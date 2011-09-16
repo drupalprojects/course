@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * Implementation of hook_course_object_info().
+ */
+function course_webform_course_object_info() {
+  return array(
+    'webform' => array(
+      'title' => 'Webform',
+      'suggested title' => 'Evaluation',
+      'class' => 'CourseObjectNode',
+      'description' => 'A webform to be used in a course workflow.',
+      'graded' => FALSE,
+    ),
+  );
+}
+
+/**
+ * Presave must return an instance ID.
+ */
+function course_webform_course_object_api($node, $op, $object) {
+  if ($op == 'presave') {
+    switch ($object['requirement_component']) {
+      case 'poll':
+        if ($object['instance']) {
+          $webform = node_load($object['instance']);
+        }
+        else {
+          $webform = new stdClass;
+          $webform->type = 'webform';
+          $webform->title = $object['title'];
+          $webform->uid = $node->uid;
+        }
+        node_save($webform);
+        return $webform->nid;
+    }
+  }
+}

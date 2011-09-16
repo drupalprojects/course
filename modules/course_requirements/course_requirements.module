@@ -1,0 +1,67 @@
+<?php
+
+function course_requirements_menu() {
+  $items = array();
+
+  $items['admin/settings/course/requirements'] = array(
+    'page calback' => 'drupal_get_form',
+    'page arguments' => array('course_requirements_settings_form'),
+    'access arguments' => array('administer course'),
+    'type' => MENU_LOCAL_TASK,
+    'title' => 'Requirements',
+  );
+
+  return $items;
+}
+
+function course_requirements_settings_form() {
+  $form = array();
+
+  foreach (content_fields() as $field => $info) {
+    if ($info['type'] == 'nodereference') {
+      $fields[$field] = $field;
+    }
+  }
+
+  $form['course_requirements_cck_field'] = array(
+    '#type' => 'select',
+    '#title' => 'Nodereference field used to select requirements',
+    '#options' => $fields,
+    '#default_value' => variable_get('course_requirements_cck_field', 'field_course_requirements'),
+  );
+
+  return system_settings_form($form);
+}
+
+function course_requirements_can_take_course($node, $user) {
+  $field = variable_get('course_requirements_cck_field', 'field_course_requirements');
+  if (isset($node->$field)) {
+    $items = $node->$field;
+    foreach ($items as $item) {
+      $nids[] = $item['nid'];
+    }
+  }
+
+  if (count($nids)) {
+    $placeholders = db_placeholders($nids);
+    $sql = "select * from {node} node
+    left join {course_report} cr on cr.nid = node.nid and cr.uid = %d
+    where node.nid in ($placeholders)";
+    array_unshift($nids, $user->uid);
+    $result = db_query($sql, $nids);
+    while ($report = db_fetch_object($result)) {
+      if (!$report->complete) {
+        $block = true;
+      }
+      $rows[] = array(l($report->title, "node/{$report->nid}"), $report->section_name);
+    }
+  }
+
+  if ($block) {
+    return array(array(
+      'success' => FALSE,
+      'header' => 'Sorry, you must complete the following courses in order to take this course.',
+      'message' => theme_table(array('Course','Your Status'), $rows),
+    ));
+  }
+}

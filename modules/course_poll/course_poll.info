@@ -1,0 +1,3 @@
+core = 6.x
+name = Expose poll as a Course object
+dependencies[] = poll

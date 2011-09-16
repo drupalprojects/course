@@ -1,0 +1,58 @@
+<?php
+
+/**
+ * Implementation of hook_course_object_info().
+ */
+function course_poll_course_object_info() {
+  return array(
+    'poll' => array(
+      'title' => 'Poll',
+      'suggested title' => 'Poll',
+      'class' => 'CourseObjectNode',
+      'description' => 'A poll to be used in a course workflow.',
+      'graded' => FALSE,
+    ),
+  );
+}
+
+/**
+ * Presave must return an instance ID.
+ */
+function course_poll_course_object_api($node, $op, $object) {
+  if ($op == 'presave') {
+    switch ($object['requirement_component']) {
+      case 'poll':
+        if ($object['instance']) {
+          $poll = node_load($object['instance']);
+        }
+        else {
+          $poll = new stdClass;
+          $poll->choice[0]['chtext'] = 'Yes';
+          $poll->choice[1]['chtext'] = 'No';
+          $poll->type = 'poll';
+          $poll->title = $object['title'];
+          $poll->uid = $node->uid;
+          $poll->active = 1;
+        }
+        node_save($poll);
+        return $poll->nid;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_form_FORMID_alter().
+ */
+function course_poll_form_poll_view_voting_alter(&$form, &$form_state) {
+  $form['vote']['#submit'][] = 'course_poll_fulfill';
+}
+
+/**
+ * Fulfill the voting requirement.
+ */
+function course_poll_fulfill(&$form, &$form_state) {
+  global $user;
+
+  $courseObject = new CourseObjectNode(arg(1), $user);
+  $courseObject->getFulfillment()->setComplete()->save();
+}

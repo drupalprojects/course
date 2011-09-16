@@ -1,0 +1,477 @@
+<?php
+
+module_load_include('inc','views','handlers/views_handler_relationship');
+
+/**
+ * Relate the node and current user to an entry in the course report.
+ * @todo move this to include
+ */
+class course_report_node_vhr extends views_handler_relationship {
+  /**
+   * Called to implement a relationship in a query.
+   */
+  function query() {
+    global $user;
+    // Figure out what base table this relationship brings to the party.
+    $join = new views_join();
+    $join->definition = array(
+      'table' => 'course_report',
+      'field' => 'nid',
+      'left_table' => 'node',
+      'left_field' => 'nid',
+      'extra' => array(
+        array(
+          'field' => 'uid',
+          'numeric' => TRUE,
+          'value' => $user->uid,
+        ),
+      ),
+    );
+
+    $join->construct();
+    $this->ensure_my_table();
+
+    $alias = $join->definition['table'] .'_'. $join->definition['left_table'];
+    $this->alias = $this->query->add_relationship($alias, $join, $this->definition['base'], $this->relationship);
+  }
+}
+
+
+/**
+ * Implementation of hook_views_data().
+ */
+function course_views_data() {
+  $data = array();
+
+  // Expose course schema to views.
+  module_load_install('course');
+  $schema = course_schema();
+
+  foreach ($schema as $table => $schemata) {
+    $data[$table]['table']['group'] = t($table);
+    foreach ($schemata['fields'] as $key => $field) {
+      switch ($field['type']) {
+        case 'int':
+        case 'numeric':
+        case 'float':
+          $type = "_numeric";
+          break;
+        default:
+          $type = "";
+      }
+      $data[$table][$key] = array(
+        'title' => ucwords($key),
+        'help' => $field['description'],
+        'field' => array(
+          'handler' => "views_handler_field$type",
+          'click sortable' => TRUE,
+        ),
+        'sort' => array(
+          'handler' => "views_handler_sort$type",
+        ),
+        'filter' => array(
+          'handler' => "views_handler_filter$type",
+        ),
+        'argument' => array(
+          'handler' => "views_handler_argument",
+        ),
+      );
+      if ($field['scale']) {
+        $data[$table][$key]['field']['float'] = TRUE;
+      }
+    }
+  }
+
+  $data['course_enrolment']['table']['group'] = t('Course enrolments');
+
+  $data['course_enrolment']['table']['join'] = array(
+    'node' => array(
+      'left_field' => 'nid',
+      'field' => 'nid',
+    ),
+    'users' => array(
+      'left_field' => 'uid',
+      'field' => 'uid',
+    ),
+    // Join the enrolment table to the course report/signup on nid AND uid.
+    'course_report' => array(
+      'left_table' => 'course_report',
+      'left_field' => 'uid',
+      'field' => 'uid',
+      'extra' => array(
+        array(
+          'left_table' => 'course_report',
+          'left_field' => 'nid',
+          'field' => 'nid',
+          'value' => 'course_report.nid',
+          'numeric' => TRUE,
+        ),
+      ),
+    ),
+    'signup_log' => array(
+      'left_table' => 'signup_log',
+      'left_field' => 'uid',
+      'field' => 'uid',
+      'extra' => array(
+        array(
+          'left_table' => 'signup_log',
+          'left_field' => 'nid',
+          'field' => 'nid',
+          'value' => 'signup_log.nid',
+          'numeric' => TRUE,
+        ),
+      ),
+    ),
+  );
+
+  $data['course_enrolment']['nid'] = array(
+    'title' => 'Node ID of enrolment',
+    'field' => array(
+      'handler' => 'views_handler_field_node',
+      'click_sortable' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+    'relationship' => array(
+      'base' => 'node',
+      'field' => 'nid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('Enrolled node'),
+    ),
+  );
+
+  $data['course_enrolment']['uid'] = array(
+    'title' => 'User ID of enrolment',
+    'field' => array(
+      'handler' => 'views_handler_field_user',
+      'click_sortable' => TRUE,
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_user',
+    ),
+    'relationship' => array(
+      'base' => 'users',
+      'field' => 'uid',
+      'handler' => 'views_handler_relationship',
+      'label' => t('Enrolled user'),
+    ),
+  );
+
+  $data['users']['course_enrollments'] = array(
+    'title' => 'Enrollments',
+    'relationship' => array(
+      'base' => 'course_enrolment',
+      'base field' => 'uid',
+      'relationship field' => 'uid',
+      'handler' => 'views_handler_relationship',
+      'label' => 'Course enrollment',
+      'help' => 'Create a relationship from the user to their enrollments',
+    ),
+  );
+
+  $data['course_enrolment']['timestamp'] = array(
+    'title' => t('Start of enrolment'),
+    'help' => t('The date the user started the course.'),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_date',
+    ),
+  );
+
+  $data['course_enrolment']['enrol_end'] = array(
+    'title' => t('End of enrolment'),
+    'help' => t('The date the user will expire in this course.'),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_date',
+    ),
+  );
+
+  $data['course_enrolment']['eid'] = array(
+    'title' => t('Enrolment ID'),
+    'help' => t('The ID of the enrolment.'),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  $data['course_node']['table']['group'] = t('Course');
+
+  $data['course_node']['table']['join'] = array(
+    'node' => array(
+      'left_field' => 'nid',
+      'field' => 'nid',
+    ),
+  );
+
+  $data['node']['course'] = array(
+    'title' => t('Is a course'),
+    'help' => t('Whether or not the content type is marked as a course.'),
+    'real field' => 'type',
+    'filter' => array(
+      'handler' => 'views_handler_filter_course',
+    ),
+  );
+
+  // Add any necessary overrides below.
+  $data['course_node']['transcript']['filter']['handler'] = 'views_handler_filter_boolean_operator';
+  $data['course_node']['type']['filter']['handler'] = 'views_handler_filter_course_type';
+
+
+  // report
+  $data['course_report']['table']['group'] = t('Course report');
+  $data['course_report']['table']['base'] = array(
+    'field' => 'id',
+    'title' => t('Course report'),
+    'help' => t('Aggregated table of reportable activities'),
+  );
+
+  // Join to node and user, also provide relationships.
+  $data['course_report']['table']['join'] = array(
+    'node' => array(
+      'left_field' => 'nid',
+      'field' => 'nid',
+    ),
+    'users' => array(
+      'left_field' => 'uid',
+      'field' => 'uid',
+    ),
+  );
+
+  $data['course_report']['nid'] = array(
+    'title' => t('Course Node'),
+    'help' => t('Create a relationship from the course report to the course node.'),
+    'relationship' => array(
+      'handler' => 'views_handler_relationship',
+      'base' => 'node',
+      'base field' => 'nid',
+      'label' => t('Course Node'),
+    ),
+  );
+
+  $data['course_report']['uid'] = array(
+    'title' => t('Course report user'),
+    'help' => t('Course report user'),
+    'relationship' => array(
+      'handler' => 'views_handler_relationship',
+      'base' => 'users',
+      'base field' => 'uid',
+      'label' => t('Course report user'),
+      'help' => t('Create a relationship from the course report to the course user.'),
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+    'field' => array(
+      'label' => t('Course report User ID'),
+      'handler' => 'views_handler_field_numeric',
+    ),
+  );
+
+  $data['course_report']['userid'] = array(
+    'title' => t('External user ID'),
+    'help' => t('External user ID.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+    ),
+  );
+
+  $data['course_report']['grade_result'] = array(
+    'title' => t('Course grade'),
+    'help' => t('Course grade received.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+    ),
+  );
+
+  $data['course_report']['grade_potential'] = array(
+    'title' => t('Grade potential'),
+    'help' => t('Max course grade.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+    ),
+  );
+
+  $data['course_report']['date_completed'] = array(
+    'title' => t('Course date completed'),
+    'help' => t('The date the user completed a course.'),
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_date',
+    ),
+  );
+
+  $data['course_report']['courseid'] = array(
+    'title' => t('External course ID'),
+    'help' => t('External course ID'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+    ),
+  );
+
+  $data['course_report']['cecredits'] = array(
+    'title' => t('Credits'),
+    'help' => t('Amount of credits for a course.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  $data['course_report']['rxcredits'] = array(
+    'title' => t('rxcredits'),
+    'help' => t('Course rxcredits'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+    ),
+  );
+
+  $data['course_report']['enrollmenttype'] = array(
+    'title' => t('Enrollment type'),
+    'help' => t('The module responsible for this enrolment.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+    ),
+  );
+
+  $data['course_report']['certgrade'] = array(
+    'title' => t('Certificate grade'),
+    'help' => t('Grade needed to attain a certificate.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+  );
+
+  $data['course_report']['section_name'] = array(
+    'title' => t('Course status'),
+    'help' => t("The user's course status."),
+    'field' => array(
+      'handler' => 'views_handler_field',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_string',
+    ),
+  );
+
+  $data['course_report']['complete'] = array(
+    'title' => t('Complete'),
+    'help' => t('Whether or not the user completed the course.'),
+    'field' => array(
+      'handler' => 'views_handler_field_numeric',
+      'click sortable' => TRUE,
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_boolean_operator',
+      'label' => 'Course completed',
+      'type' => 'yes-no',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_numeric',
+    ),
+  );
+
+  $data['course_report']['cecreditsmax'] = array(
+    'title' => t('Max credits'),
+    'help' => t('Max credits.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+    ),
+  );
+
+  $data['course_report']['credits_claimed'] = array(
+    'title' => t('Credits claimed'),
+    'help' => t('Course credits claimed.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+    ),
+  );
+
+  $data['course_report']['variable_credits'] = array(
+    'title' => t('Variable credits'),
+    'help' => t('Course variable credits.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+    ),
+  );
+
+  $data['course_report']['api'] = array(
+    'title' => t('Report API'),
+    'help' => t('A key representing the module or API responsible for the course report record.'),
+    'field' => array(
+      'handler' => 'views_handler_field',
+    ),
+  );
+
+  $data['node']['course_report']['relationship'] = array(
+    'handler' => 'course_report_node_vhr',
+    'label' => t('Course report'),
+    'title' => t('Course report'),
+    'help' => t('Create a relationship to the course report entry using this node and current user.'),
+    'base' => 'course_report',
+  );
+
+  return $data;
+}
+
+/**
+ * Implementation of hook_views_handlers() to register all of the basic handlers
+ * views uses.
+ */
+function course_views_handlers() {
+  return array(
+    'info' => array(
+      'path' => drupal_get_path('module', 'course') . '/views',
+    ),
+    'handlers' => array(
+      // filters
+      'views_handler_filter_course_type' => array(
+        'parent' => 'views_handler_filter_in_operator',
+      ),
+      'views_handler_filter_course' => array(
+        'parent' => 'views_handler_filter_boolean_operator',
+      ),
+    ),
+  );
+}

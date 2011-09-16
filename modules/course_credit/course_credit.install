@@ -1,0 +1,300 @@
+<?php
+
+function course_credit_install() {
+ drupal_install_schema('course_credit');
+ course_credit_install_default_credit_type();
+}
+
+function course_credit_uninstall() {
+ drupal_uninstall_schema('course_credit');
+}
+
+
+function course_credit_schema() {
+  $schema = array();
+
+  $schema['course_credit'] = array(
+    'description' => 'Holds information about course credit.',
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'description' => 'Course node ID.',
+        'not null' => TRUE,
+      ),
+      'ctid' => array(
+        'description' => 'Credit type ID.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'increments' => array(
+        'description' => 'Increment by which credit can be awarded.',
+        'type' => 'numeric',
+        'precision' => 6,
+        'scale' => 2,
+      ),
+      'min' => array(
+        'description' => 'Minimum credit.',
+        'type' => 'numeric',
+        'precision' => 6,
+        'scale' => 2,
+      ),
+      'max' => array(
+        'description' => 'Maximum credit.',
+        'type' => 'numeric',
+        'precision' => 6,
+        'scale' => 2,
+      ),
+      'enable_variable_credit' => array(
+        'description' => 'Variable credit.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'active' => array(
+        'description' => 'Active.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'code' => array(
+        'description' => 'Credit code.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+      ),
+    ),
+    'primary key' => array('nid','ctid'),
+  );
+
+  $schema['course_credit_type'] = array(
+    'description' => 'Holds information about course credit types.',
+    'fields' => array(
+      'ctid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'ID of the course credit type instance.',
+      ),
+      'type' => array(
+        'description' => 'Machine-readable type name used for views and tokens.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'title' => array(
+        'description' => 'Credit type title.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'description' => array(
+        'description' => 'Credit type description.',
+        'type' => 'text',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'increments' => array(
+        'description' => 'Default increment by which credit can be awarded.',
+        'type' => 'numeric',
+        'precision' => 6,
+        'scale' => 2,
+      ),
+      'min' => array(
+        'description' => 'Default minimum credit.',
+        'type' => 'numeric',
+        'precision' => 6,
+        'scale' => 2,
+      ),
+      'max' => array(
+        'description' => 'Default maximum credit.',
+        'type' => 'numeric',
+        'precision' => 6,
+        'scale' => 2,
+      ),
+      'enable_variable_credit' => array(
+        'description' => 'Default variable credit switch.',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('ctid'),
+    'unique keys' => array('type' => array('type')),
+  );
+
+
+  $schema['course_credit_type_restrictions'] = array(
+    'description' => 'Holds information about course credit types.',
+    'fields' => array(
+      'ctrid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'ID of the course credit type restriction instance.',
+      ),
+      'ctid' => array(
+        'description' => 'ID of the credit type.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+
+      'type' => array(
+        'description' => 'The credit type, machine readable.',
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'description' => array(
+        'description' => 'The description of this credit type, always treated as non-markup plain text.',
+        'type' => 'text',
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'enable_variable_credit' => array(
+        'description' => 'Enables variable credit for this credit type. (global)',
+        'type' => 'int',
+        'size' => 'tiny',
+      ),
+      'active' => array(
+        'description' => 'activates the credit type.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+
+    ),
+    'primary key' => array('ctrid'),
+  );
+
+  $schema['course_credit_awarded'] = array(
+    'description' => 'Holds information about course credit awarded.',
+    'fields' => array(
+      'ctid' => array(
+        'description' => 'Credit type ID.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+      ),
+      'nid' => array(
+        'description' => 'Course node ID.',
+        'type' => 'int',
+      ),
+      'uid' => array(
+        'description' => 'Course user ID.',
+        'type' => 'int',
+      ),
+      'credits' => array(
+        'description' => 'Credits awarded.',
+        'type' => 'numeric',
+        'precision' => 6,
+        'scale' => 2,
+      ),
+      'date' => array(
+        'description' => 'Date of award.',
+        'type' => 'int',
+      ),
+      'status' => array(
+        'description' => 'Credit approved.',
+        'type' => 'int',
+      ),
+    ),
+
+    'primary key' => array('ctid', 'nid', 'uid'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Add unique key to type
+ */
+function course_credit_update_6001() {
+  $ret = array();
+
+  db_add_unique_key($ret, 'course_credit_type', 'type', array('type'));
+
+  return $ret;
+}
+
+function course_credit_update_6002() {
+  $ret = array();
+
+  $schema = course_credit_schema();
+
+  $fields = array(
+    array('course_credit_awarded', 'credits'),
+    array('course_credit', 'min'),
+    array('course_credit', 'max'),
+    array('course_credit', 'increments'),
+    array('course_credit_type', 'min'),
+    array('course_credit_type', 'max'),
+    array('course_credit_type', 'increments'),
+  );
+
+  foreach ($fields as $array) {
+    list($table, $field) = $array;
+    db_change_field($ret, $table, $field, $field, $schema[$table]['fields'][$field]);
+  }
+
+  return $ret;
+}
+
+function course_credit_install_default_credit_type() {
+  drupal_get_schema(null, TRUE);
+
+  $credit_type = array(
+    'type' => 'cecredits',
+    'title' => 'CE Credits',
+    'description' => 'The default credit type for Ethos CE courses',
+    'increments' => .25,
+    'min' => 0,
+    'max' => 100,
+    'enable_variable_credit' => 1,
+    'active' => 1,
+  );
+
+
+  module_load_include('module', 'course_credit', 'course_credit');
+  course_credit_save_credit_type($credit_type);
+}
+
+/**
+ * Add per-course credit code field.
+ */
+function course_credit_update_6003() {
+  $ret = array();
+  $schema = course_credit_schema();
+  db_add_field($ret, 'course_credit', 'code', $schema['course_credit']['fields']['code']);
+  return $ret;
+}
+
+/**
+ * Drop active column in course_credit_type.
+ *
+ * A situation may arise where a credit type is added with a default of active,
+ * then a course that is resaved will have that credit type added without the
+ * user knowing.
+ *
+ * Drop the default 'active' column and force the user to manually activate
+ * credit types per course.
+ */
+function course_credit_update_6005() {
+  $ret = array();
+  db_drop_field($ret, 'course_credit_type', 'active');
+  return $ret;
+}

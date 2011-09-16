@@ -1,0 +1,172 @@
+<?php
+
+/**
+ * Implementation of hook_ctools_plugin_directory().
+ */
+function course_uc_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'ctools' && $plugin_type == 'content_types') {
+    return 'plugins/content_types';
+  }
+}
+
+/**
+ * Implementation of hook_form_alter().
+ *
+ * @todo We shouldn't be doing any specific logic in here, probably need
+ * something like hook_course_can_enrol.
+ */
+function course_uc_form_alter(&$form, &$form_state, $form_id) {
+  if (strpos($form_id, 'uc_product_add_to_cart') !== FALSE) {
+    global $user;
+    $node = node_load($form['nid']['#value']);
+    if (!$user->uid) {
+      $form['submit']['#access'] = FALSE;
+      if ($node->sell_price > 0) {
+        $message = "You must !login or !register to purchase this course.";
+      }
+      else {
+        $message = "You must !login or !register to take this course.";
+      }
+
+      $options = array(
+        'query' => array(
+          drupal_get_destination(),
+        ),
+      );
+      $message = t($message, array('!login' => l('login','user/login', $options), '!register' => l('register', 'user/register', $options)));
+
+      $form['course_uc']['#value'] = $message;
+    }
+
+    if ($node->field_course_date) {
+      if ($node->course['type'] == 'enduring' && time() > strtotime($node->field_course_date[0]['value2'])) {
+        $form['submit']['#access'] = FALSE;
+        $form['course_uc']['#value'] = 'Sorry, this course is expired.';
+      }
+    }
+  }
+
+  if ($form_id == 'course_admin_settings') {
+    $form['uc_course_restrict_qty'] = array(
+      '#title' => 'Restrict course products to 1 per customer.',
+      '#description' > 'Course will restrict users from adding the product to cart if they have already purchased the course or already have the course in their cart.',
+      '#type' => 'checkbox',
+      '#default_value' => variable_get('uc_course_restrict_qty', 1),
+    );
+  }
+}
+
+/**
+ * Implementation of hook_course_enrol().
+ *
+ * Satisfy payment requirement when manually enrolled.
+ */
+function course_uc_course_enrol($node, $user) {
+  $reqs = course_outline_get_course_requirements($node);
+  if (is_array($reqs) && count($reqs)) {
+    foreach ($reqs as $req) {
+      if ($req['requirement_type'] == 'ubercart_payment') {
+        $ubercart = course_outline_get_fulfillment($req['snid'], $user->uid);
+        if (!$ubercart['complete']) {
+          $ubercart['snid'] = $req['snid'];
+          $ubercart['uid'] = $user->uid;
+          $ubercart['complete'] = 1;
+          $ubercart['date_completed'] = time();
+          $ubercart['info'] = 'Completed payment requirement because user was enrolled.';
+          course_outline_save_fulfillment($ubercart);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_add_to_cart().
+ */
+function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
+  if (variable_get('uc_course_restrict_qty', 1)) {
+    global $user;
+    $node = node_load($nid);
+    if (course_node_is_course($node)) {
+      if (course_uc_restrict_qty_check_purchased($user->uid, $nid)) {
+        return array(
+          array(
+            'success' => FALSE,
+            'message' => "You've already purchased this course.",
+            'silent' => FALSE,
+          )
+        );
+      }
+      if (course_uc_restrict_qty_check_cart($user->uid, $nid)) {
+        return array(
+          array(
+            'success' => FALSE,
+            'message' => t("This course is already in your !cart.",array('!cart' => l('shopping cart','cart'))),
+            'silent' => FALSE,
+          )
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Check if a user purchased a node previously.
+ */
+function course_uc_restrict_qty_check_purchased($uid, $nid) {
+  $sql = "select 1 from {uc_orders} uco
+  left join {uc_order_products} ucop on uco.order_id = ucop.order_id
+  where uid = %d and nid = %d";
+  $purchased = db_result(db_query($sql, $uid, $nid));
+  return $purchased;
+}
+
+/**
+ * Check if a node is in a user's cart.
+ */
+function course_uc_restrict_qty_check_cart($uid, $nid) {
+  $cid = !(is_null($cid) || empty($cid)) ? $cid : uc_cart_get_id();
+  $contents = uc_cart_get_contents($cid);
+  foreach ($contents as $item) {
+    if ($item->nid == $nid) {
+      return TRUE;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_uc_cart_alter().
+ */
+function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
+  if (variable_get('uc_course_restrict_qty', 1)) {
+    global $user;
+    foreach ($cart_items as $key => $cart_item) {
+      $node = node_load($cart_item->nid);
+      if (course_node_is_course($node) && $cart_item->qty > 1) {
+        $cart_items[$key]->qty = 1;
+        $sql = "update {uc_cart_products} set qty = 1 where cart_id = %d and nid = %d";
+        db_query($sql, $user->uid, $node->nid);
+        if (!$message) {
+          drupal_set_message('Sorry, you may not purchase multiple identical courses.', 'error');
+          $message = true;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_state) {
+  if (variable_get('uc_course_restrict_qty', 1)) {
+    foreach($form['items'] as $key => &$item) {
+      if (is_numeric($key)) {
+        $node = node_load($item['nid']['#value']);
+        if (course_node_is_course($node)) {
+          //$item['qty']['#disabled'] = TRUE;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,62 @@
+<?php
+
+/**
+ * Implementation of hook_course_object_info().
+ */
+function course_content_course_object_info() {
+  $types = content_types();
+  foreach ($types as $type => $info) {
+    if (variable_get("course_content_use_$type", 0)) {
+      $course_objects[$type] = array(
+        'title' => $info['name'],
+        'suggested title' => 'Course',
+        'class' => 'CourseObjectNode',
+        'description' => 'A node to be used in a course workflow.',
+        'graded' => FALSE,
+      );
+    }
+  }
+
+  return $course_objects;
+}
+
+/**
+ * Presave must return an instance ID.
+ */
+function course_content_course_object_api($node, $op, $object) {
+  if ($op == 'presave') {
+    if ($object['instance']) {
+      $content = node_load($object['instance']);
+    }
+    else {
+      $content = new stdClass;
+      $content->type = $object['requirement_component'];
+      $content->title = $object['title'];
+      $content->uid = $node->uid;
+    }
+    node_save($content);
+    return $content->nid;
+  }
+}
+
+function course_content_nodeapi(&$node, $op, $a3, $a4) {
+  if ($op == 'view' && $a4 && variable_get("course_content_use_{$node->type}", 0)) {
+    global $user;
+
+    $courseObject = new CourseObjectNode($node->nid, $user);
+    $courseObject->getFulfillment()->setComplete()->save();
+  }
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ */
+function course_content_form_node_type_form_alter(&$form, &$form_state) {
+  // Alter the node type's configuration form to add our setting.
+  $form['course']['course_content_use'] = array(
+    '#title' => t('Use as course content'),
+    '#type' => 'checkbox',
+    '#default_value' => variable_get("course_content_use_{$form['#node_type']->type}", 0),
+    '#description' => 'Use this type as course content, when fulfillment can be satisifed by viewing.',
+  );
+}

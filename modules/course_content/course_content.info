@@ -1,0 +1,4 @@
+name = Node Course objects
+description = Expose selected nodes as course content objects.
+core = 6.x
+dependencies[] = course

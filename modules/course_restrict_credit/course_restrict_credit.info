@@ -1,0 +1,5 @@
+core = 6.x
+name = Course Restrict Credit
+description = Restricts claiming credit for two similar courses.
+dependencies[] = course
+dependencies[] = course_credit

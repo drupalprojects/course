@@ -1,0 +1,6 @@
+name = Course
+core = 6.x
+description = Integrate external courses with Drupal.
+version = 6.x-1.0-beta1
+dependencies[] = autoload
+php = 5
