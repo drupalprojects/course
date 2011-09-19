@@ -1,15 +1,25 @@
 <?php
 
+/**
+ * Implementation of hook_install().
+ *
+ * Install a default content type, set some defaults.
+ */
 function course_credit_install() {
- drupal_install_schema('course_credit');
- course_credit_install_default_credit_type();
+  drupal_install_schema('course_credit');
+  course_credit_install_default_credit_type();
 }
 
+/**
+ * Implementation of hook_uninstall().
+ */
 function course_credit_uninstall() {
- drupal_uninstall_schema('course_credit');
+  drupal_uninstall_schema('course_credit');
 }
 
-
+/**
+ * Implementation of hook_schema().
+ */
 function course_credit_schema() {
   $schema = array();
 
@@ -221,39 +231,8 @@ function course_credit_schema() {
 }
 
 /**
- * Add unique key to type
+ * Helper funtion to install default credit types.
  */
-function course_credit_update_6001() {
-  $ret = array();
-
-  db_add_unique_key($ret, 'course_credit_type', 'type', array('type'));
-
-  return $ret;
-}
-
-function course_credit_update_6002() {
-  $ret = array();
-
-  $schema = course_credit_schema();
-
-  $fields = array(
-    array('course_credit_awarded', 'credits'),
-    array('course_credit', 'min'),
-    array('course_credit', 'max'),
-    array('course_credit', 'increments'),
-    array('course_credit_type', 'min'),
-    array('course_credit_type', 'max'),
-    array('course_credit_type', 'increments'),
-  );
-
-  foreach ($fields as $array) {
-    list($table, $field) = $array;
-    db_change_field($ret, $table, $field, $field, $schema[$table]['fields'][$field]);
-  }
-
-  return $ret;
-}
-
 function course_credit_install_default_credit_type() {
   drupal_get_schema(null, TRUE);
 
@@ -268,33 +247,6 @@ function course_credit_install_default_credit_type() {
     'active' => 1,
   );
 
-
   module_load_include('module', 'course_credit', 'course_credit');
   course_credit_save_credit_type($credit_type);
-}
-
-/**
- * Add per-course credit code field.
- */
-function course_credit_update_6003() {
-  $ret = array();
-  $schema = course_credit_schema();
-  db_add_field($ret, 'course_credit', 'code', $schema['course_credit']['fields']['code']);
-  return $ret;
-}
-
-/**
- * Drop active column in course_credit_type.
- *
- * A situation may arise where a credit type is added with a default of active,
- * then a course that is resaved will have that credit type added without the
- * user knowing.
- *
- * Drop the default 'active' column and force the user to manually activate
- * credit types per course.
- */
-function course_credit_update_6005() {
-  $ret = array();
-  db_drop_field($ret, 'course_credit_type', 'active');
-  return $ret;
 }
