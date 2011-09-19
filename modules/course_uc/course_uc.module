@@ -19,6 +19,12 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
   if (strpos($form_id, 'uc_product_add_to_cart') !== FALSE) {
     global $user;
     $node = node_load($form['nid']['#value']);
+
+    $result = course_take_course_access($node);
+    if (course_node_is_course($node) && $result['success'] && !$node->field_addtl_products[0]['nid']) {
+      $form['submit']['#access'] = FALSE;
+    }
+
     if (!$user->uid) {
       $form['submit']['#access'] = FALSE;
       if ($node->sell_price > 0) {
@@ -47,12 +53,20 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
   }
 
   if ($form_id == 'course_admin_settings') {
-    $form['uc_course_restrict_qty'] = array(
+    $form['course_uc_restrict_qty'] = array(
       '#title' => 'Restrict course products to 1 per customer.',
       '#description' > 'Course will restrict users from adding the product to cart if they have already purchased the course or already have the course in their cart.',
       '#type' => 'checkbox',
-      '#default_value' => variable_get('uc_course_restrict_qty', 1),
+      '#default_value' => variable_get('course_uc_restrict_qty', 1),
     );
+  }
+}
+
+function course_uc_init() {
+  if (arg(1) == 'checkout') {
+    global $conf;
+    // Turn off content profile on registration for ubercart account creations.
+    $conf['content_profile_profile']['registration_use'] = 0;
   }
 }
 
@@ -84,7 +98,7 @@ function course_uc_course_enrol($node, $user) {
  * Implementation of hook_add_to_cart().
  */
 function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
-  if (variable_get('uc_course_restrict_qty', 1)) {
+  if (variable_get('course_uc_restrict_qty', 1)) {
     global $user;
     $node = node_load($nid);
     if (course_node_is_course($node)) {
@@ -138,7 +152,7 @@ function course_uc_restrict_qty_check_cart($uid, $nid) {
  * Implementation of hook_uc_cart_alter().
  */
 function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
-  if (variable_get('uc_course_restrict_qty', 1)) {
+  if (variable_get('course_uc_restrict_qty', 1)) {
     global $user;
     foreach ($cart_items as $key => $cart_item) {
       $node = node_load($cart_item->nid);
@@ -159,7 +173,7 @@ function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
  * Implementation of hook_form_FORM_ID_alter().
  */
 function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_state) {
-  if (variable_get('uc_course_restrict_qty', 1)) {
+  if (variable_get('course_uc_restrict_qty', 1)) {
     foreach($form['items'] as $key => &$item) {
       if (is_numeric($key)) {
         $node = node_load($item['nid']['#value']);
@@ -169,4 +183,78 @@ function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_stat
       }
     }
   }
+}
+
+/**
+ * Implementation of hook_ca_action().
+ *
+ * Add action to enrol a user in a course.
+ *
+ * @return array
+ */
+function course_uc_ca_action() {
+  $arg = array (
+    '#entity' => 'uc_order',
+    '#title' => t('Order')
+  );
+
+  $actions['course_uc_enrol_user_in_ordered_courses'] = array (
+    '#title' => t('Enroll user in course(s)'),
+    '#category' => t('Order'),
+    '#callback' => 'course_uc_enrol_user_in_ordered_courses',
+    '#arguments' => array (
+      'order' => $arg,
+    ),
+  );
+
+  return $actions;
+}
+
+/**
+ * Loops through items in an Ubercart order and enrols the user in courses purchased.
+ */
+function course_uc_enrol_user_in_ordered_courses($order) {
+  foreach ($order->products as $product) {
+    $node = node_load($product->nid);
+    $user = user_load($order->uid);
+    if (course_node_is_course($node)) {
+      course_enrol($node, $user, 'ubercart');
+    }
+  }
+}
+
+function course_uc_ca_predicate() {
+  $configurations['course_uc_enrol_user_in_ordered_courses'] = array(
+    '#title' => t('Enroll user in ordered courses'),
+    '#class' => 'course',
+    '#trigger' => 'uc_order_status_update',
+    '#status' => 1,
+    '#conditions' => array(
+      '#operator' => 'OR',
+      '#conditions' => array(
+        array(
+          '#name' => 'uc_order_status_condition',
+          '#title' => t('If order is marked as completed'),
+          '#argument_map' => array(
+            'order' => 'updated_order',
+          ),
+          '#settings' => array(
+            'order_status' => 'completed',
+          ),
+        ),
+      ),
+    ),
+    '#actions' => array(
+      array(
+        '#name' => 'course_uc_enrol_user_in_ordered_courses',
+        '#title' => t('Enroll user in ordered courses'),
+        '#argument_map' => array(
+           'order' => 'order',
+        ),
+        '#settings' => array(),
+      ),
+    ),
+  );
+
+  return $configurations;
 }
