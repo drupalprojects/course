@@ -86,6 +86,28 @@ class CourseObject {
   }
 
   /**
+   * Set passing grade for this course object.
+   *
+   * @param float $grade
+   *   Percentage to pass.
+   */
+  public function setPassingGrade($grade) {
+    $this->requirement['passing_grade'] = $grade;
+    return $this;
+  }
+
+  /**
+   * Set requirement graded or not.
+   *
+   * @param bool $graded
+   *    Graded, true or false.
+   */
+  public function setGraded($graded) {
+    $this->requirement['graded'] = $graded;
+    return $this;
+  }
+
+  /**
    * Get the title of this course object.
    *
    * @return string
@@ -133,7 +155,7 @@ class CourseObject {
    */
   public function save() {
     $keys = $this->requirement['snid'] ? array('snid') : array();
-    return drupal_write_record('course_outline', $requirement, $keys);
+    return drupal_write_record('course_outline', $this->requirement, $keys);
   }
 }
 
@@ -192,7 +214,7 @@ class CourseObjectFulfillment {
    * @param float $grade
    */
   function setGrade($grade) {
-    $this->fulfillment['grade'] = $grade;
+    $this->fulfillment['grade_result'] = $grade;
     return $this;
   }
 
@@ -203,7 +225,7 @@ class CourseObjectFulfillment {
    *   A float value of the user's grade for this fulfillment.
    */
   function getGrade() {
-    return $this->fulfillment['grade'];
+    return $this->fulfillment['grade_result'];
   }
 
   /**

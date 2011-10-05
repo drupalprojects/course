@@ -12,12 +12,12 @@ class CourseObjectQuiz extends CourseObjectNode {
   function grade($user) {
     $nid = (int) $this->getInstanceId();
 
-    $results = quiz_get_score_data(array($nid), $user->uid);
-    if ($results[$nid]->percent_score >= $results[$nid]->percent_pass) {
-      $this->getFulfillment()->setGrade($results[$nid]->percent_score)->setComplete()->save();
+    $result = reset(quiz_get_score_data(array($nid), $user->uid));
+    if ($result && ($result->percent_score >= $result->percent_pass)) {
+      $this->getFulfillment()->setGrade($result->percent_score)->setComplete()->save();
     }
     else {
-      $this->getFulfillment()->setGrade($results[$nid]->percent_score)->save();
+      $this->getFulfillment()->setGrade($result->percent_score)->save();
     }
   }
 }

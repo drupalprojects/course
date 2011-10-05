@@ -62,3 +62,17 @@ function course_quiz_quiz_finished($quiz, $score, $rid) {
   $courseObject = new CourseObjectQuiz($quiz->nid, $user);
   $courseObject->grade($user);
 }
+
+/**
+ * Implementation of hook_nodeapi().
+ *
+ * Update passing grade.
+ */
+function course_quiz_nodeapi($node, $op, $a3, $a4) {
+  if ($node->type == 'quiz') {
+    if ($op == 'insert' || $op == 'update') {
+      $courseObject = new CourseObjectQuiz($node->nid);
+      $courseObject->setPassingGrade($node->pass_rate)->setGraded(($node->pass_rate > 0))->save();
+    }
+  }
+}

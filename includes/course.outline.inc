@@ -155,7 +155,7 @@ function _course_outline_requirement_form($requirement = array()) {
     '#type' => 'markup',
   );
   if ($requirement['instance']) {
-    $rform['operations']['#value'] = l('Edit', "node/{$requirement['nid']}/coursesettings/edit{$requirement['requirement_component']}_{$requirement['instance']}") .' | '. t('Delete');
+    $rform['operations']['#value'] = l('Edit', "node/{$requirement['nid']}/coursesettings/edit{$requirement['requirement_component']}_{$requirement['instance']}") .' | '. l(t('Delete'), "node/{$requirement['nid']}/coursesettings/edit{$requirement['requirement_component']}_{$requirement['instance']}/delete", array('query'=>array('destination'=>"node/{$requirement['nid']}/edit",)));
   }
   $rform['weight'] = array(
     '#type' => 'weight',
@@ -375,12 +375,13 @@ function course_outline_show_complete_links($course_node) {
       $status_css = $req['complete'] ? 'complete' : 'incomplete';
       $status_img = $req['complete'] ? 'ok' : ($req['required'] ? 'error' : 'warning');
       $status_optional = ($status_img == 'warning') ? ' (optional)' : '';
+      $grade = $req['graded'] ? ' - Your grade: ' . $req['grade_result'] . '%, Pass grade: ' . $req['passing_grade'] . '%': '';
       $items[] = array(
         array(
           'data' => theme_image("misc/watchdog-{$status_img}.png", $status_css),
           'width' => 20,
         ),
-        $req['title'] . $status_optional,
+        $req['title'] . $status_optional . $grade,
       );
     }
     $reqs_txt = theme_table(NULL, $items);

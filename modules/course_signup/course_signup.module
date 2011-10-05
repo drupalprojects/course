@@ -1,7 +1,5 @@
 <?php
 
-include_once "course_signup.features.inc";
-
 /**
  * Signup course admin form.
  */
@@ -31,7 +29,7 @@ function course_signup_admin() {
     '#title' => 'Use this view on courses instead of the view selected in signup as the admin view.',
     '#type' => 'select',
     '#options' => $view_options,
-    '#default_value' => variable_get('signup_admin_list_view_course_override', 'course_signup_user_vbo_admin_list:default'),
+    '#default_value' => variable_get('signup_admin_list_view_course_override', 'course_signup_user_vbo_admin:default'),
   );
 
   return system_settings_form($form);
@@ -249,7 +247,7 @@ function course_signup_init() {
   if (course_node_is_course($node)) {
     global $conf;
     // Switch courses to our view with enrollments and bulk operations.
-    $conf['signup_admin_list_view'] = variable_get('signup_admin_list_view_course_override','course_signup_user_vbo_admin_list');
+    $conf['signup_admin_list_view'] = variable_get('signup_admin_list_view_course_override','course_signup_user_vbo_admin');
     $conf['signup_ignore_default_fields'] = 1;
     $conf['signup_fieldset_collapsed'] = 0;
     $conf['uc_signup_add_cart_text'] = 'Register';
@@ -327,7 +325,7 @@ function course_signup_add_enrollment_action($object, $context) {
  * Toggle attendance field based on course type.
  */
 function course_signup_views_query_alter(&$view, &$query) {
-  if ($view->name == variable_get('signup_admin_list_view_course_override', 'course_signup_user_vbo_admin_list')) {
+  if ($view->name == variable_get('signup_admin_list_view_course_override', 'course_signup_user_vbo_admin')) {
     $node = node_load(arg(1));
     if ($node->course['type'] != 'live') {
       unset($view->field['attended']);

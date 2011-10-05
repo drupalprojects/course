@@ -2,4 +2,3 @@ name = Course Credit
 description = Enables credit award with course
 core = 6.x
 dependencies[] = course
-dependencies[] = course_outline

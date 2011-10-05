@@ -330,9 +330,9 @@ function course_signup_views_default_views() {
 
   $views[$view->name] = $view;
 
-  // Exported view: course_signup_user_vbo_admin_list
+  // Exported view: course_signup_user_vbo_admin
   $view = new view;
-  $view->name = 'course_signup_user_vbo_admin_list';
+  $view->name = 'course_signup_user_vbo_admin';
   $view->description = 'Per-node signup administration interface with checkboxes for bulk operations.';
   $view->tag = 'Signup';
   $view->view_php = '';

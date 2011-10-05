@@ -61,7 +61,7 @@ function course_menu() {
     'page arguments' => array(1),
     'access callback' => 'course_settings_menu_access',
     'access arguments' => array(1),
-    'type' => variable_get('course_settings_tab_display', 1) ? MENU_LOCAL_TASK : MENU_CALLBACK,
+    'type' => MENU_CALLBACK,
   );
 
   $items['admin/settings/course/%/install'] = array(
@@ -102,15 +102,6 @@ function course_menu() {
     'page callback' => 'course_outline_get_course_report_do',
     'page arguments' => array(2, 3),
     'access callback' => TRUE,
-    'type' => MENU_CALLBACK,
-  );
-
-  $items['node/%course_node/course-outline'] = array(
-    'title' => 'Course outline',
-    'access callback' => 'course_take_course_menu_access',
-    'access arguments' => array(1),
-    'page arguments' => array(1),
-    'page callback' => 'course_outline_course_outline_show',
     'type' => MENU_CALLBACK,
   );
 
