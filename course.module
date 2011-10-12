@@ -1073,9 +1073,11 @@ function course_available_objects() {
   $course_objects = array();
   foreach ($implementations as $implementor) {
     $objects = module_invoke($implementor, 'course_object_info');
-    foreach ($objects as $key => &$object) {
-      $object['module'] = $implementor;
-      $course_objects[$object['module']][$key] = $object;
+    if (is_array($objects)) {
+      foreach ($objects as $key => &$object) {
+        $object['module'] = $implementor;
+        $course_objects[$object['module']][$key] = $object;
+      }
     }
   }
 
