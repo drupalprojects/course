@@ -923,6 +923,8 @@ function course_credit_certificate_final_step_alter(&$step_array, $node, $accoun
 
 /*
  * Implementation of course_report_alter
+ *
+ * @todo: remove dependency on node based credit application
  */
 function course_credit_course_report_alter(&$entry, $account) {
   if (db_table_exists('content_type_course_credit_application')) {
@@ -935,7 +937,7 @@ function course_credit_course_report_alter(&$entry, $account) {
   }
 
   $sql = "SELECT 1 FROM {course_credit_awarded} WHERE nid = %d AND uid = %d";
-  $awarded = db_result(db_query($sql, $entry['nid'], $account->uid));
+  $awarded = db_result(db_query($sql, $entry->nid, $account->uid));
   if ($entry['complete'] && $app_node_nid && !$awarded) {
     $entry['section'] = 'course_credit';
     $entry['section_name'] = 'Application for Credit';
