@@ -933,15 +933,14 @@ function course_credit_course_report_alter(&$entry, $account) {
     $table = $db_info['table'];
     $app_node_nid = db_result(db_query("SELECT ca.nid FROM {{$table}} ca
     LEFT JOIN {node} n on ca.nid = n.nid
-    WHERE type = 'course_credit_application' and field_course_nid_value = %d", $entry['nid']));
+    WHERE type = 'course_credit_application' and field_course_nid_value = %d", $entry->nid));
   }
 
   $sql = "SELECT 1 FROM {course_credit_awarded} WHERE nid = %d AND uid = %d";
   $awarded = db_result(db_query($sql, $entry->nid, $account->uid));
-  if ($entry['complete'] && $app_node_nid && !$awarded) {
-    $entry['section'] = 'course_credit';
-    $entry['section_name'] = 'Application for Credit';
-    $entry['cecredits'] = 0;
+  if ($entry->complete && $app_node_nid && !$awarded) {
+    $entry->section = 'course_credit';
+    $entry->section_name = 'Application for Credit';
   }
 }
 
