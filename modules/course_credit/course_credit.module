@@ -487,13 +487,14 @@ function course_credit_render_credit($node) {
   if (count($node->course_credit)) {
     // Must have at least 1 credit instance.
     $out = '';
+    $token = module_exists('token');
 
     foreach ($user->uid ? course_credit_user_credit_types($node, $user) : $node->course_credit as $key => $credit_instance) {
       if ($credit_instance->active) {
         $out .= t("@credits !title<p>!desc</p>", array(
           '@credits' => number_format($credit_instance->max, 2),
           '!title' => $credit_instance->title,
-          '!desc' => token_replace($credit_instance->description, 'accreditation', $node),
+          '!desc' => $token ? token_replace($credit_instance->description, 'accreditation', $node) : $credit_instance->description,
         ));
       }
     }
