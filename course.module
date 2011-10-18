@@ -595,7 +595,7 @@ function course_take_course_button_html(&$node) {
  * @param int UID of user.
  */
 function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
-  if (course_node_is_course($node) && course_enrol_access($node, $user)) {
+  if (course_node_is_course($node)) {
     $enrol = array(
       'nid' => $node->nid,
       'uid' => $user->uid,
@@ -609,26 +609,21 @@ function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
       $enrol['enrol_end'] = time() + $node->course['duration']*86400;
     }
 
+    $enrol = (object) $enrol;
+
     if (!course_enrolment_check($node, $user)) {
       // User is not enrolled yet.
-      $course_enrol = module_invoke_all('course_enrol', $node, $user, $from, $code, $status);
       watchdog('course_enrol', "Enrolling user {$user->uid} into {$node->nid}");
-
-      $entry = new stdClass();
-      $entry->nid = $node->nid;
-      $entry->uid = $user->uid;
-      $entry->section_name = 'Enrolled';
-      course_report_save($entry);
-
-      $enrol = (object) $enrol;
-      drupal_write_record('course_enrolment', $enrol);
-      return $enrol;
+      course_enrolment_save($enrol);
+      $op = 'insert';
     }
     else {
-      // Updating enrollment?
+      watchdog('course_enrol', "Re-enrolling user {$user->uid} into {$node->nid}");
       // return drupal_write_record('course_enrolment', $enrol, array('nid', 'uid'));
-      return $enrol;
+      $op = 'update';
     }
+    // @todo figure $op out
+    module_invoke_all('course_enrol', $node, $user, $from, $code, $status);
   }
   else {
     return FALSE;
@@ -831,7 +826,6 @@ function course_form_alter(&$form, &$form_state, $form_id) {
       '#size' => 4,
       '#access' => FALSE,
     );
-
     $form['course']['external_id'] = array(
       '#title' => 'External course ID',
       '#description' => 'Course ID used to relate to an outside system.',
@@ -1010,6 +1004,7 @@ function course_take_course($node) {
       // If user hasn't started course, mark start of enrolment.
       $enrolment->timestamp = time();
       course_enrolment_save($enrolment);
+      drupal_set_message("Your enrollment in this course has been recorded.");
     }
     $lapp = course_get_lms($node->course['lms']);
     return ($ret = module_invoke($lapp['module'], 'lms_take_course', $node->course['lms'], $node)) ? $ret : "hook_lms_take_course not implemented";
@@ -1184,6 +1179,8 @@ function course_access_certificate($node, $user) {
 
 /**
  * Implementation of hook_token_list().
+ *
+ * @todo move to uc_course
  */
 function course_token_list($type = 'all') {
   $tokens = array();
@@ -1202,11 +1199,21 @@ function course_token_list($type = 'all') {
     $tokens['certificate']['certificate-number'] = 'Generated certificate number';
   }
 
+  if ($type == 'node') {
+    module_load_install('course');
+    $schema = course_schema();
+    foreach ($schema['course_node']['fields'] as $key => $value) {
+      $tokens['course']["course-$key"] = $value['description'];
+    }
+  }
+
   return $tokens;
 }
 
 /**
  * Implementation of hook_token_values().
+ *
+ * @todo move to uc_course
  */
 function course_token_values($type, $object = NULL, $options = array()) {
   $values = array();
@@ -1240,6 +1247,15 @@ function course_token_values($type, $object = NULL, $options = array()) {
     }
     $values['certificate-number'] = time() . '-' . $object['node']->nid;
     $values['certificate-date_completed'] = date(variable_get('course_report_certificate_time_format', 'F jS, Y'), $report->date_completed);
+  }
+
+  if ($type == 'node') {
+    $sql = 'select * from {course_node} where nid = %d';
+    if ($course = db_fetch_object(db_query($sql, $object->nid))) {
+      foreach ($course as $key => $value) {
+        $values["course-$key"] = $value;
+      }
+    }
   }
 
   return $values;
@@ -1522,9 +1538,21 @@ function course_enrol_access($node, $user){
   static $courses = array();
 
   if (!isset($courses[$node->nid])) {
+    $courses[$node->nid]['success'] = TRUE;
     $hooks = module_invoke_all('course_can_enrol', $node, $user);
-    $courses[$node->nid] = !in_array(FALSE, $hooks) && in_array(TRUE, $hooks);
+    foreach ($hooks as $key => $hook) {
+      if (!$hook) {
+        // Ok. Old style blocker. But look for messages.
+        $courses[$node->nid] = FALSE;
+      }
+      if (is_array($hook) && !$hook['success']) {
+        // New style blocker, return immediately.
+        $courses[$node->nid] = $hook;
+        return $hook;
+      }
+    }
   }
+
   return $courses[$node->nid];
 }
 
@@ -1534,11 +1562,25 @@ function course_enrol_access($node, $user){
  */
 function course_course_can_enrol($node, $user){
   if ($node->field_course_date) {
-    if ($node->course['type'] == 'enduring' && time() > strtotime($node->field_course_date[0]['value2'])) {
-      return FALSE;
+    if ($node->course['type'] == 'enduring') {
+      if (time() > strtotime($node->field_course_date[0]['value2'])) {
+        return array(array(
+          'success' => FALSE,
+          'message' => t('This course closed on %date and is no longer available for enrollments.', array(
+            '%date' => format_date(strtotime($node->field_course_date[0]['value2']), 'custom', 'F, jS Y'),
+            )),
+        ));
+      }
+      else if (time() < strtotime($node->field_course_date[0]['value'])) {
+        return array(array(
+        'success' => FALSE,
+        'message' => t('This course opens on %date.', array(
+          '%date' => format_date(strtotime($node->field_course_date[0]['value']), 'custom', 'F, jS Y'),
+          )),
+        ));
+      }
     }
   }
-  return TRUE;
 }
 
 /**

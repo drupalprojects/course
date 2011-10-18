@@ -428,15 +428,6 @@ function course_credit_nodeapi(&$node, $op, $a3, $a4) {
     }
   }
 
-  if ($node->type == 'course_credit_application' && $op == 'view') {
-    $form_txt = drupal_get_form('course_credit_app_form', $node);
-    $node->content['body']['#value'] = $form_txt;
-    //if user can edit or administer course, show a return link
-    if ((user_access('administer course') || user_access('edit courses')) && (arg(0) == 'node' && !arg(2))){
-      $node->content['body']['#value'] .='<div id="return-link" class="return-link">'. l('Return to Course', 'node/'. $node->field_course_nid[0]['value']) .'</div>';
-    }
-  }
-
   if ($node->type == 'course_credit_application') {
     if ($op == 'presave' && empty($node->field_course_nid[0]['value'])) {
       // Associate node with this app for credit.
@@ -910,15 +901,21 @@ function course_credit_can_apply_access($course_node) {
 
 /*
  * Implementation of hook_certificate_final_step_alter().
+ *
+ * If user is eligible for credit and hasn't claimed, alter the final link.
  */
 function course_credit_certificate_final_step_alter(&$step_array, $node, $account) {
   global $base_url;
 
-  $sql = "SELECT 1 FROM {course_credit_awarded} WHERE nid = %d AND uid = %d";
-  $awarded = db_result(db_query($sql, $node->nid, $account->uid));
-  if (!$awarded && $step_array['link']!='#') {
-    $step_array['link'] = url("node/{$node->nid}/course-credit-app");
-    $step_array['target'] = "_top";
+   if (count(course_credit_user_credit_types($node, $account))) {
+     // Found eligible credit type.
+    $sql = "SELECT 1 FROM {course_credit_awarded} WHERE nid = %d AND uid = %d";
+    $awarded = db_result(db_query($sql, $node->nid, $account->uid));
+    if (!$awarded && $step_array['link']!='#') {
+      // User hasn't claimed credit.
+      $step_array['link'] = url("node/{$node->nid}/course-credit-app");
+      $step_array['target'] = "_top";
+    }
   }
 }
 
@@ -1309,6 +1306,23 @@ function course_credit_token_list($type = 'all') {
     }
   }
 
+  if ($type == 'node') {
+    $fields = array(
+      'min',
+      'max',
+      'title',
+      'code',
+    );
+    $sql = "select * from {course_credit_type}";
+    $result = db_query($sql);
+    while ($row = db_fetch_object($result)) {
+      // We have to generate the tokens for every credit type.
+      foreach($fields as $field) {
+        $tokens['course credit']["course-node-credit-{$row->type}-$field"] = "Node $row->type $field";
+      }
+    }
+  }
+
   return $tokens;
 }
 
@@ -1330,6 +1344,21 @@ function course_credit_token_values($type, $object = NULL) {
           $value = number_format($value, 2);
         }
         $values["course-credit-$key"] = $values["course-credit-{$row->type}-$key"] = $value;
+      }
+    }
+  }
+
+  if ($type == 'node') {
+    $sql = "select cct.title, cct.type, cc.* from {course_credit} cc
+      left join {course_credit_type} cct on (cct.ctid = cc.ctid)
+      where cc.nid = %d";
+    $result = db_query($sql, $object->nid);
+    while ($row = db_fetch_object($result)) {
+      foreach ($row as $key => $value) {
+        if (in_array($key, array('min','max', 'credits'))) {
+          $value = number_format($value, 2);
+        }
+        $values["course-node-credit-{$row->type}-$key"] = $value;
       }
     }
   }

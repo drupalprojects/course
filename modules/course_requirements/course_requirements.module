@@ -30,6 +30,13 @@ function course_requirements_settings_form() {
     '#default_value' => variable_get('course_requirements_cck_field', 'field_course_requirements'),
   );
 
+  $form['course_requirements_allow_enrollments'] = array(
+    '#title' => 'Allow enrollments',
+    '#default_value' => variable_get('course_requirements_allow_enrollments', 0),
+    '#description' => 'Allow enrollments into a blocked course. User is still prevented from taking the course.',
+    '#type' => 'checkbox',
+  );
+
   return system_settings_form($form);
 }
 
@@ -60,8 +67,47 @@ function course_requirements_can_take_course($node, $user) {
   if ($block) {
     return array(array(
       'success' => FALSE,
-      'header' => 'Sorry, you must complete the following courses in order to take this course.',
+      'header' => 'You must complete the following courses before taking this course.',
       'message' => theme_table(array('Course','Your Status'), $rows),
     ));
   }
+}
+
+/**
+ * Implementation of hook_course_can_enrol().
+ */
+function course_requirements_course_can_enrol($node, $user) {
+  if (!variable_get('course_requirements_allow_enrollments', 0)) {
+    $result = course_requirements_can_take_course($node, $user);
+    if ($result[0]) {
+      $result[0]['header'] = 'You must complete the following courses before enrolling in this course.';
+      return $result;
+    }
+    else if ($node->cr_parent) {
+      $parent = node_load($node->cr_parent);
+      return course_requirements_course_can_enrol($parent, $user);
+    }
+  }
+}
+
+/**
+ * Implementation of hook_course_outline_completion_links_alter().
+ */
+function course_requirements_course_outline_completion_links_alter(&$links, $node, $user) {
+  $field_name = variable_get('course_requirements_cck_field', 'field_course_requirements');
+  $field = content_fields($field_name);
+  $db_info = content_database_info($field);
+  $sql = "select * from {{$db_info['table']}} t
+  left join {node} n using (nid)
+  where {$field_name}_nid = %d";
+  $result = db_query($sql, $node->nid);
+  while ($row = db_fetch_object($result)) {
+    $courses[] = l($row->title, "node/$row->nid");
+  }
+
+  $links['course_requirements'] = array(
+    ' ',
+    ' ',
+    t('This course is a dependency of !courses', array('!courses' => implode(',', $courses))),
+ );
 }
