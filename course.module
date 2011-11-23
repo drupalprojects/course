@@ -146,7 +146,7 @@ function course_block($op = 'list', $delta = 0) {
 function course_takecourse_title($node) {
   global $user;
   $report = course_report_load($node, $user);
-  return ($user->uid > 1 && $report['complete']) ? t('Review course') : t('Take course');
+  return ($user->uid > 1 && $report->complete) ? t('Review course') : t('Take course');
 }
 
 /**
