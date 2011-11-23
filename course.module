@@ -275,7 +275,7 @@ function course_take_course_access(&$node) {
   }
 
   if (!isset($courses[$node->nid])) {
-    $courses[$node->nid] = TRUE;
+    $courses[$node->nid]['success'] = TRUE;
     $hooks = module_invoke_all('can_take_course', $node, $user);
     foreach ($hooks as $key => $hook) {
       if (!$hook) {
@@ -426,7 +426,7 @@ function course_admin_settings() {
     '#title' => 'User must be enrolled to take course',
     '#description' => 'Restricts taking courses to users who have been enrolled in the course by external methods (e.g. Ubercart "Enroll User" conditional action). If this is not checked, users will be automatically enrolled when they click Take Course. This box should be checked if courses are products.',
     '#type' => 'checkbox',
-    '#default_value' => variable_get('course_access_restrict_enrol', 0),
+    '#default_value' => variable_get('course_access_restrict_enrol', 1),
   );
 
   $form['course_access_bypass_checkout'] = array(
@@ -436,9 +436,50 @@ function course_admin_settings() {
     '#default_value' => variable_get('course_access_bypass_checkout', 1),
   );
 
+  $form['course_object_custom_fields'] = array(
+    '#title' => 'Custom course object fields',
+    '#type' => 'textarea',
+    '#rows' => 5,
+    '#description' => 'Enter a key|value format to enable custom fields on course objects.',
+    '#default_value' => variable_get('course_object_custom_fields', ''),
+    '#element_validate' => array('course_check_keyval'),
+  );
+
   return system_settings_form($form);
 }
 
+/**
+ * Element validator to make sure all entries are in key|val format.
+ */
+function course_check_keyval($element, &$form_state) {
+  $val = trim($element['#value']);
+  if ($val) {
+    if (substr_count($val, "\n") + 1 != substr_count($val, '|')) {
+      form_error($element, 'Please ensure all custom object fields are in the format key|value.');
+    }
+  }
+}
+
+function course_object_custom_fields() {
+  $fields = array();
+
+  $list = explode("\n", variable_get('course_object_custom_fields', ''));
+  $list = array_map('trim', $list);
+  $list = array_filter($list, 'strlen');
+  foreach ($list as $opt) {
+    // Sanitize the user input with a permissive filter.
+    $opt = content_filter_xss($opt);
+    if (strpos($opt, '|') !== FALSE) {
+      list($key, $value) = explode('|', $opt);
+      $fields[$key] = (isset($value) && $value !== '') ? $value : $key;
+    }
+    else {
+      $fields[$key] = $opt;
+    }
+  }
+
+  return $fields;
+}
 
 /**
  * Helper function that returns an array of tokens for iframe urls.
@@ -600,7 +641,7 @@ function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
       'nid' => $node->nid,
       'uid' => $user->uid,
       'enrollmenttype' => $from,
-      'status' => 1,
+      'status' => $status,
       'code' => $code,
     );
 
@@ -662,20 +703,39 @@ function course_unenrol(&$node, &$user) {
 /**
  * Check if the user has enrolled in a course.
  *
- * @param object $node The course node.
- * @param object $user The user to check.
+ * @param mixed $node The course node.
+ * @param mixed $user The user to check.
  *
  * @return bool TRUE if the user is enrolled, FALSE otherwise.
  */
-function course_enrolment_check(&$node, &$user) {
-  $sql_check = "SELECT 1 FROM {course_enrolment} WHERE nid = %d AND uid = %d AND status = %d";
-  $query = db_query($sql_check, $node->nid, $user->uid, 1);
-  return db_result($query) > 0;
+function course_enrolment_check($nid, $uid) {
+  if (is_object($nid)) {
+    $nid = $nid->nid;
+  }
+  if (is_object($uid)) {
+    $uid = $uid->uid;
+  }
+
+  if ($nid > 0 && $uid > 0) {
+    $sql_check = "SELECT 1 FROM {course_enrolment} WHERE nid = %d AND uid = %d AND status = %d";
+    $query = db_query($sql_check, $nid, $uid, 1);
+    return db_result($query) > 0;
+  }
+  else {
+    return FALSE;
+  }
 }
 
-function course_enrolment_load(&$node, &$user) {
+function course_enrolment_load($nid, $uid) {
+  if (is_object($nid)) {
+    $nid = $nid->nid;
+  }
+  if (is_object($uid)) {
+    $uid = $uid->uid;
+  }
+
   $sql = "SELECT * FROM {course_enrolment} WHERE nid = %d AND uid = %d";
-  return db_fetch_object(db_query($sql, $node->nid, $user->uid));
+  return db_fetch_object(db_query($sql, $nid, $uid));
 }
 
 /**
@@ -1023,11 +1083,16 @@ function course_take_course($node) {
  * Create or update an enrolment.
  */
 function course_enrolment_save($enrolment) {
-  if (db_result(db_query('select 1 from {course_enrolment} where nid = %d and uid = %d', $enrolment->nid, $enrolment->uid))) {
-    drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
+  if ($enrolment->nid && $enrolment->uid) {
+    if (db_result(db_query('select 1 from {course_enrolment} where nid = %d and uid = %d', $enrolment->nid, $enrolment->uid))) {
+      drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
+    }
+    else {
+      drupal_write_record('course_enrolment', $enrolment);
+    }
   }
   else {
-    drupal_write_record('course_enrolment', $enrolment);
+    return FALSE;
   }
 
   return $enrolment;
@@ -1223,7 +1288,7 @@ function course_token_values($type, $object = NULL, $options = array()) {
       $node = node_load($product->nid);
       if (course_node_is_course($node)) {
         $line = $node->title . ' - ' . l('View course page', "node/{$node->nid}");
-        if (course_node_is_course($node)) {
+        if (course_node_is_course($node) && course_take_course_menu_access($node)) {
           $line .= ' or ' . l('Take course now', "node/{$node->nid}/takecourse");
         }
         $courses[] = $line;
@@ -1466,6 +1531,7 @@ function course_cck_kv_fields() {
  */
 function course_user_type_get_options() {
   $field_name = variable_get('course_user_types_field', '');
+  $options = array();
 
   if (!empty($field_name)) {
     $options = content_allowed_values(content_fields($field_name));
@@ -1491,10 +1557,20 @@ function course_user_type_get_options() {
 function course_course_credit_check_completion($course_node) {
   global $user;
 
+  // Check if course user types enabled, has user types, and there is actually valid credit for this course.
   if (variable_get('course_user_types_enabled', 0) && count(course_user_type_get_options())) {
-    $enrolment = course_enrolment_load($course_node, $user);
-    if (!$enrolment->user_type) {
-      drupal_goto("node/{$course_node->nid}/course-user-type", drupal_get_destination());
+    // Check for active credit types. No user checking at this point.
+    // @todo break out into function to get active credit types on a course.
+    foreach ($course_node->course['credit'] as $ctid => $type) {
+      if ($type->active) {
+        $active = TRUE;
+      }
+    }
+    if ($active) {
+      $enrolment = course_enrolment_load($course_node, $user);
+      if (!$enrolment->user_type) {
+        drupal_goto("node/{$course_node->nid}/course-user-type", drupal_get_destination());
+      }
     }
   }
 }
@@ -1561,21 +1637,24 @@ function course_enrol_access($node, $user){
  * blocks enrolment access to expired courses
  */
 function course_course_can_enrol($node, $user){
-  if ($node->field_course_date) {
+  $start = @unserialize(variable_get('course_start_date_' . $node->type, array()));
+  $end = @unserialize(variable_get('course_expiration_date_' . $node->type, array()));
+
+  if ($start && $end) {
     if ($node->course['type'] == 'enduring') {
-      if (time() > strtotime($node->field_course_date[0]['value2'])) {
+      if (time() > strtotime($node->{$end['field']}[0]['value2'] . ' UTC')) {
         return array(array(
           'success' => FALSE,
           'message' => t('This course closed on %date and is no longer available for enrollments.', array(
-            '%date' => format_date(strtotime($node->field_course_date[0]['value2']), 'custom', 'F, jS Y'),
+            '%date' => format_date(strtotime($node->{$end['field']}[0]['value2']), 'custom', 'F, jS Y'),
             )),
         ));
       }
-      else if (time() < strtotime($node->field_course_date[0]['value'])) {
+      else if (time() < strtotime($node->{$start['field']}[0]['value'] . ' UTC')) {
         return array(array(
         'success' => FALSE,
         'message' => t('This course opens on %date.', array(
-          '%date' => format_date(strtotime($node->field_course_date[0]['value']), 'custom', 'F, jS Y'),
+          '%date' => format_date(strtotime($node->{$start['field']}[0]['value']), 'custom', 'F, jS Y'),
           )),
         ));
       }
@@ -1652,6 +1731,8 @@ function course_user($op, &$edit, &$account, $category = NULL) {
     $sql = "delete from {course_report} where uid = %d";
     db_query($sql, $account->uid);
     $sql = "DELETE FROM {course_outline_fulfillment} WHERE uid = %d";
+    db_query($sql, $account->uid);
+    $sql = "delete from {course_enrolment} where uid = %d";
     db_query($sql, $account->uid);
   }
 }

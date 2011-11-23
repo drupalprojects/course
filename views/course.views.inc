@@ -1,41 +1,6 @@
 <?php
 
-module_load_include('inc','views','handlers/views_handler_relationship');
-
-/**
- * Relate the node and current user to an entry in the course report.
- * @todo move this to include
- */
-class course_report_node_vhr extends views_handler_relationship {
-  /**
-   * Called to implement a relationship in a query.
-   */
-  function query() {
-    global $user;
-    // Figure out what base table this relationship brings to the party.
-    $join = new views_join();
-    $join->definition = array(
-      'table' => 'course_report',
-      'field' => 'nid',
-      'left_table' => 'node',
-      'left_field' => 'nid',
-      'extra' => array(
-        array(
-          'field' => 'uid',
-          'numeric' => TRUE,
-          'value' => $user->uid,
-        ),
-      ),
-    );
-
-    $join->construct();
-    $this->ensure_my_table();
-
-    $alias = $join->definition['table'] .'_'. $join->definition['left_table'];
-    $this->alias = $this->query->add_relationship($alias, $join, $this->definition['base'], $this->relationship);
-  }
-}
-
+module_load_include('inc', 'course', 'views/views_join_course');
 
 /**
  * Implementation of hook_views_data().
@@ -93,34 +58,25 @@ function course_views_data() {
       'left_field' => 'uid',
       'field' => 'uid',
     ),
-    // Join the enrolment table to the course report/signup on nid AND uid.
-    'course_report' => array(
-      'left_table' => 'course_report',
-      'left_field' => 'uid',
-      'field' => 'uid',
-      'extra' => array(
-        array(
-          'left_table' => 'course_report',
-          'left_field' => 'nid',
-          'field' => 'nid',
-          'value' => 'course_report.nid',
-          'numeric' => TRUE,
-        ),
-      ),
+  );
+
+  $data['course_report']['course_enrollment'] = array(
+    'title' => 'Course enrollment',
+    'relationship' => array(
+      'base' => 'course_enrolment',
+      'handler' => 'course_views_handler_relationship_ce_cr',
+      'label' => t('Enrollment'),
+      'help' => 'Create a relationship from the course report to the course enrollment data.',
     ),
-    'signup_log' => array(
-      'left_table' => 'signup_log',
-      'left_field' => 'uid',
-      'field' => 'uid',
-      'extra' => array(
-        array(
-          'left_table' => 'signup_log',
-          'left_field' => 'nid',
-          'field' => 'nid',
-          'value' => 'signup_log.nid',
-          'numeric' => TRUE,
-        ),
-      ),
+  );
+
+  $data['signup_log']['course_enrollment'] = array(
+    'title' => 'Course enrollment',
+    'relationship' => array(
+      'base' => 'course_enrolment',
+      'handler' => 'course_views_handler_relationship_ce_sl',
+      'label' => t('Enrollment'),
+      'help' => 'Create a relationship from the signup log to the course enrollment data.',
     ),
   );
 
@@ -233,7 +189,12 @@ function course_views_data() {
   );
 
   // Add any necessary overrides below.
+  $data['course_node']['catalog']['filter']['handler'] = 'views_handler_filter_boolean_operator';
+  $data['course_node']['catalog']['filter']['type'] = 'yes-no';
+  $data['course_node']['catalog']['filter']['label'] = 'Catalog';
   $data['course_node']['transcript']['filter']['handler'] = 'views_handler_filter_boolean_operator';
+  $data['course_node']['transcript']['filter']['type'] = 'yes-no';
+  $data['course_node']['transcript']['filter']['label'] = 'Transcript';
   $data['course_node']['type']['filter']['handler'] = 'views_handler_filter_course_type';
 
 
@@ -465,12 +426,17 @@ function course_views_handlers() {
       'path' => drupal_get_path('module', 'course') . '/views',
     ),
     'handlers' => array(
-      // filters
       'views_handler_filter_course_type' => array(
         'parent' => 'views_handler_filter_in_operator',
       ),
       'views_handler_filter_course' => array(
         'parent' => 'views_handler_filter_boolean_operator',
+      ),
+      'course_views_handler_relationship_ce_cr' => array(
+        'parent' => 'views_handler_relationship',
+      ),
+      'course_views_handler_relationship_ce_sl' => array(
+        'parent' => 'views_handler_relationship',
       ),
     ),
   );

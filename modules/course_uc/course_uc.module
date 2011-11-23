@@ -44,10 +44,28 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
       $form['course_uc']['#value'] = $message;
     }
 
-    if ($node->field_course_date) {
-      if ($node->course['type'] == 'enduring' && time() > strtotime($node->field_course_date[0]['value2'])) {
-        $form['submit']['#access'] = FALSE;
-        $form['course_uc']['#value'] = 'Sorry, this course is expired.';
+    $result = course_enrol_access($node, $user);
+    if (!$result['success']) {
+      $form['submit']['#access'] = FALSE;
+      $form['course_uc']['#value'] = '<h2>' . $result['header'] . '</h2>' . $result['message'];
+    }
+  }
+}
+
+function course_uc_nodeapi($node, $op, $a3, $a4) {
+  if ($op == 'view') {
+    if (course_node_is_course($node) && !($node->sell_price > 0)) {
+      $hides = array(
+        'sell_price',
+        'display_price',
+        'model',
+        'list_price',
+        'cost',
+        'weight',
+        'dimensions',
+      );
+      foreach ($hides as $hide) {
+        unset($node->content[$hide]);
       }
     }
   }

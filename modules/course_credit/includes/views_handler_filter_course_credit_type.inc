@@ -4,7 +4,7 @@ class views_handler_filter_course_credit_type extends views_handler_filter_in_op
   function get_value_options() {
      if (!isset($this->value_options)) {
       $this->value_title = t('Credit type');
-      $types = course_credit_get_types();
+      $types = course_credit_get_credit_types();
       foreach ($types as $type => $info) {
         $options[$type] = t($info->title);
       }

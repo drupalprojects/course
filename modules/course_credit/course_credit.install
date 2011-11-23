@@ -75,6 +75,19 @@ function course_credit_schema() {
         'length' => 255,
         'not null' => FALSE,
       ),
+      'expiration_type' => array(
+        'description' => "example: 'date', 'credit_awarded', 'course_complete', or 'calendar_year'.",
+        'type' => 'varchar',
+        'length' => 255,
+      ),
+      'expiration_date' => array(
+        'description' => "Absolute date (in seconds) for date expiration type.",
+        'type' => 'int',
+      ),
+      'expiration_offset' => array(
+        'description' => "Optional offset (in seconds) for relative expiration types.",
+        'type' => 'int',
+      ),
     ),
     'primary key' => array('nid','ctid'),
   );
@@ -218,6 +231,10 @@ function course_credit_schema() {
         'description' => 'Date of award.',
         'type' => 'int',
       ),
+      'expiration' => array(
+        'description' => 'Expiration date.',
+        'type' => 'int',
+      ),
       'status' => array(
         'description' => 'Credit approved.',
         'type' => 'int',
@@ -249,4 +266,23 @@ function course_credit_install_default_credit_type() {
 
   module_load_include('module', 'course_credit', 'course_credit');
   course_credit_save_credit_type($credit_type);
+}
+
+/**
+ * Add new fields.
+ */
+function course_credit_update_6007() {
+  $ret = array();
+
+  $schema = course_credit_schema();
+
+  foreach ($schema as $table => $table_schema) {
+    foreach ($table_schema['fields'] as $field => $spec) {
+      if (!db_column_exists($table, $field)) {
+        db_add_field($ret, $table, $field, $spec);
+      }
+    }
+  }
+
+  return $ret;
 }

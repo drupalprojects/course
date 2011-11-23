@@ -15,7 +15,7 @@ $plugin = array(
 /**
  * Render the custom content type.
  */
-function course_uc_addtocart_content_type_render($subtype, $conf, $panel_args, $context) {
+function uc_course_addtocart_content_type_render($subtype, $conf, $panel_args, $context) {
   // Get a shortcut to the node.
   $node = $context->data;
 
@@ -45,12 +45,12 @@ function course_uc_addtocart_content_type_render($subtype, $conf, $panel_args, $
 /**
  * Blank edit form for selecting context
  */
-function course_uc_addtocart_content_type_edit_form(&$form, &$form_state) {
+function uc_course_addtocart_content_type_edit_form(&$form, &$form_state) {
 }
 
 /**
  * Returns the administrative title for a type.
  */
-function course_uc_addtocart_content_type_admin_title($subtype, $conf, $context) {
+function uc_course_addtocart_content_type_admin_title($subtype, $conf, $context) {
   return t('"@s" add to cart form', array('@s' => $context->identifier));
 }

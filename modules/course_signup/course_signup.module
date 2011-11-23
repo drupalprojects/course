@@ -89,7 +89,8 @@ function course_signup_tab_title($node) {
  */
 function course_signup_access_quick_register($node) {
   global $user;
-  if ($user->uid > 0 && $node->signup_status && variable_get('course_signup_bypass_checkout', 1) && !($node->sell_price > 0) && $node->course['lms'] != 'relationships' && course_enrol_access($node, $user)) {
+  $result = course_enrol_access($node, $user);
+  if ($user->uid > 0 && $node->signup_status && variable_get('course_signup_bypass_checkout', 1) && !($node->sell_price > 0) && $node->course['lms'] != 'relationships' && $result['success']) {
     //@todo check for attributes
     return TRUE;
   }
@@ -103,21 +104,25 @@ function course_signup_access_quick_register($node) {
  * @param $node Course node object.
  * @param $user User to register.
  */
-function course_signup_quick_register($node, $account = NULL) {
+function course_signup_quick_register($node, $account = NULL, $notify = TRUE) {
   if (!$account) {
     global $user;
     $account = $user;
   }
 
-  // Save a new signup (which enrols the user too).
-  $signup = new stdClass();
-  $signup->uid = $account->uid;
-  $signup->nid = $node->nid;
-  $signup->count_towards_limit = 1;
-  $signup->signup_time = time();
-  $signup->form_data = array();
-  $signup->attended = 0;
-  signup_save_signup($signup);
+  if (!$signup = db_fetch_object(db_query('select * from {signup_log} where nid = %d and uid = %d', $node->nid, $account->uid))) {
+    // Save a new signup.
+    signup_sign_up_user(array(
+      'nid' => $node->nid,
+      'uid' => $account->uid,
+    ), $notify);
+  }
+  else {
+    // Maybe we are "approving" an enrollment.
+    $signup->count_towards_limit = 1;
+
+    signup_save_signup($signup);
+  }
 }
 
 /**
@@ -139,9 +144,9 @@ function course_signup_signup_update($signup) {
 }
 
 /**
- * Implementation of hook_signup_update().
+ * Implementation of hook_signup_delete().
  *
- * Enrol a user in criteria passes when the sign up gets updated (status etc).
+ * Un-enrol the user.
  */
 function course_signup_signup_delete($signup) {
   $node = node_load($signup->nid);
@@ -160,7 +165,7 @@ function course_signup_signup_enroll($signup) {
     $node = node_load($signup->nid);
     if (course_node_is_course($node)) {
       $user = user_load($signup->uid);
-      course_enrol($node, $user);
+      course_enrol($node, $user, 'course_signup');
     }
   }
 }
@@ -170,22 +175,15 @@ function course_signup_signup_enroll($signup) {
  */
 function course_signup_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'signup_form') {
+    global $user;
     $node = node_load($form['nid']['#value']);
-    if ($node->field_course_date) {
-      if ($node->course['type'] == 'enduring' && time() > strtotime($node->field_course_date[0]['value2'])) {
+    $result = course_enrol_access($node, $user);
+    if (!$result['success']) {
       $form = array();
-      $form['closed']['#value'] = t('This course closed on %date and is no longer available for enrollments.', array(
-        '%date' => format_date(strtotime($node->field_course_date[0]['value2']), 'custom', 'F, jS Y'),
-        ));
-
-        if ($node->signup_status) {
-          // Because we are using a different datefield for closing the signup,
-          // we close the signup now. Probably need to do this on cron too.
-          // The message is ugly so until that gets themed I'm not going to
-          // manually disable the signup.
-          //signup_close_signup($node->nid);
-        }
+      if ($result['header']) {
+        $form['closed-header']['#value'] = '<h2>' . $result['header'] . '</h2>';
       }
+      $form['closed-message']['#value'] = $result['message'];
     }
   }
 
@@ -333,12 +331,13 @@ function course_signup_views_query_alter(&$view, &$query) {
   }
 }
 
+/**
+ * Implementation of hook_signup_suppress().
+ *
+ * Hide signup form complete if sell price > 0 or user has access to quick
+ * register through the take course button.
+ */
 function course_signup_signup_suppress($node) {
-  global $user;
-  //if the user cannot enrol, suppress signup:
-  if(!course_enrol_access($node, $user)){
-    return FALSE;
-  }
   return $node->sell_price > 0 || course_signup_access_quick_register($node);
 }
 
@@ -354,6 +353,31 @@ function course_signup_add_to_cart($nid, $qty, $data) {
     // Node is a course and a signup.
     $_SESSION['uc_signup']['nids'][$nid][0] = $user->mail;
   }
+}
+
+/**
+ * Implementation of hook_course_enrol().
+ *
+ * If a user is enrolled outside of signup, sign them up as well.
+ */
+function course_signup_course_enrol($node, $user, $from, $code, $status) {
+  if ($from != 'course_signup' && $status) {
+    course_signup_quick_register($node, $user);
+  }
+}
+
+/**
+ * Implementation of hook_course_can_enrol().
+ */
+function course_signup_course_can_enrol($node, $user) {
+  // We depend on Signup Restrict by Role for enrollment access per role.
+  if (module_exists('signup_restrict_by_role')) {
+    $check = signup_restrict_by_role_access_signup($node, $user);
+    $check['message'] = str_replace('signup', 'course enrollment', $check['message']);
+    $hooks[] = $check;
+  }
+
+  return $hooks;
 }
 
 /**

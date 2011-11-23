@@ -454,3 +454,17 @@ function course_schema() {
 
   return $schema;
 }
+
+/**
+ * Delete enrollments for users who don't exist anymore.
+ */
+function course_update_6121() {
+  $ret = array();
+  $sql = "DELETE ce.* FROM {course_enrolment} ce LEFT JOIN {users} u ON (ce.uid = u.uid) WHERE u.uid IS NULL";
+  $ret[] = update_sql($sql);
+  $ret[] = array(
+    'success' => TRUE,
+    'query' => db_affected_rows() . ' old enrollments deleted',
+  );
+  return $ret;
+}
