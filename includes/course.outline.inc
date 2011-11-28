@@ -137,7 +137,7 @@ function _course_outline_requirement_form($requirement = array()) {
     '#default_value' => $requirement['graded'],
   );
   $rform['passing_grade'] = array(
-    '#type' => 'textfield',
+    '#type' => $requirement['graded']? 'textfield' : 'hidden',
     '#size' => 3,
     '#default_value' => $requirement['passing_grade'],
   );
@@ -212,7 +212,7 @@ function theme_course_outline_overview_form($form) {
   drupal_add_tabledrag('course-objects', 'order', 'sibling', 'course-object-weight');
   $node = $form['#node'];
 
-  $headers = array('Title', 'Type', 'Options', 'Operations', 'Weight');
+  $headers = array('Title', 'Type', 'Options', 'Passing Grade', 'Operations', 'Weight');
 
   $rows = array();
 
@@ -222,6 +222,7 @@ function theme_course_outline_overview_form($form) {
     $rows[$key]['data'][] = drupal_render($form[$key]['title']);
     $rows[$key]['data'][] = drupal_render($form[$key]['requirement_component']) . drupal_render($form[$key]['requirement_component_show']);
     $rows[$key]['data'][] = drupal_render($form[$key]['enabled']) . drupal_render($form[$key]['required']);
+    $rows[$key]['data'][] = $form[$key]['graded']['#value']? drupal_render($form[$key]['passing_grade']): 'n/a';
     $rows[$key]['data'][] = drupal_render($form[$key]['operations']);
 
     // Add draggable settings to row.
@@ -305,14 +306,20 @@ function course_get_outline($node) {
     else {
       // User cannot access this step yet.
       $step['link_style'] = 'not-started';
-      $step['link_to_step'] = '#';
+      $step['link_to_step'] = '';
     }
 
     // arrowitem = "<span class='arrow-step'></span>";
     $class_more = '';
     drupal_alter('course_outline_step', $step, $node, $user);
+    if (!$step['link_to_step']) {
+      $data = $courseObject->getTitle();
+    }
+    else {
+      $data = l("{$courseObject->getTitle()}<br/>", $step['link_to_step'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status_text'] . '</span>';
+    }
     $workflow[] = array(
-      'data' => l("<span></span>{$courseObject->getTitle()}<br/>", $step['link_to_step'], array('external' => TRUE, 'html' => TRUE)) . "<span>{$step['status_text']}</span>",
+      'data' => $data,
       'id' => $step['id_text'],
       'class' => "{$step['link_style']} $class_more $arrowclass",
     );
@@ -399,8 +406,8 @@ function course_outline_show_complete_links($course_node) {
 function course_outline_check_remaining_requirements($course_node, $account) {
   $requirements_outstanding = array();
 
-  $sql = "select * from drupal_course_outline cr
-  left join drupal_course_outline_fulfillment crf on (cr.snid = crf.snid and uid = %d)
+  $sql = "select * from {course_outline} cr
+  left join {course_outline_fulfillment} crf on (cr.snid = crf.snid and uid = %d)
   where nid = %d and enabled
   order by weight asc";
 

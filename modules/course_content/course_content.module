@@ -42,9 +42,11 @@ function course_content_course_object_api($node, $op, $object) {
 function course_content_nodeapi(&$node, $op, $a3, $a4) {
   if ($op == 'view' && $a4 && variable_get("course_content_use_{$node->type}", 0)) {
     global $user;
-
-    $courseObject = new CourseObjectNode($node->nid, $user);
-    $courseObject->getFulfillment()->setComplete()->save();
+    // Check if this node is part of a course context.
+    if (course_determine_context($node)) {
+      $courseObject = new CourseObjectNode($node->nid, $user);
+      $courseObject->getFulfillment()->setComplete()->save();
+    }
   }
 }
 

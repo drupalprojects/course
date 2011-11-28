@@ -49,7 +49,7 @@ function course_schema() {
   $schema = array();
 
   $schema['course_report'] = array(
-    'description' => t("Stores users' course reports."),
+    'description' => "Stores users' course reports.",
     'fields' => array(
       'id' => array(
         'type' => 'serial',
@@ -293,7 +293,7 @@ function course_schema() {
   );
 
   $schema['course_outline'] = array(
-    'description' => t('Stores users\' course reports'),
+    'description' => "Stores users' course reports",
     'fields' => array(
       'snid' => array(
         'type' => 'serial',
@@ -313,21 +313,21 @@ function course_schema() {
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
-        'description' => t("The requirement_type (moodle, drupal etc)")
+        'description' => "The implementing module name (course_quiz etc)",
       ),
       'title' => array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
-        'description' => t("The item title")
+        'description' => "The item title",
       ),
       'requirement_component' => array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
-        'description' => t("The component of the requirement type")
+        'description' => "The course object key as defined by hook_course_object_info()",
       ),
       'enabled' => array(
         'type' => 'int',
@@ -341,7 +341,7 @@ function course_schema() {
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
-        'description' => t("The item info")
+        'description' => "The item info",
       ),
       'instance' => array(
         'type' => 'int',
@@ -398,7 +398,7 @@ function course_schema() {
   );
 
   $schema['course_outline_fulfillment'] = array(
-    'description' => t('Stores users\' course reports'),
+    'description' => "Stores users' course reports",
     'fields' => array(
       'sfid' => array(
         'type' => 'serial',
@@ -446,7 +446,7 @@ function course_schema() {
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
-        'description' => t("Description of fulfillment event")
+        'description' => "Description of fulfillment event",
       ),
     ),
     'primary key' => array('sfid'),

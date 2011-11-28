@@ -4,7 +4,7 @@
  * @file
  * This file contains documentation about hooks invoked by course module.
  *
- * @todo untill we finish cleaning up all files and submodules, grep through
+ * @todo until we finish cleaning up all files and submodules, grep through
  * everything for 'drupal_alter', 'module_invoke_all', 'module_invoke', and
  * 'module_implements'.
  */
@@ -62,10 +62,9 @@ function hook_lms_settings_form($lapp_id) {
 }
 
 /**
- * @todo explain this hook.
+ * Returns the installation status of an LMS.
  */
 function hook_lms_status($lapp_id) {
-  // @todo add an even more generic example.
   if ($lapp_id == 'drupal') {
     $modules = _course_required_modules();
     foreach ($modules as $module) {
@@ -193,8 +192,8 @@ function hook_course_object_api($node, $op, $object) {
 /**
  * @todo explain this hook.
  */
-function course_create_external($node) {
-  // @todo document this.
+function hook_course_create_external($node) {
+  // @todo look at course_moodle.module for implementation example.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -262,8 +261,30 @@ function hook_course_unenrol($node, $user) {
 /**
  * Hook allowing other modules to force the take course button to show.
  */
-function hook_course_show_button_alter($success, $node) {
+function hook_course_show_button_alter(&$success, $node) {
   // @todo document this.
+}
+
+/**
+ * Hook allowing other modules to alter course report.
+ *
+ * @param $entry object
+ *   The report entry containing:
+ *   - nid: the node id.
+ *   - uid: the user id.
+ *   - data: an array containing.
+ *     - user: the serialized user object at the time of entry.
+ *     - profile: the serialized user profile at the time of entry.
+ *   - updated: the entry time.
+ * @param $account object
+ *   The fully loaded report user.
+ * @param $old
+ *   The currently saved version of the user's report for a course.
+ *
+ * @see course_report_save()
+ */
+function hook_course_report_alter(&$entry, $account, $old) {
+  // @todo add example.
 }
 
 /**
