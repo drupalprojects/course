@@ -214,10 +214,10 @@ function course_schema() {
         'description' => 'Keyed LMS type.',
       ),
       'cid' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => FALSE,
-        'description' => 'The external course ID, if any.',
+        'type' => 'varchar',
+        'length' => 128,
+        'default' => NULL,
+        'description' => 'An optional external LMS course ID.',
       ),
       'attendance' => array(
         'type' => 'int',

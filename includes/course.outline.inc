@@ -316,7 +316,7 @@ function course_get_outline($node) {
       $data = $courseObject->getTitle();
     }
     else {
-      $data = l("{$courseObject->getTitle()}<br/>", $step['link_to_step'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status_text'] . '</span>';
+      $data = l("{$courseObject->getTitle()}<br/>", $step['link_to_step'], array('external' => TRUE, 'html' => TRUE)) . '<span class="course-outline-status">' . $step['status_text'] . '</span>';
     }
     $workflow[] = array(
       'data' => $data,

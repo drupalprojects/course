@@ -21,6 +21,20 @@
 /**
  * Hook allowing modules to provide lms types to course module.
  *
+ * @return array
+ *   An array of LMS declarations, keyed by LMS type, containing:
+ *   - name: The LMS label.
+ *   - description: The LMS description.
+ *   - module: the implementing module. @todo remove this!
+ *   - install url: optional LMS installation URL.
+ *   - weight: the order of LMS selection appearance. @todo maybe remove this?
+ *
+ * @see course_available_lms()
+ *
+ * @todo consider globally replacing 'lms' (learning management system) with
+ * 'lapp' (learning application), since normally course module is used to build
+ * a Drupal-based learning management system.
+ *
  * Required course submodule hook.
  */
 function hook_lms_info() {
@@ -28,15 +42,15 @@ function hook_lms_info() {
   if (!variable_get('course_disable_builtin_lms', 0)) {
     return array(
       'drupal' => array(
-        'name' => t('Drupal'),
-        'description' => t('Provides courses based on Drupal Quiz learning objects.'),
+        'name' => 'Drupal',
+        'description' => 'Provides courses based on Drupal Quiz learning objects.',
         'module' => 'course',
         'install url' => '',
         'weight' => 5,
       ),
       'none' => array(
-        'name' => t('Placeholder'),
-        'description' => t('A course with no course objects.'),
+        'name' => 'Placeholder',
+        'description' => 'A course with no course objects.',
         'module' => 'course',
         'weight' => 10,
       ),
@@ -46,6 +60,8 @@ function hook_lms_info() {
 
 /**
  * Hook allowing course modules to extend the course settings form.
+ *
+ * @todo UX review of course settings.
  */
 function hook_lms_settings_form($lapp_id) {
   $form = array();
@@ -62,7 +78,13 @@ function hook_lms_settings_form($lapp_id) {
 }
 
 /**
- * Returns the installation status of an LMS.
+ * Defines the installation status of an LMS.
+ *
+ * @param $lapp_id
+ *   The learning application ID.
+ *
+ * @return bool
+ *   The LMS installation status.
  */
 function hook_lms_status($lapp_id) {
   if ($lapp_id == 'drupal') {
@@ -112,10 +134,25 @@ function hook_lms_postinstall() {
 }
 
 /**
- * @todo explain this hook.
+ * Modules declaring LMS types must return takecourse HTML through this hook.
+ *
+ * @param $key string
+ *   The LMS key as defined in hook_lms_info().
+ * @param $node object
+ *   The course node.
+ *
+ * @see course_take_course()
+ *   Useses this hook to determine if any LMS has been installed.
+ * @see hook_lms_info()
+ *   Defines the need for this hook.
+ * @see course_lms_take_course()
+ *   Implements this hook.
+ *
+ * @return string
+ *   HTML output for the takecourse page.
  */
 function hook_lms_take_course($key, $node) {
-  // @todo add an even more generic example.
+  // Example from course_lms_take_course().
   if ($key == 'drupal') {
     return course_get_outline($node);
   }
@@ -147,7 +184,7 @@ function hook_lms_edit_course($key, $node) {
  *     - 'description': A brief description of the course object.
  */
 function hook_course_object_info() {
-  // @todo add an even more generic example.
+  // Example from course_quiz module.
   return array(
     'quiz' => array(
       'title' => 'Drupal Quiz',
@@ -190,10 +227,20 @@ function hook_course_object_api($node, $op, $object) {
 }
 
 /**
- * @todo explain this hook.
+ * Allow external LMSs to add a unique identifier to the drupal course object on
+ * save and update.
+ *
+ * @param $node object
+ *   The course node.
+ *
+ * @return int
+ *   An enternal LMS course identifier.
+ *
+ * @see course_nodeapi()
  */
 function hook_course_create_external($node) {
-  // @todo look at course_moodle.module for implementation example.
+  // Example from course_moodle module, returning a numeric moodle course id.
+  return course_moodle_api_course_post($node);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
