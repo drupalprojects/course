@@ -36,6 +36,7 @@ class views_handler_field_course_credit_node_active_types extends views_handler_
       $sql = "SELECT cc.nid, cc.ctid, cct.title FROM {course_credit} cc
         LEFT JOIN {course_credit_type} cct USING (ctid)
         WHERE cc.active AND nid IN ($placeholders)";
+      // TODO Please convert this statement to the D7 database API syntax.
       $result = db_query($sql, $nids);
       while ($row = db_fetch_array($result)) {
         $this->items[$row['nid']][$row['ctid']] = $row;

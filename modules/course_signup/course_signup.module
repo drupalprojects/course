@@ -3,7 +3,7 @@
 /**
  * Signup course admin form.
  */
-function course_signup_admin() {
+function course_signup_admin($form, &$form_state) {
   $form = array();
 
   $form['signup_intro']['#value'] = "Course uses Signup's built-in functionality to allow learners to register for courses and for administrators to manage attendance.";
@@ -20,6 +20,7 @@ function course_signup_admin() {
     foreach (array_keys($view->display) as $display_id) {
       if ($display_id != 'default' || 1) {
         $key = $view->name . ':' . $display_id;
+        // TODO Please change this theme call to use an associative array for the $variables parameter.
         $view_options[$key] = theme('signup_settings_view_label', $view, $display_id);
       }
     }
@@ -36,12 +37,12 @@ function course_signup_admin() {
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function course_signup_menu() {
   $items = array();
 
-  $items['admin/settings/course/signup'] = array(
+  $items['admin/config/course/signup'] = array(
     'access arguments' => array('administer courses'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_signup_admin'),
@@ -61,7 +62,7 @@ function course_signup_menu() {
 }
 
 /**
- * Implementation of hook_menu_alter().
+ * Implements hook_menu_alter().
  *
  * Change the title of the Signups tab.
  */
@@ -126,7 +127,7 @@ function course_signup_quick_register($node, $account = NULL, $notify = TRUE) {
 }
 
 /**
- * Implementation of hook_signup_insert().
+ * Implements hook_signup_insert().
  *
  * Enrol a user in the course if they sign up for a course.
  */
@@ -135,7 +136,7 @@ function course_signup_signup_insert($signup) {
 }
 
 /**
- * Implementation of hook_signup_update().
+ * Implements hook_signup_update().
  *
  * Enrol a user in criteria passes when the sign up gets updated (status etc).
  */
@@ -144,7 +145,7 @@ function course_signup_signup_update($signup) {
 }
 
 /**
- * Implementation of hook_signup_delete().
+ * Implements hook_signup_delete().
  *
  * Un-enrol the user.
  */
@@ -164,6 +165,9 @@ function course_signup_signup_enroll($signup) {
   if ($signup->uid && $signup->nid && $signup->count_towards_limit && empty($signup->anon_mail)) {
     $node = node_load($signup->nid);
     if (course_node_is_course($node)) {
+      // TODO Convert "user_load" to "user_load_multiple" if "$signup->uid" is other than a uid.
+      // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+      // Example: array_shift(user_load_multiple(array(), $signup->uid))
       $user = user_load($signup->uid);
       course_enrol($node, $user, 'course_signup');
     }
@@ -171,7 +175,7 @@ function course_signup_signup_enroll($signup) {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
 function course_signup_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'signup_form') {
@@ -223,17 +227,20 @@ function course_signup_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
- * Implementation of hook_signup_cancel().
+ * Implements hook_signup_cancel().
  *
  * Un-enrol user from course on signup cancellation.
  */
 function course_signup_signup_cancel($signup, $node) {
+  // TODO Convert "user_load" to "user_load_multiple" if "$signup->uid" is other than a uid.
+  // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+  // Example: array_shift(user_load_multiple(array(), $signup->uid))
   $user = user_load($signup->uid);
   course_unenrol($node, $user);
 }
 
 /**
- * Implementation of hook_init().
+ * Implements hook_init().
  *
  * Override signup admin VBO to use course VBO. Enrol user in course before the
  * access checks happen if the user can quick register.
@@ -261,7 +268,7 @@ function course_signup_init() {
 }
 
 /**
- * Implementation of hook_course_show_button_alter().
+ * Implements hook_course_show_button_alter().
  *
  * If user can quick register (free course) then always show the take course
  * button.
@@ -273,7 +280,7 @@ function course_signup_course_show_button_alter(&$show, $node) {
 }
 
 /**
- * Implementation of hook_form_FORMID_alter().
+ * Implements hook_form_FORMID_alter().
  *
  * Pre-fill user email to signup email. We'll probably kill this step in the
  * future anyway.
@@ -293,7 +300,7 @@ function course_signup_form_uc_signup_attendees_form_alter(&$form, &$form_state)
 }
 
 /**
- * Implementation of hook_action_info().
+ * Implements hook_action_info().
  *
  * Define the VBO action for signing a user up for a Course.
  */
@@ -302,7 +309,7 @@ function course_signup_action_info() {
 
   $actions['course_signup_add_enrollment_action'] = array(
     'type' => 'user',
-    'description' => t('Enroll/signup user in current course'),
+    'label' => t('Enroll/signup user in current course'),
   );
 
   return $actions;
@@ -313,12 +320,15 @@ function course_signup_action_info() {
  */
 function course_signup_add_enrollment_action($object, $context) {
   $node = node_load(arg(1));
+  // TODO Convert "user_load" to "user_load_multiple" if "$object->uid" is other than a uid.
+  // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+  // Example: array_shift(user_load_multiple(array(), $object->uid))
   $user = user_load($object->uid);
   course_signup_quick_register($node, $user);
 }
 
 /**
- * Implementation of hook_views_query_alter().
+ * Implements hook_views_query_alter().
  *
  * Toggle attendance field based on course type.
  */
@@ -332,7 +342,7 @@ function course_signup_views_query_alter(&$view, &$query) {
 }
 
 /**
- * Implementation of hook_signup_suppress().
+ * Implements hook_signup_suppress().
  *
  * Hide signup form complete if sell price > 0 or user has access to quick
  * register through the take course button.
@@ -342,7 +352,7 @@ function course_signup_signup_suppress($node) {
 }
 
 /**
- * Implementation of hook_add_to_cart().
+ * Implements hook_add_to_cart().
  *
  * Skip the uc_signup screens for course signups.
  */
@@ -356,7 +366,7 @@ function course_signup_add_to_cart($nid, $qty, $data) {
 }
 
 /**
- * Implementation of hook_course_enrol().
+ * Implements hook_course_enrol().
  *
  * If a user is enrolled outside of signup, sign them up as well.
  */
@@ -367,7 +377,7 @@ function course_signup_course_enrol($node, $user, $from, $code, $status) {
 }
 
 /**
- * Implementation of hook_course_can_enrol().
+ * Implements hook_course_can_enrol().
  */
 function course_signup_course_can_enrol($node, $user) {
   // We depend on Signup Restrict by Role for enrollment access per role.
@@ -381,7 +391,7 @@ function course_signup_course_can_enrol($node, $user) {
 }
 
 /**
- * Implementation of hook_views_api().
+ * Implements hook_views_api().
  */
 function course_signup_views_api() {
   return array(

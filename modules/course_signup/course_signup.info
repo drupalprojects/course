@@ -1,4 +1,4 @@
-core = "6.x"
+core = 7.x
 dependencies[] = "course"
 dependencies[] = "signup"
 dependencies[] = "views_bulk_operations"
@@ -7,3 +7,7 @@ features[views][] = "course_signup_user_search_add"
 features[views][] = "course_signup_user_vbo_admin"
 features[views_api][] = "api:2"
 name = "Course Signup"
+
+files[] = course_signup.install
+files[] = course_signup.module
+files[] = course_signup.views_default.inc

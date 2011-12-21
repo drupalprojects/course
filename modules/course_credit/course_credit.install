@@ -1,24 +1,32 @@
 <?php
+/**
+ * @file
+ * Install, update and uninstall functions for the course_credit module.
+ *
+ */
+
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  *
  * Install a default content type, set some defaults.
  */
 function course_credit_install() {
-  drupal_install_schema('course_credit');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_install_schema('course_credit')
   course_credit_install_default_credit_type();
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function course_credit_uninstall() {
-  drupal_uninstall_schema('course_credit');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_uninstall_schema('course_credit')
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function course_credit_schema() {
   $schema = array();
@@ -275,11 +283,14 @@ function course_credit_update_6007() {
 
   foreach ($schema as $table => $table_schema) {
     foreach ($table_schema['fields'] as $field => $spec) {
-      if (!db_column_exists($table, $field)) {
-        db_add_field($ret, $table, $field, $spec);
+      if (!db_field_exists($table, $field)) {
+        db_add_field($table, $field, $spec);
       }
     }
   }
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }

@@ -180,7 +180,7 @@ function course_outline_overview_add($form, $form_state) {
  */
 function course_outline_overview_js_more() {
   // The form is generated in an include file which we need to include manually.
-  include_once 'modules/node/node.pages.inc';
+  include_once DRUPAL_ROOT . '/' . 'modules/node/node.pages.inc';
 
   // We're starting in step #3, preparing for #4.
   $form_state = array(
@@ -195,7 +195,7 @@ function course_outline_overview_js_more() {
   $args = $form['#parameters'];
   $form_id = array_shift($args);
   $form_state['post'] = $form['#post'] = $_POST;
-  $form['#programmed'] = $form['#redirect'] = FALSE;
+  $form['#programmed'] = $form_state['#redirect'] = FALSE;
 
   // Step #5.
   drupal_process_form($form_id, $form, $form_state);
@@ -205,13 +205,19 @@ function course_outline_overview_js_more() {
 
   $object_form = $form['course_outline']['requirements'];
 
+  // TODO Please change this theme call to use an associative array for the $variables parameter.
   $output = theme('status_messages') . drupal_render($object_form);
 
   // Final rendering callback.
-  drupal_json(array('status' => TRUE, 'data' => $output));
+  drupal_json_output(array('status' => TRUE, 'data' => $output));
 }
 
-function theme_course_outline_overview_form($form) {
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function theme_course_outline_overview_form() {
+  // TODO Number of parameters in this theme funcion does not match number of parameters found in hook_theme.
   drupal_add_tabledrag('course-objects', 'order', 'sibling', 'course-object-weight');
   $node = $form['#node'];
 
@@ -233,7 +239,7 @@ function theme_course_outline_overview_form($form) {
     $rows[$key]['data'][] = drupal_render($form[$key]['weight']);
   }
 
-  $table = theme('table', $headers, $rows, array('id' => 'course-objects'));
+  $table = theme('table', array('header' => $headers, 'rows' => $rows, 'attributes' => array('id' => 'course-objects')));
   return $table;
 }
 
@@ -274,7 +280,7 @@ function course_get_outline($node) {
 
   // Create an array of the list of course objects.
   $sql = "SELECT * FROM {course_outline} cr WHERE nid = %d AND enabled AND !hidden ORDER BY weight ASC";
-  $result = db_query($sql, $node->nid);
+  $result = db_query("SELECT * FROM {course_outline} cr WHERE nid = :nid AND enabled AND ! :AND ORDER BY weight ASC", array(':nid' => $node->nid, ':AND' => hidden));
   $course_reqs = array();
   while ($row = db_fetch_array($result)) {
     $class = $object_map[$row['requirement_type']][$row['requirement_component']]['class'];
@@ -351,6 +357,7 @@ function course_outline_complete_step($course_node) {
   $txt_out = course_outline_show_complete_links($course_node);
   //if from iframe, hide drupal theme
   if (arg(2) == 'inframe') {
+    // TODO Please change this theme call to use an associative array for the $variables parameter.
     return theme("course_step_view", $txt_out);
   }
   else {

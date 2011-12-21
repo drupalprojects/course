@@ -1,3 +1,5 @@
 name = Course Requirements
 description = Set requirements on courses before a learner may take them.
-core = 6.x
+core = 7.x
+
+files[] = course_requirements.module

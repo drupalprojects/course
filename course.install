@@ -1,12 +1,19 @@
 <?php
+/**
+ * @file
+ * Install, update and uninstall functions for the course module.
+ *
+ */
+
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  *
  * Install a default content type, set some defaults.
  */
 function course_install() {
-  drupal_install_schema('course');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_install_schema('course')
 
   module_load_include('module', 'node', 'node');
 
@@ -26,7 +33,7 @@ function course_install() {
     'min_word_count' => '',
   );
 
-  $type = (object) _node_type_set_defaults($type);
+  $type = (object) node_type_set_defaults($type);
   node_type_save($type);
   node_types_rebuild();
   menu_rebuild();
@@ -36,14 +43,15 @@ function course_install() {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function course_uninstall() {
-  drupal_uninstall_schema('course');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_uninstall_schema('course')
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function course_schema() {
   $schema = array();
@@ -461,10 +469,14 @@ function course_schema() {
 function course_update_6121() {
   $ret = array();
   $sql = "DELETE ce.* FROM {course_enrolment} ce LEFT JOIN {users} u ON (ce.uid = u.uid) WHERE u.uid IS NULL";
-  $ret[] = update_sql($sql);
+  // TODO update_sql has been removed. Use the database API for any schema or data changes.
+  $ret[] = array() /* update_sql($sql) */;
   $ret[] = array(
     'success' => TRUE,
     'query' => db_affected_rows() . ' old enrollments deleted',
   );
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }

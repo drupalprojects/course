@@ -19,6 +19,9 @@ class Course {
       $this->user = $user;
     }
     else {
+      // TODO Convert "user_load" to "user_load_multiple" if "$user" is other than a uid.
+      // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+      // Example: array_shift(user_load_multiple(array(), $user))
       $this->user = user_load($user);
     }
   }

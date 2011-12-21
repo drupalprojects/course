@@ -7,19 +7,19 @@
  */
 
 // Load built-in LMS.
-include 'includes/course.drupal.inc';
+include DRUPAL_ROOT . '/' . 'includes/course.drupal.inc';
 
 // Course Outline functions
-require_once ('includes/course.outline.inc');
+require_once DRUPAL_ROOT . '/' . ('includes/course.outline.inc');
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function course_menu() {
   $items = array();
 
   // Main configuration.
-  $items['admin/settings/course'] = array(
+  $items['admin/config/course'] = array(
     'title' => 'Course',
     'description' => 'Configure courses.',
     'page callback' => 'drupal_get_form',
@@ -28,13 +28,13 @@ function course_menu() {
   );
 
   // Default tab for LMS.
-  $items['admin/settings/course/lms'] = array(
+  $items['admin/config/course/lms'] = array(
     'title' => 'LMS',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
   // Configure per-course user types.
-  $items['admin/settings/course/user-types'] = array(
+  $items['admin/config/course/user-types'] = array(
     'title' => 'User types',
     'description' => 'Configure course user types.',
     'page callback' => 'drupal_get_form',
@@ -44,7 +44,7 @@ function course_menu() {
   );
 
   // Run install tasks for an LMS.
-  $items['admin/settings/course/%/install'] = array(
+  $items['admin/config/course/%/install'] = array(
     'title' => 'Install external application',
     'access callback' => true,
     'page callback' => 'course_do_lms_install',
@@ -52,7 +52,7 @@ function course_menu() {
   );
 
   // Run post-install tasks for an LMS.
-  $items['admin/settings/course/%/postinstall'] = array(
+  $items['admin/config/course/%/postinstall'] = array(
     'title' => 'Perform post installation tasks',
     'access callback' => true,
     'page callback' => 'course_do_lms_postinstall',
@@ -61,7 +61,7 @@ function course_menu() {
   );
 
   // Configure an LMS.
-  $items['admin/settings/course/%course_lms/configure'] = array(
+  $items['admin/config/course/%course_lms/configure'] = array(
     'title' => 'Configure',
     'description' => 'Configure courses.',
     'page callback' => 'course_configure',
@@ -123,27 +123,33 @@ function course_menu() {
 }
 
 /**
- * Implements hook_block().
+ * Implements hook_block_info().
  */
-function course_block($op = 'list', $delta = 0) {
-  switch ($op) {
-    case 'list':
-      $info = array(
-        'outline' => array(
-          'info' => t('Course: Outline'),
-          'cache' => BLOCK_NO_CACHE,
-        ),
-      );
-      return $info;
-    case 'view':
-      module_load_include('inc', 'course', 'includes/course.block');
-      $function = "_course_block_{$delta}";
-      if (function_exists($function)) {
-        return call_user_func($function);
-      }
-      break;
+function course_block_info() {
+  $info = array(
+    'outline' => array(
+      'info' => t('Course: Outline'),
+      'cache' => BLOCK_NO_CACHE,
+    ),
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function course_block_view($delta) {
+  module_load_include('inc', 'course', 'includes/course.block');
+  $function = "_course_block_{$delta}";
+  if (function_exists($function)) {
+    return call_user_func($function);
   }
 }
+
+/**
+ * Implements hook_block().
+ */
+function course_block_OLD($op = 'list', $delta = 0) { }
 
 /**
  * Menu title handler for the Take course tab.
@@ -180,7 +186,7 @@ function course_do_lms_postinstall($key) {
   $lapp = course_get_lms($key);
   module_invoke($lapp['module'], 'lms_postinstall', $key);
   drupal_set_message(t('Post installation tasks for %lapp complete.', array('%lapp' => $lapp['name'])));
-  drupal_goto('admin/settings/course');
+  drupal_goto('admin/config/course');
 }
 
 /**
@@ -191,7 +197,7 @@ function course_do_lms_install($key) {
   if (!empty($lapp['install url'])) {
     // If the installer URL is set then this is an external application.
     $post = '';
-    $post .= '<h2>When you are finished installing, be sure to ' . l('run the post installation tasks', "admin/settings/course/$key/postinstall") . '.</h2>';
+    $post .= '<h2>When you are finished installing, be sure to ' . l('run the post installation tasks', "admin/config/course/$key/postinstall") . '.</h2>';
     $post .= '<br/>';
     return $post . course_iframe($lapp['install url']);
   }
@@ -199,28 +205,37 @@ function course_do_lms_install($key) {
     // No installer URL, this is Drupal-based.
     $out = module_invoke($lapp['module'], 'lms_install', $key);
     if (module_invoke($lapp['module'], 'lms_status', $key)) {
-      $post = '<h2>Please ' . l('run the post installation tasks', "admin/settings/course/$key/postinstall") . '.</h2>';
+      $post = '<h2>Please ' . l('run the post installation tasks', "admin/config/course/$key/postinstall") . '.</h2>';
     }
     else {
-      $post = '<h2>Installation failed...' . l('try again?', "admin/settings/course/$key/install") . '</h2>';
+      $post = '<h2>Installation failed...' . l('try again?', "admin/config/course/$key/install") . '</h2>';
     }
     return $out . $post;
   }
 }
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_permission().
  *
  * Define permissions to take courses and edit course settings.
  */
-function course_perm() {
+function course_permission() {
   return array(
     // Manage course settings
-    'administer course',
+    'administer course' => array(
+      'title' => t('administer course'),
+      'description' => t('TODO Add a description for \'administer course\''),
+    ),
     // Students
-    'take courses',
+    'take courses' => array(
+      'title' => t('take courses'),
+      'description' => t('TODO Add a description for \'take courses\''),
+    ),
     // Course admins
-    'edit courses',
+    'edit courses' => array(
+      'title' => t('edit courses'),
+      'description' => t('TODO Add a description for \'edit courses\''),
+    ),
   );
 }
 
@@ -282,7 +297,8 @@ function course_take_course_access(&$node) {
     // @todo find out why this causes an infinite loop on sites with existing drupal_goto()
     // in $items['user/login']['page callback'] via hook_menu_alter().
     // Does this todo still apply?
-    drupal_goto('user/login', drupal_get_destination());
+    // TODO drupal_get_destination() needs to be an array of keys and values instead of a string.
+    drupal_goto('user/login', array('query' => drupal_get_destination()));
   }
 
   if (!isset($courses[$node->nid])) {
@@ -321,7 +337,7 @@ function course_settings_access($node) {
 }
 
 /**
- * Implementation of hook_can_take_course().
+ * Implements hook_can_take_course().
  *
  * Check for built-in access restrictions (enrollment, release/expiration).
  *
@@ -342,7 +358,7 @@ function course_can_take_course($node, $user) {
 
   $sql = "select * from {course_enrolment} where nid = %d and uid = %d";
   if ($row = db_fetch_object(db_query($sql, $node->nid, $user->uid))) {
-    if ($node->course['duration'] > 0 && time() > $row->enrol_end) {
+    if ($node->course['duration'] > 0 && REQUEST_TIME > $row->enrol_end) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, your enrollment has expired for this course.',
@@ -351,7 +367,7 @@ function course_can_take_course($node, $user) {
   }
 
   if ($node->field_course_date) {
-    if ($node->course['type'] == 'enduring' && time() > strtotime($node->field_course_date[0]['value2'])) {
+    if ($node->course['type'] == 'enduring' && REQUEST_TIME > strtotime($node->field_course_date[0]['value2'])) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, this course is expired.',
@@ -363,7 +379,7 @@ function course_can_take_course($node, $user) {
 /**
  * Define the Course settings form.
  */
-function course_admin_settings() {
+function course_admin_settings($form, &$form_state) {
   $lapps = course_available_lms();
 
   $form['installation'] = array(
@@ -377,19 +393,19 @@ function course_admin_settings() {
       $lapp['status'] = 'Installed.';
       $links['postinstall'] = array(
         'title' => 'Post-install',
-        'href' => "admin/settings/course/$key/postinstall",
+        'href' => "admin/config/course/$key/postinstall",
       );
 
       $links['configure'] = array(
         'title' => 'Configure',
-        'href' => "admin/settings/course/$key/configure",
+        'href' => "admin/config/course/$key/configure",
       );
     }
     else {
       $lapp['status'] = 'Not installed.';
       $links['install'] = array(
         'title' => 'Install',
-        'href' => "admin/settings/course/$key/install",
+        'href' => "admin/config/course/$key/install",
       );
     }
 
@@ -500,19 +516,20 @@ function course_object_custom_fields() {
 }
 
 /**
- * Implementation of hook_nodeapi().
+ * Implements hook_nodeapi().
  *
  * When a course is saved, handles changes to the course outline and the
  * creation of external courses.
  *
  * Renders the "take course" button on view.
  */
-function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
+function course_nodeapi_OLD(&$node, $op, $teaser = NULL, $page = NULL) {
+  // TODO Remaining code in this function needs to be moved to the appropriate new hook function.
   if (course_node_is_course($node)) {
     switch ($op) {
       case 'prepare':
         if (count(course_available_lms()) == 0) {
-          drupal_set_message("You haven't installed an LMS yet. Please visit " . l('course configuration', 'admin/settings/course') . '.', 'error');
+          drupal_set_message("You haven't installed an LMS yet. Please visit " . l('course configuration', 'admin/config/course') . '.', 'error');
         }
         break;
       case 'validate':
@@ -523,7 +540,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         }
         else {
           $message = t("LMS (%application) not yet set up.", array('%application' => $lapp['name']));
-          $message .= " Please " . l('configure the Course module', 'admin/settings/course') . '.';
+          $message .= " Please " . l('configure the Course module', 'admin/config/course') . '.';
           form_set_error('', $message);
         }
         break;
@@ -546,7 +563,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         if ($response) {
           $record['cid'] = $response;
         }
-        $existing = db_result(db_query('select 1 from {course_node} where nid = %d', $node->nid));
+        $existing = db_query('select 1 from {course_node} where nid = %d', $node->nid)->fetchField();
         if ($existing) {
           // Don't save LMS. Cannot be changed currently.
           unset($record['lms']);
@@ -571,7 +588,9 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         $sql = "SELECT * FROM {course_outline}
           WHERE nid = %d
           ORDER BY weight ASC";
-        $result = db_query($sql, $node->nid);
+        $result = db_query("SELECT * FROM {course_outline}
+          WHERE nid = :nid
+          ORDER BY weight ASC", array(':nid' => $node->nid));
         while ($requirement = db_fetch_object($result)) {
           foreach ($requirement as $key => $value) {
             $rarray[$requirement->snid]->$key = $value;
@@ -584,8 +603,12 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       case 'delete':
         // Clean up course specific settings and enrollments when a course is
         // deleted.
-        db_query("DELETE FROM {course_node} where nid = %d", $node->nid);
-        db_query("DELETE FROM {course_enrolment} where nid = %d", $node->nid);
+        // TODO Please convert this statement to the D7 database API syntax.
+        /* db_query("DELETE FROM {course_node} where nid = %d", $node->nid) */
+        NULL;
+        // TODO Please convert this statement to the D7 database API syntax.
+        /* db_query("DELETE FROM {course_enrolment} where nid = %d", $node->nid) */
+        NULL;
         break;
     }
   }
@@ -646,7 +669,7 @@ function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
 
     if ($node->course['duration'] > 0) {
       // Set enrolment end to now + the duration of the course.
-      $enrol['enrol_end'] = time() + $node->course['duration'] * 86400;
+      $enrol['enrol_end'] = REQUEST_TIME + $node->course['duration'] * 86400;
     }
 
     $enrol = (object) $enrol;
@@ -686,12 +709,19 @@ function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
 function course_unenrol(&$node, &$user) {
   if (course_node_is_course($node)) {
     $sql = "delete from {course_report} where nid = %d and uid = %d";
+    // TODO Please convert this statement to the D7 database API syntax.
     db_query($node->nid, $user->uid);
     $sql = "DELETE FROM {course_enrolment} where nid = %d and uid = %d";
-    db_query($sql, $node->nid, $user->uid);
+    // TODO Please convert this statement to the D7 database API syntax.
+    /* db_query($sql, $node->nid, $user->uid) */
+    NULL;
     // @todo change to delete w/left join
     $sql = "DELETE FROM {course_outline_fulfillment} WHERE uid = %d AND snid IN (SELECT snid FROM {course_outline} WHERE nid = %d)";
-    db_query($sql, $user->uid, $node->nid);
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query($sql, $user->uid, $node->nid) */
+    db_delete('course_outline_fulfillment')
+    ->where('uid = %d AND snid IN (SELECT snid FROM {course_outline} WHERE nid = %d)',  )
+  ->execute();
     module_invoke_all('course_unenrol', $node, $user);
     watchdog('course_enrol', "Removed user {$user->uid} from {$node->nid}");
     return TRUE;
@@ -719,8 +749,8 @@ function course_enrolment_check($nid, $uid) {
 
   if ($nid > 0 && $uid > 0) {
     $sql_check = "SELECT 1 FROM {course_enrolment} WHERE nid = %d AND uid = %d AND status = %d";
-    $query = db_query($sql_check, $nid, $uid, 1);
-    return db_result($query) > 0;
+    $query = db_query("SELECT 1 FROM {course_enrolment} WHERE nid = :nid AND uid = :uid AND status = :status", array(':nid' => $nid, ':uid' => $uid, ':status' => 1));
+    return $query->fetchField() > 0;
   }
   else {
     return FALSE;
@@ -743,11 +773,11 @@ function course_enrolment_load($nid, $uid) {
   }
 
   $sql = "SELECT * FROM {course_enrolment} WHERE nid = %d AND uid = %d";
-  return db_fetch_object(db_query($sql, $nid, $uid));
+  return db_fetch_object(db_query("SELECT * FROM {course_enrolment} WHERE nid = :nid AND uid = :uid", array(':nid' => $nid, ':uid' => $uid)));
 }
 
 /**
- * Implementation of hook_enable().
+ * Implements hook_enable().
  *
  * Insert course as product and add admin theme to course settings.
  */
@@ -761,7 +791,7 @@ function course_enable() {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  *
  * Hides Ubercart "add to cart button" if the user can take the course.
  * Show LMS selection.
@@ -788,7 +818,7 @@ function course_form_alter(&$form, &$form_state, $form_id) {
     // Ensure LMS type set as default is still installed.
     $default_lms = $default_lms_installed ? $default_lms : 'none';
     if (!$lms_installed) {
-      drupal_set_message(t('No LMS installed. Please <a href="@confirure">configure the Course module</a>.', array('@configure' => url('admin/settings/course'))), 'warning');
+      drupal_set_message(t('No LMS installed. Please <a href="@confirure">configure the Course module</a>.', array('@configure' => url('admin/config/course'))), 'warning');
     }
     $form['course']['#tree'] = TRUE;
     $form['course']['#type'] = 'fieldset';
@@ -812,7 +842,7 @@ function course_form_alter(&$form, &$form_state, $form_id) {
       '#description' => 'Live courses support attendance.',
     );
     if ($node->course['lms'] != '') {
-      drupal_set_title(t("@title (@lms)", array('@lms' => $lapps[$node->course['lms']]['name'], '@title' => $node->title)));
+      drupal_set_title(t("@title (@lms)", array('@lms' => $lapps[$node->course['lms']]['name'], '@title' => $node->title)), PASS_THROUGH);
       $form['course']['lms']['#disabled'] = TRUE;
     }
     $form['course']['attendance'] = array(
@@ -906,7 +936,7 @@ function course_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
- * Implementation of hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter().
  */
 function course_form_node_type_form_alter(&$form, &$form_state) {
   // Alter the node type's configuration form to add our setting.
@@ -935,7 +965,7 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
     }
   }
   if (!$lms_installed) {
-    $description = '<div class="messages warning">' . t('No LMS installed. Please <a href="@confirure">configure the Course module</a>.', array('@configure' => url('admin/settings/course'))) . '</div>';
+    $description = '<div class="messages warning">' . t('No LMS installed. Please <a href="@confirure">configure the Course module</a>.', array('@configure' => url('admin/config/course'))) . '</div>';
   }
   $form['course']['default_lms'] = array(
     '#title' => t('Default LMS for %name', array('%name' => $form['#node_type']->name)),
@@ -1030,7 +1060,7 @@ function course_configure($lapp) {
 /**
  * Form definition for submodule's configuration form.
  */
-function course_settings_form($form_state, $lapp) {
+function course_settings_form($form, $form_state, $lapp) {
   $form_id = $lapp['module'] . '_lms_settings_form';
   $form = $form_id($lapp['machine']);
   return system_settings_form($form);
@@ -1053,7 +1083,7 @@ function course_take_course($node) {
     }
     if (empty($enrolment->timestamp)) {
       // If user hasn't started course, mark start of enrolment.
-      $enrolment->timestamp = time();
+      $enrolment->timestamp = REQUEST_TIME;
       course_enrolment_save($enrolment);
       drupal_set_message("Your enrollment in this course has been recorded.");
     }
@@ -1061,7 +1091,7 @@ function course_take_course($node) {
     return ($ret = module_invoke($lapp['module'], 'lms_take_course', $node->course['lms'], $node)) ? $ret : "hook_lms_take_course not implemented";
   }
   else {
-    drupal_set_header('HTTP/1.1 403 Forbidden');
+    drupal_add_http_header('Status', '403 Forbidden');
     drupal_set_title(t('Access denied'));
     if (empty($result['message'])) {
       return "Sorry, you do not have access to take this course. (No message provided by module).";
@@ -1075,7 +1105,7 @@ function course_take_course($node) {
  */
 function course_enrolment_save($enrolment) {
   if ($enrolment->nid && $enrolment->uid) {
-    if (db_result(db_query('select 1 from {course_enrolment} where nid = %d and uid = %d', $enrolment->nid, $enrolment->uid))) {
+    if (db_query('select 1 from {course_enrolment} where nid = %d and uid = %d', $enrolment->nid, $enrolment->uid)->fetchField()) {
       drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
     }
     else {
@@ -1157,6 +1187,10 @@ function course_node_is_course(&$node) {
   return variable_get("course_use_{$type}", 0);
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_views_plugins() {
   return array(
     'argument validator' => array(
@@ -1169,6 +1203,10 @@ function course_views_plugins() {
   );
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_views_api() {
   return array(
     'api' => 2,
@@ -1177,7 +1215,7 @@ function course_views_api() {
 }
 
 /**
- * Implementation of hook_content_extra_fields().
+ * Implements hook_content_extra_fields().
  */
 function course_content_extra_fields($type) {
   $node->type = $type;
@@ -1198,6 +1236,10 @@ function course_content_extra_fields($type) {
   return $extras;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_preprocess_page(&$variables) {
   if (arg(2) == 'takecourse') {
     $regions = variable_get('course_disable_regions', array());
@@ -1215,7 +1257,7 @@ function course_preprocess_page(&$variables) {
 function course_get_types() {
   $types = array();
 
-  foreach (node_get_types() as $type => $info) {
+  foreach (node_type_get_types() as $type => $info) {
     if (variable_get("course_use_$type", 0)) {
       $types[] = $type;
     }
@@ -1225,19 +1267,19 @@ function course_get_types() {
 }
 
 /**
- * Implementation of hook_access_certificate().
+ * Implements hook_access_certificate().
  *
  * If something entered a complete record into the reports table, return TRUE.
  */
 function course_access_certificate($node, $user) {
   if (course_node_is_course($node)) {
     $sql = "select 1 from {course_report} where nid = %d and uid = %d and complete = %d";
-    return (bool) $node->course['certificate'] && (bool) db_result(db_query($sql, $node->nid, $user->uid, 1));
+    return (bool) $node->course['certificate'] && (bool) db_query($sql, $node->nid, $user->uid, 1)->fetchField();
   }
 }
 
 /**
- * Implementation of hook_token_list().
+ * Implements hook_token_list().
  *
  * @todo move to uc_course
  */
@@ -1270,7 +1312,7 @@ function course_token_list($type = 'all') {
 }
 
 /**
- * Implementation of hook_token_values().
+ * Implements hook_token_values().
  *
  * @todo move to uc_course
  */
@@ -1304,7 +1346,7 @@ function course_token_values($type, $object = NULL, $options = array()) {
         $values["certificate-$key"] = $value;
       }
     }
-    $values['certificate-number'] = time() . '-' . $object['node']->nid;
+    $values['certificate-number'] = REQUEST_TIME . '-' . $object['node']->nid;
     $values['certificate-date_completed'] = date(variable_get('course_report_certificate_time_format', 'F jS, Y'), $report->date_completed);
   }
 
@@ -1321,25 +1363,25 @@ function course_token_values($type, $object = NULL, $options = array()) {
 }
 
 /**
- * Implementation of hook_action_info().
+ * Implements hook_action_info().
  */
 function course_action_info() {
   $actions = array();
 
   $actions['course_add_enrollment_action'] = array(
     'type' => 'user',
-    'description' => t('Enroll user in current course'),
+    'label' => t('Enroll user in current course'),
   );
 
   $actions['course_edit_enrolment_action'] = array(
     'type' => 'signup',
-    'description' => t('Edit enrollment'),
+    'label' => t('Edit enrollment'),
     'configurable' => TRUE,
   );
 
   $actions['course_remove_enrollment_action'] = array(
     'type' => 'user',
-    'description' => t('Remove a user from current course'),
+    'label' => t('Remove a user from current course'),
   );
 
   return $actions;
@@ -1359,7 +1401,7 @@ function course_add_enrollment_action(&$user, $context) {
             'snid' => $req['snid'],
             'uid' => $user->uid,
             'complete' => 1,
-            'date_completed' => time(),
+            'date_completed' => REQUEST_TIME,
             'info' => 'Payment marked as complete because user was manually enrolled.',
           );
           course_outline_save_fulfillment($ubercart);
@@ -1371,11 +1413,19 @@ function course_add_enrollment_action(&$user, $context) {
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_remove_enrollment_action(&$user, $context) {
   $node = node_load(arg(1));
   course_unenrol($node, $user);
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_edit_enrolment_action(&$signup, $context) {
   $enrolment->uid = $signup->uid;
   $enrolment->nid = $signup->nid;
@@ -1390,6 +1440,10 @@ function course_edit_enrolment_action(&$signup, $context) {
   drupal_set_message(t('Updated enrollment for @user', array('@user' => $report->name)));
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_edit_enrolment_action_form($context) {
   $form = array();
 
@@ -1412,6 +1466,10 @@ function course_edit_enrolment_action_form($context) {
   return $form;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_edit_enrolment_action_submit($form, $form_state) {
   return array(
     'enrol_end' => $form_state['values']['enrol_end'],
@@ -1419,10 +1477,14 @@ function course_edit_enrolment_action_submit($form, $form_state) {
   );
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_edit_enrolment_action_validate($form, $form_state) { }
 
 /**
- * Implementatin of hook_init().
+ * Implements hook_init().
  */
 function course_init() {
   // Determine context.
@@ -1432,7 +1494,7 @@ function course_init() {
 }
 
 /**
- * Implementation of hook_ctools_plugin_directory().
+ * Implements hook_ctools_plugin_directory().
  */
 function course_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'ctools' && $plugin_type == 'content_types') {
@@ -1441,7 +1503,7 @@ function course_ctools_plugin_directory($owner, $plugin_type) {
 }
 
 /**
- * Implementation of hook_autoload_info().
+ * Implements hook_autoload_info().
  */
 function course_autoload_info() {
   return array(
@@ -1454,7 +1516,7 @@ function course_autoload_info() {
 /**
  * Form for configuring user types.
  */
-function course_user_type_settings_form() {
+function course_user_type_settings_form($form, &$form_state) {
   drupal_set_title('Course: Enrollment user types');
 
   $form = array();
@@ -1489,6 +1551,10 @@ function course_user_type_settings_form() {
   return system_settings_form($form);
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_user_type_settings_form_validate(&$form, &$form_state) {
   $lines = explode("\n", trim($form_state['values']['course_user_types']));
   foreach ($lines as $line) {
@@ -1502,6 +1568,10 @@ function course_user_type_settings_form_validate(&$form, &$form_state) {
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_cck_kv_fields() {
   $field_options = array();
 
@@ -1562,7 +1632,8 @@ function course_course_credit_check_completion($course_node) {
     if ($active) {
       $enrolment = course_enrolment_load($course_node, $user);
       if (!$enrolment->user_type) {
-        drupal_goto("node/{$course_node->nid}/course-user-type", drupal_get_destination());
+        // TODO drupal_get_destination() needs to be an array of keys and values instead of a string.
+        drupal_goto("node/{$course_node->nid}/course-user-type", array('query' => drupal_get_destination()));
       }
     }
   }
@@ -1571,7 +1642,7 @@ function course_course_credit_check_completion($course_node) {
 /**
  * Allow the user to set their per-course user type.
  */
-function course_user_type_form($form_state, $node) {
+function course_user_type_form($form, $form_state, $node) {
   $form = array();
 
   $form['#node'] = $node;
@@ -1647,7 +1718,7 @@ function course_enrol_access($node, $user) {
 }
 
 /**
- * Implementation of hook_course_can_enrol().
+ * Implements hook_course_can_enrol().
  *
  * Block enrollments when a course has either not yet started or is expired.
  */
@@ -1657,7 +1728,7 @@ function course_course_can_enrol($node, $user) {
 
   if ($start && $end) {
     if ($node->course['type'] == 'enduring') {
-      if (time() > strtotime($node->{$end['field']}[0]['value2'] . ' UTC')) {
+      if (REQUEST_TIME > strtotime($node->{$end['field']}[0]['value2'] . ' UTC')) {
         return array(array(
             'success' => FALSE,
             'message' => t('This course closed on %date and is no longer available for enrollments.', array(
@@ -1665,7 +1736,7 @@ function course_course_can_enrol($node, $user) {
             )),
           ));
       }
-      else if (time() < strtotime($node->{$start['field']}[0]['value'] . ' UTC')) {
+      else if (REQUEST_TIME < strtotime($node->{$start['field']}[0]['value'] . ' UTC')) {
         return array(array(
             'success' => FALSE,
             'message' => t('This course opens on %date.', array(
@@ -1696,6 +1767,9 @@ function course_report_save($entry) {
   }
 
   // Load user so we can serialize it.
+  // TODO Convert "user_load" to "user_load_multiple" if "$entry->uid" is other than a uid.
+  // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+  // Example: array_shift(user_load_multiple(array(), $entry->uid))
   $account = user_load($entry->uid);
 
   // Load profile so we can serialize it.
@@ -1711,7 +1785,7 @@ function course_report_save($entry) {
   }
   $entry->data = serialize(array('user' => $account, 'profile' => $profile));
 
-  $entry->updated = time();
+  $entry->updated = REQUEST_TIME;
 
   $sql = "select * from {course_report} where nid = %d and uid = %d";
   $query = db_query($sql, $entry->nid, $entry->uid);
@@ -1722,7 +1796,7 @@ function course_report_save($entry) {
   $course_report_alter = drupal_alter('course_report', $entry, $account, $old);
 
   if ($entry->complete && empty($entry->date_completed)) {
-    $entry->date_completed = time();
+    $entry->date_completed = REQUEST_TIME;
   }
 
   // Hello CE credit!
@@ -1739,24 +1813,33 @@ function course_report_save($entry) {
 }
 
 /**
- * Implementation of hook_user().
- *
- * Delete the user's course records, fulfillments, and enrollments upon
- * deletion.
+ * Implements hook_user_cancel().
  */
-function course_user($op, &$edit, &$account, $category = NULL) {
-  if ($op == 'delete') {
+function course_user_cancel($edit, $account, $method) {
+  if (TRUE) {
     $sql = "delete from {course_report} where uid = %d";
     db_query($sql, $account->uid);
     $sql = "DELETE FROM {course_outline_fulfillment} WHERE uid = %d";
-    db_query($sql, $account->uid);
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query($sql, $account->uid) */
+    db_delete('course_outline_fulfillment')
+  ->condition('uid', $account->uid)
+  ->execute();
     $sql = "delete from {course_enrolment} where uid = %d";
     db_query($sql, $account->uid);
   }
 }
 
 /**
- * Implementation of hook_views_bulk_operations_object_info().
+ * Implements hook_user().
+ *
+ * Delete the user's course records, fulfillments, and enrollments upon
+ * deletion.
+ */
+function course_user_OLD($op, &$edit, &$account, $category = NULL) { }
+
+/**
+ * Implements hook_views_bulk_operations_object_info().
  *
  * Expose information about the course report object to VBO.
  */
@@ -1793,7 +1876,7 @@ function course_report_load($mixed, $user = NULL) {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function course_theme() {
   return array(
@@ -1964,21 +2047,21 @@ function course_outline_get_requirement($mixed) {
 
   if (is_numeric($snid)) {
     $sql_get_requirement = "SELECT * FROM {course_outline} WHERE snid = %d";
-    $results = db_query($sql_get_requirement, $snid);
+    $results = db_query("SELECT * FROM {course_outline} WHERE snid = :snid", array(':snid' => $snid));
     while ($row = db_fetch_array($results)) {
       $requirement = $row;
     }
   }
   elseif (is_array($mixed) && isset($mixed['nid']) && isset($mixed['requirement_type']) && isset($mixed['add']) && isset($mixed['instance'])) {
     $sql_get_requirement = "SELECT * FROM {course_outline} WHERE nid = %d AND requirement_type = '%s' AND requirement_component= '%s' AND instance =%d";
-    $results = db_query($sql_get_requirement, $mixed['nid'], $mixed['requirement_type'], $mixed['add'], $mixed['instance']);
+    $results = db_query("SELECT * FROM {course_outline} WHERE nid = :nid AND requirement_type = :requirement_type AND requirement_component = :requirement_component AND instance = :instance", array(':nid' => $mixed['nid'], ':requirement_type' => $mixed['requirement_type'], ':requirement_component' => $mixed['add'], ':instance' => $mixed['instance']));
     while ($row = db_fetch_array($results)) {
       $requirement = $row;
     }
   }
   elseif (is_array($mixed) && isset($mixed['nid']) && isset($mixed['requirement_type']) && isset($mixed['add'])) {
     $sql_get_requirement = "SELECT * FROM {course_outline} WHERE nid = %d AND requirement_type = '%s' AND requirement_component= '%s'";
-    $results = db_query($sql_get_requirement, $mixed['nid'], $mixed['requirement_type'], $mixed['add']);
+    $results = db_query("SELECT * FROM {course_outline} WHERE nid = :nid AND requirement_type = :requirement_type AND requirement_component = :requirement_component", array(':nid' => $mixed['nid'], ':requirement_type' => $mixed['requirement_type'], ':requirement_component' => $mixed['add']));
     while ($row = db_fetch_array($results)) {
       $requirement = $row;
     }
@@ -2024,7 +2107,7 @@ function course_outline_save_fulfillment($mixed) {
  *   An object representing a fulfillment record.
  */
 function course_outline_get_fulfillment($snid, $uid) {
-  $results = db_query("SELECT * FROM {course_outline_fulfillment} WHERE snid = %d AND uid = %d", $snid, $uid);
+  $results = db_query("SELECT * FROM {course_outline_fulfillment} WHERE snid = :snid AND uid = :uid", array(':snid' => $snid, ':uid' => $uid));
   while ($row = db_fetch_array($results)) {
     return $row;
   }
@@ -2047,7 +2130,7 @@ function course_outline_get_course_requirements($nid) {
   }
 
   if ($nid) {
-    $results = db_query("SELECT * FROM {course_outline} WHERE nid = %d ORDER BY weight ASC", $nid);
+    $results = db_query("SELECT * FROM {course_outline} WHERE nid = :nid ORDER BY weight ASC", array(':nid' => $nid));
     while ($row = db_fetch_array($results)) {
       $requirements[] = $row;
     }
@@ -2101,7 +2184,7 @@ function course_determine_context($node = NULL) {
 
   if ($node->nid) {
     $sql = 'select nid from {course_outline} where instance = %d or nid = %d limit 1';
-    if ($course_nid = db_result(db_query($sql, $node->nid, $node->nid))) {
+    if ($course_nid = db_query($sql, $node->nid, $node->nid)->fetchField()) {
       return node_load($course_nid);
     }
   }

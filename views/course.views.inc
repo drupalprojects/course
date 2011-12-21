@@ -3,7 +3,7 @@
 module_load_include('inc', 'course', 'views/views_join_course');
 
 /**
- * Implementation of hook_views_data().
+ * Implements hook_views_data().
  */
 function course_views_data() {
   $data = array();
@@ -417,7 +417,7 @@ function course_views_data() {
 }
 
 /**
- * Implementation of hook_views_handlers() to register all of the basic handlers
+ * Implements hook_views_handlers() to register all of the basic handlers().
  * views uses.
  */
 function course_views_handlers() {

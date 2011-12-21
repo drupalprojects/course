@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_course_outline_completion_links_alter().
+ * Implements hook_course_outline_completion_links_alter().
  *
  * Add a download certificate link.
  */

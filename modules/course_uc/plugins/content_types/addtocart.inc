@@ -25,14 +25,16 @@ function uc_course_addtocart_content_type_render($subtype, $conf, $panel_args, $
   }
 
   // Load information about the node type.
-  $type = node_get_types('type', $node->type);
+  $type = node_type_get_type($node->type);
   $module = $type->module;
 
   // Built the add to cart button
   if (function_exists('theme_' . $module . '_add_to_cart')) {
+    // TODO Please change this theme call to use an associative array for the $variables parameter.
     $result = theme($module . '_add_to_cart', $node);
   }
   elseif (function_exists('theme_uc_product_add_to_cart')) {
+    // TODO Please change this theme call to use an associative array for the $variables parameter.
     $result = theme('uc_product_add_to_cart', $node);
   }
 

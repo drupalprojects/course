@@ -1,10 +1,10 @@
 <?php
 
 module_load_include('inc', 'views', 'handlers/views_handler_relationship');
-include_once 'includes/views_join_course_credit.inc';
+include_once DRUPAL_ROOT . '/' . 'includes/views_join_course_credit.inc';
 
 /**
- * Implementation of hook_views_handlers() to register all of the basic handlers
+ * Implements hook_views_handlers() to register all of the basic handlers().
  * views uses.
  */
 function course_credit_views_handlers() {
@@ -47,6 +47,9 @@ class course_credit_node_awarded_credit_vhr extends views_handler_relationship {
     global $user;
     //detect the user from the path to the report (instead of deafualt global $user)
     if ($this->view->argument['uid']) {
+      // TODO Convert "user_load" to "user_load_multiple" if "$this->view->args[0]" is other than a uid.
+      // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+      // Example: array_shift(user_load_multiple(array(), $this->view->args[0]))
       $account = user_load($this->view->args[0]);
     }
     else {
@@ -77,7 +80,7 @@ class course_credit_node_awarded_credit_vhr extends views_handler_relationship {
 }
 
 /**
- * Implementation of hook_views_data().
+ * Implements hook_views_data().
  */
 function course_credit_views_data() {
   $data = array();

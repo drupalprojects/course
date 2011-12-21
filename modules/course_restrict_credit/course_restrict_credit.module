@@ -1,22 +1,27 @@
 <?php
 
 /**
- * Implementation of hook_nodeapi().
- *
- * Display a message when a node is loaded that matches an already completed
- * sister Course.
+ * Implements hook_node_view().
  */
-function course_restrict_credit_nodeapi(&$node, $op, $a3, $a4) {
-  if ($op == 'view') {
+function course_restrict_credit_node_view($node, $view_mode = 'full') {
+  if (TRUE) {
     if ($restriction = course_restrict_credit_check($node)) {
       course_restrict_credit_message($restriction);
     }
   }
 }
 
+/**
+ * Implements hook_nodeapi().
+ *
+ * Display a message when a node is loaded that matches an already completed
+ * sister Course.
+ */
+function course_restrict_credit_nodeapi_OLD(&$node, $op, $a3, $a4) { }
+
 
 /**
- * Implementation of hook_panels_post_render().
+ * Implements hook_panels_post_render().
  *
  * Nodeapi view is never called on a panel page, so display the message here.
  */
@@ -41,7 +46,7 @@ function course_restrict_credit_message($restriction) {
 }
 
 /**
- * Implementation of hook_course_credit_check_completion().
+ * Implements hook_course_credit_check_completion().
  *
  * Prevent the user from claiming credit if they're already taken a sister
  * course.
@@ -80,7 +85,7 @@ function course_restrict_credit_check($node) {
         $sql = "select c.nid from {course_node} c
         inner join {course_credit_awarded} cca on ((cca.nid = c.nid) and (cca.uid = %d))
         where external_id = '%s' and c.nid != %d";
-        if ($nid = db_result(db_query($sql, $user->uid, $node->course['external_id'], $node->nid))) {
+        if ($nid = db_query($sql, $user->uid, $node->course['external_id'], $node->nid)->fetchField()) {
           // Found a sister course.
           $sister_node = node_load($nid);
           $ret = array(

@@ -1,4 +1,7 @@
 name = Ubercart Course
-core = 6.x
+core = 7.x
 description = Provides Course as an Ubercart product.
 dependencies[] = uc_product
+
+files[] = course_uc.module
+files[] = content_types/addtocart.inc

@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_quiz_autoload_info() {
   return array(
     'CourseObjectQuiz' => array('file' => 'course_object.quiz.inc'),
@@ -8,7 +12,7 @@ function course_quiz_autoload_info() {
 
 
 /**
- * Implementation of hook_course_object_info().
+ * Implements hook_course_object_info().
  */
 function course_quiz_course_object_info() {
   return array(
@@ -52,7 +56,7 @@ function course_quiz_course_object_api($node, $op, $object) {
 }
 
 /**
- * Implementation of hook_quiz_finished().
+ * Implements hook_quiz_finished().
  *
  * Update the fulfillment record.
  */
@@ -64,11 +68,12 @@ function course_quiz_quiz_finished($quiz, $score, $rid) {
 }
 
 /**
- * Implementation of hook_nodeapi().
+ * Implements hook_nodeapi().
  *
  * Update passing grade.
  */
-function course_quiz_nodeapi($node, $op, $a3, $a4) {
+function course_quiz_nodeapi_OLD($node, $op, $a3, $a4) {
+  // TODO Remaining code in this function needs to be moved to the appropriate new hook function.
   if ($node->type == 'quiz') {
     if ($op == 'insert' || $op == 'update') {
       $courseObject = new CourseObjectQuiz($node->nid);

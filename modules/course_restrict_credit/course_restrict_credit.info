@@ -1,5 +1,7 @@
-core = 6.x
+core = 7.x
 name = Course Restrict Credit
 description = Restricts claiming credit for two similar courses.
 dependencies[] = course
 dependencies[] = course_credit
+
+files[] = course_restrict_credit.module

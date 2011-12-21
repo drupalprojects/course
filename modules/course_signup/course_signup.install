@@ -1,7 +1,13 @@
 <?php
+/**
+ * @file
+ * Install, update and uninstall functions for the course_signup module.
+ *
+ */
+
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  *
  * Set courses to use signup.
  */

@@ -8,12 +8,12 @@
  */
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function course_credit_menu() {
   $items = array();
 
-  $items['admin/settings/course/credit'] = array(
+  $items['admin/config/course/credit'] = array(
     'title' => 'Credit',
     'access arguments' => array('administer courses'),
     'page callback' => 'drupal_get_form',
@@ -21,12 +21,12 @@ function course_credit_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
-  $items['admin/settings/course/credit/settings'] = array(
+  $items['admin/config/course/credit/settings'] = array(
     'title' => 'Settings',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
 
-  $items['admin/settings/course/credit/types'] = array(
+  $items['admin/config/course/credit/types'] = array(
     'title' => 'Credit types',
     'access arguments' => array('administer courses'),
     'page callback' => 'drupal_get_form',
@@ -34,7 +34,7 @@ function course_credit_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
-  $items['admin/settings/course/credit/types/%/map'] = array(
+  $items['admin/config/course/credit/types/%/map'] = array(
     'title' => 'Credit Map',
     'access arguments' => array('administer courses'),
     'page callback' => 'drupal_get_form',
@@ -42,7 +42,7 @@ function course_credit_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
-  $items['admin/settings/course/credit/types/%/delete'] = array(
+  $items['admin/config/course/credit/types/%/delete'] = array(
     'title' => 'Delete credit type',
     'access arguments' => array('administer courses'),
     'page callback' => 'drupal_get_form',
@@ -50,7 +50,7 @@ function course_credit_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
-  $items['admin/settings/course/credit/add-type'] = array(
+  $items['admin/config/course/credit/add-type'] = array(
     'title' => 'Add type',
     'access arguments' => array('administer courses'),
     'page callback' => 'drupal_get_form',
@@ -78,7 +78,7 @@ function course_credit_menu() {
   );
 
   // Add a form in certificate mapping.
-  $items['admin/settings/certificate/mapping/credit-types'] = array(
+  $items['admin/config/certificate/mapping/credit-types'] = array(
     'title' => 'Credit',
     'description' => 'Set up certificate mapping to credit types',
     'page callback' => 'certificate_credit_mapping_page',
@@ -99,6 +99,10 @@ function course_credit_edit_app_access($node) {
   return db_table_exists('content_type_course_credit_application') && course_settings_access($node);
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_form_router($node) {
   global $user;
 
@@ -128,12 +132,12 @@ function course_credit_form_router($node) {
   $form_state['values']['agreement'] = 1;
 
   // Programmatically submit form.
-  drupal_execute('course_credit_app_form', $form_state, $node);
+  drupal_form_submit('course_credit_app_form', $form_state, $node);
   drupal_goto("node/{$node->nid}/course-complete");
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function course_credit_theme() {
   return array(
@@ -141,20 +145,20 @@ function course_credit_theme() {
       'render element' => 'form',
     ),
     'course_credit_types_form' => array(
-      'arguments' => array('form' => NULL),
+      'render element' => 'form',
     ),
   );
 }
 
 /**
- * Implementation of hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter().
  */
 function course_credit_form_course_credit_application_node_form_alter($form, $form_state) {
   $form['field_course_nid']['#access'] = FALSE;
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
 function course_credit_form_alter(&$form, &$form_state, $form_id) {
   if (strpos($form_id, '_node_form') !== FALSE && course_credit_node_is_creditable($form['#node'])) {
@@ -433,9 +437,10 @@ function course_credit_application_add($node) {
     $field_info = content_fields('field_course_nid');
     $db_info = content_database_info($field_info);
     $table = $db_info['table'];
-    $app_id = db_result(db_query("SELECT ca.nid FROM {{$table}} ca
+    // TODO Please convert this statement to the D7 database API syntax.
+    $app_id = db_query("SELECT ca.nid FROM {{$table}} ca
     LEFT JOIN {node} n on ca.nid = n.nid
-    WHERE type = 'course_credit_application' and field_course_nid_value = %d", arg(1)));
+    WHERE type = 'course_credit_application' and field_course_nid_value = %d", arg(1))->fetchField();
   }
 
   $form_id = 'course_credit_application_node_form';
@@ -475,6 +480,10 @@ function course_credit_migrate_import_from_cecredits($node) {
   course_credit_save_course_credit_type_instance($credit_type_instance);
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_save_credit_type(&$credit_type) {
   if (!course_credit_get_credit_type($credit_type['type'])) {
     return drupal_write_record('course_credit_type', $credit_type);
@@ -484,6 +493,10 @@ function course_credit_save_credit_type(&$credit_type) {
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_save_course_credit_type_instance(&$credit_type_instance) {
   if (is_object($credit_type_instance)) {
     $credit_type_instance = (array) $credit_type_instance;
@@ -504,11 +517,11 @@ function course_credit_save_course_credit_type_instance(&$credit_type_instance) 
 function course_credit_get_credit_type($type) {
   if (is_numeric($type)) {
     $sql = "SELECT * FROM  {course_credit_type} WHERE ctid = %d";
-    $result = db_query($sql, $type);
+    $result = db_query("SELECT * FROM  {course_credit_type} WHERE ctid = :ctid", array(':ctid' => $type));
   }
   else {
     $sql = "SELECT * FROM  {course_credit_type} WHERE type = '%s'";
-    $result = db_query($sql, $type);
+    $result = db_query("SELECT * FROM  {course_credit_type} WHERE type = :type", array(':type' => $type));
   }
   return db_fetch_object($result);
 }
@@ -520,12 +533,12 @@ function course_credit_get_credit_type($type) {
  */
 function course_credit_get_credit_type_instance($nid, $ctid) {
   $sql = "SELECT * FROM  {course_credit} WHERE nid = %d AND ctid = %d";
-  $result = db_query($sql, $nid, $ctid);
+  $result = db_query("SELECT * FROM  {course_credit} WHERE nid = :nid AND ctid = :ctid", array(':nid' => $nid, ':ctid' => $ctid));
   return db_fetch_object($result);
 }
 
 /**
- * Implementation of alter hook_course_resource_links_to_add_alter().
+ * Implements hook_course_resource_links_to_add_alter().
  */
 function course_credit_course_resource_links_to_add_alter(&$new_activity_array) {
   /*  $has_app = db_result(db_query("SELECT nid FROM {content_type_course_credit_application} WHERE field_course_nid_value = %d", arg(1)));
@@ -540,7 +553,7 @@ function course_credit_course_resource_links_to_add_alter(&$new_activity_array) 
 }
 
 /**
- * Implementation of alter hook_course_resource_links_to_edit_alter().
+ * Implements hook_course_resource_links_to_edit_alter().
  */
 function course_credit_course_resource_links_to_edit_alter(&$new_activity_array) {
   /*  $has_app = db_result(db_query("SELECT nid FROM {content_type_course_credit_application} WHERE field_course_nid_value = %d", arg(1)));
@@ -555,7 +568,7 @@ function course_credit_course_resource_links_to_edit_alter(&$new_activity_array)
 }
 
 /**
- * Implementation of hook_course_nodeapi_extra().
+ * Implements hook_course_nodeapi_extra().
  *
  * Load credit type instances for this course.
  */
@@ -577,11 +590,61 @@ function course_credit_course_nodeapi_extra($node, $op) {
 }
 
 /**
- * Implementation of hook_nodeapi().
+ * Implements hook_node_view().
  */
-function course_credit_nodeapi(&$node, $op, $a3, $a4) {
-  global $user;
+function course_credit_node_view($node, $view_mode = 'full') {
+  if (TRUE && course_credit_node_is_creditable($node)) {
+    $node->content['course_credit']['#value'] = course_credit_render_credit($node);
+  }
+}
 
+/**
+ * Implements hook_node_load().
+ */
+function course_credit_node_load($node, $types) {
+  if (TRUE && course_credit_node_is_creditable($node)) {
+    $credits = array();
+    $course_credit_awarded = array();
+
+    $sql = "select cc.*, cct.title, cct.type, cct.description from {course_credit} cc
+    inner join {course_credit_type} cct using (ctid)
+    where nid = %d";
+    $result = db_query($sql, $node->nid);
+    $credits = array();
+    while ($row = db_fetch_object($result)) {
+      $credits[$row->ctid] = $row;
+    }
+
+    $sql = "select * from {course_credit_awarded}
+    where uid = %d and nid = %d";
+    $result = db_query($sql, $user->uid, $node->nid);
+    while ($row = db_fetch_object($result)) {
+      $course_credit_awarded[$row->ctid] = $row;
+    }
+
+    return array(
+      'course_credit_awarded' => $course_credit_awarded,
+      'course_credit' => $credits,
+    );
+  }
+}
+
+/**
+ * Implements hook_node_delete().
+ */
+function course_credit_node_delete($node) {
+  if (TRUE) {
+    db_query("delete from {course_credit_awarded} where nid = %d", $node->nid);
+    db_query("delete from {course_credit} where nid = %d", $node->nid);
+  }
+}
+
+/**
+ * Implements hook_nodeapi().
+ */
+function course_credit_nodeapi_OLD(&$node, $op, $a3, $a4) {
+  // TODO Remaining code in this function needs to be moved to the appropriate new hook function.
+  global $user;
   if (in_array($op, array('insert', 'update')) && course_credit_node_is_creditable($node)) {
     if (count($node->course_credit)) {
       // Clear out old values.
@@ -613,7 +676,6 @@ function course_credit_nodeapi(&$node, $op, $a3, $a4) {
       db_query($sql, $max_credits, $node->nid);
     }
   }
-
   if ($node->type == 'course_credit_application') {
     if ($op == 'presave' && empty($node->field_course_nid[0]['value'])) {
       // Associate node with this app for credit.
@@ -627,41 +689,6 @@ function course_credit_nodeapi(&$node, $op, $a3, $a4) {
         drupal_goto("node/" . $node->field_course_nid[0]['value']);
         break;
     }
-  }
-
-  if ($op == 'view' && course_credit_node_is_creditable($node)) {
-    $node->content['course_credit']['#value'] = course_credit_render_credit($node);
-  }
-
-  if ($op == 'load' && course_credit_node_is_creditable($node)) {
-    $credits = array();
-    $course_credit_awarded = array();
-
-    $sql = "select cc.*, cct.title, cct.type, cct.description from {course_credit} cc
-    inner join {course_credit_type} cct using (ctid)
-    where nid = %d";
-    $result = db_query($sql, $node->nid);
-    $credits = array();
-    while ($row = db_fetch_object($result)) {
-      $credits[$row->ctid] = $row;
-    }
-
-    $sql = "select * from {course_credit_awarded}
-    where uid = %d and nid = %d";
-    $result = db_query($sql, $user->uid, $node->nid);
-    while ($row = db_fetch_object($result)) {
-      $course_credit_awarded[$row->ctid] = $row;
-    }
-
-    return array(
-      'course_credit_awarded' => $course_credit_awarded,
-      'course_credit' => $credits,
-    );
-  }
-
-  if ($op == 'delete') {
-    db_query("delete from {course_credit_awarded} where nid = %d", $node->nid);
-    db_query("delete from {course_credit} where nid = %d", $node->nid);
   }
 }
 
@@ -700,11 +727,11 @@ function course_credit_award_save($record = array()) {
 
   if ($record['type'] && !$record['ctid']) {
     // Preparation for removing the ctid field and going by machine names instead. Much more reliable.
-    $record['ctid'] = db_result(db_query("select ctid from {course_credit_type} where type = '%s'", $record['type']));
+    $record['ctid'] = db_query("select ctid from {course_credit_type} where type = '%s'", $record['type'])->fetchField();
   }
 
   //check for the credit award record:
-  $existing = db_fetch_object(db_query("SELECT * FROM {course_credit_awarded} WHERE ctid = %d AND nid = %d AND uid = %d", $record['ctid'], $record['nid'], $record['uid']));
+  $existing = db_fetch_object(db_query("SELECT * FROM {course_credit_awarded} WHERE ctid = :ctid AND nid = :nid AND uid = :uid", array(':ctid' => $record['ctid'], ':nid' => $record['nid'], ':uid' => $record['uid'])));
 
   if (!$existing->expiration && !isset($record['expiration'])) {
     // New record, or old record with no expiration, and expiration not
@@ -721,7 +748,7 @@ function course_credit_award_save($record = array()) {
         break;
       case 'credit_awarded':
         // Credit awarded date + offset.
-        $expiration = time() + $ci->expiration_offset;
+        $expiration = REQUEST_TIME + $ci->expiration_offset;
         break;
     }
 
@@ -736,7 +763,7 @@ function course_credit_award_save($record = array()) {
 
   if (!$existing->date && !isset($record['date'])) {
     // New or no date or date not provided - timestamp the claim.
-    $record['date'] = time();
+    $record['date'] = REQUEST_TIME;
   }
 
   // Insert or update a record.
@@ -755,9 +782,17 @@ function course_credit_award_save($record = array()) {
   return $ret;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_award_delete($ccaid) {
   //check for the credit award record:
-  db_query("DELETE FROM {course_credit_awarded} WHERE ccaid = %d", $ccaid);
+  // TODO Please review the conversion of this statement to the D7 database API syntax.
+  /* db_query("DELETE FROM {course_credit_awarded} WHERE ccaid = %d", $ccaid) */
+  db_delete('course_credit_awarded')
+  ->condition('ccaid', $ccaid)
+  ->execute();
   watchdog("course_credit", "course credit award deleted for ccaid:{$ccaid}");
   return TRUE;
 }
@@ -788,7 +823,7 @@ function course_credit_fields() {
 /**
  * Admin form for course credit.
  */
-function course_credit_settings_form() {
+function course_credit_settings_form($form, &$form_state) {
   drupal_set_title('Course credit settings');
 
   $form = array();
@@ -846,7 +881,7 @@ function course_credit_settings_form() {
     '#collapsed' => TRUE,
   );
 
-  foreach (node_get_types() as $type => $info) {
+  foreach (node_type_get_types() as $type => $info) {
     $form['creditable_types']["course_credit_creditable_$type"] = array(
       '#title' => $info->name,
       '#type' => 'checkbox',
@@ -881,7 +916,7 @@ function course_credit_settings_form() {
 /**
  * Credit application form.
  */
-function course_credit_app_form(&$form_state, $node) {
+function course_credit_app_form($form, &$form_state, $node) {
   global $user;
 
   drupal_set_title(drupal_get_title() . ': Credit claiming');
@@ -893,9 +928,10 @@ function course_credit_app_form(&$form_state, $node) {
     $field_info = content_fields('field_course_nid');
     $db_info = content_database_info($field_info);
     $table = $db_info['table'];
-    $appnid = db_result(db_query("SELECT ca.nid FROM {{$table}} ca
+    // TODO Please convert this statement to the D7 database API syntax.
+    $appnid = db_query("SELECT ca.nid FROM {{$table}} ca
     LEFT JOIN {node} n on ca.nid = n.nid
-    WHERE type = 'course_credit_application' and field_course_nid_value = %d", $node->nid));
+    WHERE type = 'course_credit_application' and field_course_nid_value = %d", $node->nid)->fetchField();
   }
 
   if (count($node->course_credit)) {
@@ -1016,6 +1052,10 @@ function course_credit_app_form(&$form_state, $node) {
 /*
  *
  */
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_app_form_submit(&$form, &$form_state) {
   global $user;
   $account     = $user;
@@ -1052,9 +1092,19 @@ function course_credit_app_form_submit(&$form, &$form_state) {
   module_invoke_all('credit_application_submit', $form_post, $course_node, $app_node, $account);
   $send_to = "node/{$course_node->nid}/course-complete";
   //update course report with credits and status update
-  db_query("UPDATE {course_report} SET cecredits = %f, section = '%s', section_name = '%s' WHERE nid = %d AND uid = %d", $variable_credits_claimed, 'complete', 'Complete', $course_node->nid, $account->uid);
+  // TODO Please review the conversion of this statement to the D7 database API syntax.
+  /* db_query("UPDATE {course_report} SET cecredits = %f, section = '%s', section_name = '%s' WHERE nid = %d AND uid = %d", $variable_credits_claimed, 'complete', 'Complete', $course_node->nid, $account->uid) */
+  db_update('course_report')
+  ->fields(array(
+    'cecredits' => $variable_credits_claimed,
+    'section' => 'complete',
+    'section_name' => 'Complete',
+  ))
+  ->condition('nid', $course_node->nid)
+  ->condition('uid', $account->uid)
+  ->execute();
   //send to recieve certificate
-  $form['#redirect'] = $send_to;
+  $form_state['#redirect'] = $send_to;
 }
 
 /**
@@ -1066,7 +1116,8 @@ function course_credit_app_form_submit(&$form, &$form_state) {
  * @ingroup forms
  * @see course_credit_app_form()
  */
-function theme_course_credit_app_form($form) {
+function theme_course_credit_app_form($variables) {
+  $form = $variables['form'];
   $output = '';
   //$output .= drupal_render($form['date']);
   $output .= drupal_render($form['statement']);
@@ -1083,13 +1134,13 @@ function theme_course_credit_app_form($form) {
   $output = $object->output;
 
   // Render all form elements that haven't already been rendered.
-  $output .= drupal_render($form);
+  $output .= drupal_render_children($form);
 
   return $output;
 }
 
 /**
- * Implementation of hook_validate.
+ * Implements hook_validate().
  *
  * @see course_credit_app_form().
  */
@@ -1146,11 +1197,15 @@ function course_credit_app_form_validate($form, &$form_state) {
   }
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_can_apply_access($course_node) {
   global $user;
   // Let other modules know that we are about to claim credit.
   module_invoke_all('course_credit_check_completion', $course_node);
-  $has_completed_course = db_result(db_query("SELECT 1 FROM {course_report} WHERE uid = %d AND nid = %d AND complete = %d", $user->uid, $course_node->nid, 1));
+  $has_completed_course = db_query("SELECT 1 FROM {course_report} WHERE uid = :uid AND nid = :nid AND complete = :complete", array(':uid' => $user->uid, ':nid' => $course_node->nid, ':complete' => 1))->fetchField();
 
   // If user has not completed course, then prevent access. Originally we
   // allowed for admin to bypass this, but it confuses people who have the
@@ -1169,13 +1224,17 @@ function course_credit_can_apply_access($course_node) {
  *
  * If user is eligible for credit and hasn't claimed, alter the final link.
  */
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_certificate_final_step_alter(&$step_array, $node, $account) {
   global $base_url;
 
   if (count(course_credit_user_credit_types($node, $account))) {
     // Found eligible credit type.
     $sql = "SELECT 1 FROM {course_credit_awarded} WHERE nid = %d AND uid = %d";
-    $awarded = db_result(db_query($sql, $node->nid, $account->uid));
+    $awarded = db_query("SELECT 1 FROM {course_credit_awarded} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $account->uid))->fetchField();
     if (!$awarded && $step_array['link'] != '#') {
       // User hasn't claimed credit.
       $step_array['link'] = url("node/{$node->nid}/course-credit-app");
@@ -1189,27 +1248,36 @@ function course_credit_certificate_final_step_alter(&$step_array, $node, $accoun
  *
  * @todo: remove dependency on node based credit application
  */
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_course_report_alter(&$entry, $account) {
   if (db_table_exists('content_type_course_credit_application')) {
     $field_info = content_fields('field_course_nid');
     $db_info = content_database_info($field_info);
     $table = $db_info['table'];
-    $app_node_nid = db_result(db_query("SELECT ca.nid FROM {{$table}} ca
+    // TODO Please convert this statement to the D7 database API syntax.
+    $app_node_nid = db_query("SELECT ca.nid FROM {{$table}} ca
     LEFT JOIN {node} n on ca.nid = n.nid
-    WHERE type = 'course_credit_application' and field_course_nid_value = %d", $entry->nid));
+    WHERE type = 'course_credit_application' and field_course_nid_value = %d", $entry->nid)->fetchField();
   }
 
   $sql = "SELECT 1 FROM {course_credit_awarded} WHERE nid = %d AND uid = %d";
-  $awarded = db_result(db_query($sql, $entry->nid, $account->uid));
+  $awarded = db_query("SELECT 1 FROM {course_credit_awarded} WHERE nid = :nid AND uid = :uid", array(':nid' => $entry->nid, ':uid' => $account->uid))->fetchField();
   if ($entry->complete && $app_node_nid && !$awarded) {
     $entry->section = 'course_credit';
     $entry->section_name = 'Application for Credit';
   }
 }
 
-function course_credit_type_map_form(&$form_state, $type) {
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function course_credit_type_map_form($form, &$form_state, $type) {
   // @todo set this properly in the menu using placeholders.
-  drupal_set_title(t('Edit credit type mapping for %type', array('%type' => $type)));
+  drupal_set_title(t('Edit credit type mapping for %type', array('%type' => $type)), PASS_THROUGH);
 
   $stored = variable_get('course_credit_type_map_' . $type, array());
 
@@ -1298,7 +1366,7 @@ function course_credit_type_map_form(&$form_state, $type) {
     );
   }
 
-  $form['#redirect'] = 'admin/settings/course/credit/types';
+  $form_state['#redirect'] = 'admin/config/course/credit/types';
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -1308,12 +1376,20 @@ function course_credit_type_map_form(&$form_state, $type) {
   return $form;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_type_map_form_submit(&$form, &$form_state) {
   variable_set('course_credit_type_map_' . $form_state['values']['type'], $form_state['values']['map']);
   drupal_set_message(t('Credit type %type mappings saved.', array('%type' => $form_state['values']['type'])));
 }
 
-function course_credit_types_form() {
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function course_credit_types_form($form, &$form_state) {
   $form = array();
 
   $form['#theme'] = 'course_credit_types_form';
@@ -1358,7 +1434,7 @@ function course_credit_types_form() {
         '#default_value' => $type->enable_variable_credit,
       ),
       'edit' => array(
-        '#value' => l('Edit', "admin/settings/course/credit/types/$type->type/map") . ' | ' . l('Delete', "admin/settings/course/credit/types/$type->type/delete"),
+        '#value' => l('Edit', "admin/config/course/credit/types/$type->type/map") . ' | ' . l('Delete', "admin/config/course/credit/types/$type->type/delete"),
       ),
     );
   }
@@ -1374,7 +1450,8 @@ function course_credit_types_form() {
 /**
  * Theme credit types form as a table.
  */
-function theme_course_credit_types_form($form) {
+function theme_course_credit_types_form($variables) {
+  $form = $variables['form'];
   $rows = array();
   $out = '<p>These are the default settings that will be used when creating a course.</p>';
 
@@ -1394,12 +1471,16 @@ function theme_course_credit_types_form($form) {
       }
     }
     else {
-      $out .= drupal_render($form[$key]);
+      $out .= drupal_render_children($form[$key]);
     }
   }
   return theme_table($headers, $rows) . $out;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_types_form_submit($form, $form_state) {
   foreach ($form_state['values']['credit_types'] as $key => $credit_type) {
     unset($credit_type['type']);
@@ -1506,19 +1587,19 @@ function course_credit_user_credit_types($node, $user) {
 }
 
 /**
- * Implementation of hook_access_certificate().
+ * Implements hook_access_certificate().
  *
  * Block access to certificate if user can claim credit, but hasn't.
  */
 function course_credit_access_certificate($node, $user) {
   if (course_credit_node_is_creditable($node)) {
     $sql = "select 1 from  {course_report} where nid = %d and uid = %d and complete = 1";
-    if (!db_result(db_query($sql, $node->nid, $user->uid))) {
+    if (!db_query($sql, $node->nid, $user->uid)->fetchField()) {
       return FALSE;
     }
 
     $sql = "select 1 from  {course_credit_awarded} where nid = %d and uid = %d limit 1";
-    if (db_result(db_query($sql, $node->nid, $user->uid))) {
+    if (db_query($sql, $node->nid, $user->uid)->fetchField()) {
       return TRUE;
     }
     else {
@@ -1530,7 +1611,7 @@ function course_credit_access_certificate($node, $user) {
 }
 
 /**
- * Implementation of hook_token_list().
+ * Implements hook_token_list().
  */
 function course_credit_token_list($type = 'all') {
   $tokens = array();
@@ -1573,7 +1654,7 @@ function course_credit_token_list($type = 'all') {
 }
 
 /**
- * Implementation of hook_token_values().
+ * Implements hook_token_values().
  */
 function course_credit_token_values($type, $object = NULL) {
   $values = array();
@@ -1613,7 +1694,7 @@ function course_credit_token_values($type, $object = NULL) {
 }
 
 /**
- * Implementation of hook_views_api().
+ * Implements hook_views_api().
  */
 function course_credit_views_api() {
   return array(
@@ -1622,7 +1703,7 @@ function course_credit_views_api() {
 }
 
 /**
- * Implementation of hook_content_extra_weights().
+ * Implements hook_content_extra_weights().
  */
 function course_credit_content_extra_fields($type) {
   $extras = array();
@@ -1640,7 +1721,7 @@ function course_credit_content_extra_fields($type) {
 }
 
 /**
- * Implementation of hook_features_api().
+ * Implements hook_features_api().
  */
 function course_credit_features_api() {
   return array(
@@ -1654,7 +1735,7 @@ function course_credit_features_api() {
 }
 
 /**
- * Implementation of hook_features_export().
+ * Implements hook_features_export().
  *
  * Add profile/certificate mappings to pipe.
  */
@@ -1671,7 +1752,7 @@ function course_credit_type_features_export($data, &$export, $module_name) {
 }
 
 /**
- * Implementation of hook_features_export_render().
+ * Implements hook_features_export_render().
  */
 function course_credit_type_features_export_render($module_name, $data, $export = NULL) {
   $code = array();
@@ -1694,7 +1775,7 @@ function course_credit_type_load($type) {
 }
 
 /**
- * Implementation of hook_features_export_options().
+ * Implements hook_features_export_options().
  */
 function course_credit_type_features_export_options() {
   $options = array();
@@ -1709,7 +1790,7 @@ function course_credit_type_features_export_options() {
 }
 
 /**
- * Implementation of hook_features_revert().
+ * Implements hook_features_revert().
  *
  * Revert credit types. Search for an existing machine name, and update it if it
  * exists. Otherwise create a new one.
@@ -1739,6 +1820,10 @@ function phptemplate_menu_local_task($link, $active = FALSE) {
   return theme_menu_local_task($link, $active);
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_node_is_creditable(&$node) {
   if (course_node_is_course($node)) {
     return TRUE;
@@ -1750,30 +1835,39 @@ function course_credit_node_is_creditable(&$node) {
 }
 
 /**
- * Implementation of hook_user().
+ * Implements hook_user_load().
  */
-function course_credit_user($op, &$edit, &$account, $category = NULL) {
-  switch ($op) {
-    case 'load':
-      global $user;
-      $account->credits_earned = array();
-      $account->courses_completed = db_result(db_query("select count(uid) from {course_credit_awarded} where uid=%d", $user->uid));
-      $res = db_query("select credits,nid from {course_credit_awarded} where uid=%d", $user->uid);
-      $account->credits_earned['total'] = 0;
-      while ($row = db_fetch_array($res)) {
-        $account->credits_earned['total'] += $row['credits'];
-        $account->credits_earned[$row['nid']] = $row['credits'];
-      }
-      break;
-    case 'delete':
-      $sql = "DELETE FROM {course_credit_awarded} WHERE uid = %d";
-      db_query($sql, $account->uid);
-      break;
+function course_credit_user_load($users) {
+  global $user;
+  $account->credits_earned = array();
+  $account->courses_completed = db_query("select count(uid) from {course_credit_awarded} where uid=%d", $user->uid)->fetchField();
+  $res = db_query("select credits,nid from {course_credit_awarded} where uid=%d", $user->uid);
+  $account->credits_earned['total'] = 0;
+  while ($row = db_fetch_array($res)) {
+    $account->credits_earned['total'] += $row['credits'];
+    $account->credits_earned[$row['nid']] = $row['credits'];
   }
 }
 
 /**
- * Implementation of hook_ctools_plugin_directory().
+ * Implements hook_user_cancel().
+ */
+function course_credit_user_cancel($edit, $account, $method) {
+  $sql = "DELETE FROM {course_credit_awarded} WHERE uid = %d";
+  // TODO Please review the conversion of this statement to the D7 database API syntax.
+  /* db_query($sql, $account->uid) */
+  db_delete('course_credit_awarded')
+  ->condition('uid', $account->uid)
+  ->execute();
+}
+
+/**
+ * Implements hook_user().
+ */
+function course_credit_user_OLD($op, &$edit, &$account, $category = NULL) { }
+
+/**
+ * Implements hook_ctools_plugin_directory().
  */
 function course_credit_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'ctools' && $plugin_type == 'content_types') {
@@ -1799,7 +1893,7 @@ function course_credit_get_credit_types() {
 /**
  * @todo validate machine name
  */
-function course_credit_type_add_form() {
+function course_credit_type_add_form($form, &$form_state) {
   $form = array();
 
   $form['title'] = array(
@@ -1822,13 +1916,17 @@ function course_credit_type_add_form() {
     '#value' => 'Save',
   );
 
-  $form['#redirect'] = 'admin/settings/course/credit/types';
+  $form_state['#redirect'] = 'admin/config/course/credit/types';
 
   $form['#validate'][] = 'course_credit_type_add_form_validate';
 
   return $form;
 }
 
+/**
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
 function course_credit_type_add_form_validate($form, &$form_state) {
   $type = $form_state['values']['type'];
   if (!preg_match('/^[a-z0-9_]+$/', $type)) {
@@ -1850,11 +1948,11 @@ function course_credit_type_add_form_submit(&$form, &$form_state) {
 /**
  * Delete confirmation form.
  */
-function course_credit_type_delete_form(&$form_state, $type) {
+function course_credit_type_delete_form($form, &$form_state, $type) {
   $form['type']['#type'] = 'hidden';
   $form['type']['#value'] = $type;
-  $form['#redirect'] = 'admin/settings/course/credit/types';
-  return confirm_form($form, t('Are you sure you want to delete the credit type %type?', array('%type' => $type)), 'admin/settings/course/credit/types', 'Disabling it is probably a better idea. This cannot be un-done, and course credit will be deleted from users who received this credit type.');
+  $form_state['#redirect'] = 'admin/config/course/credit/types';
+  return confirm_form($form, t('Are you sure you want to delete the credit type %type?', array('%type' => $type)), 'admin/config/course/credit/types', 'Disabling it is probably a better idea. This cannot be un-done, and course credit will be deleted from users who received this credit type.');
 }
 
 /**
@@ -1866,10 +1964,15 @@ function course_credit_type_delete_form_submit(&$form, &$form_state) {
 }
 
 /**
- * Implementation of hook_course_unenrol().
+ * Implements hook_course_unenrol().
  */
 function course_credit_course_unenrol($node, $user) {
-  db_query("DELETE FROM {course_credit_awarded} WHERE nid = %d AND uid = %d", $node->nid, $user->uid);
+  // TODO Please review the conversion of this statement to the D7 database API syntax.
+  /* db_query("DELETE FROM {course_credit_awarded} WHERE nid = %d AND uid = %d", $node->nid, $user->uid) */
+  db_delete('course_credit_awarded')
+  ->condition('nid', $node->nid)
+  ->condition('uid', $user->uid)
+  ->execute();
 }
 
 /**
@@ -1887,7 +1990,7 @@ function course_credit_certificate_map_options() {
     'course_credit_awarded' => array(
       'title' => 'Awarded course credit',
       'options' => $options,
-      'description' => t('Using this mapping will award a certificate based on the credit type the user claimed after completing a course.<br/>You may set up eligibilty for credit types on the !link page.', array('!link' => l('credit types', 'admin/settings/course/credit/types'))),
+      'description' => t('Using this mapping will award a certificate based on the credit type the user claimed after completing a course.<br/>You may set up eligibilty for credit types on the !link page.', array('!link' => l('credit types', 'admin/config/course/credit/types'))),
     ),
   );
 }
@@ -1913,7 +2016,7 @@ function course_credit_certificate_map($node, $user, $map_type, $options) {
 }
 
 /**
- * Implementation of hook_date_api_fields().
+ * Implements hook_date_api_fields().
  *
  * Expose the awarded expiration date, credit claim time, and hard expiration
  * date for course credit to date API.
@@ -1933,7 +2036,7 @@ function course_credit_date_api_fields($field) {
 }
 
 /**
- * Implementation of hook_date_api_tables().
+ * Implements hook_date_api_tables().
  */
 function course_credit_date_api_tables() {
   return array('course_credit_awarded', 'course_credit');

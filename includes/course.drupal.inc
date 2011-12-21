@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_lms_info().
+ * Implements hook_lms_info().
  */
 function course_lms_info() {
   if (!variable_get('course_disable_builtin_lms', 0)) {
@@ -29,7 +29,7 @@ function course_lms_info() {
 }
 
 /**
- * Implementation of hook_lms_settings_form().
+ * Implements hook_lms_settings_form().
  */
 function course_lms_settings_form($lapp_id) {
   $form = array();
@@ -46,7 +46,7 @@ function course_lms_settings_form($lapp_id) {
 }
 
 /**
- * Implementation of hook_lms_status().
+ * Implements hook_lms_status().
  */
 function course_lms_status($lapp_id) {
   if ($lapp_id == 'drupal') {
@@ -58,7 +58,7 @@ function course_lms_status($lapp_id) {
 }
 
 /**
- * Implementation of hook_lms_install().
+ * Implements hook_lms_install().
  *
  * Enable modules necessary for this LMS to function.
  */
@@ -85,7 +85,7 @@ function course_lms_install($lapp_id) {
 function course_lms_postinstall() { }
 
 /**
- * Implementation of hook_lms_take_course().
+ * Implements hook_lms_take_course().
  */
 function course_lms_take_course($key, $node) {
   if ($key == 'drupal') {
@@ -94,7 +94,7 @@ function course_lms_take_course($key, $node) {
 }
 
 /**
- * Implementation of hook_lms_edit_course().
+ * Implements hook_lms_edit_course().
  */
 function course_lms_edit_course($key, $node) {
   if ($key == 'drupal') {

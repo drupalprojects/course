@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_course_object_info().
+ * Implements hook_course_object_info().
  */
 function course_content_course_object_info() {
   $types = content_types();
@@ -39,8 +39,11 @@ function course_content_course_object_api($node, $op, $object) {
   }
 }
 
-function course_content_nodeapi(&$node, $op, $a3, $a4) {
-  if ($op == 'view' && $a4 && variable_get("course_content_use_{$node->type}", 0)) {
+/**
+ * Implements hook_node_view().
+ */
+function course_content_node_view($node, $view_mode = 'full') {
+  if (TRUE && $a4 && variable_get("course_content_use_{$node->type}", 0)) {
     global $user;
     // Check if this node is part of a course context.
     if (course_determine_context($node)) {
@@ -51,7 +54,13 @@ function course_content_nodeapi(&$node, $op, $a3, $a4) {
 }
 
 /**
- * Implementation of hook_form_FORM_ID_alter().
+ * @todo Please document this function.
+ * @see http://drupal.org/node/1354
+ */
+function course_content_nodeapi_OLD(&$node, $op, $a3, $a4) { }
+
+/**
+ * Implements hook_form_FORM_ID_alter().
  */
 function course_content_form_node_type_form_alter(&$form, &$form_state) {
   // Alter the node type's configuration form to add our setting.
