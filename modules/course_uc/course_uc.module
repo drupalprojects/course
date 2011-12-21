@@ -2,6 +2,10 @@
 
 /**
  * Implements hook_ctools_plugin_directory().
+ *
+ * @param $owner
+ * @param $plugin_type
+ * @return string
  */
 function course_uc_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'ctools' && $plugin_type == 'content_types') {
@@ -39,7 +43,10 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
           drupal_get_destination(),
         ),
       );
-      $message = t($message, array('!login' => l('login', 'user/login', $options), '!register' => l('register', 'user/register', $options)));
+      $message = t($message, array(
+                                  '!login' => l('login', 'user/login', $options),
+                                  '!register' => l('register', 'user/register', $options)
+                             ));
 
       $form['course_uc']['#value'] = $message;
     }
@@ -54,44 +61,46 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
 
 /**
  * Implements hook_node_view().
+ *
+ * @param $node
+ * @param string $view_mode
  */
 function course_uc_node_view($node, $view_mode = 'full') {
-  if (TRUE) {
-    if (course_node_is_course($node) && !($node->sell_price > 0)) {
-      $hides = array(
-        'sell_price',
-        'display_price',
-        'model',
-        'list_price',
-        'cost',
-        'weight',
-        'dimensions',
-      );
-      foreach ($hides as $hide) {
-        unset($node->content[$hide]);
-      }
+  if (course_node_is_course($node) && !($node->sell_price > 0)) {
+    $hides = array(
+      'sell_price',
+      'display_price',
+      'model',
+      'list_price',
+      'cost',
+      'weight',
+      'dimensions',
+    );
+    foreach ($hides as $hide) {
+      unset($node->content[$hide]);
     }
   }
 }
 
 /**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * @param array $form
+ * @param array $form_state
+ * @param string $form_id
+ * @return void
  */
-function course_uc_nodeapi_OLD($node, $op, $a3, $a4) {
-  // TODO Remaining code in this function needs to be moved to the appropriate new hook function.
-  if ($form_id == 'course_admin_settings') {
-    $form['course_uc_restrict_qty'] = array(
-      '#title' => 'Restrict course products to 1 per customer.', '#description' > 'Course will restrict users from adding the product to cart if they have already purchased the course or already have the course in their cart.',
-      '#type' => 'checkbox',
-      '#default_value' => variable_get('course_uc_restrict_qty', 1),
-    );
-  }
+function course_uc_form_course_admin_settings_alter(&$form, &$form_state, $form_id = "course_admin_settings") {
+  $form['course_uc_restrict_qty'] = array(
+    '#title' => 'Restrict course products to 1 per customer.',
+    '#description' => 'Course will restrict users from adding the product to cart if they have already purchased the course or already have the course in their cart.',
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('course_uc_restrict_qty', 1),
+  );
 }
 
 /**
- * @todo Please document this function.
- * @see http://drupal.org/node/1354
+ * Implements hook_init().
  */
 function course_uc_init() {
   if (arg(1) == 'checkout') {
@@ -105,6 +114,9 @@ function course_uc_init() {
  * Implements hook_course_enrol().
  *
  * Satisfy payment requirement when manually enrolled.
+ *
+ * @param $node
+ * @param $user
  */
 function course_uc_course_enrol($node, $user) {
   $reqs = course_outline_get_course_requirements($node);
@@ -126,7 +138,12 @@ function course_uc_course_enrol($node, $user) {
 }
 
 /**
- * Implements hook_add_to_cart().
+ * Implements UC hook_add_to_cart().
+ *
+ * @param $nid
+ * @param $qty
+ * @param $data
+ * @return array
  */
 function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
   if (variable_get('course_uc_restrict_qty', 1)) {
@@ -146,7 +163,8 @@ function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
         return array(
           array(
             'success' => FALSE,
-            'message' => t("This course is already in your !cart.", array('!cart' => l('shopping cart', 'cart'))),
+            'message' => t("This course is already in your !cart.",
+              array('!cart' => l('shopping cart', 'cart'))),
             'silent' => FALSE,
           ),
         );
@@ -157,6 +175,9 @@ function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
 
 /**
  * Check if a user purchased a node previously.
+ * @param $uid
+ * @param $nid
+ * @return void
  */
 function course_uc_restrict_qty_check_purchased($uid, $nid) {
   $sql = "select 1 from {uc_orders} uco
@@ -168,8 +189,13 @@ function course_uc_restrict_qty_check_purchased($uid, $nid) {
 
 /**
  * Check if a node is in a user's cart.
+ *
+ * @param $uid
+ * @param $nid
+ * @return bool
  */
 function course_uc_restrict_qty_check_cart($uid, $nid) {
+  // @todo In what circumstance would $cid ever be set here?
   $cid = !(is_null($cid) || empty($cid)) ? $cid : uc_cart_get_id();
   $contents = uc_cart_get_contents($cid);
   foreach ($contents as $item) {
@@ -181,6 +207,8 @@ function course_uc_restrict_qty_check_cart($uid, $nid) {
 
 /**
  * Implements hook_uc_cart_alter().
+ *
+ * @param $cart_items
  */
 function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
   if (variable_get('course_uc_restrict_qty', 1)) {
@@ -191,6 +219,7 @@ function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
         $cart_items[$key]->qty = 1;
         $sql = "update {uc_cart_products} set qty = 1 where cart_id = %d and nid = %d";
         db_query($sql, $user->uid, $node->nid);
+        // @todo This conditional doesn't make sense. Where would $message have been set?
         if (!$message) {
           drupal_set_message('Sorry, you may not purchase multiple identical courses.', 'error');
           $message = true;
@@ -202,6 +231,9 @@ function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
 
 /**
  * Implements hook_form_FORM_ID_alter().
+ *
+ * @param $form
+ * @param $form_state
  */
 function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_state) {
   if (variable_get('course_uc_restrict_qty', 1)) {
@@ -243,6 +275,8 @@ function course_uc_ca_action() {
 
 /**
  * Loops through items in an Ubercart order and enrols the user in courses purchased.
+ *
+ * @param $order
  */
 function course_uc_enrol_user_in_ordered_courses($order) {
   foreach ($order->products as $product) {
@@ -258,8 +292,12 @@ function course_uc_enrol_user_in_ordered_courses($order) {
 }
 
 /**
+ * Implements hook_ca_predicate().
+ *
  * @todo Please document this function.
  * @see http://drupal.org/node/1354
+ *
+ * @return array
  */
 function course_uc_ca_predicate() {
   $configurations['course_uc_enrol_user_in_ordered_courses'] = array(
