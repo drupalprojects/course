@@ -66,10 +66,10 @@ function course_requirements_can_take_course($node, $user) {
 
   if ($block) {
     return array(array(
-      'success' => FALSE,
-      'header' => 'You must complete the following courses before taking this course.',
-      'message' => theme_table(array('Course','Your Status'), $rows),
-    ));
+        'success' => FALSE,
+        'header' => 'You must complete the following courses before taking this course.',
+        'message' => theme_table(array('Course', 'Your Status'), $rows),
+      ));
   }
 }
 
@@ -109,5 +109,5 @@ function course_requirements_course_outline_completion_links_alter(&$links, $nod
     ' ',
     ' ',
     t('This course is a dependency of !courses', array('!courses' => implode(',', $courses))),
- );
+  );
 }

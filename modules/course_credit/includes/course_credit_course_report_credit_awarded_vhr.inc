@@ -29,7 +29,7 @@ class course_credit_course_report_credit_awarded extends views_handler_relations
     $join->construct();
     $this->ensure_my_table();
 
-    $alias = $join->definition['table'] .'_'. $join->definition['left_table'];
+    $alias = $join->definition['table'] . '_' . $join->definition['left_table'];
     $this->alias = $this->query->add_relationship($alias, $join, $this->definition['base'], $this->relationship);
   }
 }

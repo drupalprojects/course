@@ -9,7 +9,10 @@ class views_handler_field_course_credit_node_active_types extends views_handler_
    */
   function construct() {
     parent::construct();
-    $this->additional_fields['nid'] = array('table' => 'node', 'field' => 'nid');
+    $this->additional_fields['nid'] = array(
+      'table' => 'node',
+      'field' => 'nid',
+    );
   }
 
   /**

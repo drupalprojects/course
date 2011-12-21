@@ -34,5 +34,4 @@ function course_course_take_course_button_content_type_admin_title($subtype, $co
   return t('"@s" Course take course button', array('@s' => $context->identifier));
 }
 
-function course_course_take_course_button_content_type_edit_form(&$form, &$form_state) {
-}
+function course_course_take_course_button_content_type_edit_form(&$form, &$form_state) { }

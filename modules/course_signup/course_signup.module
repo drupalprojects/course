@@ -19,7 +19,7 @@ function course_signup_admin() {
   foreach ($views as $view) {
     foreach (array_keys($view->display) as $display_id) {
       if ($display_id != 'default' || 1) {
-        $key = $view->name .':'. $display_id;
+        $key = $view->name . ':' . $display_id;
         $view_options[$key] = theme('signup_settings_view_label', $view, $display_id);
       }
     }
@@ -202,7 +202,7 @@ function course_signup_form_alter(&$form, &$form_state, $form_id) {
         $form['status']['#options'][1] = 'active';
         foreach (element_children($form) as $k) {
           // Replace all instances of signup text with enrollment.
-          $form[$k]['#title'] = t(str_replace(array('Signup', 'signup'), array('Enrollment','enrollment'), $form[$k]['#title']));
+          $form[$k]['#title'] = t(str_replace(array('Signup', 'signup'), array('Enrollment', 'enrollment'), $form[$k]['#title']));
         }
       }
       if ($node->course['type'] == 'live') {
@@ -245,7 +245,7 @@ function course_signup_init() {
   if (course_node_is_course($node)) {
     global $conf;
     // Switch courses to our view with enrollments and bulk operations.
-    $conf['signup_admin_list_view'] = variable_get('signup_admin_list_view_course_override','course_signup_user_vbo_admin');
+    $conf['signup_admin_list_view'] = variable_get('signup_admin_list_view_course_override', 'course_signup_user_vbo_admin');
     $conf['signup_ignore_default_fields'] = 1;
     $conf['signup_fieldset_collapsed'] = 0;
     $conf['uc_signup_add_cart_text'] = 'Register';

@@ -317,7 +317,7 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
         // Display conditionally.
         // List relative options.
         $relative_options = array();
-        foreach(array_keys($expiration_types) as $key) {
+        foreach (array_keys($expiration_types) as $key) {
           if (!in_array($key, array('date', ''))) {
             $relative_options[] = $key;
           }
@@ -341,7 +341,7 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
       $summary = course_credit_type_fieldset_summary($type->ctid, $form, $node);
       if (!empty($summary)) {
         // Append the summary to the fieldset title.
-        $form['course_credit'][$type->ctid]['#title'] .= ' ('. implode(' | ', $summary) .')';
+        $form['course_credit'][$type->ctid]['#title'] .= ' (' . implode(' | ', $summary) . ')';
       }
     }
   }
@@ -442,7 +442,7 @@ function course_credit_application_add($node) {
   if ($app_id) {
     $appnode = node_load($app_id);
   }
-  else  {
+  else {
     $appnode->type = 'course_credit_application';
     //node_object_prepare($appnode);
   }
@@ -455,7 +455,7 @@ function course_credit_application_add($node) {
 /**
  *
  */
-function course_credit_application_check($node, $uid) {}
+function course_credit_application_check($node, $uid) { }
 
 /**
  * Update from using the CCK field_cecredits.
@@ -479,7 +479,7 @@ function course_credit_save_credit_type(&$credit_type) {
   if (!course_credit_get_credit_type($credit_type['type'])) {
     return drupal_write_record('course_credit_type', $credit_type);
   }
-  else  {
+  else {
     return drupal_write_record('course_credit_type', $credit_type, array('type'));
   }
 }
@@ -491,7 +491,7 @@ function course_credit_save_course_credit_type_instance(&$credit_type_instance) 
   if (!course_credit_get_credit_type_instance($credit_type_instance['nid'], $credit_type_instance['ctid'])) {
     return drupal_write_record('course_credit', $credit_type_instance);
   }
-  else  {
+  else {
     return drupal_write_record('course_credit', $credit_type_instance, array('nid', 'ctid'));
   }
 }
@@ -506,7 +506,7 @@ function course_credit_get_credit_type($type) {
     $sql = "SELECT * FROM  {course_credit_type} WHERE ctid = %d";
     $result = db_query($sql, $type);
   }
-  else  {
+  else {
     $sql = "SELECT * FROM  {course_credit_type} WHERE type = '%s'";
     $result = db_query($sql, $type);
   }
@@ -528,30 +528,30 @@ function course_credit_get_credit_type_instance($nid, $ctid) {
  * Implementation of alter hook_course_resource_links_to_add_alter().
  */
 function course_credit_course_resource_links_to_add_alter(&$new_activity_array) {
-/*  $has_app = db_result(db_query("SELECT nid FROM {content_type_course_credit_application} WHERE field_course_nid_value = %d", arg(1)));
-  if (!$has_app) {
-    $new_activity_array['ethosce_credit_application'] = array(
-      'type' => 'ethosce_credit_application',
-      'title' => 'Application for credit',
-      'add' => 'credit-application',
-      'url_add_resource' => '',
-    );
-  }*/
+  /*  $has_app = db_result(db_query("SELECT nid FROM {content_type_course_credit_application} WHERE field_course_nid_value = %d", arg(1)));
+   if (!$has_app) {
+   $new_activity_array['ethosce_credit_application'] = array(
+   'type' => 'ethosce_credit_application',
+   'title' => 'Application for credit',
+   'add' => 'credit-application',
+   'url_add_resource' => '',
+   );
+   }*/
 }
 
 /**
  * Implementation of alter hook_course_resource_links_to_edit_alter().
  */
 function course_credit_course_resource_links_to_edit_alter(&$new_activity_array) {
-/*  $has_app = db_result(db_query("SELECT nid FROM {content_type_course_credit_application} WHERE field_course_nid_value = %d", arg(1)));
-  if ($has_app) {
-    $new_activity_array['ethosce_credit_application'] = array(
-      'type' => 'ethosce_credit_application',
-      'title' => 'Application for credit',
-      'add' => 'credit-application',
-      'url_add_resource' => '',
-    );
-  }*/
+  /*  $has_app = db_result(db_query("SELECT nid FROM {content_type_course_credit_application} WHERE field_course_nid_value = %d", arg(1)));
+   if ($has_app) {
+   $new_activity_array['ethosce_credit_application'] = array(
+   'type' => 'ethosce_credit_application',
+   'title' => 'Application for credit',
+   'add' => 'credit-application',
+   'url_add_resource' => '',
+   );
+   }*/
 }
 
 /**
@@ -745,7 +745,7 @@ function course_credit_award_save($record = array()) {
     watchdog("course_credit", "course credit awarded new for uid:{$record['uid']} ctid:{$record['ctid']} nid:{$record['nid']}");
   }
   else {
-    $ret = drupal_write_record('course_credit_awarded', $record, array('ctid','nid', 'uid'));
+    $ret = drupal_write_record('course_credit_awarded', $record, array('ctid', 'nid', 'uid'));
     watchdog("course_credit", "course credit award updated for uid:{$record['uid']} ctid:{$record['ctid']} nid:{$record['nid']}");
   }
 
@@ -796,7 +796,7 @@ function course_credit_settings_form() {
   $fallback_options[] = 'none';
   $sql = "select title, type from {course_credit_type}";
   $result = db_query($sql);
-  while($row = db_fetch_object($result)) {
+  while ($row = db_fetch_object($result)) {
     $fallback_options[$row->type] = strip_tags($row->title);
   }
 
@@ -826,7 +826,7 @@ function course_credit_settings_form() {
   $form['credit_application'] = array(
     '#type' => 'fieldset',
     '#title' => t('Application for credit'),
-    '#collapsed' =>  variable_get('course_credit_cck_field', FALSE) !== FALSE,
+    '#collapsed' => variable_get('course_credit_cck_field', FALSE) !== FALSE,
     '#collapsible' => TRUE,
   );
 
@@ -839,7 +839,7 @@ function course_credit_settings_form() {
   );
 
   $form['creditable_types'] = array(
-    '#type'=> 'fieldset',
+    '#type' => 'fieldset',
     '#title' => 'Extra creditable types',
     '#description' => 'By default, courses are creditable. For some edge cases, crediting other content types may be useful.',
     '#collapsible' => TRUE,
@@ -899,7 +899,7 @@ function course_credit_app_form(&$form_state, $node) {
   }
 
   if (count($node->course_credit)) {
-    foreach($node->course_credit as $credit_type) {
+    foreach ($node->course_credit as $credit_type) {
       if ($credit_type->enable_variable_credit) {
         $needs_credit_app = TRUE;
         break;
@@ -951,7 +951,7 @@ function course_credit_app_form(&$form_state, $node) {
       $form['credits_claimed'][$credit_type_info->type] = array(
         '#type' => 'textfield',
         '#prefix' => t('!title credit can be claimed in @increments increments up to a maximum of @credits', array(
-          '!title' => str_replace(' credit', '',$credit_type_info->title),
+          '!title' => str_replace(' credit', '', $credit_type_info->title),
           '@credits' => number_format($credit_type->max, 2),
           '@plural' => format_plural($credit_type->max, 'credits', 'credits'),
           '@increments' => $credit_type->increments,
@@ -969,7 +969,7 @@ function course_credit_app_form(&$form_state, $node) {
       $form['credits_claimed'][$credit_type_info->type] = array(
         '#type' => 'textfield',
         '#prefix' => t('You can claim @credits !title @plural', array(
-          '!title' => str_replace(' credit', '',$credit_type_info->title),
+          '!title' => str_replace(' credit', '', $credit_type_info->title),
           '@credits' => number_format($credit_type->max, 2),
           '@plural' => format_plural($credit_type->max, 'credit', 'credits'),
         )),
@@ -993,7 +993,9 @@ function course_credit_app_form(&$form_state, $node) {
   );
 
   if (arg(2) == 'inframe') {
-    $form['inframe'] = array('#type' => 'hidden', '#value' => 1,
+    $form['inframe'] = array(
+      '#type' => 'hidden',
+      '#value' => 1,
     );
   }
 
@@ -1116,21 +1118,21 @@ function course_credit_app_form_validate($form, &$form_state) {
   if (is_array($credits_claimed)) {
     foreach ($credits_claimed as $key => $claim) {
       if ($credits_claimed_params[$key]['max'] < $claim) {
-        form_set_error('credits_claimed', t('Credits claimed exceed maximum of '. $credits_claimed_params[$key]['max'] .'.'));
+        form_set_error('credits_claimed', t('Credits claimed exceed maximum of ' . $credits_claimed_params[$key]['max'] . '.'));
       }
 
       if ($credits_claimed_params[$key]['min'] > $claim) {
-        form_set_error('credits_claimed', t('Credits claimed below minimum of '. $credits_claimed_params[$key]['min'] .'.'));
+        form_set_error('credits_claimed', t('Credits claimed below minimum of ' . $credits_claimed_params[$key]['min'] . '.'));
       }
 
-      $claim = (float)$claim;
-      $credit_increment = (float)$credits_claimed_params[$key]['increment'];
+      $claim = (float) $claim;
+      $credit_increment = (float) $credits_claimed_params[$key]['increment'];
       if ($credit_increment) {
         $mod = ($claim * 100) % ($credit_increment * 100);
       }
 
       if ($mod) {
-        form_set_error('credits_claimed', t('Credits claimed must be in increments of '. $credits_claimed_params[$key]['increment'] .'.'));
+        form_set_error('credits_claimed', t('Credits claimed must be in increments of ' . $credits_claimed_params[$key]['increment'] . '.'));
       }
     }
   }
@@ -1154,10 +1156,10 @@ function course_credit_can_apply_access($course_node) {
   // allowed for admin to bypass this, but it confuses people who have the
   // permissions and are testing a course.
   if (!$has_completed_course) {
-      // If certificate requirements exist and they do not have a completion
-      // record, we redirect them to a nice view of all the remaining
-      // requirements.
-      drupal_goto("node/{$course_node->nid}/course-complete");
+    // If certificate requirements exist and they do not have a completion
+    // record, we redirect them to a nice view of all the remaining
+    // requirements.
+    drupal_goto("node/{$course_node->nid}/course-complete");
   }
   return TRUE;
 }
@@ -1170,11 +1172,11 @@ function course_credit_can_apply_access($course_node) {
 function course_credit_certificate_final_step_alter(&$step_array, $node, $account) {
   global $base_url;
 
-   if (count(course_credit_user_credit_types($node, $account))) {
-     // Found eligible credit type.
+  if (count(course_credit_user_credit_types($node, $account))) {
+    // Found eligible credit type.
     $sql = "SELECT 1 FROM {course_credit_awarded} WHERE nid = %d AND uid = %d";
     $awarded = db_result(db_query($sql, $node->nid, $account->uid));
-    if (!$awarded && $step_array['link']!='#') {
+    if (!$awarded && $step_array['link'] != '#') {
       // User hasn't claimed credit.
       $step_array['link'] = url("node/{$node->nid}/course-credit-app");
       $step_array['target'] = "_top";
@@ -1209,7 +1211,7 @@ function course_credit_type_map_form(&$form_state, $type) {
   // @todo set this properly in the menu using placeholders.
   drupal_set_title(t('Edit credit type mapping for %type', array('%type' => $type)));
 
-  $stored = variable_get('course_credit_type_map_'. $type, array());
+  $stored = variable_get('course_credit_type_map_' . $type, array());
 
   $form = array();
 
@@ -1247,7 +1249,7 @@ function course_credit_type_map_form(&$form_state, $type) {
   if (module_exists('content_profile') && module_exists('optionwidgets')) {
     $types = content_types();
     foreach ($types as $key => $type) {
-      if (variable_get('content_profile_use_'. $key, 0)) {
+      if (variable_get('content_profile_use_' . $key, 0)) {
         $profile_types[] = $key;
       }
     }
@@ -1307,7 +1309,7 @@ function course_credit_type_map_form(&$form_state, $type) {
 }
 
 function course_credit_type_map_form_submit(&$form, &$form_state) {
-  variable_set('course_credit_type_map_'. $form_state['values']['type'], $form_state['values']['map']);
+  variable_set('course_credit_type_map_' . $form_state['values']['type'], $form_state['values']['map']);
   drupal_set_message(t('Credit type %type mappings saved.', array('%type' => $form_state['values']['type'])));
 }
 
@@ -1320,7 +1322,7 @@ function course_credit_types_form() {
   $types = course_credit_get_credit_types();
 
   $form['credit_types']['#tree'] = TRUE;
-  foreach($types as $type) {
+  foreach ($types as $type) {
     $form['credit_types'][$type->type] = array(
       '#tree' => TRUE,
       'title' => array(
@@ -1391,7 +1393,7 @@ function theme_course_credit_types_form($form) {
         $rows[] = $row;
       }
     }
-    else  {
+    else {
       $out .= drupal_render($form[$key]);
     }
   }
@@ -1449,14 +1451,14 @@ function course_credit_user_credit_types($node, $user) {
       // If credit type is active, try mappings.
 
       // Match against certificate field groups.
-      $mappings = variable_get('course_credit_type_map_'. $ct_instance->type, array());
+      $mappings = variable_get('course_credit_type_map_' . $ct_instance->type, array());
       if ($mappings['certificate']) {
         $fieldgroups = variable_get('certificate_field_groups', array());
         foreach ($mappings['certificate']['fieldgroups'] as $valid_group) {
           // $valid_group = the name of the fieldgroup (eg Physician) that we should allow claiming for
           foreach ($fieldgroups[$valid_group] as $valid_value) {
             //$valid_value = the value that triggers the fieldgroup
-            if (is_array($profile->$cck_profile_field) && count($profile->$cck_profile_field)){
+            if (is_array($profile->$cck_profile_field) && count($profile->$cck_profile_field)) {
               foreach ($profile->$cck_profile_field as $item) {
                 if ($item['value'] !== NULL && $item['value'] == $valid_value) {
                   //Trigger met. Pass this credit type.
@@ -1484,7 +1486,7 @@ function course_credit_user_credit_types($node, $user) {
       // Match against course user_types.
       if (is_array($mappings['course']['user_type'])) {
         if (in_array($enrolment->user_type, $mappings['course']['user_type'])) {
-            $valid_credit_instances[$ct_instance->type] = $ct_instance;
+          $valid_credit_instances[$ct_instance->type] = $ct_instance;
         }
       }
 
@@ -1546,7 +1548,7 @@ function course_credit_token_list($type = 'all') {
     );
     foreach ($rows as $row) {
       // We have to generate the tokens for every credit type.
-      foreach($fields as $field) {
+      foreach ($fields as $field) {
         $tokens['course credit']["course-credit-{$row->type}-$field"] = $field;
       }
     }
@@ -1561,7 +1563,7 @@ function course_credit_token_list($type = 'all') {
     );
     foreach ($rows as $row) {
       // We have to generate the tokens for every credit type.
-      foreach($fields as $field) {
+      foreach ($fields as $field) {
         $tokens['course credit']["course-node-credit-{$row->type}-$field"] = "Node $row->type $field";
       }
     }
@@ -1584,7 +1586,7 @@ function course_credit_token_values($type, $object = NULL) {
     $result = db_query($sql, $object['node']->nid, $object['node']->nid, $object['user']->uid);
     while ($row = db_fetch_object($result)) {
       foreach ($row as $key => $value) {
-        if (in_array($key, array('min','max', 'credits'))) {
+        if (in_array($key, array('min', 'max', 'credits'))) {
           $value = number_format($value, 2);
         }
         $values["course-credit-$key"] = $values["course-credit-{$row->type}-$key"] = $value;
@@ -1599,7 +1601,7 @@ function course_credit_token_values($type, $object = NULL) {
     $result = db_query($sql, $object->nid);
     while ($row = db_fetch_object($result)) {
       foreach ($row as $key => $value) {
-        if (in_array($key, array('min','max', 'credits'))) {
+        if (in_array($key, array('min', 'max', 'credits'))) {
           $value = number_format($value, 2);
         }
         $values["course-node-credit-{$row->type}-$key"] = $value;
@@ -1677,7 +1679,7 @@ function course_credit_type_features_export_render($module_name, $data, $export 
   foreach ($data as $name) {
     $credit_type = course_credit_type_load($name);
     unset($credit_type->ctid);
-    $code[] = "  \$course_credit_type['{$name}'] = " . features_var_export($credit_type) .";";
+    $code[] = "  \$course_credit_type['{$name}'] = " . features_var_export($credit_type) . ";";
   }
   $code[] = "return \$course_credit_type;";
   $code = implode("\n", $code);
@@ -1730,7 +1732,7 @@ function phptemplate_menu_local_task($link, $active = FALSE) {
 
   //Check each tab being rendered for our victim
   foreach ($kill as $drupal) {
-    if (strpos($link, $drupal) !==FALSE) {
+    if (strpos($link, $drupal) !== FALSE) {
       return '';
     }
   }
@@ -1751,14 +1753,14 @@ function course_credit_node_is_creditable(&$node) {
  * Implementation of hook_user().
  */
 function course_credit_user($op, &$edit, &$account, $category = NULL) {
-  switch($op) {
+  switch ($op) {
     case 'load':
       global $user;
       $account->credits_earned = array();
-      $account->courses_completed = db_result(db_query("select count(uid) from {course_credit_awarded} where uid=%d",$user->uid));
-      $res = db_query("select credits,nid from {course_credit_awarded} where uid=%d",$user->uid);
+      $account->courses_completed = db_result(db_query("select count(uid) from {course_credit_awarded} where uid=%d", $user->uid));
+      $res = db_query("select credits,nid from {course_credit_awarded} where uid=%d", $user->uid);
       $account->credits_earned['total'] = 0;
-      while($row = db_fetch_array($res)) {
+      while ($row = db_fetch_array($res)) {
         $account->credits_earned['total'] += $row['credits'];
         $account->credits_earned[$row['nid']] = $row['credits'];
       }
@@ -1878,7 +1880,7 @@ function course_credit_course_unenrol($node, $user) {
 function course_credit_certificate_map_options() {
   $options = array();
 
-  foreach(course_credit_get_credit_types() as $cc) {
+  foreach (course_credit_get_credit_types() as $cc) {
     $options[$cc->type] = $cc->title;
   }
   return array(

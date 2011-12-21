@@ -69,8 +69,8 @@ function hook_lms_settings_form($lapp_id) {
   switch ($lapp_id) {
     case 'drupal':
       $form['course_something']['#type'] = 'radios';
-      $form['course_something']['#options'] = array('Something','Something else');
-      $form['course_something']['#default_value'] = variable_get('course_something','');
+      $form['course_something']['#options'] = array('Something', 'Something else');
+      $form['course_something']['#default_value'] = variable_get('course_something', '');
       break;
   }
 

@@ -1,6 +1,6 @@
 <?php
 
-module_load_include('inc','views','handlers/views_handler_relationship');
+module_load_include('inc', 'views', 'handlers/views_handler_relationship');
 include_once 'includes/views_join_course_credit.inc';
 
 /**
@@ -49,7 +49,7 @@ class course_credit_node_awarded_credit_vhr extends views_handler_relationship {
     if ($this->view->argument['uid']) {
       $account = user_load($this->view->args[0]);
     }
-    else{
+    else {
       $account = $user;
     }
     // Figure out what base table this relationship brings to the party.
@@ -71,7 +71,7 @@ class course_credit_node_awarded_credit_vhr extends views_handler_relationship {
     $join->construct();
     $this->ensure_my_table();
 
-    $alias = $join->definition['table'] .'_'. $join->definition['left_table'];
+    $alias = $join->definition['table'] . '_' . $join->definition['left_table'];
     $this->alias = $this->query->add_relationship($alias, $join, $this->definition['base'], $this->relationship);
   }
 }

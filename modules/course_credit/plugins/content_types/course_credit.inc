@@ -28,5 +28,4 @@ function course_credit_course_credit_content_type_admin_title($subtype, $conf, $
   return t('"@s" Course credit', array('@s' => $context->identifier));
 }
 
-function course_credit_course_credit_content_type_edit_form(&$form, &$form_state) {
-}
+function course_credit_course_credit_content_type_edit_form(&$form, &$form_state) { }

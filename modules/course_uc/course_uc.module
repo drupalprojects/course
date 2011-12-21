@@ -39,7 +39,7 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
           drupal_get_destination(),
         ),
       );
-      $message = t($message, array('!login' => l('login','user/login', $options), '!register' => l('register', 'user/register', $options)));
+      $message = t($message, array('!login' => l('login', 'user/login', $options), '!register' => l('register', 'user/register', $options)));
 
       $form['course_uc']['#value'] = $message;
     }
@@ -72,8 +72,7 @@ function course_uc_nodeapi($node, $op, $a3, $a4) {
 
   if ($form_id == 'course_admin_settings') {
     $form['course_uc_restrict_qty'] = array(
-      '#title' => 'Restrict course products to 1 per customer.',
-      '#description' > 'Course will restrict users from adding the product to cart if they have already purchased the course or already have the course in their cart.',
+      '#title' => 'Restrict course products to 1 per customer.', '#description' > 'Course will restrict users from adding the product to cart if they have already purchased the course or already have the course in their cart.',
       '#type' => 'checkbox',
       '#default_value' => variable_get('course_uc_restrict_qty', 1),
     );
@@ -126,16 +125,16 @@ function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
             'success' => FALSE,
             'message' => "You've already purchased this course.",
             'silent' => FALSE,
-          )
+          ),
         );
       }
       if (course_uc_restrict_qty_check_cart($user->uid, $nid)) {
         return array(
           array(
             'success' => FALSE,
-            'message' => t("This course is already in your !cart.",array('!cart' => l('shopping cart','cart'))),
+            'message' => t("This course is already in your !cart.", array('!cart' => l('shopping cart', 'cart'))),
             'silent' => FALSE,
-          )
+          ),
         );
       }
     }
@@ -192,7 +191,7 @@ function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
  */
 function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_state) {
   if (variable_get('course_uc_restrict_qty', 1)) {
-    foreach($form['items'] as $key => &$item) {
+    foreach ($form['items'] as $key => &$item) {
       if (is_numeric($key)) {
         $node = node_load($item['nid']['#value']);
         if (course_node_is_course($node)) {
@@ -211,16 +210,16 @@ function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_stat
  * @return array
  */
 function course_uc_ca_action() {
-  $arg = array (
+  $arg = array(
     '#entity' => 'uc_order',
-    '#title' => t('Order')
+    '#title' => t('Order'),
   );
 
-  $actions['course_uc_enrol_user_in_ordered_courses'] = array (
+  $actions['course_uc_enrol_user_in_ordered_courses'] = array(
     '#title' => t('Enroll user in course(s)'),
     '#category' => t('Order'),
     '#callback' => 'course_uc_enrol_user_in_ordered_courses',
-    '#arguments' => array (
+    '#arguments' => array(
       'order' => $arg,
     ),
   );
@@ -267,7 +266,7 @@ function course_uc_ca_predicate() {
         '#name' => 'course_uc_enrol_user_in_ordered_courses',
         '#title' => t('Enroll user in ordered courses'),
         '#argument_map' => array(
-           'order' => 'order',
+          'order' => 'order',
         ),
         '#settings' => array(),
       ),

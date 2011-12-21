@@ -36,7 +36,7 @@ function course_outline_overview_form(&$form, &$form_state, $form_id) {
   foreach ($course_objects as $module => $objects) {
     foreach ($objects as $key => $object) {
       $module_string = ucwords(str_replace('_', ' ', $module));
-      $options[$module_string][$object['module'] .'-'. $key] = $object['title'];
+      $options[$module_string][$object['module'] . '-' . $key] = $object['title'];
     }
   }
 
@@ -57,7 +57,7 @@ function course_outline_overview_form(&$form, &$form_state, $form_id) {
           '#options' => $options,
         );
       }
-      else  {
+      else {
         // Don't allow user to change type of object.
         $rform['requirement_component'] = array(
           '#type' => 'hidden',
@@ -137,7 +137,7 @@ function _course_outline_requirement_form($requirement = array()) {
     '#default_value' => $requirement['graded'],
   );
   $rform['passing_grade'] = array(
-    '#type' => $requirement['graded']? 'textfield' : 'hidden',
+    '#type' => $requirement['graded'] ? 'textfield' : 'hidden',
     '#size' => 3,
     '#default_value' => $requirement['passing_grade'],
   );
@@ -155,7 +155,7 @@ function _course_outline_requirement_form($requirement = array()) {
     '#type' => 'markup',
   );
   if ($requirement['instance']) {
-    $rform['operations']['#value'] = l('Edit', "node/{$requirement['nid']}/coursesettings/edit{$requirement['requirement_component']}_{$requirement['instance']}") .' | '. l(t('Delete'), "node/{$requirement['nid']}/coursesettings/edit{$requirement['requirement_component']}_{$requirement['instance']}/delete", array('query'=>array('destination'=>"node/{$requirement['nid']}/edit",)));
+    $rform['operations']['#value'] = l('Edit', "node/{$requirement['nid']}/coursesettings/edit{$requirement['requirement_component']}_{$requirement['instance']}") . ' | ' . l(t('Delete'), "node/{$requirement['nid']}/coursesettings/edit{$requirement['requirement_component']}_{$requirement['instance']}/delete", array('query' => array('destination' => "node/{$requirement['nid']}/edit")));
   }
   $rform['weight'] = array(
     '#type' => 'weight',
@@ -183,7 +183,10 @@ function course_outline_overview_js_more() {
   include_once 'modules/node/node.pages.inc';
 
   // We're starting in step #3, preparing for #4.
-  $form_state = array('storage' => NULL, 'submitted' => FALSE);
+  $form_state = array(
+    'storage' => NULL,
+    'submitted' => FALSE,
+  );
   $form_build_id = $_POST['form_build_id'];
   // Step #4.
   $form = form_get_cache($form_build_id, $form_state);
@@ -222,7 +225,7 @@ function theme_course_outline_overview_form($form) {
     $rows[$key]['data'][] = drupal_render($form[$key]['title']);
     $rows[$key]['data'][] = drupal_render($form[$key]['requirement_component']) . drupal_render($form[$key]['requirement_component_show']);
     $rows[$key]['data'][] = drupal_render($form[$key]['enabled']) . drupal_render($form[$key]['required']);
-    $rows[$key]['data'][] = $form[$key]['graded']['#value']? drupal_render($form[$key]['passing_grade']): 'n/a';
+    $rows[$key]['data'][] = $form[$key]['graded']['#value'] ? drupal_render($form[$key]['passing_grade']) : 'n/a';
     $rows[$key]['data'][] = drupal_render($form[$key]['operations']);
 
     // Add draggable settings to row.
@@ -290,7 +293,7 @@ function course_get_outline($node) {
 
     // Find out what this step's status is.
     // Check the previous step.
-    $prev_req = $course_objects[($key-1)];
+    $prev_req = $course_objects[($key -1)];
     if ($courseObject->getFulfillment()->isComplete()) {
       // Step is complete. User can access.
       $step['link_style'] = 'completed';
@@ -335,7 +338,7 @@ function course_get_outline($node) {
 
   // Course introduction.
   if (isset($node->field_course_intro) && strlen($node->field_course_intro[0]['value'])) {
-    $output = '<h3>'. t('Instructions') .':</h3><p>'. $node->field_course_intro[0]['value'] .'</p>'. $output;
+    $output = '<h3>' . t('Instructions') . ':</h3><p>' . $node->field_course_intro[0]['value'] . '</p>' . $output;
   }
 
   return $output;
@@ -350,7 +353,7 @@ function course_outline_complete_step($course_node) {
   if (arg(2) == 'inframe') {
     return theme("course_step_view", $txt_out);
   }
-  else  {
+  else {
     return $txt_out;
   }
 }
@@ -365,7 +368,7 @@ function course_outline_show_complete_links($course_node) {
   if ($report->complete) {
     //if the course doen't have a certificate, then show completion message:
     if ($credit_application['complete'] || !$certificate->credit_application_required) {
-      $txt_out .= '<p>'. t('Thank you for participating in this activity. After downloading your certificate you may close the browser window.') .'</p>';
+      $txt_out .= '<p>' . t('Thank you for participating in this activity. After downloading your certificate you may close the browser window.') . '</p>';
       $links = array(
         'course' => array('Return to course', "node/$course_node->nid", 'Return to the course to view course details and material.'),
       );
@@ -375,14 +378,14 @@ function course_outline_show_complete_links($course_node) {
       }
     }
   }
-  else  {
+  else {
     $requirements_outstanding = course_outline_check_remaining_requirements($course_node, $account);
     $items = array();
     foreach ($requirements_outstanding as $req) {
       $status_css = $req['complete'] ? 'complete' : 'incomplete';
       $status_img = $req['complete'] ? 'ok' : ($req['required'] ? 'error' : 'warning');
       $status_optional = ($status_img == 'warning') ? ' (optional)' : '';
-      $grade = $req['graded'] ? ' - Your grade: ' . $req['grade_result'] . '%, Pass grade: ' . $req['passing_grade'] . '%': '';
+      $grade = $req['graded'] ? ' - Your grade: ' . $req['grade_result'] . '%, Pass grade: ' . $req['passing_grade'] . '%' : '';
       $items[] = array(
         array(
           'data' => theme_image("misc/watchdog-{$status_img}.png", $status_css),
@@ -393,8 +396,8 @@ function course_outline_show_complete_links($course_node) {
     }
     $reqs_txt = theme_table(NULL, $items);
 
-    $txt_out .= '<p>'. t('Thank you for participating in this activity. After completing the remaining requirements you will be able to download your certificate.') .'</p>';
-    $txt_out .= $reqs_txt .'<div class="homelink"><p>'. l($course_out_return_array['course_outline_link_text'], $course_out_return_array['course_outline_link']) .'</p></div>';
+    $txt_out .= '<p>' . t('Thank you for participating in this activity. After completing the remaining requirements you will be able to download your certificate.') . '</p>';
+    $txt_out .= $reqs_txt . '<div class="homelink"><p>' . l($course_out_return_array['course_outline_link_text'], $course_out_return_array['course_outline_link']) . '</p></div>';
   }
 
   return $txt_out;

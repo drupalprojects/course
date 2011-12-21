@@ -44,19 +44,19 @@ class CourseObject {
    *
    * @return string
    */
-  public function getTakeUrl() {}
+  public function getTakeUrl() { }
 
   /**
    * Get the URL to edit this course object, if any.
    *
    * @return string
    */
-  public function getEditUrl() {}
+  public function getEditUrl() { }
 
   /**
    * If graded, grade this course object against a user.
    */
-  public function grade($user = NULL) {}
+  public function grade($user = NULL) { }
 
   /**
    * Is this course object graded?

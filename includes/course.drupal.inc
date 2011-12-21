@@ -37,8 +37,8 @@ function course_lms_settings_form($lapp_id) {
   switch ($lapp_id) {
     case 'drupal':
       $form['course_something']['#type'] = 'radios';
-      $form['course_something']['#options'] = array('Something','Something else');
-      $form['course_something']['#default_value'] = variable_get('course_something','');
+      $form['course_something']['#options'] = array('Something', 'Something else');
+      $form['course_something']['#default_value'] = variable_get('course_something', '');
       break;
   }
 
@@ -82,8 +82,7 @@ function course_lms_install($lapp_id) {
 /**
  * Pre-set quiz settings, etc...
  */
-function course_lms_postinstall() {
-}
+function course_lms_postinstall() { }
 
 /**
  * Implementation of hook_lms_take_course().

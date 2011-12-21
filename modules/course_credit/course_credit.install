@@ -89,7 +89,7 @@ function course_credit_schema() {
         'type' => 'int',
       ),
     ),
-    'primary key' => array('nid','ctid'),
+    'primary key' => array('nid', 'ctid'),
   );
 
   $schema['course_credit_type'] = array(
@@ -167,7 +167,6 @@ function course_credit_schema() {
         'not null' => TRUE,
         'unsigned' => TRUE,
       ),
-
       'type' => array(
         'description' => 'The credit type, machine readable.',
         'type' => 'varchar',
@@ -199,7 +198,6 @@ function course_credit_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
-
     ),
     'primary key' => array('ctrid'),
   );
@@ -240,7 +238,6 @@ function course_credit_schema() {
         'type' => 'int',
       ),
     ),
-
     'primary key' => array('ctid', 'nid', 'uid'),
   );
 

@@ -30,7 +30,7 @@ class course_credit_awarded_credit_instance_vhr extends views_handler_relationsh
     $join->construct();
     $this->ensure_my_table();
 
-    $alias = $join->definition['table'] .'_'. $join->definition['left_table'];
+    $alias = $join->definition['table'] . '_' . $join->definition['left_table'];
     $this->alias = $this->query->add_relationship($alias, $join, $this->definition['base'], $this->relationship);
   }
 }

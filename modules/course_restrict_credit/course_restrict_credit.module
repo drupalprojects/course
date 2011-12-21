@@ -86,7 +86,7 @@ function course_restrict_credit_check($node) {
           $ret = array(
             'message' => t('You will not be able to receive credit for this course because you have already claimed credit for !title.', array(
               '!title' => l($sister_node->title, "node/{$sister_node->nid}"),
-              )),
+            )),
             'takecourse' => TRUE,
           );
         }
@@ -107,9 +107,9 @@ function course_restrict_credit_can_take_course($node, $user) {
     if (!$restriction['takecourse']) {
       // If user can't take course.
       return array(array(
-        'success' => FALSE,
-        'message' => $restriction['message'],
-      ));
+          'success' => FALSE,
+          'message' => $restriction['message'],
+        ));
     }
   }
 }

@@ -29,8 +29,8 @@ function uc_course_addtocart_content_type_render($subtype, $conf, $panel_args, $
   $module = $type->module;
 
   // Built the add to cart button
-  if (function_exists('theme_'. $module .'_add_to_cart')) {
-    $result = theme($module .'_add_to_cart', $node);
+  if (function_exists('theme_' . $module . '_add_to_cart')) {
+    $result = theme($module . '_add_to_cart', $node);
   }
   elseif (function_exists('theme_uc_product_add_to_cart')) {
     $result = theme('uc_product_add_to_cart', $node);
@@ -45,8 +45,7 @@ function uc_course_addtocart_content_type_render($subtype, $conf, $panel_args, $
 /**
  * Blank edit form for selecting context
  */
-function uc_course_addtocart_content_type_edit_form(&$form, &$form_state) {
-}
+function uc_course_addtocart_content_type_edit_form(&$form, &$form_state) { }
 
 /**
  * Returns the administrative title for a type.
