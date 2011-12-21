@@ -559,14 +559,17 @@ function course_node_update($node) {
 function course_node_load($nodes, $types) {
   $result = db_query('SELECT * FROM {course_node} WHERE nid IN(:nids)', array(':nids' => array_keys($nodes)));
   foreach ($result as $record) {
-    // Change typecast record object as array for now.
-    // @todo consider keeping this as an object and changing hooks and
-    // implementations that expected this as an array in D6.
-    $course = (array)$record;
-
-    // Attach additional module provided info to $node->course.
-    $hooks = module_invoke_all('course_nodeapi_extra', $nodes[$record->nid], 'load');
-    $nodes[$record->nid]->course = array_merge($course, $hooks);
+    // @todo update functions that expect $node->course to be an array.
+    $nodes[$record->nid]->course = $record;
+    
+    // Let other modules attach info to $node->course.
+    foreach (module_implements('course_nodeapi_extra') as $module) {
+      // @todo break hook_course_nodeapi_extra() into separate hooks,
+      // corresponding to D7 Node API Hooks. Or better yet, we could let other
+      // modules implement hook_node_load() themselves and drop this hook.
+      $extra = module_invoke($module, 'course_nodeapi_extra', $nodes[$record->nid], 'load');
+      $nodes[$record->nid]->course->$module = $extra;
+    }
   }
 
   // Load the course outline to the node.
@@ -574,11 +577,8 @@ function course_node_load($nodes, $types) {
     WHERE nid = :nid
     ORDER BY weight ASC", array(':nid' => $node->nid));
   foreach ($result as $record) {
-    // @todo do we really need to save the array like this? Keep simple object
-    // version for reference.
-    #$nodes[$record->nid]->course_outline = $record;
-    $requirements = (array)$record;
-    $nodes[$record->nid]->course_outline = array('requirements' => $requirements);
+    // @todo update functions that expect $node->course_outline to be an array.
+    $nodes[$record->nid]->course_outline = $record;
   }
 }
 
@@ -683,6 +683,15 @@ function course_render_button($node) {
 
 /**
  * Generate a button for taking the course.
+ *
+ * @todo I'd suggest changing this to a field, but this is way too custom
+ * for course module. Let's remove it entirely (custom modules can add their
+ * own markup, remove the takecourse tab, etc). Also drop the other functions,
+ * admin settings, and variables that work so hard to make a single link.
+ *
+ * @see course_admin_settings()
+ * @see course_node_view()
+ * @see course_render_button()
  */
 function course_take_course_button_html(&$node) {
   $course_button = module_invoke_all('course_button', $node);
@@ -703,6 +712,8 @@ function course_take_course_button_html(&$node) {
  *
  * @param int NID of node.
  * @param int UID of user.
+ *
+ * @todo be consistent with regional spelling of 'enrol' vs 'enroll'.
  */
 function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
   if (course_node_is_course($node)) {
