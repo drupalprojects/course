@@ -117,6 +117,26 @@ class CourseObject {
   }
 
   /**
+   * Get the status message of this course object.
+   */
+  public function getStatus($type = 'short') {
+    /*
+     * if ($this->courseObjectFulfillment->isComplete()) {
+     *   // do other messages?
+     * }
+     * else {
+     *  if ($type == 'short') {
+     *  return "Not viewed";
+     * }
+     *
+     * if ($type == 'long') {
+     * return "You have not viewed $title";
+     * }
+     * }
+     */
+  }
+
+  /**
    * Get the course object ID of this course object.
    *
    * @return int
