@@ -69,12 +69,12 @@ function course_credit_menu() {
 
   // FAPI form.
   $items['node/%course_node/course-credit-app'] = array(
-    'title' => 'Application for Credit',
+    'title' => 'Claim',
     'access callback' => 'course_credit_can_apply_access',
     'access arguments' => array(1),
     'page callback' => 'course_credit_form_router',
     'page arguments' => array(1),
-    'type' => MENU_CALLBACK,
+    'type' => MENU_LOCAL_TASK,
   );
 
   // Add a form in certificate mapping.
@@ -147,13 +147,6 @@ function course_credit_theme() {
 }
 
 /**
- * Implementation of hook_form_FORM_ID_alter().
- */
-function course_credit_form_course_credit_application_node_form_alter($form, $form_state) {
-  $form['field_course_nid']['#access'] = FALSE;
-}
-
-/**
  * Implementation of hook_form_alter().
  */
 function course_credit_form_alter(&$form, &$form_state, $form_id) {
@@ -180,7 +173,7 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
 
     // Loop through credit types.
     foreach ($types as $type) {
-      // @todo pass type identifier once we migrate from ctid to type.
+      // @todo pass type identifier once we migrate from type to type.
       #$form['course_credit']['type'] = array('#type' => 'value', '#value' => $type->type);
 
       // After a preview or form reload, the course credit types must be
@@ -190,14 +183,14 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
       // @see taxonomy_preview_terms()
       if ($node->preview) {
         // Typecast $node->course_credit back to an array of objects.
-        $node->course_credit[$type->ctid] = (object) $node->course_credit[$type->ctid];
+        $node->course_credit[$type->type] = (object) $node->course_credit[$type->type];
       }
 
       // Check fields where we process the default_value loaded from the
       // database, so we don't re-process it.
       $default_values = array();
-      $expiration_date = $node->course_credit[$type->ctid]->expiration_date;
-      $expiration_offset = $node->course_credit[$type->ctid]->expiration_offset;
+      $expiration_date = $node->course_credit[$type->type]->expiration_date;
+      $expiration_offset = $node->course_credit[$type->type]->expiration_offset;
       if ($node->preview) {
         // On preview, output the form_state values without processing.
         $default_values['expiration_date'] = $expiration_date ? $expiration_date : '';
@@ -210,7 +203,7 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
       }
 
       // Create a new fieldset for every credit instance.
-      $form['course_credit'][$type->ctid] = array(
+      $form['course_credit'][$type->type] = array(
         '#type' => 'fieldset',
         // We strip tags (and sanitize) rather than using @ or % placeholders
         // because the credit title may include HTML.
@@ -222,54 +215,54 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
       );
 
       // Controls display of all settings for this type.
-      $form['course_credit'][$type->ctid]['active'] = array(
+      $form['course_credit'][$type->type]['active'] = array(
         '#title' => t('Active'),
         '#type' => 'checkbox',
-        '#default_value' => $node->course_credit[$type->ctid]->active,
+        '#default_value' => $node->course_credit[$type->type]->active,
       );
 
-      $form['course_credit'][$type->ctid]['increments'] = array(
+      $form['course_credit'][$type->type]['increments'] = array(
         '#title' => t('Increments'),
         '#type' => 'textfield',
         '#size' => 4,
-        '#default_value' => $node->course_credit[$type->ctid]->increments,
+        '#default_value' => $node->course_credit[$type->type]->increments,
         // Start inline container.
         '#prefix' => '<div class="container-inline">',
       );
 
-      $form['course_credit'][$type->ctid]['min'] = array(
+      $form['course_credit'][$type->type]['min'] = array(
         '#title' => t('Min'),
         '#type' => 'textfield',
         '#size' => 4,
-        '#default_value' => $node->course_credit[$type->ctid]->min,
+        '#default_value' => $node->course_credit[$type->type]->min,
       );
 
-      $form['course_credit'][$type->ctid]['max'] = array(
+      $form['course_credit'][$type->type]['max'] = array(
         '#title' => t('Max'),
         '#type' => 'textfield',
         '#size' => 4,
-        '#default_value' => $node->course_credit[$type->ctid]->max,
+        '#default_value' => $node->course_credit[$type->type]->max,
         // End inline container.
         '#suffix' => '</div>',
       );
 
       // Display if course credit code is enabled.
       if (variable_get('course_credit_code', 1)) {
-        $form['course_credit'][$type->ctid]['code'] = array(
+        $form['course_credit'][$type->type]['code'] = array(
           '#title' => t('Code'),
           '#type' => 'textfield',
           '#size' => 16,
-          '#default_value' => $node->course_credit[$type->ctid]->code,
+          '#default_value' => $node->course_credit[$type->type]->code,
         );
       }
 
       // Display if variable credit claiming is enabled.
       if (variable_get('course_credit_variable', 1)) {
-        $form['course_credit'][$type->ctid]['enable_variable_credit'] = array(
+        $form['course_credit'][$type->type]['enable_variable_credit'] = array(
           '#title' => t('Variable credit'),
           '#type' => 'checkbox',
           '#size' => 16,
-          '#default_value' => $node->course_credit[$type->ctid]->enable_variable_credit,
+          '#default_value' => $node->course_credit[$type->type]->enable_variable_credit,
         );
       }
 
@@ -281,17 +274,17 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
           'calendar_year' => t('End of year credit awarded'),
           'credit_awarded' => t('Date credit is awarded'),
         );
-        $form['course_credit'][$type->ctid]['expiration_type'] = array(
+        $form['course_credit'][$type->type]['expiration_type'] = array(
           '#title' => t('Expiration type'),
           '#type' => 'select',
           '#options' => $expiration_types,
-          '#default_value' => $node->course_credit[$type->ctid]->expiration_type,
+          '#default_value' => $node->course_credit[$type->type]->expiration_type,
           // CTools dependent API compliant.
           '#process' => array('ctools_dependent_process'),
           '#dependency' => $active,
         );
         // Display conditionally.
-        $form['course_credit'][$type->ctid]['expiration_date'] = array(
+        $form['course_credit'][$type->type]['expiration_date'] = array(
           '#title' => t('Please specify'),
           '#type' => 'textfield',
           '#size' => 16,
@@ -300,18 +293,18 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
           // CTools dependent API compliant.
           '#process' => array('ctools_dependent_process'),
           '#dependency' => array(
-            "edit-course-credit-{$type->ctid}-expiration-type" => array('date'),
+            "edit-course-credit-{$type->type}-expiration-type" => array('date'),
           ),
         );
         // Make this a date popup field if available.
         // @see date_popup_elements()
         if (module_exists('date_popup')) {
-          $form['course_credit'][$type->ctid]['expiration_date']['#type'] = 'date_popup';
-          $form['course_credit'][$type->ctid]['expiration_date']['#date_format'] = 'm/d/Y';
-          $form['course_credit'][$type->ctid]['expiration_date']['#date_year_range'] = '-10:+10';
-          $form['course_credit'][$type->ctid]['expiration_date']['#process'][] = 'date_popup_process';
+          $form['course_credit'][$type->type]['expiration_date']['#type'] = 'date_popup';
+          $form['course_credit'][$type->type]['expiration_date']['#date_format'] = 'm/d/Y';
+          $form['course_credit'][$type->type]['expiration_date']['#date_year_range'] = '-10:+10';
+          $form['course_credit'][$type->type]['expiration_date']['#process'][] = 'date_popup_process';
           // Date popup adds it's own description.
-          $form['course_credit'][$type->ctid]['expiration_date']['#description'] = NULL;
+          $form['course_credit'][$type->type]['expiration_date']['#description'] = NULL;
         }
 
         // Display conditionally.
@@ -322,7 +315,7 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
             $relative_options[] = $key;
           }
         }
-        $form['course_credit'][$type->ctid]['expiration_offset'] = array(
+        $form['course_credit'][$type->type]['expiration_offset'] = array(
           '#title' => t('Plus additional days'),
           '#type' => 'textfield',
           '#size' => 16,
@@ -332,16 +325,16 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
           // CTools dependent API compliant.
           '#process' => array('ctools_dependent_process'),
           '#dependency' => array(
-            "edit-course-credit-{$type->ctid}-expiration-type" => $relative_options,
+            "edit-course-credit-{$type->type}-expiration-type" => $relative_options,
           ),
         );
       }
       // Add settings summary to fieldset title, so it can be quickly scanned
       // when collapsed. Similar to verticaltab summary.
-      $summary = course_credit_type_fieldset_summary($type->ctid, $form, $node);
+      $summary = course_credit_type_fieldset_summary($type->type, $form, $node);
       if (!empty($summary)) {
         // Append the summary to the fieldset title.
-        $form['course_credit'][$type->ctid]['#title'] .= ' ('. implode(' | ', $summary) .')';
+        $form['course_credit'][$type->type]['#title'] .= ' ('. implode(' | ', $summary) .')';
       }
     }
   }
@@ -350,7 +343,7 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
 /**
  * Helper function to build node credit type settings summary.
  *
- * @param $ctid
+ * @param $type
  *   The credit type identifier.
  * @param $form
  *   The node form.
@@ -358,10 +351,10 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
  *   The node object as represented in $form['#node'], but with special
  *   modifications during preview.
  */
-function course_credit_type_fieldset_summary($ctid, $form, $node) {
+function course_credit_type_fieldset_summary($type, $form, $node) {
   // Set some variables for this credit type.
-  $form_elements = $form['course_credit'][$ctid];
-  $node_values = $node->course_credit[$ctid];
+  $form_elements = $form['course_credit'][$type];
+  $node_values = $node->course_credit[$type];
   // Reset summary array for this credit type.
   $summary = array();
   // Only display summary if credit type is active.
@@ -452,29 +445,6 @@ function course_credit_application_add($node) {
   return drupal_get_form($form_id, $appnode);
 }
 
-/**
- *
- */
-function course_credit_application_check($node, $uid) {}
-
-/**
- * Update from using the CCK field_cecredits.
- */
-function course_credit_migrate_import_from_cecredits($node) {
-  $credit_type = course_credit_get_credit_type('cecredits');
-
-  $credit_type_instance = array(
-    'nid' => $node->nid,
-    'ctid' => $credit_type->ctid,
-    'increments' => .25,
-    'min' => 0,
-    'max' => $node->field_cecredits[0]['value'],
-    'enable_variable_credit' => 1,
-  );
-
-  course_credit_save_course_credit_type_instance($credit_type_instance);
-}
-
 function course_credit_save_credit_type(&$credit_type) {
   if (!course_credit_get_credit_type($credit_type['type'])) {
     return drupal_write_record('course_credit_type', $credit_type);
@@ -488,11 +458,11 @@ function course_credit_save_course_credit_type_instance(&$credit_type_instance) 
   if (is_object($credit_type_instance)) {
     $credit_type_instance = (array) $credit_type_instance;
   }
-  if (!course_credit_get_credit_type_instance($credit_type_instance['nid'], $credit_type_instance['ctid'])) {
+  if (!course_credit_get_credit_type_instance($credit_type_instance['nid'], $credit_type_instance['type'])) {
     return drupal_write_record('course_credit', $credit_type_instance);
   }
   else  {
-    return drupal_write_record('course_credit', $credit_type_instance, array('nid', 'ctid'));
+    return drupal_write_record('course_credit', $credit_type_instance, array('nid', 'type'));
   }
 }
 
@@ -503,7 +473,7 @@ function course_credit_save_course_credit_type_instance(&$credit_type_instance) 
  */
 function course_credit_get_credit_type($type) {
   if (is_numeric($type)) {
-    $sql = "SELECT * FROM  {course_credit_type} WHERE ctid = %d";
+    $sql = "SELECT * FROM  {course_credit_type} WHERE type = %d";
     $result = db_query($sql, $type);
   }
   else  {
@@ -518,40 +488,10 @@ function course_credit_get_credit_type($type) {
  *
  * @return object or null.
  */
-function course_credit_get_credit_type_instance($nid, $ctid) {
-  $sql = "SELECT * FROM  {course_credit} WHERE nid = %d AND ctid = %d";
-  $result = db_query($sql, $nid, $ctid);
+function course_credit_get_credit_type_instance($nid, $type) {
+  $sql = "SELECT * FROM  {course_credit} WHERE nid = %d AND type = %d";
+  $result = db_query($sql, $nid, $type);
   return db_fetch_object($result);
-}
-
-/**
- * Implementation of alter hook_course_resource_links_to_add_alter().
- */
-function course_credit_course_resource_links_to_add_alter(&$new_activity_array) {
-/*  $has_app = db_result(db_query("SELECT nid FROM {content_type_course_credit_application} WHERE field_course_nid_value = %d", arg(1)));
-  if (!$has_app) {
-    $new_activity_array['ethosce_credit_application'] = array(
-      'type' => 'ethosce_credit_application',
-      'title' => 'Application for credit',
-      'add' => 'credit-application',
-      'url_add_resource' => '',
-    );
-  }*/
-}
-
-/**
- * Implementation of alter hook_course_resource_links_to_edit_alter().
- */
-function course_credit_course_resource_links_to_edit_alter(&$new_activity_array) {
-/*  $has_app = db_result(db_query("SELECT nid FROM {content_type_course_credit_application} WHERE field_course_nid_value = %d", arg(1)));
-  if ($has_app) {
-    $new_activity_array['ethosce_credit_application'] = array(
-      'type' => 'ethosce_credit_application',
-      'title' => 'Application for credit',
-      'add' => 'credit-application',
-      'url_add_resource' => '',
-    );
-  }*/
 }
 
 /**
@@ -562,7 +502,7 @@ function course_credit_course_resource_links_to_edit_alter(&$new_activity_array)
 function course_credit_course_nodeapi_extra($node, $op) {
   if ($op == 'load') {
     $sql = "select cc.*, cct.title, cct.type, cct.description from {course_credit} cc
-      left join {course_credit_type} cct using (ctid)
+      left join {course_credit_type} cct using (type)
       where nid = %d";
     $result = db_query($sql, $node->nid);
     $credits = array();
@@ -592,8 +532,8 @@ function course_credit_nodeapi(&$node, $op, $a3, $a4) {
           $entry = (array) $entry;
         }
         $entry['nid'] = $node->nid;
-        // @todo $key will become 'type' once we switch from ctid to type.
-        $entry['ctid'] = $key;
+        // @todo $key will become 'type' once we switch from type to type.
+        $entry['type'] = $key;
         $credits[] = $entry['max'];
 
         // Convert date format to unix.
@@ -638,19 +578,19 @@ function course_credit_nodeapi(&$node, $op, $a3, $a4) {
     $course_credit_awarded = array();
 
     $sql = "select cc.*, cct.title, cct.type, cct.description from {course_credit} cc
-    inner join {course_credit_type} cct using (ctid)
+    inner join {course_credit_type} cct using (type)
     where nid = %d";
     $result = db_query($sql, $node->nid);
     $credits = array();
     while ($row = db_fetch_object($result)) {
-      $credits[$row->ctid] = $row;
+      $credits[$row->type] = $row;
     }
 
     $sql = "select * from {course_credit_awarded}
     where uid = %d and nid = %d";
     $result = db_query($sql, $user->uid, $node->nid);
     while ($row = db_fetch_object($result)) {
-      $course_credit_awarded[$row->ctid] = $row;
+      $course_credit_awarded[$row->type] = $row;
     }
 
     return array(
@@ -692,24 +632,22 @@ function course_credit_render_credit($node) {
 
 /**
  * Save awarded credit.
- *
- * @todo do away with CTIDs
  */
 function course_credit_award_save($record = array()) {
   $node = node_load($record['nid']);
 
-  if ($record['type'] && !$record['ctid']) {
-    // Preparation for removing the ctid field and going by machine names instead. Much more reliable.
-    $record['ctid'] = db_result(db_query("select ctid from {course_credit_type} where type = '%s'", $record['type']));
+  if ($record['type'] && !$record['type']) {
+    // Preparation for removing the type field and going by machine names instead. Much more reliable.
+    $record['type'] = db_result(db_query("select type from {course_credit_type} where type = '%s'", $record['type']));
   }
 
   //check for the credit award record:
-  $existing = db_fetch_object(db_query("SELECT * FROM {course_credit_awarded} WHERE ctid = %d AND nid = %d AND uid = %d", $record['ctid'], $record['nid'], $record['uid']));
+  $existing = db_fetch_object(db_query("SELECT * FROM {course_credit_awarded} WHERE type = %d AND nid = %d AND uid = %d", $record['type'], $record['nid'], $record['uid']));
 
   if (!$existing->expiration && !isset($record['expiration'])) {
     // New record, or old record with no expiration, and expiration not
     // explicitly provided - calculate expiration.
-    $ci = $node->course['credit'][$record['ctid']];
+    $ci = $node->course['credit'][$record['type']];
     switch ($ci->expiration_type) {
       case 'date':
         // Arbitrary date + offset
@@ -742,11 +680,11 @@ function course_credit_award_save($record = array()) {
   // Insert or update a record.
   if (!$existing) {
     $ret = drupal_write_record('course_credit_awarded', $record);
-    watchdog("course_credit", "course credit awarded new for uid:{$record['uid']} ctid:{$record['ctid']} nid:{$record['nid']}");
+    watchdog("course_credit", "course credit awarded new for uid:{$record['uid']} type:{$record['type']} nid:{$record['nid']}");
   }
   else {
-    $ret = drupal_write_record('course_credit_awarded', $record, array('ctid','nid', 'uid'));
-    watchdog("course_credit", "course credit award updated for uid:{$record['uid']} ctid:{$record['ctid']} nid:{$record['nid']}");
+    $ret = drupal_write_record('course_credit_awarded', $record, array('type','nid', 'uid'));
+    watchdog("course_credit", "course credit award updated for uid:{$record['uid']} type:{$record['type']} nid:{$record['nid']}");
   }
 
   // Tell modules we just awarded credit.
@@ -771,18 +709,6 @@ function course_credit_award_delete($ccaid) {
  */
 function course_credit_can_claim($node, $user) {
   return count(course_credit_user_credit_types($node, $user));
-}
-
-/**
- * Define Fields.
- */
-function course_credit_fields() {
-  $field_instances = db_query('SELECT cnfi.field_name, cnfi.label FROM {content_node_field_instance} cnfi');
-  $options[''] = t("none");
-  while ($field_instance = db_fetch_object($field_instances)) {
-    $options[$field_instance->field_name] = $field_instance->field_name;
-  }
-  return $options;
 }
 
 /**
@@ -820,22 +746,6 @@ function course_credit_settings_form() {
     '#description' => t("Credit type to fall back to if the user's profile does not match them with a credit type"),
     '#options' => $fallback_options,
     '#default_value' => variable_get('course_credit_fallback_type', ''),
-  );
-
-  $fields = course_credit_fields();
-  $form['credit_application'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Application for credit'),
-    '#collapsed' =>  variable_get('course_credit_cck_field', FALSE) !== FALSE,
-    '#collapsible' => TRUE,
-  );
-
-  // @todo limit to noderef fields later.
-  $form['credit_application']['course_credit_cck_field'] = array(
-    '#type' => 'select',
-    '#title' => t('CCK field to be used for selecting the course node'),
-    '#options' => $fields,
-    '#default_value' => variable_get('course_credit_cck_field', array()),
   );
 
   $form['creditable_types'] = array(
@@ -884,19 +794,7 @@ function course_credit_settings_form() {
 function course_credit_app_form(&$form_state, $node) {
   global $user;
 
-  drupal_set_title(drupal_get_title() . ': Credit claiming');
-
-  // Get the application for credit nid
-  // @todo. Use nodereference for this later.
-  // For now use text field.
-  if (db_table_exists('content_type_course_credit_application')) {
-    $field_info = content_fields('field_course_nid');
-    $db_info = content_database_info($field_info);
-    $table = $db_info['table'];
-    $appnid = db_result(db_query("SELECT ca.nid FROM {{$table}} ca
-    LEFT JOIN {node} n on ca.nid = n.nid
-    WHERE type = 'course_credit_application' and field_course_nid_value = %d", $node->nid));
-  }
+  drupal_set_title($node->title . ': Credit claiming');
 
   if (count($node->course_credit)) {
     foreach($node->course_credit as $credit_type) {
@@ -907,25 +805,7 @@ function course_credit_app_form(&$form_state, $node) {
     }
   }
 
-  if (!$appnid && $needs_credit_app && FALSE) {
-    // Node doesn't have application for credit, and claiming is required for at least 1 credit type.
-    $form['error']['#value'] = "<p>This course has variable credit specified, but a credit application was not found.</p>";
-    if (user_access('create course_credit_application content')) {
-      $form['error']['#value'] .= l('Create an application for credit', "node/{$node->nid}/course-credit-edit-app");
-    }
-    return $form;
-  }
-
   $form = array();
-  // Get configured course field.
-  $course_cck_field = variable_get('course_credit_cck_field', array());
-  $course_node = $node;
-  // vv this is app for credit node
-  $form['#node'] = node_load($appnid);
-
-  $form['statement'] = array(
-    '#value' => $node->body,
-  );
 
   // Claim credit for credit types.
   $form['credits_claimed'] = array(
@@ -942,7 +822,7 @@ function course_credit_app_form(&$form_state, $node) {
 
   foreach ($credit_types as $credit_type) {
     // Get additional type info (type & title).
-    $credit_type_info = course_credit_get_credit_type($credit_type->ctid);
+    $credit_type_info = course_credit_get_credit_type($credit_type->type);
 
     // $credit_type_info is from the global
     // $credit_type is from the user
@@ -1029,7 +909,7 @@ function course_credit_app_form_submit(&$form, &$form_state) {
 
       //save the array to a credit award record.
       $award_save_array = array(
-        'ctid' => $credit_type->ctid,
+        'type' => $credit_type->type,
         'nid' => $course_node->nid,
         'uid' => $account->uid,
         'credits' => $credits_value,
@@ -1435,7 +1315,7 @@ function course_credit_user_credit_types($node, $user) {
   $open_claim = variable_get('course_credit_open_claim', 0);
 
   $sql = "select cct.title, cct.description, cct.type, cc.* from {course_credit} cc
-  left join {course_credit_type} cct using (ctid)
+  left join {course_credit_type} cct using (type)
   where nid = %d";
   $result = db_query($sql, $node->nid);
   while ($ct_instance = db_fetch_object($result)) {
@@ -1578,8 +1458,8 @@ function course_credit_token_values($type, $object = NULL) {
 
   if ($type == 'certificate') {
     $sql = "select cct.title, cct.type, cc.*, cca.* from {course_credit_awarded} cca
-    left join {course_credit} cc on (cc.ctid = cca.ctid and cc.nid = %d)
-    inner join {course_credit_type} cct on cct.ctid = cca.ctid
+    left join {course_credit} cc on (cc.type = cca.type and cc.nid = %d)
+    inner join {course_credit_type} cct on cct.type = cca.type
     where cca.nid = %d and cca.uid = %d";
     $result = db_query($sql, $object['node']->nid, $object['node']->nid, $object['user']->uid);
     while ($row = db_fetch_object($result)) {
@@ -1594,7 +1474,7 @@ function course_credit_token_values($type, $object = NULL) {
 
   if ($type == 'node') {
     $sql = "select cct.title, cct.type, cc.* from {course_credit} cc
-      left join {course_credit_type} cct on (cct.ctid = cc.ctid)
+      left join {course_credit_type} cct on (cct.type = cc.type)
       where cc.nid = %d";
     $result = db_query($sql, $object->nid);
     while ($row = db_fetch_object($result)) {
@@ -1676,7 +1556,7 @@ function course_credit_type_features_export_render($module_name, $data, $export 
   $code[] = '$course_credit_type = array();';
   foreach ($data as $name) {
     $credit_type = course_credit_type_load($name);
-    unset($credit_type->ctid);
+    unset($credit_type->type);
     $code[] = "  \$course_credit_type['{$name}'] = " . features_var_export($credit_type) .";";
   }
   $code[] = "return \$course_credit_type;";
@@ -1840,6 +1720,7 @@ function course_credit_type_add_form_validate($form, &$form_state) {
 function course_credit_type_add_form_submit(&$form, &$form_state) {
   $credit_type->title = $form_state['values']['title'];
   $credit_type->type = $form_state['values']['type'];
+  $credit_type->type = $credit_type->type;
 
   drupal_write_record('course_credit_type', $credit_type);
   drupal_set_message('New credit type added.');
@@ -1898,7 +1779,7 @@ function course_credit_certificate_map_options() {
 function course_credit_certificate_map($node, $user, $map_type, $options) {
   if ($map_type == 'course_credit_awarded') {
     $sql = 'select * from {course_credit_awarded} cca
-    left join {course_credit_type} cct on cca.ctid = cct.ctid
+    left join {course_credit_type} cct on cca.type = cct.type
     where nid = %d and uid = %d';
     $result = db_query($sql, $node->nid, $user->uid);
     $credit_awarded = db_fetch_object($result);

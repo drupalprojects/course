@@ -130,6 +130,7 @@ function course_block($op = 'list', $delta = 0) {
     case 'list':
       $info = array(
         'outline' => array('info' => t('Course: Outline'), 'cache' => BLOCK_NO_CACHE),
+        'navigation' => array('info' => t('Course: Navigation'), 'cache' => BLOCK_NO_CACHE),
       );
       return $info;
     case 'view':
@@ -1130,6 +1131,22 @@ function course_available_objects() {
   }
 
   return $course_objects;
+}
+
+/**
+ * Get a loaded course object
+ * @param type $outline_entry
+ * @return object|boolean
+ */
+function course_get_course_object($outline_entry, $account) {
+  $available = course_available_objects();
+  $ret = $available[$outline_entry->requirement_type][$outline_entry->requirement_component];
+  if ($ret['class']) {
+    return new $ret['class']($outline_entry, $account);
+  }
+  else {
+    return new CourseObject($outline_entry, $account);
+  }
 }
 
 /**

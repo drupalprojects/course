@@ -134,10 +134,10 @@ function course_credit_views_data() {
   );
 
   $data['course_credit_awarded']['ctid_global']['relationship'] = array(
-    'relationship field' => 'ctid',
+    'relationship field' => 'type',
     'base' => 'course_credit_type',
-    'field' => 'ctid',
-    'base field' => 'ctid',
+    'field' => 'type',
+    'base field' => 'type',
     'handler' => 'views_handler_relationship',
     'label' => t('Credit type'),
     'title' => t('Credit type'),
@@ -153,10 +153,10 @@ function course_credit_views_data() {
   );
 
   $data['course_credit']['ctid']['relationship'] = array(
-    'relationship field' => 'ctid',
+    'relationship field' => 'type',
     'base' => 'course_credit_type',
-    'base field' => 'ctid',
-    'field' => 'ctid',
+    'base field' => 'type',
+    'field' => 'type',
     'handler' => 'views_handler_relationship',
     'label' => t('Default credit type'),
     'title' => t('Default credit type'),

@@ -30,12 +30,12 @@ class views_handler_field_course_credit_node_active_types extends views_handler_
 
     if ($nids) {
       $placeholders = db_placeholders($nids);
-      $sql = "SELECT cc.nid, cc.ctid, cct.title FROM {course_credit} cc
-        LEFT JOIN {course_credit_type} cct USING (ctid)
+      $sql = "SELECT cc.nid, cc.type, cct.title FROM {course_credit} cc
+        LEFT JOIN {course_credit_type} cct USING (type)
         WHERE cc.active AND nid IN ($placeholders)";
       $result = db_query($sql, $nids);
       while ($row = db_fetch_array($result)) {
-        $this->items[$row['nid']][$row['ctid']] = $row;
+        $this->items[$row['nid']][$row['type']] = $row;
       }
     }
   }

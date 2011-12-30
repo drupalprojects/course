@@ -273,15 +273,8 @@ function course_get_outline($node) {
   $sql = "SELECT * FROM {course_outline} cr WHERE nid = %d AND enabled AND !hidden ORDER BY weight ASC";
   $result = db_query($sql, $node->nid);
   $course_reqs = array();
-  while ($row = db_fetch_array($result)) {
-    $class = $object_map[$row['requirement_type']][$row['requirement_component']]['class'];
-    if (class_exists($class)) {
-      $course_objects[] = new $class($row, $user);
-    }
-    else {
-      // Use standard CourseObject.
-      $course_objects[] = new CourseObject($row, $user);
-    }
+  while ($row = db_fetch_object($result)) {
+    $course_objects[] = course_get_course_object($row, $user);
   }
 
   // Iterate over objects.
@@ -333,30 +326,18 @@ function course_get_outline($node) {
 
   $output .= theme_item_list($workflow);
 
-  // Course introduction.
-  if (isset($node->field_course_intro) && strlen($node->field_course_intro[0]['value'])) {
-    $output = '<h3>'. t('Instructions') .':</h3><p>'. $node->field_course_intro[0]['value'] .'</p>'. $output;
-  }
-
   return $output;
 }
 
 /**
- * @todo Document this.
- */
-function course_outline_complete_step($course_node) {
-  $txt_out = course_outline_show_complete_links($course_node);
-  //if from iframe, hide drupal theme
-  if (arg(2) == 'inframe') {
-    return theme("course_step_view", $txt_out);
-  }
-  else  {
-    return $txt_out;
-  }
-}
-
-/**
- * @todo Document this.
+ * Render a landing page for course completion.
+ *
+ * Modules can use hook_course_outline_completion_links_alter() to add links
+ * to this page, such as post-course actions.
+ *
+ * @param $course_node A course node.
+ *
+ * @return string HTML for the landing page.
  */
 function course_outline_show_complete_links($course_node) {
   global $user;

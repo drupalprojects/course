@@ -3,7 +3,7 @@
 /**
  * Relate awarded credit to credit instance.
  *
- * Join awarded.nid to instance.nid, awarded.ctid to instance.ctid
+ * Join awarded.nid to instance.nid, awarded.type to instance.type
  */
 class course_credit_awarded_credit_instance_vhr extends views_handler_relationship {
   /**
@@ -15,9 +15,9 @@ class course_credit_awarded_credit_instance_vhr extends views_handler_relationsh
     $join = new views_join_course_credit();
     $join->definition = array(
       'left_table' => !empty($this->relationship) ? $this->relationship : 'course_credit_awarded',
-      'left_field' => 'ctid',
+      'left_field' => 'type',
       'table' => 'course_credit',
-      'field' => 'ctid',
+      'field' => 'type',
       'extra' => array(
         array(
           'field' => 'nid', // course_credit.nid
