@@ -6,6 +6,7 @@
 class Course {
   private $node;
   private $user;
+  private $courseObjects;
 
   public function __construct($node, $user) {
     if (is_object($node)) {
@@ -64,5 +65,27 @@ class Course {
     $report->nid = $this->node->nid;
     $report->uid = $this->user->uid;
     course_report_save($report);
+  }
+
+  /**
+   * Get the course objects in this course.
+   *
+   * @return array
+   *   An array of course objects.
+   */
+  public function getObjects() {
+    global $user;
+    if (!$this->courseObjects) {
+      $sql = 'select * from {course_outline} co
+        order by weight asc';
+      $result = db_query($sql);
+      course_available_objects();
+
+      while ($row = db_fetch_object($result)) {
+        $this->courseObjects[] = course_get_course_object($row, $user);
+      }
+    }
+
+    return $this->courseObjects;
   }
 }

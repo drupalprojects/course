@@ -5,7 +5,7 @@
  *
  * Join report.uid to awarded.uid, and report.nid to awarded.nid
  */
-class course_credit_course_report_credit_awarded extends views_handler_relationship {
+class course_credit_course_report_credit_awarded_vhr extends views_handler_relationship {
   /**
    * Called to implement a relationship in a query.
    */

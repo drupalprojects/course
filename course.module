@@ -1228,6 +1228,22 @@ function course_available_objects() {
 }
 
 /**
+ * Get a loaded course object
+ * @param type $outline_entry
+ * @return object|boolean
+ */
+function course_get_course_object($outline_entry, $account) {
+  $available = course_available_objects();
+  $ret = $available[$outline_entry->requirement_type][$outline_entry->requirement_component];
+  if ($ret['class']) {
+    return new $ret['class']($outline_entry, $account);
+  }
+  else {
+    return new CourseObject($outline_entry, $account);
+  }
+}
+
+/**
  * Get specific LMS info by key.
  */
 function course_get_lms($key) {

@@ -28,7 +28,7 @@ class CourseObject {
   function __construct($requirement, $user = NULL) {
     if (is_numeric($requirement) && $requirement > 0) {
       $sql = "select * from {course_outline} where instance = %d";
-      $this->requirement = db_fetch_array(db_query($sql, $requirement));
+      $this->requirement = db_fetch_object(db_query($sql, $requirement));
     }
     else {
       $this->requirement = $requirement;
@@ -64,7 +64,7 @@ class CourseObject {
    * @return bool
    */
   public function isGraded() {
-    return $this->requirement['graded'];
+    return $this->requirement->graded;
   }
 
   /**
@@ -73,7 +73,7 @@ class CourseObject {
    * @return bool
    */
   public function isRequired() {
-    return $this->requirement['required'];
+    return $this->requirement->required;
   }
 
   /**
@@ -82,7 +82,7 @@ class CourseObject {
    * @return float
    */
   public function getPassingGrade() {
-    return $this->requirement['passing_grade'];
+    return $this->requirement->passing_grade;
   }
 
   /**
@@ -92,7 +92,7 @@ class CourseObject {
    *   Percentage to pass.
    */
   public function setPassingGrade($grade) {
-    $this->requirement['passing_grade'] = $grade;
+    $this->requirement->passing_grade = $grade;
     return $this;
   }
 
@@ -103,7 +103,7 @@ class CourseObject {
    *    Graded, true or false.
    */
   public function setGraded($graded) {
-    $this->requirement['graded'] = $graded;
+    $this->requirement->graded = $graded;
     return $this;
   }
 
@@ -113,7 +113,27 @@ class CourseObject {
    * @return string
    */
   public function getTitle() {
-    return $this->requirement['title'];
+    return $this->requirement->title;
+  }
+
+  /**
+   * Get the status message of this course object.
+   */
+  public function getStatus($type = 'short') {
+    /*
+     * if ($this->courseObjectFulfillment->isComplete()) {
+     *   // do other messages?
+     * }
+     * else {
+     *  if ($type == 'short') {
+     *  return "Not viewed";
+     * }
+     *
+     * if ($type == 'long') {
+     * return "You have not viewed $title";
+     * }
+     * }
+     */
   }
 
   /**
@@ -122,7 +142,7 @@ class CourseObject {
    * @return int
    */
   public function getId() {
-    return $this->requirement['snid'];
+    return $this->requirement->snid;
   }
 
   /**
@@ -140,21 +160,21 @@ class CourseObject {
    * @return int
    */
   function getInstanceId() {
-    return $this->requirement['instance'];
+    return $this->requirement->instance;
   }
 
   /**
    * Get the course node ID this object belongs to.
    */
   function getCourseNid() {
-    return $this->requirement['nid'];
+    return $this->requirement->nid;
   }
 
   /**
    * Save the course object to the database.
    */
   public function save() {
-    $keys = $this->requirement['snid'] ? array('snid') : array();
+    $keys = $this->requirement->snid ? array('snid') : array();
     return drupal_write_record('course_outline', $this->requirement, $keys);
   }
 }
@@ -258,7 +278,7 @@ class CourseObjectNode extends CourseObject {
 
   public function __construct($requirement, $user = NULL) {
     parent::__construct($requirement, $user);
-    $this->node = node_load($requirement['instance']);
+    $this->node = node_load($this->getInstanceId());
   }
 
   public function getTakeUrl() {
