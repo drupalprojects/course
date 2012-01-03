@@ -6,13 +6,11 @@
  * containing any number of graded or ungraded course objects.
  */
 
-define('COURSE_ROOT', DRUPAL_ROOT . '/' . drupal_get_path('module', 'course'));
-
 // Load built-in LMS.
-require_once COURSE_ROOT . '/includes/course.drupal.inc';
+require_once dirname(__FILE__) . '/includes/course.drupal.inc';
 
 // Course Outline functions
-require_once COURSE_ROOT . '/includes/course.outline.inc';
+require_once dirname(__FILE__) . '/includes/course.outline.inc';
 
 /**
  * Implements hook_menu().
@@ -72,23 +70,21 @@ function course_menu() {
   );
 
   // Per course user type selection.
-  $items['node/%node/course-user-type'] = array(
+  $items['node/%course/course-user-type'] = array(
     'title' => 'Choose user type',
     'description' => 'Allow the learner to choose their user type.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_user_type_form', 1),
-    'access callback' => 'course_node_is_course',
-    'access arguments' => array(1),
+    'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
 
   // Landing page for course completion.
-  $items['node/%node/course-complete'] = array(
+  $items['node/%course/course-complete'] = array(
     'title' => 'Course complete',
     'page arguments' => array(1),
     'page callback' => 'course_outline_complete_step',
-    'access callback' => 'course_node_is_course',
-    'access arguments' => array(1),
+    'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
 
@@ -100,7 +96,7 @@ function course_menu() {
   );
 
   // Display the 'Take course' menu item as a tab or link, depending.
-  $items['node/%node/takecourse'] = array(
+  $items['node/%course/takecourse'] = array(
     'title' => 'Take course',
     'title callback' => 'course_takecourse_title',
     'title arguments' => array(1),
@@ -113,7 +109,7 @@ function course_menu() {
   );
 
   // Display the 'Course settings' menu item as a tab or link, depending.
-  $items['node/%node/coursesettings'] = array(
+  $items['node/%course/coursesettings'] = array(
     'title' => 'Course settings',
     'description' => 'Course settings.',
     'page callback' => 'course_edit_course',
@@ -151,9 +147,12 @@ function course_block_view($delta) {
 }
 
 /**
- * Implements hook_block().
+ * Menu loader: check if node is a Course.
  */
-function course_block_OLD($op = 'list', $delta = 0) { }
+function course_load($arg) {
+  $node = node_load($arg);
+  return course_node_is_course($node) ? $node : FALSE;
+}
 
 /**
  * Menu title handler for the Take course tab.
@@ -246,26 +245,22 @@ function course_permission() {
  * @param object $node
  */
 function course_menu_access($item, $node) {
-  // Only apply to courses.
-  if (course_node_is_course($node)) {
-    global $user;
-    static $courses = array();
-    if (!isset($courses[$node->nid])) {
-      switch ($item) {
-        case 'takecourse':
-          $hooks = module_invoke_all('course_has_takecourse', $node, $user);
-          $courses[$node->nid] = !in_array(FALSE, $hooks);
-          break;
+  global $user;
+  static $courses = array();
+  if (!isset($courses[$item][$node->nid])) {
+    switch ($item) {
+      case 'takecourse':
+        $hooks = module_invoke_all('course_has_takecourse', $node, $user);
+        $courses[$item][$node->nid] = !in_array(FALSE, $hooks);
+        break;
 
-        case 'settings':
-          $hooks = module_invoke_all('course_has_settings', $node, $user);
-          $courses[$node->nid] = !in_array(FALSE, $hooks) && course_settings_access($node);
-          break;
-      }
+      case 'settings':
+        $hooks = module_invoke_all('course_has_settings', $node, $user);
+        $courses[$item][$node->nid] = !in_array(FALSE, $hooks) && course_settings_access($node);
+        break;
     }
   }
-
-  return $courses[$node->nid];
+  return $courses[$item][$node->nid];
 }
 
 /**
