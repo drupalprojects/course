@@ -1845,16 +1845,8 @@ function course_outline_save_requirement(&$outline_entry, $node = NULL) {
   }
   if (!$outline_entry->instance) {
     // Only creating new course objects right now. Can't update them yet
-
-    // Check if we have an object with an implementation of create().
-    // Otherwise use the old course_object_api call.
     $courseObject = course_get_course_object($outline_entry);
-    if (method_exists($courseObject, 'create')) {
-      $ret = $courseObject->create($node, $outline_entry);
-    }
-    else {
-      $ret = module_invoke($outline_entry->requirement_type, 'course_object_api', $node, 'presave', $outline_entry);
-    }
+    $ret = $courseObject->create($node, $outline_entry);
     $outline_entry->instance = $ret;
   }
   $available_objects = course_available_objects();

@@ -177,6 +177,21 @@ class CourseObject {
     $keys = $this->requirement->snid ? array('snid') : array();
     return drupal_write_record('course_outline', $this->requirement, $keys);
   }
+
+  /**
+   * Creates a course object.
+   *
+   * For example, this would create the new node and return the node ID if this
+   * was a CourseObjectNode.
+   *
+   * Do not confuse this with save(), which saves the course outline record for
+   * tracking.
+   */
+  public function create($outline_entry) {
+    $node = node_load(arg(1));
+    $ret = module_invoke($outline_entry->requirement_type, 'course_object_api', $node, 'presave', $outline_entry);
+    return $ret;
+  }
 }
 
 /**
