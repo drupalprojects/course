@@ -247,8 +247,9 @@ function course_outline_overview_form_validate($form, $form_state) {
 function course_outline_overview_save($node, $op) {
   if (isset($node->course_outline)) {
     foreach ($node->course_outline['requirements'] as $key => $record) {
-      $record['nid'] = $node->nid;
-      if (!empty($record['requirement_component'])) {
+      $record = (object) $record;
+      $record->nid = $node->nid;
+      if (!empty($record->requirement_component)) {
         // Must have a component.
         course_outline_save_requirement($record, $node);
       }
