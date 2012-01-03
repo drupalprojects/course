@@ -8,46 +8,28 @@
 
 /**
  * Implements hook_install().
- *
- * Install a default content type, set some defaults.
  */
 function course_install() {
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_install_schema('course')
+  module_load_include('inc', 'node', 'content_types');
 
-  module_load_include('module', 'node', 'node');
-
-  $type = array(
+  // Create the default course type.
+  $course_type = array(
     'type' => 'course',
-    'name' => 'Course',
-    'module' => 'node',
-    'has_title' => 1,
-    'title_label' => 'Title',
-    'has_body' => 1,
-    'body_label' => 'Description',
-    'description' => 'A <em>course</em> containing Drupal learning objects.',
+    'name' => st('Course'),
+    'base' => 'node_content',
+    'description' => st('Create an e-learning course, containing any number of graded or ungraded course objects.'),
     'custom' => TRUE,
     'modified' => TRUE,
     'locked' => FALSE,
-    'help' => '',
-    'min_word_count' => '',
   );
+  $course_type = node_type_set_defaults($course_type);
+  node_type_save($course_type);
+  node_add_body_field($course_type);
 
-  $type = (object) node_type_set_defaults($type);
-  node_type_save($type);
-  node_types_rebuild();
-  menu_rebuild();
-
+  // @todo remove these. Make sure useages of these variables use the default
+  // value of variable_get() properly.
   variable_set('course_use_course', 1);
   variable_set('default_lms_course', 'drupal');
-}
-
-/**
- * Implements hook_uninstall().
- */
-function course_uninstall() {
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_uninstall_schema('course')
 }
 
 /**
@@ -186,7 +168,6 @@ function course_schema() {
       'code' => array(
         'type' => 'varchar',
         'length' => 128,
-        'not null' => TRUE,
         'default' => NULL,
         'description' => 'The access code used to enroll.',
       ),
@@ -247,16 +228,21 @@ function course_schema() {
         'precision' => 6,
         'scale' => 2,
       ),
+      // @see http://drupal.org/node/159605#comment-4321368
       'open' => array(
-        'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
+        'pgsql_type' => 'timestamp without time zone',
+        'sqlite_type' => 'VARCHAR',
+        'sqlsrv_type' => 'smalldatetime',
         'not null' => TRUE,
-        'default' => 0,
         'description' => 'Date course opens.',
       ),
       'close' => array(
-        'type' => 'datetime',
+        'mysql_type' => 'DATETIME',
+        'pgsql_type' => 'timestamp without time zone',
+        'sqlite_type' => 'VARCHAR',
+        'sqlsrv_type' => 'smalldatetime',
         'not null' => TRUE,
-        'default' => 0,
         'description' => 'Date course closes.',
       ),
       'duration' => array(
@@ -464,19 +450,17 @@ function course_schema() {
 }
 
 /**
- * Delete enrollments for users who don't exist anymore.
+ * Cleanup enrolments for deleted users.
  */
 function course_update_6121() {
-  $ret = array();
-  $sql = "DELETE ce.* FROM {course_enrolment} ce LEFT JOIN {users} u ON (ce.uid = u.uid) WHERE u.uid IS NULL";
-  // TODO update_sql has been removed. Use the database API for any schema or data changes.
-  $ret[] = array() /* update_sql($sql) */;
-  $ret[] = array(
-    'success' => TRUE,
-    'query' => db_affected_rows() . ' old enrollments deleted',
-  );
-  // hook_update_N() no longer returns a $ret array. Instead, return
-  // nothing or a translated string indicating the update ran successfully.
-  // See http://drupal.org/node/224333#update_sql.
-  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
+  // Delete enrollments for users who don't exist anymore.
+  // @todo remove this update, because hook_user_delete() should auto-clean.
+  $count = db_delete('course_enrolment', 'ce')
+    ->join('users', 'u', 'ce.uid = u.uid')
+    ->condition('u.uid', NULL)
+    ->execute();
+
+  return t('%count old enrollments deleted.', array('%count' => $count));
+
+  throw new DrupalUpdateException('Automatic cleanup failed; you may need to manually remove old users from the course_enrolment table.');
 }

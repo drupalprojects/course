@@ -1,7 +1,6 @@
 name = Course
 core = 7.x
 description = Integrate external courses with Drupal.
-dependencies[] = autoload
 php = 5
 
 files[] = course.api.php

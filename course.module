@@ -2,15 +2,17 @@
 
 /**
  * @file
- * Core functionality for Courses.
- *
+ * This module allows any content-type to be used as an e-learning course,
+ * containing any number of graded or ungraded course objects.
  */
 
+define('COURSE_ROOT', DRUPAL_ROOT . '/' . drupal_get_path('module', 'course'));
+
 // Load built-in LMS.
-include DRUPAL_ROOT . '/' . 'includes/course.drupal.inc';
+require_once COURSE_ROOT . '/includes/course.drupal.inc';
 
 // Course Outline functions
-require_once DRUPAL_ROOT . '/' . ('includes/course.outline.inc');
+require_once COURSE_ROOT . '/includes/course.outline.inc';
 
 /**
  * Implements hook_menu().
@@ -70,21 +72,23 @@ function course_menu() {
   );
 
   // Per course user type selection.
-  $items['node/%course_node/course-user-type'] = array(
+  $items['node/%node/course-user-type'] = array(
     'title' => 'Choose user type',
     'description' => 'Allow the learner to choose their user type.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_user_type_form', 1),
-    'access callback' => TRUE,
+    'access callback' => 'course_node_is_course',
+    'access arguments' => array(1),
     'type' => MENU_CALLBACK,
   );
 
   // Landing page for course completion.
-  $items['node/%course_node/course-complete'] = array(
+  $items['node/%node/course-complete'] = array(
     'title' => 'Course complete',
-    'access callback' => TRUE,
     'page arguments' => array(1),
     'page callback' => 'course_outline_complete_step',
+    'access callback' => 'course_node_is_course',
+    'access arguments' => array(1),
     'type' => MENU_CALLBACK,
   );
 
@@ -96,26 +100,26 @@ function course_menu() {
   );
 
   // Display the 'Take course' menu item as a tab or link, depending.
-  $items['node/%course_node/takecourse'] = array(
+  $items['node/%node/takecourse'] = array(
     'title' => 'Take course',
     'title callback' => 'course_takecourse_title',
     'title arguments' => array(1),
     'description' => 'Take course.',
     'page callback' => 'course_take_course',
     'page arguments' => array(1),
-    'access callback' => 'course_take_course_menu_access',
-    'access arguments' => array(1),
+    'access callback' => 'course_menu_access',
+    'access arguments' => array('takecourse', 1),
     'type' => variable_get('course_takecourse_tab_display', 1) ? MENU_LOCAL_TASK : MENU_CALLBACK,
   );
 
   // Display the 'Course settings' menu item as a tab or link, depending.
-  $items['node/%course_node/coursesettings'] = array(
+  $items['node/%node/coursesettings'] = array(
     'title' => 'Course settings',
     'description' => 'Course settings.',
     'page callback' => 'course_edit_course',
     'page arguments' => array(1),
-    'access callback' => 'course_settings_menu_access',
-    'access arguments' => array(1),
+    'access callback' => 'course_menu_access',
+    'access arguments' => array('settings', 1),
     'type' => MENU_CALLBACK,
   );
 
@@ -162,14 +166,6 @@ function course_takecourse_title($node) {
   global $user;
   $report = course_report_load($node, $user);
   return ($user->uid > 1 && $report->complete) ? t('Review course') : t('Take course');
-}
-
-/**
- * Menu loader: check if node is a Course.
- */
-function course_node_load($arg) {
-  $node = node_load($arg);
-  return course_node_is_course($node) ? $node : FALSE;
 }
 
 /**
@@ -240,34 +236,33 @@ function course_permission() {
 }
 
 /**
- * Should the take course button show on this node?
+ * Menu access callback.
  *
- * This differs from course_take_course_access as it only returns true/false.
- */
-function course_take_course_menu_access($node) {
-  global $user;
-  static $courses = array();
-
-  if (!isset($courses[$node->nid])) {
-    $hooks = module_invoke_all('course_has_takecourse', $node, $user);
-    $courses[$node->nid] = !in_array(FALSE, $hooks);
-  }
-
-  return $courses[$node->nid];
-}
-
-/**
- * Should the course settings tab show on this node?
+ * @param string $item
+ *   The menu item. Can be:
+ *   - takecourse
+ *   - settings
  *
- * This differs from course_take_course_access as it only returns true/false. If a module's
+ * @param object $node
  */
-function course_settings_menu_access($node) {
-  global $user;
-  static $courses = array();
+function course_menu_access($item, $node) {
+  // Only apply to courses.
+  if (course_node_is_course($node)) {
+    global $user;
+    static $courses = array();
+    if (!isset($courses[$node->nid])) {
+      switch ($item) {
+        case 'takecourse':
+          $hooks = module_invoke_all('course_has_takecourse', $node, $user);
+          $courses[$node->nid] = !in_array(FALSE, $hooks);
+          break;
 
-  if (!isset($courses[$node->nid])) {
-    $hooks = module_invoke_all('course_has_settings', $node, $user);
-    $courses[$node->nid] = !in_array(FALSE, $hooks) && course_settings_access($node);
+        case 'settings':
+          $hooks = module_invoke_all('course_has_settings', $node, $user);
+          $courses[$node->nid] = !in_array(FALSE, $hooks) && course_settings_access($node);
+          break;
+      }
+    }
   }
 
   return $courses[$node->nid];
@@ -561,7 +556,7 @@ function course_node_load($nodes, $types) {
   foreach ($result as $record) {
     // @todo update functions that expect $node->course to be an array.
     $nodes[$record->nid]->course = $record;
-    
+
     // Let other modules attach info to $node->course.
     foreach (module_implements('course_nodeapi_extra') as $module) {
       // @todo break hook_course_nodeapi_extra() into separate hooks,
@@ -616,7 +611,8 @@ function course_node_delete($node) {
  * Implements hook_node_prepare().
  */
 function course_node_prepare($node) {
-  if (empty(course_available_lms())) {
+  $course_available_lms = course_available_lms();
+  if (empty($course_available_lms)) {
     $name = node_type_get_name($node);
     $messages[] = t("There is no learning application installed for this @type.", array('@type' => $name));
     if (user_access('administer course')) {
@@ -856,12 +852,12 @@ function course_enable() {
  * Show LMS selection.
  */
 function course_form_alter(&$form, &$form_state, $form_id) {
-  global $user;
-  $node = $form['#node'];
+  if (isset($form['#node']->type) && $form_id == $form['#node']->type . '_node_form' && course_node_is_course($form['#node']->type)) {
+    $node = $form['#node'];
 
-  if (course_node_is_course($node) && strpos($form_id, '_node_form') !== FALSE) {
     $lapps = course_available_lms();
     $options = array();
+    $lms_installed = array();
     $default_lms = variable_get("default_lms_{$node->type}", 'none');
     foreach ($lapps as $key => $lapp) {
       if (module_invoke($lapp['module'], 'lms_status', $key)) {
@@ -2246,7 +2242,7 @@ function course_determine_context($node = NULL) {
     $node = node_load(arg(1));
   }
 
-  if ($node->nid) {
+  if ($node && $node->nid) {
     $sql = 'select nid from {course_outline} where instance = %d or nid = %d limit 1';
     if ($course_nid = db_query($sql, $node->nid, $node->nid)->fetchField()) {
       return node_load($course_nid);
