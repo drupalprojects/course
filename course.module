@@ -84,8 +84,9 @@ function course_menu() {
     'title' => 'Course complete',
     'access callback' => TRUE,
     'page arguments' => array(1),
-    'page callback' => 'course_outline_complete_step',
+    'page callback' => 'course_outline_show_complete_links',
     'type' => MENU_CALLBACK,
+    'file' => 'includes/course.outline.inc',
   );
 
   // AHAH handler.
@@ -1124,7 +1125,9 @@ function course_available_objects() {
     $objects = module_invoke($implementor, 'course_object_info');
     if (is_array($objects)) {
       foreach ($objects as $key => &$object) {
-        $object['module'] = $implementor;
+        if (!$object['module']) {
+          $object['module'] = $implementor;
+        }
         $course_objects[$object['module']][$key] = $object;
       }
     }
@@ -1138,7 +1141,7 @@ function course_available_objects() {
  * @param type $outline_entry
  * @return object|boolean
  */
-function course_get_course_object($outline_entry, $account) {
+function course_get_course_object($outline_entry, $account = NULL) {
   $available = course_available_objects();
   $ret = $available[$outline_entry->requirement_type][$outline_entry->requirement_component];
   if ($ret['class']) {
@@ -1828,45 +1831,48 @@ function course_theme() {
  * @return mixed
  *   NULL if nothing to do, FALSE if failure.
  */
-function course_outline_save_requirement(&$mixed, $node = NULL) {
-  if (is_array($mixed)) {
-    if (!$mixed['requirement_component']) $mixed['requirement_component'] = $mixed['add'];
-    $pair = explode('-', $mixed['requirement_component']);
-    if (count($pair) == 2) {
-      $mixed['requirement_type'] = $pair[0];
-      $mixed['requirement_component'] = $pair[1];
-    }
+function course_outline_save_requirement(&$outline_entry, $node = NULL) {
+  $pair = explode('-', $outline_entry->requirement_component);
 
-    // Invoke for external module.
-    if (!$node) {
-      $node = node_load($mixed['nid']);
-    }
-    if (!$mixed['instance']) {
-      // Only creating new course objects right now. Can't update them yet
-      $ret = module_invoke($mixed['requirement_type'], 'course_object_api', $node, 'presave', $mixed);
-      $mixed['instance'] = $ret;
-    }
-    $available_objects = course_available_objects();
-    if (isset($available_objects[$mixed['requirement_type']][$mixed['requirement_component']]['graded'])){
-      $mixed['graded'] = $available_objects[$mixed['requirement_type']][$mixed['requirement_component']]['graded'];
-    }
-    if ($old = course_outline_get_requirement($mixed)) {
-      if (drupal_write_record('course_outline', $mixed, array('snid','nid'))) {
-        $mixed['add'] = $mixed['requirement_component'];
-        return TRUE;
-      }
-    }
-    else  {
-      // Does not exist.
-      if (drupal_write_record('course_outline', $mixed)) {
-        $mixed['add'] = $mixed['requirement_component'];
-        return TRUE;
-      }
-    }
-    return FALSE;
+  if (count($pair) == 2) {
+    $outline_entry->requirement_type = $pair[0];
+    $outline_entry->requirement_component = $pair[1];
   }
 
-  return NULL;
+  // Invoke for external module.
+  if (!$node) {
+    $node = node_load($outline_entry->nid);
+  }
+  if (!$outline_entry->instance) {
+    // Only creating new course objects right now. Can't update them yet
+
+    // Check if we have an object with an implementation of create().
+    // Otherwise use the old course_object_api call.
+    $courseObject = course_get_course_object($outline_entry);
+    if (method_exists($courseObject, 'create')) {
+      $ret = $courseObject->create($node, $outline_entry);
+    }
+    else {
+      $ret = module_invoke($outline_entry->requirement_type, 'course_object_api', $node, 'presave', $outline_entry);
+    }
+    $outline_entry->instance = $ret;
+  }
+  $available_objects = course_available_objects();
+  if (isset($available_objects[$outline_entry->requirement_type][$outline_entry->requirement_component]->graded)){
+    $outline_entry->graded = $available_objects[$outline_entry->requirement_type][$outline_entry->requirement_component]->graded;
+  }
+  if ($old = course_outline_get_requirement($outline_entry)) {
+    if (drupal_write_record('course_outline', $outline_entry, array('snid','nid'))) {
+      return TRUE;
+    }
+  }
+  else  {
+    // Does not exist.
+    if (drupal_write_record('course_outline', $outline_entry)) {
+      return TRUE;
+    }
+  }
+  return FALSE;
 }
 
 /**
