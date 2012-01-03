@@ -22,36 +22,6 @@ function course_quiz_course_object_info() {
 }
 
 /**
- * Presave must return an instance ID.
- */
-function course_quiz_course_object_api($node, $op, $object) {
-  if ($op == 'presave') {
-    switch ($object['requirement_component']) {
-      case 'quiz':
-        if ($object['instance']) {
-          $quiz = node_load($object['instance']);
-        }
-        else {
-          $quiz = new stdClass;
-        }
-        $quiz->auto_created = TRUE;
-        $quiz->type = 'quiz';
-        $quiz->title = $object['title'];
-        $quiz->uid = $node->uid;
-        $quiz->quiz_always = TRUE;
-        $quiz->quiz_open = $quiz->quiz_close = array(
-          'month' => date('m'),
-          'day' => date('d'),
-          'year' => date('Y'),
-        );
-        $quiz = (object) array_merge(_quiz_get_node_defaults(), (array) $quiz);
-        node_save($quiz);
-        return $quiz->nid;
-    }
-  }
-}
-
-/**
  * Implementation of hook_quiz_finished().
  *
  * Update the fulfillment record.

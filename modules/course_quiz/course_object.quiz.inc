@@ -1,6 +1,32 @@
 <?php
 
 class CourseObjectQuiz extends CourseObjectNode {
+  function create($object) {
+    global $user;
+    switch ($object->requirement_component) {
+      case 'quiz':
+        if ($object->instance) {
+          $quiz = node_load($object->instance);
+        }
+        else {
+          $quiz = new stdClass;
+        }
+        $quiz->auto_created = TRUE;
+        $quiz->type = 'quiz';
+        $quiz->title = $object->title;
+        $quiz->uid = $user->uid;
+        $quiz->quiz_always = TRUE;
+        $quiz->quiz_open = $quiz->quiz_close = array(
+          'month' => date('m'),
+          'day' => date('d'),
+          'year' => date('Y'),
+        );
+        $quiz = (object) array_merge(_quiz_get_node_defaults(), (array) $quiz);
+        node_save($quiz);
+        return $quiz->nid;
+    }
+  }
+  
   function getTakeUrl() {
     return url("node/{$this->node->nid}/take");
   }
