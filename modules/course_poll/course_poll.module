@@ -20,17 +20,17 @@ function course_poll_course_object_info() {
  */
 function course_poll_course_object_api($node, $op, $object) {
   if ($op == 'presave') {
-    switch ($object['requirement_component']) {
+    switch ($object->requirement_component) {
       case 'poll':
-        if ($object['instance']) {
-          $poll = node_load($object['instance']);
+        if ($object->instance) {
+          $poll = node_load($object->instance);
         }
         else {
           $poll = new stdClass;
           $poll->choice[0]['chtext'] = 'Yes';
           $poll->choice[1]['chtext'] = 'No';
           $poll->type = 'poll';
-          $poll->title = $object['title'];
+          $poll->title = $object->title;
           $poll->uid = $node->uid;
           $poll->active = 1;
         }

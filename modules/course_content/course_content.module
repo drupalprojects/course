@@ -25,13 +25,13 @@ function course_content_course_object_info() {
  */
 function course_content_course_object_api($node, $op, $object) {
   if ($op == 'presave') {
-    if ($object['instance']) {
-      $content = node_load($object['instance']);
+    if ($object->instance) {
+      $content = node_load($object->instance);
     }
     else {
       $content = new stdClass;
-      $content->type = $object['requirement_component'];
-      $content->title = $object['title'];
+      $content->type = $object->requirement_component;
+      $content->title = $object->title;
       $content->uid = $node->uid;
     }
     node_save($content);

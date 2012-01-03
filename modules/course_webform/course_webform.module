@@ -20,15 +20,15 @@ function course_webform_course_object_info() {
  */
 function course_webform_course_object_api($node, $op, $object) {
   if ($op == 'presave') {
-    switch ($object['requirement_component']) {
+    switch ($object->requirement_component) {
       case 'webform':
-        if ($object['instance']) {
-          $webform = node_load($object['instance']);
+        if ($object->instance) {
+          $webform = node_load($object->instance);
         }
         else {
           $webform = new stdClass;
           $webform->type = 'webform';
-          $webform->title = $object['title'];
+          $webform->title = $object->title;
           $webform->uid = $node->uid;
         }
         node_save($webform);
