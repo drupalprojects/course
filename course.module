@@ -1871,6 +1871,7 @@ function course_outline_save_requirement(&$outline_entry, $node = NULL) {
  * @todo convert to OO.
  */
 function course_outline_set_additional_requirements($node) {
+  /*
   if (in_array($node->field_course_type[0]['value'], array('live','enduring'))) {
     $course_type = strtolower($node->field_course_type[0]['value']);
   }
@@ -1936,6 +1937,7 @@ function course_outline_set_additional_requirements($node) {
       course_outline_delete_requirement($attendance_requirement);
     }
   }
+  */
 }
 
 /**
