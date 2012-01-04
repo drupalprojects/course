@@ -1,0 +1,6 @@
+name = SCORM Course Object
+core = 6.x
+description = Provides Course support for CCK Scorm Field
+dependencies[] = SCORM
+files[] = course_scorm.classes.inc
+dependencies[] = course_content

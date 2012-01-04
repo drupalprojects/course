@@ -1,0 +1,61 @@
+<?php
+
+/**
+ * Implementation of hook_course_object_info().
+ */
+function course_scorm_course_object_info() {
+  $types = content_types();
+  $fields = content_fields();
+  foreach ($fields as $name => $field) {
+    if ($field['type'] == 'filefield' && $field['widget']['type'] == 'SCORM_widget') {
+      if (variable_get("course_content_use_{$field['type_name']}", 0)) {
+        $course_objects[$field['type_name']] = array(
+          'title' => $types[$field['type_name']]['name'],
+          'suggested title' => 'Course',
+          'class' => 'CourseObjectScorm',
+          'description' => 'A SCORM object to be used in a course workflow.',
+          'graded' => TRUE,
+        );
+      }
+    }
+  }
+
+  return $course_objects;
+}
+
+/**
+ * Implementation of hook_exit().
+ *
+ * Track the SCORM object completion. We can get away from this if [#1392824] is
+ * addressed.
+ */
+function course_scorm_exit() {
+  if (arg(1) == 'datamodel') {
+    global $user;
+    $nid = db_result(db_query('select nodereference from {scorm} where id = %d', $_POST['id']));
+    $node = node_load($nid);
+    if (course_determine_context($node)) {
+      $courseObject = new CourseObjectScorm($node->nid, $user);
+      $sql = "select * from {scorm_scoes_track} sst
+        where userid = %d and scormid = %d and scoid = %d and attempt = %d";
+      $result = db_query($sql, $user->uid, $_POST['id'], $_POST['scoid'], $_POST['attempt']);
+      while ($row = db_fetch_object($result)) {
+        $completion_property = ($row->element == 'cmi.core.lesson_status' || $row->element == 'cmi.completion_status');
+        $completion_value = ($row->value == 'completed' || $row->value == 'passed');
+        $passed = $courseObject->isGraded() && $row->element == 'cmi.core.score.raw' && $row->value > $courseObject->getPassingGrade();
+        if (($completion_property && $completion_value) || $passed) {
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_autoload_info().
+ */
+function course_scorm_autoload_info() {
+  return array(
+    'CourseObjectScorm' => array('file' => 'course_scorm.classes.inc'),
+  );
+}
+
