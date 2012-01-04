@@ -1,30 +1,30 @@
 <?php
 
 class CourseObjectQuiz extends CourseObjectNode {
-  function create($object) {
+  /**
+   * Create the quiz node and set it as this object's instance.
+   */
+  function create() {
     global $user;
-    switch ($object->requirement_component) {
-      case 'quiz':
-        if ($object->instance) {
-          $quiz = node_load($object->instance);
-        }
-        else {
-          $quiz = new stdClass;
-        }
-        $quiz->auto_created = TRUE;
-        $quiz->type = 'quiz';
-        $quiz->title = $object->title;
-        $quiz->uid = $user->uid;
-        $quiz->quiz_always = TRUE;
-        $quiz->quiz_open = $quiz->quiz_close = array(
-          'month' => date('m'),
-          'day' => date('d'),
-          'year' => date('Y'),
-        );
-        $quiz = (object) array_merge(_quiz_get_node_defaults(), (array) $quiz);
-        node_save($quiz);
-        return $quiz->nid;
+    if ($this->getInstanceId()) {
+      $quiz = node_load($this->getInstanceId());
     }
+    else {
+      $quiz = new stdClass;
+    }
+    $quiz->auto_created = TRUE;
+    $quiz->type = 'quiz';
+    $quiz->title = $this->getTitle();
+    $quiz->uid = $user->uid;
+    $quiz->quiz_always = TRUE;
+    $quiz->quiz_open = $quiz->quiz_close = array(
+      'month' => date('m'),
+      'day' => date('d'),
+      'year' => date('Y'),
+    );
+    $quiz = (object) array_merge(_quiz_get_node_defaults(), (array) $quiz);
+    node_save($quiz);
+    $this->setInstanceId($quiz->nid);
   }
   
   function getTakeUrl() {

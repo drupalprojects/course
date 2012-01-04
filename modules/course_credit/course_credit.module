@@ -58,7 +58,7 @@ function course_credit_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
-  $items['node/%course_node/course-credit-edit-app'] = array(
+  $items['node/%course/course-credit-edit-app'] = array(
     'title' => 'Edit App for Credit',
     'access callback' => 'course_credit_edit_app_access',
     'access arguments' => array(1),
@@ -68,7 +68,7 @@ function course_credit_menu() {
   );
 
   // FAPI form.
-  $items['node/%course_node/course-credit-app'] = array(
+  $items['node/%course/course-credit-app'] = array(
     'title' => 'Claim',
     'access callback' => 'course_credit_can_apply_access',
     'access arguments' => array(1),

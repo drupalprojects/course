@@ -26,7 +26,9 @@ function _course_block_navigation() {
     $course = new Course($node, $user);
     foreach ($course->getObjects() as $courseObject) {
       if (!$courseObject->getFulfillment()->isComplete()) {
-        $back = $previous->getTakeUrl();
+        if ($previous) {
+          $back = $previous->getTakeUrl();
+        }
       }
       $previous = $courseObject;
     }

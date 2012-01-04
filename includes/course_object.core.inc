@@ -164,11 +164,37 @@ class CourseObject {
   }
 
   /**
+   * Set this object's instance ID.
+   *
+   * @param mixed $id The external ID of this course object.
+   */
+  function setInstanceId($id) {
+    $this->requirement->instance = $id;
+  }
+
+  /**
    * Get the course node ID this object belongs to.
    */
   function getCourseNid() {
     return $this->requirement->nid;
   }
+
+  /**
+   * Get the object component for this course object.
+   */
+  function getComponent() {
+    return $this->requirement->requirement_component;
+  }
+
+  /**
+   * Set the course node ID this object belongs to.
+   *
+   * @param int $nid The node ID this object should be added to.
+   */
+  function setCourseNid($nid) {
+    $this->requirement->nid = $nid;
+  }
+
 
   /**
    * Save the course object to the database.
@@ -187,10 +213,9 @@ class CourseObject {
    * Do not confuse this with save(), which saves the course outline record for
    * tracking.
    */
-  public function create($outline_entry) {
+  public function create() {
     $node = node_load(arg(1));
-    $ret = module_invoke($outline_entry->requirement_type, 'course_object_api', $node, 'presave', $outline_entry);
-    return $ret;
+    $this->setInstanceId(module_invoke($this->requirement->requirement_type, 'course_object_api', $node, 'presave', $this->requirement));
   }
 }
 

@@ -50,11 +50,12 @@ function course_outline_overview_form(&$form, &$form_state, $form_id) {
         continue;
       }
       $rform = _course_outline_requirement_form($requirement);
-      if (empty($requirement['requirement_component'])) {
+      if (empty($requirement['snid'])) {
         // User hasnt selected an object type yet, let them select.
         $rform['requirement_component'] = array(
           '#type' => 'select',
           '#options' => $options,
+          '#default_value' => $requirement['requirement_component'],
         );
       }
       else  {
@@ -63,11 +64,11 @@ function course_outline_overview_form(&$form, &$form_state, $form_id) {
           '#type' => 'hidden',
           '#value' => $requirement['requirement_component'],
         );
+        $rform['requirement_component_show'] = array(
+          '#type' => 'markup',
+          '#value' => ucwords(str_replace('_', ' ', $requirement['requirement_type'])) . '<br/>' . $course_objects[$requirement['requirement_type']][$requirement['requirement_component']]['title'],
+        );
       }
-      $rform['requirement_component_show'] = array(
-        '#type' => 'markup',
-        '#value' => $requirement['requirement_component'],
-      );
       $cform['requirements'][] = $rform;
     }
   }
@@ -99,6 +100,7 @@ function course_outline_overview_form(&$form, &$form_state, $form_id) {
  * To be re-used in listing requirements and creating new ones.
  */
 function _course_outline_requirement_form($requirement = array()) {
+  $courseObject = course_get_course_object((object) $requirement);
   $rform['#tree'] = TRUE;
   $rform['snid'] = array(
     '#type' => 'value',
@@ -133,6 +135,7 @@ function _course_outline_requirement_form($requirement = array()) {
     '#default_value' => isset($requirement['required']) ? $requirement['required'] : 1,
   );
   $rform['graded'] = array(
+    '#title' => 'Graded',
     '#type' => 'checkbox',
     '#default_value' => $requirement['graded'],
   );
@@ -155,7 +158,7 @@ function _course_outline_requirement_form($requirement = array()) {
     '#type' => 'markup',
   );
   if ($requirement['instance']) {
-    $rform['operations']['#value'] = l('Edit', "node/{$requirement['nid']}/coursesettings/edit{$requirement['requirement_component']}_{$requirement['instance']}") .' | '. l(t('Delete'), "node/{$requirement['nid']}/coursesettings/edit{$requirement['requirement_component']}_{$requirement['instance']}/delete", array('query'=>array('destination'=>"node/{$requirement['nid']}/edit",)));
+    $rform['operations']['#value'] = l('Edit', $courseObject->getEditUrl(), array('external' => TRUE, 'query' => drupal_get_destination()));
   }
   $rform['weight'] = array(
     '#type' => 'weight',
@@ -221,8 +224,8 @@ function theme_course_outline_overview_form($form) {
     unset($form[$key]['requirement_component']['#title']);
     $rows[$key]['data'][] = drupal_render($form[$key]['title']);
     $rows[$key]['data'][] = drupal_render($form[$key]['requirement_component']) . drupal_render($form[$key]['requirement_component_show']);
-    $rows[$key]['data'][] = drupal_render($form[$key]['enabled']) . drupal_render($form[$key]['required']);
-    $rows[$key]['data'][] = $form[$key]['graded']['#value']? drupal_render($form[$key]['passing_grade']): 'n/a';
+    $rows[$key]['data'][] = drupal_render($form[$key]['enabled']) . drupal_render($form[$key]['required']) . drupal_render($form[$key]['graded']);
+    $rows[$key]['data'][] = $form[$key]['graded']['#value'] ? drupal_render($form[$key]['passing_grade']): 'n/a';
     $rows[$key]['data'][] = drupal_render($form[$key]['operations']);
 
     // Add draggable settings to row.

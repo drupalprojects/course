@@ -7,10 +7,10 @@
  */
 
 // Load built-in LMS.
-include 'includes/course.drupal.inc';
+require_once dirname(__FILE__) . '/includes/course.drupal.inc';
 
 // Course Outline functions
-require_once ('includes/course.outline.inc');
+require_once dirname(__FILE__) . '/includes/course.outline.inc';
 
 /**
  * Implementation of hook_menu().
@@ -70,7 +70,7 @@ function course_menu() {
   );
   
   // Per course user type selection.
-  $items['node/%course_node/course-user-type'] = array(
+  $items['node/%course/course-user-type'] = array(
     'title' => 'Choose user type',
     'description' => 'Allow the learner to choose their user type.',
     'page callback' => 'drupal_get_form',
@@ -80,7 +80,7 @@ function course_menu() {
   );
 
   // Landing page for course completion.
-  $items['node/%course_node/course-complete'] = array(
+  $items['node/%course/course-complete'] = array(
     'title' => 'Course complete',
     'access callback' => TRUE,
     'page arguments' => array(1),
@@ -97,7 +97,7 @@ function course_menu() {
   );
   
   // Display the 'Take course' menu item as a tab or link, depending.
-  $items['node/%course_node/takecourse'] = array(
+  $items['node/%course/takecourse'] = array(
     'title' => 'Take course',
     'title callback' => 'course_takecourse_title',
     'title arguments' => array(1),
@@ -110,7 +110,7 @@ function course_menu() {
   );
 
   // Display the 'Course settings' menu item as a tab or link, depending.
-  $items['node/%course_node/coursesettings'] = array(
+  $items['node/%course/coursesettings'] = array(
     'title' => 'Course settings',
     'description' => 'Course settings.',
     'page callback' => 'course_edit_course',
@@ -160,7 +160,7 @@ function course_takecourse_title($node) {
 /**
  * Menu loader: check if node is a Course.
  */
-function course_node_load($arg) {
+function course_load($arg) {
   $node = node_load($arg);
   return course_node_is_course($node) ? $node : FALSE;
 }
@@ -1118,19 +1118,24 @@ function _course_weight_lapps($a1, $a2) {
  * @return array
  *   An array of course objects, keyed by module and then object key.
  */
-function course_available_objects() {
-  $implementations = module_implements('course_object_info');
-  $course_objects = array();
-  foreach ($implementations as $implementor) {
-    $objects = module_invoke($implementor, 'course_object_info');
-    if (is_array($objects)) {
-      foreach ($objects as $key => &$object) {
-        if (!$object['module']) {
-          $object['module'] = $implementor;
+function course_available_objects($reset = FALSE) {
+  static $course_objects = array();
+
+  if (!$course_objects || $reset) {
+    $implementations = module_implements('course_object_info');
+    $course_objects = array();
+    foreach ($implementations as $implementor) {
+      $objects = module_invoke($implementor, 'course_object_info');
+      if (is_array($objects)) {
+        foreach ($objects as $key => &$object) {
+          if (!$object['module']) {
+            $object['module'] = $implementor;
+          }
+          $course_objects[$object['module']][$key] = $object;
         }
-        $course_objects[$object['module']][$key] = $object;
       }
     }
+    drupal_alter('course_object_info', $course_objects);
   }
 
   return $course_objects;
@@ -1839,32 +1844,15 @@ function course_outline_save_requirement(&$outline_entry, $node = NULL) {
     $outline_entry->requirement_component = $pair[1];
   }
 
-  // Invoke for external module.
-  if (!$node) {
-    $node = node_load($outline_entry->nid);
-  }
-  if (!$outline_entry->instance) {
+  // Load a course object so we can work with it.
+  $courseObject = course_get_course_object($outline_entry);
+
+  if (!$courseObject->getInstanceId()) {
     // Only creating new course objects right now. Can't update them yet
-    $courseObject = course_get_course_object($outline_entry);
-    $ret = $courseObject->create($node, $outline_entry);
-    $outline_entry->instance = $ret;
+    $courseObject->create();
   }
-  $available_objects = course_available_objects();
-  if (isset($available_objects[$outline_entry->requirement_type][$outline_entry->requirement_component]->graded)){
-    $outline_entry->graded = $available_objects[$outline_entry->requirement_type][$outline_entry->requirement_component]->graded;
-  }
-  if ($old = course_outline_get_requirement($outline_entry)) {
-    if (drupal_write_record('course_outline', $outline_entry, array('snid','nid'))) {
-      return TRUE;
-    }
-  }
-  else  {
-    // Does not exist.
-    if (drupal_write_record('course_outline', $outline_entry)) {
-      return TRUE;
-    }
-  }
-  return FALSE;
+
+  $courseObject->save();
 }
 
 /**

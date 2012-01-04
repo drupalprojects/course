@@ -44,8 +44,13 @@ function course_content_nodeapi(&$node, $op, $a3, $a4) {
     global $user;
     // Check if this node is part of a course context.
     if (course_determine_context($node)) {
-      $courseObject = new CourseObjectNode($node->nid, $user);
-      $courseObject->getFulfillment()->setComplete()->save();
+      $type = db_result(db_query('select requirement_type from {course_outline} where instance = %d', $node->nid));
+      if ($type == 'course_content') {
+        // Nothing else has altered this type, we should complete the object
+        // with a pageview.
+        $courseObject = new CourseObjectNode($node->nid, $user);
+        $courseObject->getFulfillment()->setComplete()->save();
+      }
     }
   }
 }

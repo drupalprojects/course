@@ -49,7 +49,7 @@ function course_signup_menu() {
     'title' => 'Signup',
   );
 
-  $items['node/%course_node/signup-course'] = array(
+  $items['node/%course/signup-course'] = array(
     'title' => 'Quick course registration',
     'page callback' => 'course_signup_quick_register',
     'access callback' => 'course_signup_access_quick_register',
@@ -68,7 +68,7 @@ function course_signup_menu() {
 function course_signup_menu_alter(&$items) {
   $items['node/%node/signups']['title callback'] = 'course_signup_tab_title';
   $items['node/%node/signups']['title arguments'] = array(1);
-  $items['node/%node/signups']['weight'] = $items['node/%course_node/report']['weight'];
+  $items['node/%node/signups']['weight'] = $items['node/%course/report']['weight'];
   // Hide normal signup add form, ours is better!
   $items['node/%node/signups/add']['access callback'] = FALSE;
 }

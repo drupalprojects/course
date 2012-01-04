@@ -40,7 +40,7 @@ function course_quiz_quiz_finished($quiz, $score, $rid) {
  */
 function course_quiz_nodeapi($node, $op, $a3, $a4) {
   if ($node->type == 'quiz') {
-    if ($op == 'insert' || $op == 'update') {
+    if ($op == 'update') {
       $courseObject = new CourseObjectQuiz($node->nid);
       $courseObject->setPassingGrade($node->pass_rate)->setGraded(($node->pass_rate > 0))->save();
     }
