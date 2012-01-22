@@ -15,7 +15,7 @@ function course_credit_menu() {
 
   $items['admin/settings/course/credit'] = array(
     'title' => 'Credit',
-    'access arguments' => array('administer courses'),
+    'access arguments' => array('administer course'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_credit_settings_form'),
     'type' => MENU_LOCAL_TASK,
@@ -28,7 +28,7 @@ function course_credit_menu() {
 
   $items['admin/settings/course/credit/types'] = array(
     'title' => 'Credit types',
-    'access arguments' => array('administer courses'),
+    'access arguments' => array('administer course'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_credit_types_form'),
     'type' => MENU_LOCAL_TASK,
@@ -36,7 +36,7 @@ function course_credit_menu() {
 
   $items['admin/settings/course/credit/types/%/map'] = array(
     'title' => 'Credit Map',
-    'access arguments' => array('administer courses'),
+    'access arguments' => array('administer course'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_credit_type_map_form', 5),
     'type' => MENU_LOCAL_TASK,
@@ -44,7 +44,7 @@ function course_credit_menu() {
 
   $items['admin/settings/course/credit/types/%/delete'] = array(
     'title' => 'Delete credit type',
-    'access arguments' => array('administer courses'),
+    'access arguments' => array('administer course'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_credit_type_delete_form', 5),
     'type' => MENU_LOCAL_TASK,
@@ -52,7 +52,7 @@ function course_credit_menu() {
 
   $items['admin/settings/course/credit/add-type'] = array(
     'title' => 'Add type',
-    'access arguments' => array('administer courses'),
+    'access arguments' => array('administer course'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_credit_type_add_form'),
     'type' => MENU_LOCAL_TASK,
