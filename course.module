@@ -594,8 +594,10 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
  * Check the permissions of showing the take course button, and return the HTML.
  */
 function course_render_button($node) {
-  global $user;
-  $result = course_take_course_access($node);
+  $result = course_enrol_access($node);
+  if ($result['success']) {
+    $result = course_take_course_access($node);
+  }
   // Allow another module to force the take course button to show.
   drupal_alter('course_show_button', $result['success'], $node);
   if ($result['success']) {
@@ -773,6 +775,7 @@ function course_form_alter(&$form, &$form_state, $form_id) {
     $lapps = course_available_lms();
     $options = array();
     $default_lms = variable_get("default_lms_{$node->type}", 'none');
+    $lms_installed = FALSE;
     foreach ($lapps as $key => $lapp) {
       if (module_invoke($lapp['module'], 'lms_status', $key)) {
         $options[$key] = $lapp['name'];
@@ -787,7 +790,18 @@ function course_form_alter(&$form, &$form_state, $form_id) {
     // Ensure LMS type set as default is still installed.
     $default_lms = $default_lms_installed ? $default_lms : 'none';
     if (!$lms_installed) {
-      drupal_set_message(t('No LMS installed. Please <a href="@confirure">configure the Course module</a>.', array('@configure' => url('admin/settings/course'))), 'warning');
+      $messages = array();
+      // Inform the user the lapp is not installed.
+      $messages[] = t('The learning application for this course is not installed.');
+      // Add additional information for course admins or learners.
+      if ($is_course_admin) {
+        $configure = url('admin/settings/course', array('query' => drupal_get_destination()));
+        $messages[] = t('Please <a href="@configure">configure the Course module</a>.', array('@configure' => $configure));
+      }
+      else {
+        $messages[] = t('Please contact the site administrator for more information.');
+      }
+      drupal_set_message(implode(' ', $messages), 'warning');
     }
     $form['course']['#tree'] = TRUE;
     $form['course']['#type'] = 'fieldset';
@@ -1039,7 +1053,10 @@ function course_take_course($node) {
   global $user;
   drupal_set_title($node->title);
 
-  $result = course_take_course_access($node);
+  $result = course_enrol_access($node);
+  if ($result['success']) {
+    $result = course_take_course_access($node);
+  }
   if ($result['success'] === TRUE) {
     $enrolment = course_enrolment_load($node, $user);
     if (empty($enrolment->eid)) {
@@ -1199,13 +1216,11 @@ function course_views_api() {
  * Implementation of hook_content_extra_fields().
  */
 function course_content_extra_fields($type) {
-  $node->type = $type;
-
   $extras = array();
 
-  if (course_node_is_course($node)) {
+  if (course_node_is_course($type)) {
     $extras['course'] = array(
-      'label' => t('Course'),
+      'label' => t('Course settings'),
       'description' => t('Course settings and button.'),
     );
     $extras['course_outline'] = array(
@@ -1398,13 +1413,40 @@ function course_remove_enrollment_action(&$user, $context) {
 function course_edit_enrolment_action(&$signup, $context) {
   $enrolment->uid = $signup->uid;
   $enrolment->nid = $signup->nid;
-  $unixtime = strtotime($context['enrol_end']) + 86399;
-  if ($unixtime) {
-    $enrolment->enrol_end = $unixtime;
+  if ($context['enrol_end']) {
+    $unixtime = strtotime($context['enrol_end']);
+    if ($unixtime) {
+      $enrolment->enrol_end = $unixtime + 86399;
+    }
   }
   if ($context['status'] != '') {
     $enrolment->status = $context['status'];
   }
+
+  $node = node_load($enrolment->nid);
+  $account = user_load($enrolment->uid);
+  $fulfillments = certificate_requirements_check_remaining_requirements($node, $account);
+  foreach ($fulfillments as $snid => $fulfillment) {
+    if ($context['course_objects'][$snid] != '' && $fulfillment['complete'] != $context['course_objects'][$snid]) {
+      // There was a change
+      $fulfillment['complete'] = $context['course_objects'][$snid];
+      $fulfillment['uid'] = $account->uid;
+      $fulfillment['info'] = "Requirement \"{$fulfillment['title']}\" updated via bulk action.";
+
+      if ($fulfillment['complete'] == -1) {
+        certificate_requirements_delete_fulfillment($fulfillment);
+      }
+      else if ($fulfillment['complete'] == 0) {
+        $fulfillment['complete'] = 0;
+        $fulfillment['grade_result'] = 0;
+        certificate_requirements_save_fulfillment($fulfillment);
+      }
+      else {
+        certificate_requirements_save_fulfillment($fulfillment);
+      }
+    }
+  }
+
   drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
   drupal_set_message(t('Updated enrollment for @user', array('@user' => $report->name)));
 }
@@ -1427,6 +1469,47 @@ function course_edit_enrolment_action_form($context) {
       0 => 'inactive',
     ),
   );
+
+  $node = node_load(arg(1));
+
+  $form['course_objects'] = array(
+    '#title' => 'Set completion status',
+    '#description' => 'Set the status of a course object to be applied to selected users.',
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+  );
+
+  if (count($context['selection']) == 1) {
+    // Only one user, so let's prefill values.
+    $selection = reset($context['selection']);
+    // Toggle for VBO being added to a signup view.
+    if ($selection->sid) {
+      $uid = $selection->users_signup_log_uid;
+    }
+    else {
+      $uid = $selection->uid;
+    }
+    $account = user_load($uid);
+    $fulfillments = certificate_requirements_check_remaining_requirements($node, $account);
+  }
+
+  $objects = certificate_requirements_get_course_requirements($node);
+
+  foreach ($objects as $snid => $object) {
+    $form['course_objects'][$snid] = array(
+      '#type' => 'select',
+      '#title' => $object['title'],
+      '#options' => array(
+        '' => '- no change - ',
+        1 => 'Complete',
+        -1 => 'Incomplete',
+        0 => 'Failed',
+      ),
+      '#default_value' => $fulfillments[$snid]['complete'],
+    );
+  }
 
   return $form;
 }
@@ -1644,8 +1727,12 @@ function course_user_type_form_submit(&$form, $form_state) {
  *   has permission to self-enroll in this course, and 'message', a
  *   module-provided message that should be displayed to the user.
  */
-function course_enrol_access($node, $user){
+function course_enrol_access($node, $user = NULL){
   static $courses = array();
+
+  if (!$user) {
+    global $user;
+  }
 
   if (!isset($courses[$node->nid])) {
     $courses[$node->nid]['success'] = TRUE;
