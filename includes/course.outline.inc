@@ -92,6 +92,8 @@ function course_outline_overview_form(&$form, &$form_state, $form_id) {
       'wrapper' => 'course-objects-wrapper',
     ),
   );
+
+  $cform['requirements']['#element_validate'] = array('_course_outline_overview_validate_requirements');
 }
 
 /**
@@ -240,8 +242,12 @@ function theme_course_outline_overview_form($form) {
 /**
  * Validation callback.
  */
-function course_outline_overview_form_validate($form, $form_state) {
-  // @todo add validation.
+function _course_outline_overview_validate_requirements(&$form, &$form_state) {
+  foreach($form_state['values']['course_outline']['requirements'] as $key => $item) {
+    if ($item['requirement_component'] && !$item['title']) {
+      form_error($form[$key]['title'], t('Title is required.'));
+    }
+  }
 }
 
 /**
