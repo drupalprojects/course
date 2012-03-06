@@ -131,6 +131,16 @@ function course_menu() {
     'file' => 'course.reports.inc',
   );
 
+  // Global report area
+  $items['admin/reports/course'] = array(
+    'title' => 'Course reports',
+    'description' => 'View and download course information.',
+    'access arguments' => array('access all course reports'),
+    'page callback' => 'system_admin_menu_block_page',
+    'file path' => drupal_get_path('module', 'system'),
+    'file' => 'system.admin.inc',
+  );
+
   return $items;
 }
 
@@ -141,14 +151,16 @@ function course_menu() {
  * any one module having to define itself as a default local task.
  */
 function course_menu_alter(&$items) {
-  $default = variable_get('course_reports_default_report', 'dashboard');
+  $default = variable_get('course_reports_default_report', '');
 
-  $parent = $items["node/%node/course-reports/$default"];
-  $items["node/%node/course-reports/$default"]['type'] = MENU_DEFAULT_LOCAL_TASK;
-  $items["node/%node/course-reports/$default"]['weight'] = -999;
-  $parent['type'] = MENU_LOCAL_TASK;
-  $parent['title'] = 'Course reports';
-  $items['node/%node/course-reports'] = $parent;
+  if ($default) {
+    $parent = $items["node/%node/course-reports/$default"];
+    $items["node/%node/course-reports/$default"]['type'] = MENU_DEFAULT_LOCAL_TASK;
+    $items["node/%node/course-reports/$default"]['weight'] = -999;
+    $parent['type'] = MENU_LOCAL_TASK;
+    $parent['title'] = 'Course reports';
+    $items['node/%node/course-reports'] = $parent;
+  }
 }
 
 /**
