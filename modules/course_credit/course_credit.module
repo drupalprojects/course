@@ -267,35 +267,58 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
       }
 
       // Display if credit expiration is enabled.
-      if (variable_get('course_credit_expiration', 0)) {
+      if (variable_get('course_credit_expiration', 1)) {
+        // We don't have drupal_clean_css_identifier() until Drupal 7.
+        $credit_type_html = strtr($type->type, '_', '-');;
+
         $expiration_types = array(
-          '' => t('None'),
           'date' => t('Specify date'),
           'calendar_year' => t('End of year credit awarded'),
           'credit_awarded' => t('Date credit is awarded'),
         );
+
+        // Create another array of all type options except date. We need this so
+        // ctools can hide other elements not applicable to date selection.
+        $non_date_options = $expiration_types;
+        if (isset($non_date_options['date'])) {
+          unset($non_date_options['date']);
+        }
+
+        // Set common ctools dependency element components, for display on all
+        // but the date type.
+        $date_independent = array(
+          // CTools dependent API compliant.
+          '#process' => array('ctools_dependent_process'),
+          '#dependency' => array(
+            "edit-course-credit-{$credit_type_html}-expiration-type" => array_keys($non_date_options),
+          ),
+        );
+        // Set the reverse, for display only when date type is selected.
+        $reverse = array(
+          '#dependency' => array(
+            "edit-course-credit-{$credit_type_html}-expiration-type" => array('date'),
+          ),
+        );
+        $date_dependent = $reverse + $date_independent;
+
+        // Add 'none' option after dependency settings are in place.
+        $expiration_types = array('' => t('None')) + $expiration_types;
+
         $form['course_credit'][$type->type]['expiration_type'] = array(
           '#title' => t('Expiration type'),
           '#type' => 'select',
           '#options' => $expiration_types,
           '#default_value' => $node->course_credit[$type->type]->expiration_type,
-          // CTools dependent API compliant.
-          '#process' => array('ctools_dependent_process'),
-          '#dependency' => $active,
         );
-        // Display conditionally.
+
+        // Dependent on date expiration type option.
         $form['course_credit'][$type->type]['expiration_date'] = array(
           '#title' => t('Please specify'),
           '#type' => 'textfield',
           '#size' => 16,
           '#default_value' => $default_values['expiration_date'],
           '#description' => t('For absolute date use mm/dd/yyyy.'),
-          // CTools dependent API compliant.
-          '#process' => array('ctools_dependent_process'),
-          '#dependency' => array(
-            "edit-course-credit-{$type->type}-expiration-type" => array('date'),
-          ),
-        );
+        ) + $date_dependent;
         // Make this a date popup field if available.
         // @see date_popup_elements()
         if (module_exists('date_popup')) {
@@ -307,14 +330,7 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
           $form['course_credit'][$type->type]['expiration_date']['#description'] = NULL;
         }
 
-        // Display conditionally.
-        // List relative options.
-        $relative_options = array();
-        foreach(array_keys($expiration_types) as $key) {
-          if (!in_array($key, array('date', ''))) {
-            $relative_options[] = $key;
-          }
-        }
+        // Dependent on non-date expiration type options.
         $form['course_credit'][$type->type]['expiration_offset'] = array(
           '#title' => t('Plus additional days'),
           '#type' => 'textfield',
@@ -322,12 +338,7 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
           // Convert seconds (from DB) to days (for human readability).
           '#default_value' => $default_values['expiration_offset'],
           '#description' => t('For relative types, optionally specify an offset (in days) from the selected type.'),
-          // CTools dependent API compliant.
-          '#process' => array('ctools_dependent_process'),
-          '#dependency' => array(
-            "edit-course-credit-{$type->type}-expiration-type" => $relative_options,
-          ),
-        );
+        ) + $date_independent;
       }
       // Add settings summary to fieldset title, so it can be quickly scanned
       // when collapsed. Similar to verticaltab summary.
@@ -335,6 +346,13 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
       if (!empty($summary)) {
         // Append the summary to the fieldset title.
         $form['course_credit'][$type->type]['#title'] .= ' ('. implode(' | ', $summary) .')';
+      }
+
+      // Prefill with global defaults if no values provided.
+      if (!$node->course_credit[$type->type]) {
+        foreach (element_children($form['course_credit'][$type->type]) as $key) {
+          $form['course_credit'][$type->type][$key]['#default_value'] = $type->$key;
+        }
       }
     }
   }
@@ -489,7 +507,7 @@ function course_credit_get_credit_type($type) {
  * @return object or null.
  */
 function course_credit_get_credit_type_instance($nid, $type) {
-  $sql = "SELECT * FROM  {course_credit} WHERE nid = %d AND type = %d";
+  $sql = "SELECT * FROM  {course_credit} WHERE nid = %d AND type = '%s'";
   $result = db_query($sql, $nid, $type);
   return db_fetch_object($result);
 }
@@ -527,6 +545,8 @@ function course_credit_nodeapi(&$node, $op, $a3, $a4) {
       // Clear out old values.
       db_query('delete from {course_credit} where nid = %d', $node->nid);
 
+      // Keep track of maximum credit for all types.
+      $max_credits = array(0);
       foreach ($node->course_credit as $key => $entry) {
         if (is_object($entry)) {
           $entry = (array) $entry;
@@ -534,7 +554,10 @@ function course_credit_nodeapi(&$node, $op, $a3, $a4) {
         $entry['nid'] = $node->nid;
         // @todo $key will become 'type' once we switch from type to type.
         $entry['type'] = $key;
-        $credits[] = $entry['max'];
+
+        if ($entry['active']) {
+          $max_credits[] = $entry['max'];
+        }
 
         // Convert date format to unix.
         $expiration_type_is_date = $entry['expiration_type'] == 'date';
@@ -548,7 +571,7 @@ function course_credit_nodeapi(&$node, $op, $a3, $a4) {
       }
 
       // Find max of max credits to stash.
-      $max_credits = max($credits);
+      $max_credits = max($max_credits);
       $sql = "update {course_node} set credits = %f where nid = %d";
       db_query($sql, $max_credits, $node->nid);
     }
@@ -768,7 +791,7 @@ function course_credit_settings_form() {
     '#type' => 'checkbox',
     '#title' => t('Enable credit code settings on courses'),
     '#description' => t('This will enable credit code settings on all course edit forms.'),
-    '#default_value' => variable_get('course_credit_expiration', 1),
+    '#default_value' => variable_get('course_credit_code', 1),
   );
 
   $form['course_credit_variable'] = array(
@@ -782,7 +805,7 @@ function course_credit_settings_form() {
     '#type' => 'checkbox',
     '#title' => t('Enable credit expiration settings on courses'),
     '#description' => t('This will enable credit type expiration settings on all course edit forms.'),
-    '#default_value' => variable_get('course_credit_expiration', 0),
+    '#default_value' => variable_get('course_credit_expiration', 1),
   );
 
   return system_settings_form($form);
