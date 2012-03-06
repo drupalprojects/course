@@ -95,12 +95,12 @@ function course_uc_init() {
  */
 function course_uc_course_enrol($node, $user) {
   $reqs = course_outline_get_course_requirements($node);
-  if (is_array($reqs) && count($reqs)) {
+  if (!empty($reqs)) {
     foreach ($reqs as $req) {
-      if ($req['requirement_type'] == 'ubercart_payment') {
-        $ubercart = course_outline_get_fulfillment($req['snid'], $user->uid);
+      if ($req->requirement_type == 'ubercart_payment') {
+        $ubercart = course_outline_get_fulfillment($req->snid, $user->uid);
         if (!$ubercart['complete']) {
-          $ubercart['snid'] = $req['snid'];
+          $ubercart['snid'] = $req->snid;
           $ubercart['uid'] = $user->uid;
           $ubercart['complete'] = 1;
           $ubercart['date_completed'] = time();
