@@ -15,13 +15,13 @@ class course_credit_course_report_credit_awarded_vhr extends views_handler_relat
     $join->definition = array(
       'table' => 'course_credit_awarded',
       'field' => 'uid',
-      'left_table' => !empty($this->relationship) ? $this->relationship : 'ethosce_course_report',
+      'left_table' => !empty($this->relationship) ? $this->relationship : 'course_report',
       'left_field' => 'uid',
       'extra' => array(
         array(
           'field' => 'nid', // course_credit_awarded.nid
           'numeric' => TRUE,
-          'value' => (!empty($this->relationship) ? $this->relationship : 'ethosce_course_report') . '.nid',
+          'value' => (!empty($this->relationship) ? $this->relationship : 'course_report') . '.nid',
         ),
       ),
     );

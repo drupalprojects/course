@@ -725,10 +725,6 @@ function course_credit_award_delete($ccaid) {
 
 /**
  * Helper function to determine if user can claim variable credit.
- *
- * @todo move the called function out of ethosce_courses_moodleapi.module.
- *
- * @see ethosce_courses_moodleapi_can_claim_variable_credit()
  */
 function course_credit_can_claim($node, $user) {
   return count(course_credit_user_credit_types($node, $user));

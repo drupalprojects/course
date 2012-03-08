@@ -193,7 +193,7 @@ function course_credit_install_default_credit_type() {
   $credit_type = array(
     'type' => 'cecredits',
     'title' => 'CE Credits',
-    'description' => 'The default credit type for Ethos CE courses',
+    'description' => 'The default credit type for courses',
     'increments' => .25,
     'min' => 0,
     'max' => 100,
