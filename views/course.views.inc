@@ -1,6 +1,6 @@
 <?php
 
-module_load_include('inc', 'course', 'views/views_join_course');
+module_load_include('inc', 'course', 'views/handlers/views_join_course');
 
 /**
  * Implementation of hook_views_data().
@@ -423,7 +423,7 @@ function course_views_data() {
 function course_views_handlers() {
   return array(
     'info' => array(
-      'path' => drupal_get_path('module', 'course') . '/views',
+      'path' => drupal_get_path('module', 'course') . '/views/handlers',
     ),
     'handlers' => array(
       'views_handler_filter_course_type' => array(
