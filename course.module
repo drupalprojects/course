@@ -122,13 +122,13 @@ function course_menu() {
   );
 
   // Reports page listing each course object.
-  $items['node/%node/course-reports/objects'] = array(
+  $items['node/%course/course-reports/objects'] = array(
     'title' => 'Course objects',
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'course_object_reports_page',
     'page arguments' => array(1),
     'access arguments' => array('access course reports'),
-    'file' => 'course.reports.inc',
+    'file' => 'includes/course.reports.inc',
   );
 
   // Global report area
@@ -151,15 +151,16 @@ function course_menu() {
  * any one module having to define itself as a default local task.
  */
 function course_menu_alter(&$items) {
-  $default = variable_get('course_reports_default_report', '');
+  $default = variable_get('course_reports_default_report', 'node/%/course-reports/overview');
 
   if ($default) {
-    $parent = $items["node/%node/course-reports/$default"];
-    $items["node/%node/course-reports/$default"]['type'] = MENU_DEFAULT_LOCAL_TASK;
-    $items["node/%node/course-reports/$default"]['weight'] = -999;
+    $parent = $items[$default];
+    $items[$default]['type'] = MENU_DEFAULT_LOCAL_TASK;
+    $items[$default]['weight'] = -999;
     $parent['type'] = MENU_LOCAL_TASK;
     $parent['title'] = 'Course reports';
-    $items['node/%node/course-reports'] = $parent;
+    $parent['access arguments'] = array('access course reports');
+    $items['node/%course/course-reports'] = $parent;
   }
 }
 
