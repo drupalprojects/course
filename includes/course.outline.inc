@@ -28,7 +28,6 @@ function course_outline_overview_form(&$form, &$form_state, $form_id) {
   $cform['#title'] = 'Course objects';
   $cform['requirements']['#theme'] = 'course_outline_overview_form';
 
-
   $course_objects = course_available_objects();
   $options = array(
     '' => '- select new -',
@@ -36,7 +35,7 @@ function course_outline_overview_form(&$form, &$form_state, $form_id) {
   foreach ($course_objects as $module => $objects) {
     foreach ($objects as $key => $object) {
       $module_string = ucwords(str_replace('_', ' ', $module));
-      $options[$module_string][$object['module'] .'-'. $key] = $object['title'];
+      $options[$module_string][$object['module'] . '-' . $key] = $object['title'];
     }
   }
 
@@ -58,7 +57,7 @@ function course_outline_overview_form(&$form, &$form_state, $form_id) {
           '#default_value' => $requirement['requirement_component'],
         );
       }
-      else  {
+      else {
         // Don't allow user to change type of object.
         $rform['requirement_component'] = array(
           '#type' => 'hidden',
@@ -102,7 +101,7 @@ function course_outline_overview_form(&$form, &$form_state, $form_id) {
  * To be re-used in listing requirements and creating new ones.
  */
 function _course_outline_requirement_form($requirement = array()) {
-  $courseObject = course_get_course_object((object) $requirement);
+  $courseObject = course_get_course_object($requirement);
   $rform['#tree'] = TRUE;
   $rform['snid'] = array(
     '#type' => 'value',
@@ -142,7 +141,7 @@ function _course_outline_requirement_form($requirement = array()) {
     '#default_value' => $requirement['graded'],
   );
   $rform['passing_grade'] = array(
-    '#type' => $requirement['graded']? 'textfield' : 'hidden',
+    '#type' => $requirement['graded'] ? 'textfield' : 'hidden',
     '#size' => 3,
     '#default_value' => $requirement['passing_grade'],
   );
@@ -227,7 +226,7 @@ function theme_course_outline_overview_form($form) {
     $rows[$key]['data'][] = drupal_render($form[$key]['title']);
     $rows[$key]['data'][] = drupal_render($form[$key]['requirement_component']) . drupal_render($form[$key]['requirement_component_show']);
     $rows[$key]['data'][] = drupal_render($form[$key]['enabled']) . drupal_render($form[$key]['required']) . drupal_render($form[$key]['graded']);
-    $rows[$key]['data'][] = $form[$key]['graded']['#value'] ? drupal_render($form[$key]['passing_grade']): 'n/a';
+    $rows[$key]['data'][] = $form[$key]['graded']['#value'] ? drupal_render($form[$key]['passing_grade']) : 'n/a';
     $rows[$key]['data'][] = drupal_render($form[$key]['operations']);
 
     // Add draggable settings to row.
@@ -243,7 +242,7 @@ function theme_course_outline_overview_form($form) {
  * Validation callback.
  */
 function _course_outline_overview_validate_requirements(&$form, &$form_state) {
-  foreach($form_state['values']['course_outline']['requirements'] as $key => $item) {
+  foreach ($form_state['values']['course_outline']['requirements'] as $key => $item) {
     if ($item['requirement_component'] && !$item['title']) {
       form_error($form[$key]['title'], t('Title is required.'));
     }
@@ -293,7 +292,7 @@ function course_get_outline($node) {
 
     // Find out what this step's status is.
     // Check the previous step.
-    $prev_req = $course_objects[($key-1)];
+    $prev_req = $course_objects[($key - 1)];
     if ($courseObject->getFulfillment()->isComplete()) {
       // Step is complete. User can access.
       $step['link_style'] = 'completed';
@@ -354,26 +353,23 @@ function course_outline_show_complete_links($course_node) {
   $account = $user;
   $report = course_report_load($course_node, $account);
   if ($report->complete) {
-    //if the course doen't have a certificate, then show completion message:
-    if ($credit_application['complete'] || !$certificate->credit_application_required) {
-      $txt_out .= '<p>'. t('Thank you for participating in this activity. After downloading your certificate you may close the browser window.') .'</p>';
-      $links = array(
-        'course' => array('Return to course', "node/$course_node->nid", 'Return to the course to view course details and material.'),
-      );
-      drupal_alter('course_outline_completion_links', $links, $course_node, $account);
-      foreach ($links as $link) {
-        $txt_out .= theme_form_element(array('#description' => $link[2]), l($link[0], $link[1]));
-      }
+    $txt_out .= '<p>' . t('Thank you for participating in this activity.') . '</p>';
+    $links = array(
+      'course' => array('Return to course', "node/$course_node->nid", 'Return to the course to view course details and material.'),
+    );
+    drupal_alter('course_outline_completion_links', $links, $course_node, $account);
+    foreach ($links as $link) {
+      $txt_out .= theme_form_element(array('#description' => $link[2]), l($link[0], $link[1]));
     }
   }
-  else  {
+  else {
     $requirements_outstanding = course_outline_check_remaining_requirements($course_node, $account);
     $items = array();
     foreach ($requirements_outstanding as $req) {
       $status_css = $req['complete'] ? 'complete' : 'incomplete';
       $status_img = $req['complete'] ? 'ok' : ($req['required'] ? 'error' : 'warning');
       $status_optional = ($status_img == 'warning') ? ' (optional)' : '';
-      $grade = $req['graded'] ? ' - Your grade: ' . $req['grade_result'] . '%, Pass grade: ' . $req['passing_grade'] . '%': '';
+      $grade = $req['graded'] ? ' - Your grade: ' . $req['grade_result'] . '%, Pass grade: ' . $req['passing_grade'] . '%' : '';
       $items[] = array(
         array(
           'data' => theme_image("misc/watchdog-{$status_img}.png", $status_css),
@@ -384,8 +380,16 @@ function course_outline_show_complete_links($course_node) {
     }
     $reqs_txt = theme_table(NULL, $items);
 
-    $txt_out .= '<p>'. t('Thank you for participating in this activity. After completing the remaining requirements you will be able to download your certificate.') .'</p>';
-    $txt_out .= $reqs_txt .'<div class="homelink"><p>'. l($course_out_return_array['course_outline_link_text'], $course_out_return_array['course_outline_link']) .'</p></div>';
+    $txt_out .= '<p>' . t('You must complete the remaining requirements to proceed.') . '</p>';
+    $txt_out .= $reqs_txt . '<div class="homelink"><p>' . l($course_out_return_array['course_outline_link_text'], $course_out_return_array['course_outline_link']) . '</p></div>';
+
+    $links = array(
+      'course' => array('Return to course', "node/$course_node->nid/takecourse", 'Return to the course to view course details and material.'),
+    );
+    drupal_alter('course_outline_incomplete_links', $links, $course_node, $account);
+    foreach ($links as $link) {
+      $txt_out .= theme_form_element(array('#description' => $link[2]), l($link[0], $link[1]));
+    }
   }
 
   return $txt_out;

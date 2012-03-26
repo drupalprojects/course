@@ -29,7 +29,7 @@ function course_quiz_course_object_info() {
 function course_quiz_quiz_finished($quiz, $score, $rid) {
   global $user;
 
-  $courseObject = new CourseObjectQuiz($quiz->nid, $user);
+  $courseObject = course_get_course_object('course_quiz', 'quiz', $quiz->nid, $user);
   $courseObject->grade($user);
 }
 

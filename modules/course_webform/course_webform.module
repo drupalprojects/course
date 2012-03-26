@@ -8,7 +8,7 @@ function course_webform_course_object_info() {
     'webform' => array(
       'title' => 'Webform',
       'suggested title' => 'Evaluation',
-      'class' => 'CourseObjectNode',
+      'class' => 'CourseObjectWebform',
       'description' => 'A webform to be used in a course workflow.',
       'graded' => FALSE,
     ),
@@ -16,32 +16,21 @@ function course_webform_course_object_info() {
 }
 
 /**
- * Presave must return an instance ID.
- */
-function course_webform_course_object_api($node, $op, $object) {
-  if ($op == 'presave') {
-    switch ($object->requirement_component) {
-      case 'webform':
-        if ($object->instance) {
-          $webform = node_load($object->instance);
-        }
-        else {
-          $webform = new stdClass;
-          $webform->type = 'webform';
-          $webform->title = $object->title;
-          $webform->uid = $node->uid;
-        }
-        node_save($webform);
-        return $webform->nid;
-    }
-  }
-}
-
-/**
  * Implementation of hook_webform_submission_insert().
  */
 function course_webform_webform_submission_insert($node, $submission) {
   global $user;
-  $courseObject = new CourseObjectNode($node->nid, $user);
+
+  // Find the course object associated with this webform.
+  $courseObject = course_get_course_object('course_webform', 'webform', arg(1), $user);
   $courseObject->getFulfillment()->setComplete()->save();
+}
+
+/**
+ * Implementation of hook_autoload_info().
+ */
+function course_webform_autoload_info() {
+  return array(
+    'CourseObjectWebform' => array('file' => 'course_webform.classes.inc'),
+  );
 }

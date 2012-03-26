@@ -3,7 +3,7 @@
 /**
  * Special join handler to allow join on two colums.
  *
- * Do not sanize the extra data coming from our course_credit.views.inc. See
+ * Do not sanitize the extra data coming from our course.views.inc. See
  * http://drupal.org/node/560492
  */
 class views_join_course extends views_join {

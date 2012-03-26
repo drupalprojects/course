@@ -8,6 +8,7 @@
  * Also holds a fulfillment record if a user is given.
  */
 class CourseObject {
+
   // Hold requirement/object from database and the fulfillment object.
   private $requirement = array();
   private $courseObjectFulfillment = stdClass;
@@ -17,22 +18,17 @@ class CourseObject {
    *
    * Constructing with a requirement array will pre-load this object. This is
    * useful for query saving when constructing many objects at once is
-   * necessary. Passing a numeric instance ID will load that requirement from
+   * necessary. Passing a numeric requirement ID will load that requirement from
    * the database in the context of the course. Providing the user will either
    * load an existing fulfillment from the database or create a new fulfillment
    * object.
    *
-   * @param array $requirement
+   * @param object $requirement
+   *   An object with requirement_component, requirement_type, and instance
    * @param object $user
    */
-  function __construct($requirement, $user = NULL) {
-    if (is_numeric($requirement) && $requirement > 0) {
-      $sql = "select * from {course_outline} where instance = %d";
-      $this->requirement = db_fetch_object(db_query($sql, $requirement));
-    }
-    else {
-      $this->requirement = $requirement;
-    }
+  function __construct($requirement = NULL, $user = NULL) {
+    $this->requirement = $requirement;
 
     if ($user) {
       $this->courseObjectFulfillment = new CourseObjectFulfillment($this, $user);
@@ -44,19 +40,25 @@ class CourseObject {
    *
    * @return string
    */
-  public function getTakeUrl() {}
+  public function getTakeUrl() {
+    
+  }
 
   /**
    * Get the URL to edit this course object, if any.
    *
    * @return string
    */
-  public function getEditUrl() {}
+  public function getEditUrl() {
+    
+  }
 
   /**
    * If graded, grade this course object against a user.
    */
-  public function grade($user = NULL) {}
+  public function grade($user = NULL) {
+    
+  }
 
   /**
    * Is this course object graded?
@@ -195,7 +197,6 @@ class CourseObject {
     $this->requirement->nid = $nid;
   }
 
-
   /**
    * Save the course object to the database.
    */
@@ -214,9 +215,19 @@ class CourseObject {
    * tracking.
    */
   public function create() {
-    $node = node_load(arg(1));
-    $this->setInstanceId(module_invoke($this->requirement->requirement_type, 'course_object_api', $node, 'presave', $this->requirement));
+    // Stub. This should set $this->setInstanceId().
   }
+
+  /**
+   * Deletes a course object.
+   *
+   * For example, this would delete the associated node (if this was a
+   * CourseObjectNode) and delete all other associated data.
+   */
+  public function delete() {
+    // Stub. Clean up everything appropriate to this object.
+  }
+
 }
 
 /**
@@ -226,6 +237,7 @@ class CourseObject {
  *
  */
 class CourseObjectFulfillment {
+
   // Fulfillment array.
   private $fulfillment = array();
   private $courseObject;
@@ -241,11 +253,11 @@ class CourseObjectFulfillment {
   function __construct($courseObject, $user) {
     $this->courseObject = $courseObject;
     $sql = "select * from {course_outline_fulfillment} where snid = %d and uid = %d";
-    $this->fulfillment = db_fetch_array(db_query($sql, $courseObject->getId(), $user->uid));
+    $this->fulfillment = db_fetch_object(db_query($sql, $this->courseObject->getId(), $user->uid));
 
     // Set requirement ID.
-    $this->fulfillment['snid'] = $courseObject->getId();
-    $this->fulfillment['uid'] = $user->uid;
+    $this->fulfillment->snid = $this->courseObject->getId();
+    $this->fulfillment->uid = $user->uid;
   }
 
   /**
@@ -254,7 +266,7 @@ class CourseObjectFulfillment {
    * @return bool
    */
   function isComplete() {
-    return (bool) $this->fulfillment['complete'];
+    return (bool) $this->fulfillment->complete;
   }
 
   /**
@@ -264,7 +276,7 @@ class CourseObjectFulfillment {
    *   Set to 0 to un-complete, 1 or omit to complete.
    */
   function setComplete($complete = 1) {
-    $this->fulfillment['complete'] = $complete;
+    $this->fulfillment->complete = $complete;
     return $this;
   }
 
@@ -274,7 +286,7 @@ class CourseObjectFulfillment {
    * @param float $grade
    */
   function setGrade($grade) {
-    $this->fulfillment['grade_result'] = $grade;
+    $this->fulfillment->grade_result = $grade;
     return $this;
   }
 
@@ -285,7 +297,7 @@ class CourseObjectFulfillment {
    *   A float value of the user's grade for this fulfillment.
    */
   function getGrade() {
-    return $this->fulfillment['grade_result'];
+    return $this->fulfillment->grade_result;
   }
 
   /**
@@ -299,21 +311,23 @@ class CourseObjectFulfillment {
    * Save this fulfillment to the database.
    */
   function save() {
-    $keys = $this->fulfillment['sfid'] ? array('sfid') : array();
+    $keys = $this->fulfillment->sfid ? array('sfid') : array();
     $ret = drupal_write_record('course_outline_fulfillment', $this->fulfillment, $keys);
 
     // Create a Course to track the user's progress.
-    $course = new Course($this->getCourseObject()->getCourseNid(), $this->fulfillment['uid']);
+    $course = new Course($this->getCourseObject()->getCourseNid(), $this->fulfillment->uid);
     $course->track();
 
     return $ret;
   }
+
 }
 
 /**
  * A course object that uses a node as a base.
  */
 class CourseObjectNode extends CourseObject {
+
   protected $node;
 
   public function __construct($requirement, $user = NULL) {
@@ -328,4 +342,14 @@ class CourseObjectNode extends CourseObject {
   public function getEditUrl() {
     return url("node/{$this->node->nid}/edit");
   }
+
+  public function create() {
+    $content = new stdClass;
+    $content->type = $this->getComponent();
+    $content->title = $this->getTitle();
+    $content->uid = $this->node->uid;
+    node_save($content);
+    $this->setInstanceId($content->nid);
+  }
+
 }

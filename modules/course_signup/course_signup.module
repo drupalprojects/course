@@ -215,7 +215,7 @@ function course_signup_form_alter(&$form, &$form_state, $form_id) {
     if (course_node_is_course($form['#node'])) {
       if ($form['signup']) {
         $form['signup']['signup_enabled']['#disabled'] = TRUE;
-        $form['signup']['signup_enabled']['#value'] = 1;
+        $form['signup']['signup_enabled']['#default_value'] = 1;
         $form['signup']['signup_enabled']['#description'] = 'Signups are always enabled for courses when course_signup is enabled.';
       }
     }
@@ -386,5 +386,16 @@ function course_signup_course_can_enrol($node, $user) {
 function course_signup_views_api() {
   return array(
     'api' => '2',
+  );
+}
+
+/**
+ * Implementation of hook_course_object_info().
+ */
+function course_signup_course_object_info() {
+  return array(
+    'course_signup' => array(
+      'title' => 'Attendance',
+    ),
   );
 }

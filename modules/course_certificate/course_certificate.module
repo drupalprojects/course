@@ -14,3 +14,52 @@ function course_certificate_course_outline_completion_links_alter(&$links, $node
     );
   }
 }
+
+/**
+ * Implementation of hook_access_certificate().
+ *
+ * If something entered a complete record into the reports table, return TRUE.
+ */
+function course_certificate_access_certificate($node, $user) {
+  if (course_node_is_course($node)) {
+    $sql = "select 1 from {course_report} where nid = %d and uid = %d and complete = %d";
+    return (bool) $node->course['certificate'] && (bool) db_result(db_query($sql, $node->nid, $user->uid, 1));
+  }
+}
+
+function course_certificate_token_list($type = 'all') {
+  if ($type == 'certificate') {
+    module_load_include('install', 'course_report', 'course_report');
+    $schema = course_report_schema();
+    foreach ($schema['course_report']['fields'] as $key => $value) {
+      $tokens['certificate']["certificate-$key"] = $value['description'];
+    }
+    $tokens['certificate']['certificate-number'] = 'Generated certificate number';
+  }
+}
+
+function course_certificate_token_values($type, $object = NULL, $options = array()) {
+  if ($type == 'certificate') {
+    $sql = 'select * from {course_report} where nid = %d and uid = %d';
+    if ($report = db_fetch_object(db_query($sql, $object['node']->nid, $object['user']->uid))) {
+      foreach ($report as $key => $value) {
+        $values["certificate-$key"] = $value;
+      }
+    }
+    $values['certificate-number'] = time() . '-' . $object['node']->nid;
+    $values['certificate-date_completed'] = date(variable_get('course_report_certificate_time_format', 'F jS, Y'), $report->date_completed);
+  }
+}
+
+/**
+ * Implementation of hook_course_object_info().
+ * 
+ * Expose certificate as a course object.
+ */
+function course_certificate_course_object_info() {
+  return array(
+    'certificate' => array(
+      'title' => 'Certificate',
+    ),
+  );
+}

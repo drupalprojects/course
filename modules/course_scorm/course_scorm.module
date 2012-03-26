@@ -34,7 +34,7 @@ function course_scorm_exit() {
     global $user;
     $nid = db_result(db_query('select nodereference from {scorm} where id = %d', $_POST['id']));
     $node = node_load($nid);
-    if (course_determine_context($node)) {
+    if (course_determine_context('course_scorm', 'scorm', $node)) {
       $courseObject = new CourseObjectScorm($node->nid, $user);
       $sql = "select * from {scorm_scoes_track} sst
         where userid = %d and scormid = %d and scoid = %d and attempt = %d";

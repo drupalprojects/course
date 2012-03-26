@@ -219,14 +219,6 @@ function course_schema() {
         'default' => NULL,
         'description' => 'An optional external LMS course ID.',
       ),
-      'attendance' => array(
-        'type' => 'int',
-        'size' => 'tiny',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'description' => 'Whether or not the course requires attendance.',
-        'default' => 0,
-      ),
       'type' => array(
         'type' => 'varchar',
         'length' => '16',
@@ -268,12 +260,6 @@ function course_schema() {
         'not null' => TRUE,
         'default' => 1,
         'description' => "Whether or not to show this course on the course catalog",
-      ),
-      'certificate' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 1,
-        'description' => "Whether or not the user can receive a certificate for this course.",
       ),
       'outline_custom_titles' => array(
         'type' => 'int',

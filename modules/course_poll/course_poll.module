@@ -8,36 +8,11 @@ function course_poll_course_object_info() {
     'poll' => array(
       'title' => 'Poll',
       'suggested title' => 'Poll',
-      'class' => 'CourseObjectNode',
+      'class' => 'CourseObjectPoll',
       'description' => 'A poll to be used in a course workflow.',
       'graded' => FALSE,
     ),
   );
-}
-
-/**
- * Presave must return an instance ID.
- */
-function course_poll_course_object_api($node, $op, $object) {
-  if ($op == 'presave') {
-    switch ($object->requirement_component) {
-      case 'poll':
-        if ($object->instance) {
-          $poll = node_load($object->instance);
-        }
-        else {
-          $poll = new stdClass;
-          $poll->choice[0]['chtext'] = 'Yes';
-          $poll->choice[1]['chtext'] = 'No';
-          $poll->type = 'poll';
-          $poll->title = $object->title;
-          $poll->uid = $node->uid;
-          $poll->active = 1;
-        }
-        node_save($poll);
-        return $poll->nid;
-    }
-  }
 }
 
 /**
@@ -53,6 +28,18 @@ function course_poll_form_poll_view_voting_alter(&$form, &$form_state) {
 function course_poll_fulfill(&$form, &$form_state) {
   global $user;
 
-  $courseObject = new CourseObjectNode(arg(1), $user);
+  // Find the course object associated with this poll.
+  $courseObject = course_get_course_object('course_poll', 'poll', arg(1), $user);
   $courseObject->getFulfillment()->setComplete()->save();
+}
+
+/**
+ * Implementation of hook_autoload_info().
+ */
+function course_poll_autoload_info() {
+  return array(
+    'CourseObjectPoll' => array(
+      'file' => 'course_poll.classes.inc',
+    ),
+  );
 }

@@ -197,36 +197,6 @@ function hook_course_object_info() {
 }
 
 /**
- * The API for creating course objects on the fly.
- *
- * By "presave" we mean the course object record has not yet been saved to the
- * database.
- *
- * @return int
- *   An instance ID (node, external object ID, etc.).
- */
-function hook_course_object_api($node, $op, $object) {
-  // @todo add an even more generic example.
-  if ($op == 'presave') {
-    switch ($object['requirement_component']) {
-      case 'quiz':
-        if ($object['instance']) {
-          $quiz = node_load($object['instance']);
-        }
-        else {
-          $quiz = new stdClass;
-        }
-        $quiz->auto_created = TRUE;
-        $quiz->type = 'quiz';
-        $quiz->title = $object['title'];
-        $quiz->uid = $node->uid;
-        node_save($quiz);
-        return $quiz->nid;
-    }
-  }
-}
-
-/**
  * Allow external LMSs to add a unique identifier to the drupal course object on
  * save and update.
  *

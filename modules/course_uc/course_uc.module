@@ -276,3 +276,47 @@ function course_uc_ca_predicate() {
 
   return $configurations;
 }
+
+/**
+ * Implementation of hook_token_list().
+ */
+function course_uc_token_list($type = 'all') {
+  $tokens = array();
+
+  if ($type == 'order') {
+    $tokens['order']['course-products-header'] = t('Text to show if there are course products in the cart.');
+    $tokens['order']['course-products'] = t('A link to the course products.');
+  }
+
+  return $tokens;
+}
+
+
+/**
+ * Implementation of hook_token_values().
+ */
+function course_uc_token_values($type, $object = NULL, $options = array()) {
+  $values = array();
+
+  if ($type == 'order') {
+    foreach ($object->products as $product) {
+      $node = node_load($product->nid);
+      if (course_node_is_course($node)) {
+        $line = $node->title . ' - ' . l('View course page', "node/{$node->nid}");
+        if (course_node_is_course($node) && course_take_course_menu_access($node)) {
+          $line .= ' or ' . l('Take course now', "node/{$node->nid}/takecourse");
+        }
+        $courses[] = $line;
+        $show_header = 1;
+      }
+      $items[] = l($node->title, "node/{$node->nid}");
+    }
+    if ($show_header) {
+      $values['course-products-header'] = t("Here are the courses you have purchased:");
+    }
+    $values['course-products'] = theme_item_list($courses);
+    $values['all-products'] = theme_item_list($items);
+  }
+
+  return $values;
+}
