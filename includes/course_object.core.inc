@@ -10,7 +10,7 @@
 class CourseObject {
 
   // Hold requirement/object from database and the fulfillment object.
-  private $requirement = array();
+  private $requirement = stdClass;
   private $courseObjectFulfillment = stdClass;
 
   /**
@@ -27,12 +27,143 @@ class CourseObject {
    *   An object with requirement_component, requirement_type, and instance
    * @param object $user
    */
-  function __construct($requirement = NULL, $user = NULL) {
-    $this->requirement = $requirement;
-
-    if ($user) {
-      $this->courseObjectFulfillment = new CourseObjectFulfillment($this, $user);
+  function __construct($requirement = NULL, $account = NULL) {
+    if (!$user) {
+      global $user;
+      $account = $user;
     }
+
+    $this->requirement = $requirement;
+    $this->requirement->config = unserialize($this->requirement->config);
+    if (!$this->requirement->config) {
+      $this->requirement->config = array();
+    }
+
+    $this->courseObjectFulfillment = new CourseObjectFulfillment($this, $account);
+  }
+
+  /**
+   * Define configuration elements and their defaults.
+   *
+   * Extended classes should call parent::configDefinition first to get the
+   * parent's configuration.
+   */
+  public function optionsDefinition() {
+    /*
+    return array(
+      'snid' => '',
+    );
+    */
+  }
+
+  /**
+   * Default options form for all course objects.
+   */
+  public function optionsForm(&$form, &$form_state) {
+    $form = array();
+
+    $form['header']['#value'] = t("<h2>Settings for %t</h2>", array('%t' => $this->getTitle()));
+
+    $form['snid'] = array(
+      '#type' => 'hidden',
+      '#value' => $this->getId(),
+    );
+
+    /*
+    $form['duration'] = array(
+      '#title' => 'Length of time in minutes a user can remain in this object before it is closed.',
+      '#type' => 'textfield',
+      '#size' => 2,
+    );
+
+    $form['release'] = array(
+      '#title' => 'When this object can be accessed.',
+      '#type' => 'date',
+    );
+
+    $form['expiration'] = array(
+      '#title' => 'When this object will close.',
+      '#type' => 'date',
+    );
+    */
+
+    // Submit
+    $form['submit'] = array(
+      '#value' => 'Save',
+      '#weight' => 999,
+      '#type' => 'submit',
+    );
+
+    return $form;
+  }
+
+  /**
+   * Validate?
+   */
+  public function optionsValidate(&$form, &$form_state) {
+
+  }
+
+  /**
+   * Save object configs to the database.
+   */
+  public function optionsSubmit(&$form, &$form_state) {
+    $write = array();
+    foreach (array_keys($this->optionsDefinition()) as $key) {
+      $write[$key] = $form_state['values'][$key];
+    }
+    $this->requirement->config = $write;
+    $this->save();
+  }
+
+  /**
+   * Take a course object.
+   *
+   * - Set the session of this course object being taken. This allows for
+   *   non-node objects to be tracked.
+   * - Delegate the course object take functionality
+   *
+   * @return mixed
+   *   HTML content or a redirect.
+   */
+  public function takeCourseObject() {
+    $_SESSION['course'][$this->getCourseNid()]['current'] = $this->getId();
+
+    $url = $this->getTakeUrl();
+    switch ($this->getTakeType()) {
+      case 'iframe':
+        return course_iframe($url);
+      case 'popup':
+        return "will popup $url";
+      case 'content':
+        return $this->take();
+      case 'redirect':
+      default:
+        // This URL should have already been url()'d (it might be external).
+        session_write_close();
+        header("Location: $url");
+        exit;
+    }
+  }
+
+  /**
+   * How should this course object be executed?
+   *
+   * - iframe: display an iframe with getTakeUrl() in it
+   * - popup: launch getTakeUrl() in a popup
+   * - modal: launch getTakeUrl() in a modal
+   * - content: print the value from take() (or do whatever the module wants to
+   *   do)
+   */
+  public function getTakeType() {
+    return 'content';
+  }
+
+  /**
+   *
+   */
+  public function take() {
+    return 'This should be overridden by the module to return course content.';
   }
 
   /**
@@ -41,7 +172,7 @@ class CourseObject {
    * @return string
    */
   public function getTakeUrl() {
-    
+
   }
 
   /**
@@ -50,23 +181,7 @@ class CourseObject {
    * @return string
    */
   public function getEditUrl() {
-    
-  }
 
-  /**
-   * If graded, grade this course object against a user.
-   */
-  public function grade($user = NULL) {
-    
-  }
-
-  /**
-   * Is this course object graded?
-   *
-   * @return bool
-   */
-  public function isGraded() {
-    return $this->requirement->graded;
   }
 
   /**
@@ -76,37 +191,6 @@ class CourseObject {
    */
   public function isRequired() {
     return $this->requirement->required;
-  }
-
-  /**
-   * Get the passing grade for this course object.
-   *
-   * @return float
-   */
-  public function getPassingGrade() {
-    return $this->requirement->passing_grade;
-  }
-
-  /**
-   * Set passing grade for this course object.
-   *
-   * @param float $grade
-   *   Percentage to pass.
-   */
-  public function setPassingGrade($grade) {
-    $this->requirement->passing_grade = $grade;
-    return $this;
-  }
-
-  /**
-   * Set requirement graded or not.
-   *
-   * @param bool $graded
-   *    Graded, true or false.
-   */
-  public function setGraded($graded) {
-    $this->requirement->graded = $graded;
-    return $this;
   }
 
   /**
@@ -228,6 +312,19 @@ class CourseObject {
     // Stub. Clean up everything appropriate to this object.
   }
 
+  /**
+   * Get an object's configuration.
+   */
+  public function getOptions() {
+    $defaults = $this->optionsDefinition();
+    return array_merge($defaults, $this->requirement->config);
+  }
+
+  public function setOption($option, $value) {
+    $this->requirement->config[$option] = $value;
+    return $this;
+  }
+
 }
 
 /**
@@ -335,6 +432,13 @@ class CourseObjectNode extends CourseObject {
     $this->node = node_load($this->getInstanceId());
   }
 
+  /**
+   * Simple node course object behavior is to just redirect to the node.
+   */
+  public function getTakeType() {
+    return 'redirect';
+  }
+
   public function getTakeUrl() {
     return url("node/{$this->node->nid}");
   }
@@ -350,6 +454,13 @@ class CourseObjectNode extends CourseObject {
     $content->uid = $this->node->uid;
     node_save($content);
     $this->setInstanceId($content->nid);
+  }
+
+  /**
+   * Destroy the node instance.
+   */
+  public function delete() {
+    node_delete($this->getInstanceId());
   }
 
 }

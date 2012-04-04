@@ -62,3 +62,33 @@ function course_object_reports_page($node) {
 function course_object_single_report_link($courseObject, $key, $report) {
   return l($report['title'], "node/{$courseObject->getCourseNid()}/course-reports/objects/{$courseObject->getId()}/$key");
 }
+
+function theme_course_report($nav, $header, $body) {
+  $out = '';
+
+  if (!$nav) {
+    $body = t('None of the objects in your course have reports associated with them.');
+  }
+
+  $body = $header . $body;
+
+  $row = array(
+    array(
+      'data' => $nav,
+      'width' => 200,
+      'id' => 'course-object-reports-nav',
+    ),
+    array(
+      'data' => $body,
+      'id' => 'course-object-reports-content',
+    ),
+  );
+
+  $rows[] = $row;
+
+  $out = theme_table(NULL, $rows, array(
+    'id' => 'course-object-reports',
+    ));
+
+  return $out;
+}
