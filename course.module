@@ -85,7 +85,7 @@ function course_menu() {
     'access callback' => TRUE,
     'page arguments' => array('course_outline_overview_form'),
     'page callback' => 'drupal_get_form',
-    'type' => MENU_LOCAL_TASK,
+    //'type' => MENU_LOCAL_TASK,
     'file' => 'includes/course.outline.inc',
   );
 
