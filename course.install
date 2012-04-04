@@ -249,24 +249,6 @@ function course_schema() {
         'default' => 0,
         'description' => 'Amount of time a user has to access this course.',
       ),
-      'transcript' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 1,
-        'description' => "Whether or not to show this course on the user's transcript",
-      ),
-      'catalog' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 1,
-        'description' => "Whether or not to show this course on the course catalog",
-      ),
-      'outline_custom_titles' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => "Whether or not the outline will show custom titles for this course's items.",
-      ),
       'external_id' => array(
         'type' => 'varchar',
         'length' => 128,
@@ -336,33 +318,12 @@ function course_schema() {
         'default' => 0,
         'description' => 'The item instance',
       ),
-      'graded' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'unsigned' => TRUE,
-        'default' => 0,
-        'description' => 'is this item graded?',
-      ),
-      'passing_grade' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'unsigned' => TRUE,
-        'default' => 0,
-        'description' => 'passing_grade (out of 100 precent).',
-      ),
       'required' => array(
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
         'default' => 0,
         'description' => 'is this item required?',
-      ),
-      'payment_required' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'unsigned' => TRUE,
-        'default' => 0,
-        'description' => 'is this item payment_required?',
       ),
       'weight' => array(
         'type' => 'int',
@@ -378,6 +339,11 @@ function course_schema() {
         'unsigned' => TRUE,
         'default' => 0,
         'description' => 'Can user edit requirement?',
+      ),
+      'config' => array(
+        'type' => 'text',
+        'size' => 'medium',
+        'serialize' => TRUE,
       ),
     ),
     'primary key' => array('snid'),
@@ -452,5 +418,34 @@ function course_update_6121() {
     'success' => TRUE,
     'query' => db_affected_rows() . ' old enrollments deleted',
   );
+  return $ret;
+}
+
+/**
+ * Remove old fields that won't be used anymore.
+ */
+function course_update_6122() {
+  $ret = array();
+  db_drop_field($ret, 'course_node', 'transcript');
+  db_drop_field($ret, 'course_node', 'catalog');
+  db_drop_field($ret, 'course_node', 'outline_custom_titles');
+
+  db_drop_field($ret, 'course_outline', 'graded');
+  db_drop_field($ret, 'course_outline', 'passing_grade');
+  db_drop_field($ret, 'course_outline', 'payment_required');
+  return $ret;
+}
+
+/**
+ * Add config field (serialized) to course_outline.
+ */
+function course_update_6123() {
+  $ret = array();
+
+  db_add_field($ret, 'course_outline', 'config', array(
+    'type' => 'text',
+    'size' => 'medium',
+    'serialized' => TRUE,
+  ));
   return $ret;
 }
