@@ -2,4 +2,7 @@ name = Course
 core = 6.x
 description = Integrate external courses with Drupal.
 dependencies[] = autoload
+dependencies[] = ctools
 php = 5
+files[] = includes/course_object.core.inc
+files[] = includes/course.core.inc
