@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Module file to expose a manual course object.
+ */
+
+/**
+ * Implementation of hook_course_object_info().
+ */
+function course_object_manual_course_object_info() {
+  return array(
+    'manual' => array(
+      'title' => 'Manual step',
+      'suggested title' => 'Manual step',
+      'class' => 'CourseObjectManual',
+      'description' => 'A manual step to be used in a course workflow, only marked complete by administrators.',
+    ),
+  );
+}
