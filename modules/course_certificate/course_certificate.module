@@ -53,13 +53,14 @@ function course_certificate_token_values($type, $object = NULL, $options = array
 
 /**
  * Implementation of hook_course_object_info().
- * 
+ *
  * Expose certificate as a course object.
  */
 function course_certificate_course_object_info() {
   return array(
     'certificate' => array(
       'title' => 'Certificate',
+      'class' => 'CourseObjectCertificate',
     ),
   );
 }

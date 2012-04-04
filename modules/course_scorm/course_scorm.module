@@ -49,13 +49,3 @@ function course_scorm_exit() {
     }
   }
 }
-
-/**
- * Implementation of hook_autoload_info().
- */
-function course_scorm_autoload_info() {
-  return array(
-    'CourseObjectScorm' => array('file' => 'course_scorm.classes.inc'),
-  );
-}
-

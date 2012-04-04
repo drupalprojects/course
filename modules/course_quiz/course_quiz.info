@@ -3,4 +3,4 @@ core = 6.x
 description = Exposes Drupal Quiz as a course object.
 dependencies[] = course
 dependencies[] = quiz
-files[] = course_object.quiz.inc
+files[] = course_quiz.classes.inc

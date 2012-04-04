@@ -1,6 +1,16 @@
 <?php
 
 /**
+ * Implementation of hook_init().
+ */
+function course_webform_init() {
+  $node = node_load(arg(1));
+  if ($course = course_determine_context('course_webform', 'webform', $node->nid)) {
+    course_set_context($course);
+  }
+}
+
+/**
  * Implementation of hook_course_object_info().
  */
 function course_webform_course_object_info() {
@@ -24,13 +34,4 @@ function course_webform_webform_submission_insert($node, $submission) {
   // Find the course object associated with this webform.
   $courseObject = course_get_course_object('course_webform', 'webform', arg(1), $user);
   $courseObject->getFulfillment()->setComplete()->save();
-}
-
-/**
- * Implementation of hook_autoload_info().
- */
-function course_webform_autoload_info() {
-  return array(
-    'CourseObjectWebform' => array('file' => 'course_webform.classes.inc'),
-  );
 }

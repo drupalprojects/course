@@ -1,11 +1,14 @@
 <?php
 
-function course_quiz_autoload_info() {
-  return array(
-    'CourseObjectQuiz' => array('file' => 'course_object.quiz.inc'),
-  );
+/**
+ * Implementation of hook_init().
+ */
+function course_quiz_init() {
+  $node = node_load(arg(1));
+  if ($course = course_determine_context('course_quiz', 'quiz', $node->nid)) {
+    course_set_context($course);
+  }
 }
-
 
 /**
  * Implementation of hook_course_object_info().
@@ -14,9 +17,7 @@ function course_quiz_course_object_info() {
   return array(
     'quiz' => array(
       'title' => 'Quiz',
-      'graded' => TRUE,
       'class' => 'CourseObjectQuiz',
-      'group' => 'Tests',
     ),
   );
 }
@@ -41,8 +42,8 @@ function course_quiz_quiz_finished($quiz, $score, $rid) {
 function course_quiz_nodeapi($node, $op, $a3, $a4) {
   if ($node->type == 'quiz') {
     if ($op == 'update') {
-      $courseObject = new CourseObjectQuiz($node->nid);
-      $courseObject->setPassingGrade($node->pass_rate)->setGraded(($node->pass_rate > 0))->save();
+      $courseObject = course_get_course_object('course_quiz', 'quiz', $node->nid);
+      $courseObject->setOption('passing_grade', $node->pass_rate)->save();
     }
   }
 }

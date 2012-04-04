@@ -7,3 +7,4 @@ dependencies[] = "views_bulk_operations"
 features[views][] = "course_signup_user_search_add"
 features[views][] = "course_signup_user_vbo_admin"
 features[views_api][] = "api:3.0"
+files[] = course_signup.classes.inc

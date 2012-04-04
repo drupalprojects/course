@@ -1,20 +1,20 @@
 <?php
 
 /**
- * Parent class for webform course tracking. 
+ * Parent class for poll tracking.
  */
 class CourseObjectPoll extends CourseObjectNode {
 
   public function create() {
+    global $user;
     $poll = new stdClass;
     $poll->choice[0]['chtext'] = 'Yes';
     $poll->choice[1]['chtext'] = 'No';
     $poll->type = 'poll';
     $poll->title = $this->getTitle();
-    $poll->uid = $this->node->uid;
+    $poll->uid = $user->uid;
     $poll->active = 1;
     node_save($poll);
     $this->setInstanceId($poll->nid);
   }
-
 }

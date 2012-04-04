@@ -2,3 +2,4 @@ name = Webform Course objects
 core = 6.x
 description = Expose webform to course object
 dependencies[] = webform
+files[] = course_webform.classes.inc

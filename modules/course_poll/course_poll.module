@@ -1,6 +1,16 @@
 <?php
 
 /**
+ * Implementation of hook_init().
+ */
+function course_poll_init() {
+  $node = node_load(arg(1));
+  if ($course = course_determine_context('course_poll', 'poll', $node->nid)) {
+    course_set_context($course);
+  }
+}
+
+/**
  * Implementation of hook_course_object_info().
  */
 function course_poll_course_object_info() {
@@ -10,7 +20,6 @@ function course_poll_course_object_info() {
       'suggested title' => 'Poll',
       'class' => 'CourseObjectPoll',
       'description' => 'A poll to be used in a course workflow.',
-      'graded' => FALSE,
     ),
   );
 }

@@ -19,7 +19,7 @@ function course_signup_admin() {
   foreach ($views as $view) {
     foreach (array_keys($view->display) as $display_id) {
       if ($display_id != 'default' || 1) {
-        $key = $view->name .':'. $display_id;
+        $key = $view->name . ':' . $display_id;
         $view_options[$key] = theme('signup_settings_view_label', $view, $display_id);
       }
     }
@@ -57,7 +57,30 @@ function course_signup_menu() {
     'page arguments' => array(1),
   );
 
+  $items['course-signup/autocomplete'] = array(
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+    'page callback' => 'course_signup_autocomplete',
+  );
+
   return $items;
+}
+
+/**
+ * Helper function for autocompletion of signup nodes.
+ */
+function course_signup_autocomplete($string) {
+  $result = db_query_range(db_rewrite_sql("SELECT n.nid, n.title, u.name FROM {node} n
+    INNER JOIN {users} u ON u.uid = n.uid
+    INNER JOIN {signup} s ON s.nid = n.nid
+    WHERE title LIKE '%%%s%%' OR n.nid = %d"), $string, $string, 0, 10);
+
+  $matches = array();
+  while ($node = db_fetch_object($result)) {
+    $matches[$node->title . " [nid: $node->nid]"] = '<span class="autocomplete_title">' . check_plain($node->title) . '</span>';
+  }
+
+  drupal_json($matches);
 }
 
 /**
@@ -115,7 +138,7 @@ function course_signup_quick_register($node, $account = NULL, $notify = TRUE) {
     signup_sign_up_user(array(
       'nid' => $node->nid,
       'uid' => $account->uid,
-    ), $notify);
+      ), $notify);
   }
   else {
     // Maybe we are "approving" an enrollment.
@@ -202,7 +225,7 @@ function course_signup_form_alter(&$form, &$form_state, $form_id) {
         $form['status']['#options'][1] = 'active';
         foreach (element_children($form) as $k) {
           // Replace all instances of signup text with enrollment.
-          $form[$k]['#title'] = t(str_replace(array('Signup', 'signup'), array('Enrollment','enrollment'), $form[$k]['#title']));
+          $form[$k]['#title'] = t(str_replace(array('Signup', 'signup'), array('Enrollment', 'enrollment'), $form[$k]['#title']));
         }
       }
       if ($node->course['type'] == 'live') {
@@ -245,7 +268,7 @@ function course_signup_init() {
   if (course_node_is_course($node)) {
     global $conf;
     // Switch courses to our view with enrollments and bulk operations.
-    $conf['signup_admin_list_view'] = variable_get('signup_admin_list_view_course_override','course_signup_user_vbo_admin');
+    $conf['signup_admin_list_view'] = variable_get('signup_admin_list_view_course_override', 'course_signup_user_vbo_admin');
     $conf['signup_ignore_default_fields'] = 1;
     $conf['signup_fieldset_collapsed'] = 0;
     $conf['uc_signup_add_cart_text'] = 'Register';
@@ -385,7 +408,7 @@ function course_signup_course_can_enrol($node, $user) {
  */
 function course_signup_views_api() {
   return array(
-    'api' => '2',
+    'api' => '3.0',
   );
 }
 
@@ -394,8 +417,25 @@ function course_signup_views_api() {
  */
 function course_signup_course_object_info() {
   return array(
-    'course_signup' => array(
+    'signup_attendance' => array(
       'title' => 'Attendance',
+      'class' => 'CourseObjectSignup',
     ),
   );
+}
+
+/**
+ * Track attendance.
+ *
+ * @todo, find a better way? looking at you, @see signup_mark_attended_action
+ */
+function course_signup_watchdog($watchdog) {
+  if (strpos($watchdog['message'], 'Marked signup') !== FALSE) {
+    $sid = reset($watchdog['variables']);
+    $signup = signup_load_signup($sid);
+    $account = user_load($signup->uid);
+    $courseObject = course_get_course_object('course_signup', 'signup_attendance', $signup->nid, $account);
+    $complete = strpos($watchdog['message'], 'did not') === FALSE;
+    $courseObject->getFulfillment()->setComplete($complete)->save();
+  }
 }

@@ -376,37 +376,104 @@ function course_signup_views_default_views() {
   $handler->display->display_options['style_options']['columns'] = array(
     'name' => 'name',
     'signup_time' => 'signup_time',
-    'form_data' => 'form_data',
+    'timestamp' => 'timestamp',
+    'enrol_end' => 'enrol_end',
     'attended' => 'attended',
-    'edit_link' => 'edit_link',
   );
   $handler->display->display_options['style_options']['default'] = '-1';
   $handler->display->display_options['style_options']['info'] = array(
     'name' => array(
       'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
       'separator' => '',
     ),
     'signup_time' => array(
       'sortable' => 1,
+      'default_sort_order' => 'asc',
+      'align' => '',
       'separator' => '',
     ),
-    'form_data' => array(
+    'timestamp' => array(
+      'sortable' => 0,
+      'default_sort_order' => 'asc',
+      'align' => '',
+      'separator' => '',
+    ),
+    'enrol_end' => array(
+      'sortable' => 0,
+      'default_sort_order' => 'asc',
+      'align' => '',
       'separator' => '',
     ),
     'attended' => array(
       'sortable' => 1,
-      'separator' => '',
-    ),
-    'edit_link' => array(
+      'default_sort_order' => 'asc',
+      'align' => '',
       'separator' => '',
     ),
   );
   $handler->display->display_options['style_options']['override'] = 1;
   $handler->display->display_options['style_options']['sticky'] = 0;
+  $handler->display->display_options['style_options']['empty_table'] = 0;
+  $handler->display->display_options['style_options']['operations'] = array(
+    'signup_cancel_action' => array(
+      'selected' => 1,
+      'skip_confirmation' => 0,
+      'label' => '',
+    ),
+    'system_message_action' => array(
+      'selected' => 0,
+      'skip_confirmation' => 0,
+      'label' => '',
+    ),
+    'course_edit_enrollment_action' => array(
+      'selected' => 1,
+      'skip_confirmation' => 0,
+      'label' => '',
+    ),
+    'views_bulk_operations_action' => array(
+      'selected' => 0,
+      'skip_confirmation' => 0,
+      'label' => '',
+    ),
+    'views_bulk_operations_script_action' => array(
+      'selected' => 0,
+      'skip_confirmation' => 0,
+      'label' => '',
+    ),
+    'signup_mark_attended_action' => array(
+      'selected' => 1,
+      'skip_confirmation' => 0,
+      'label' => '',
+    ),
+    'signup_mark_not_attended_action' => array(
+      'selected' => 1,
+      'skip_confirmation' => 0,
+      'label' => '',
+    ),
+    'views_bulk_operations_argument_selector_action' => array(
+      'selected' => 0,
+      'skip_confirmation' => 0,
+      'label' => '',
+    ),
+    'system_goto_action' => array(
+      'selected' => 0,
+      'skip_confirmation' => 0,
+      'label' => '',
+    ),
+    'system_send_email_action' => array(
+      'selected' => 0,
+      'skip_confirmation' => 0,
+      'label' => '',
+    ),
+  );
   $handler->display->display_options['style_options']['execution_type'] = '1';
   $handler->display->display_options['style_options']['display_type'] = '0';
   $handler->display->display_options['style_options']['display_result'] = 1;
   $handler->display->display_options['style_options']['merge_single_action'] = 1;
+  $handler->display->display_options['style_options']['hide_selector'] = 0;
+  $handler->display->display_options['style_options']['preserve_selection'] = 1;
   /* Relationship: Signup: Node */
   $handler->display->display_options['relationships']['nid']['id'] = 'nid';
   $handler->display->display_options['relationships']['nid']['table'] = 'signup_log';
