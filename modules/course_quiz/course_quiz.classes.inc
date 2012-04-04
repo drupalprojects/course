@@ -1,6 +1,7 @@
 <?php
 
 class CourseObjectQuiz extends CourseObjectNode {
+
   /**
    * Create the quiz node and set it as this object's instance.
    */
@@ -26,7 +27,7 @@ class CourseObjectQuiz extends CourseObjectNode {
     node_save($quiz);
     $this->setInstanceId($quiz->nid);
   }
-  
+
   function getTakeUrl() {
     return url("node/{$this->node->nid}/take");
   }
@@ -46,4 +47,45 @@ class CourseObjectQuiz extends CourseObjectNode {
       $this->getFulfillment()->setGrade($result->percent_score)->save();
     }
   }
+
+  /**
+   * Course quiz options.
+   */
+  public function optionsDefinition() {
+    $options = parent::optionsDefinition();
+
+    $options['passing_grade'] = 75;
+
+    return $options;
+  }
+
+  /**
+   * Add an option only pertinent to quiz?
+   */
+  public function optionsForm(&$form, &$form_state) {
+    parent::optionsForm($form, $form_state);
+    $defaults = $this->getOptions();
+
+    $form['passing_grade'] = array(
+      '#title' => 'Passing grade',
+      '#type' => 'textfield',
+      '#default_value' => $defaults['passing_grade'],
+    );
+
+    return $form;
+  }
+
+  /**
+   * Update the Quiz's passing grade.
+   *
+   * Let's do this as a courtesy.
+   */
+  public function optionsSubmit(&$form, &$form_state) {
+    $passing_grade = $form_state['values']['passing_grade'];
+    $quiz = node_load($this->getInstanceId());
+    $quiz->pass_rate = $passing_grade;
+    node_save($quiz);
+    parent::optionsSubmit($form, $form_state);
+  }
+
 }
