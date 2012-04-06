@@ -2,3 +2,4 @@ name = Ubercart Course
 core = 6.x
 description = Provides Course as an Ubercart product.
 dependencies[] = uc_product
+dependencies[] = course
