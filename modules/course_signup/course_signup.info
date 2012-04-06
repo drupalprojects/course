@@ -1,10 +1,8 @@
-name = "Course Signup"
-description = "Use Signup as an enrollment and attendance system for courses."
-core = "6.x"
-dependencies[] = "course"
-dependencies[] = "signup"
-dependencies[] = "views_bulk_operations"
-features[views][] = "course_signup_user_search_add"
-features[views][] = "course_signup_user_vbo_admin"
-features[views_api][] = "api:3.0"
+name = Course signups
+description = Use Signup as an enrollment and attendance system for courses.
+core = 6.x
+dependencies[] = course
+dependencies[] = signup
+dependencies[] = views_bulk_operations
 files[] = course_signup.classes.inc
+package = Course

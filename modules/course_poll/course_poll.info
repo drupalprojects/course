@@ -1,4 +1,7 @@
 core = 6.x
-name = Expose poll as a Course object
+name = Poll course objects
+description = Exposes Poll as a course object.
 dependencies[] = poll
+dependencies[] = course
 files[] = course_poll.classes.inc
+package = Course objects

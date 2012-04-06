@@ -1,4 +1,5 @@
-name = Node Course objects
-description = Expose selected nodes as course content objects.
+name = Node course objects
+description = Expose selected content types as course content objects with configurable completion tracking.
 core = 6.x
 dependencies[] = course
+package = Course objects

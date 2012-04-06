@@ -1,2 +1,6 @@
 core = 6.x
-title = Course books
+name = Book course objects
+description = Supports Drupal Books as course objects, with configurable completion requirements.
+package = Course objects
+dependencies[] = book
+dependencies[] = course

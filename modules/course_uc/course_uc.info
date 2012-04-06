@@ -1,5 +1,6 @@
 name = Ubercart Course
 core = 6.x
-description = Provides Course as an Ubercart product.
+description = Supports Course as an Ubercart product and restricts enrollment to paid courses.
 dependencies[] = uc_product
 dependencies[] = course
+package = Course

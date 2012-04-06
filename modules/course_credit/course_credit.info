@@ -1,4 +1,5 @@
-name = Course Credit
-description = Enables credit award with course
+name = Course credit
+description = Adds credit functionality to courses, including multiple credit types, credit mapping, and variable credit.
 core = 6.x
 dependencies[] = course
+package = Course

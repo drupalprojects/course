@@ -1,6 +1,7 @@
-name = Course certificate
-description = Awards a certificate when a course is completed.
+name = Course certificates
+description = Uses Certificate module to award a certificate when a course is completed.
 core = 6.x
-dependencies[] = "certificate"
-dependencies[] = "course"
+dependencies[] = certificate
+dependencies[] = course
 files[] = course_certificate.classes.inc
+package = Course
