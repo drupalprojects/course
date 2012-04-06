@@ -455,8 +455,8 @@ function course_settings_access($node) {
  * @param object $user The user to check.
  */
 function course_can_take_course($node, $user) {
-  if (variable_get('course_access_restrict_enrol', 1) && !course_enrolment_check($node, $user)) {
-    if (!(variable_get('course_access_bypass_checkout', 0) && empty($node->sell_price))) {
+  if (variable_get('course_access_restrict_enrol', 0) && !course_enrolment_check($node, $user)) {
+    if (!(variable_get('course_access_bypass_checkout', 1) && empty($node->sell_price))) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, you are not yet enrolled in this course.',
@@ -474,8 +474,8 @@ function course_can_take_course($node, $user) {
     }
   }
 
-  if ($node->field_course_date) {
-    if ($node->course['type'] == 'enduring' && time() > strtotime($node->field_course_date[0]['value2'])) {
+  if ($node->course['closed']) {
+    if ($node->course['type'] == 'enduring' && time() > strtotime($node->course['close'])) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, this course is expired.',
@@ -562,7 +562,7 @@ function course_admin_settings() {
     '#title' => 'User must be enrolled to take course',
     '#description' => 'Restricts taking courses to users who have been enrolled in the course by external methods (e.g. Ubercart "Enroll User" conditional action). If this is not checked, users will be automatically enrolled when they click Take Course. This box should be checked if courses are products.',
     '#type' => 'checkbox',
-    '#default_value' => variable_get('course_access_restrict_enrol', 1),
+    '#default_value' => variable_get('course_access_restrict_enrol', 0),
   );
 
   $form['course_access_bypass_checkout'] = array(
