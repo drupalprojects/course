@@ -455,8 +455,8 @@ function course_settings_access($node) {
  * @param object $user The user to check.
  */
 function course_can_take_course($node, $user) {
-  if (variable_get('course_access_restrict_enrol', 0) && !course_enrolment_check($node, $user)) {
-    if (!(variable_get('course_access_bypass_checkout', 1) && empty($node->sell_price))) {
+  if (variable_get('course_access_restrict_enrol', 1) && !course_enrolment_check($node, $user)) {
+    if (!(variable_get('course_access_bypass_checkout', 0) && empty($node->sell_price))) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, you are not yet enrolled in this course.',
