@@ -45,15 +45,11 @@ class CourseObject {
   /**
    * Define configuration elements and their defaults.
    *
-   * Extended classes should call parent::configDefinition first to get the
+   * Extended classes should call parent::optionsDefinition first to get the
    * parent's configuration.
    */
   public function optionsDefinition() {
-    /*
-    return array(
-      'snid' => '',
-    );
-    */
+    return array();
   }
 
   /**
@@ -70,22 +66,22 @@ class CourseObject {
     );
 
     /*
-    $form['duration'] = array(
+      $form['duration'] = array(
       '#title' => 'Length of time in minutes a user can remain in this object before it is closed.',
       '#type' => 'textfield',
       '#size' => 2,
-    );
+      );
 
-    $form['release'] = array(
+      $form['release'] = array(
       '#title' => 'When this object can be accessed.',
       '#type' => 'date',
-    );
+      );
 
-    $form['expiration'] = array(
+      $form['expiration'] = array(
       '#title' => 'When this object will close.',
       '#type' => 'date',
-    );
-    */
+      );
+     */
 
     // Submit
     $form['submit'] = array(
@@ -461,6 +457,35 @@ class CourseObjectNode extends CourseObject {
    */
   public function delete() {
     node_delete($this->getInstanceId());
+  }
+
+  public function optionsForm(&$form, &$form_state) {
+    $form = parent::optionsForm($form, $form_state);
+
+    $form['instance'] = array(
+      '#title' => 'Existing node',
+      '#autocomplete_path' => 'ctools/autocomplete/node',
+      '#type' => 'textfield',
+    );
+
+    $nid = $this->getInstanceId();
+    if ($nid) {
+      $node = node_load($nid);
+      $link = l(t("'%title' [node id %nid]", array('%title' => $node->title, '%nid' => $node->nid)), "node/$node->nid", array('attributes' => array('target' => '_blank', 'title' => t('Open in new window')), 'html' => TRUE));
+      $form['instance']['#description'] = t('Currently set to !link', array('!link' => $link));
+    }
+
+    return $form;
+  }
+
+  public function optionsSubmit(&$form, &$form_state) {
+    $value = $form_state['values']['instance'];
+    preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $value, $matches);
+    $nid = $matches[2];
+    if ($nid) {
+      $this->setInstanceId($nid);
+    }
+    parent::optionsSubmit($form, $form_state);
   }
 
 }
