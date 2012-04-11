@@ -79,14 +79,13 @@ function course_outline_overview_form(&$form_state) {
   // Wrapper for just the objects.
   $cform['requirements']['#tree'] = TRUE;
   if (count($requirements)) {
-    foreach ($requirements as $requirement) {
+    foreach ($requirements as $uniqid => $requirement) {
       $requirement = (array) $requirement;
       if ($requirement['hidden']) {
         // Do not print out hidden requirements yet, such as attendance/payment.
         continue;
       }
-      $obj_uniqid = uniqid();
-      $rform = _course_outline_requirement_form($requirement, $obj_uniqid);
+      $rform = _course_outline_requirement_form($requirement, $uniqid);
       if (empty($requirement['snid'])) {
         // User hasnt selected an object type yet, let them select.
         $rform['requirement_component'] = array(
@@ -106,8 +105,8 @@ function course_outline_overview_form(&$form_state) {
           '#value' => ucwords(str_replace('_', ' ', $requirement['requirement_type'])) . '<br/>' . $course_objects[$requirement['requirement_type']][$requirement['requirement_component']]['title'],
         );
       }
-      ctools_ajax_associate_url_to_element($form, $rform['requirement_component'], "course-object/nojs/store/$obj_uniqid");
-      $cform['requirements'][$obj_uniqid] = $rform;
+      ctools_ajax_associate_url_to_element($form, $rform['requirement_component'], "course-object/nojs/store/$uniqid");
+      $cform['requirements'][$uniqid] = $rform;
     }
   }
 
