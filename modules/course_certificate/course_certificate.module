@@ -29,12 +29,9 @@ function course_certificate_access_certificate($node, $user) {
 
 function course_certificate_token_list($type = 'all') {
   if ($type == 'certificate') {
-    module_load_include('install', 'course_report', 'course_report');
-    $schema = course_report_schema();
-    foreach ($schema['course_report']['fields'] as $key => $value) {
-      $tokens['certificate']["certificate-$key"] = $value['description'];
-    }
+    $tokens['certificate']["certificate-date_completed"] = t('Date of course completion');
     $tokens['certificate']['certificate-number'] = 'Generated certificate number';
+    return $tokens;
   }
 }
 
@@ -42,12 +39,10 @@ function course_certificate_token_values($type, $object = NULL, $options = array
   if ($type == 'certificate') {
     $sql = 'select * from {course_report} where nid = %d and uid = %d';
     if ($report = db_fetch_object(db_query($sql, $object['node']->nid, $object['user']->uid))) {
-      foreach ($report as $key => $value) {
-        $values["certificate-$key"] = $value;
-      }
+      $values['certificate-date_completed'] = date(variable_get('course_report_certificate_time_format', 'F jS, Y'), $report->date_completed);
     }
     $values['certificate-number'] = time() . '-' . $object['node']->nid;
-    $values['certificate-date_completed'] = date(variable_get('course_report_certificate_time_format', 'F jS, Y'), $report->date_completed);
+    return $values;
   }
 }
 
