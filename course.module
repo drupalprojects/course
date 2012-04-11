@@ -75,17 +75,17 @@ function course_menu() {
     'description' => 'Allow the learner to choose their user type.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_user_type_form', 1),
-    'access callback' => TRUE,
+    'access callback' => 'user_is_logged_in',
     'type' => MENU_CALLBACK,
   );
 
   // Landing page for course completion.
   $items['node/%course/course-outline'] = array(
     'title' => 'Course outline',
-    'access callback' => TRUE,
+    'access arguments' => array('edit courses'),
     'page arguments' => array('course_outline_overview_form'),
     'page callback' => 'drupal_get_form',
-    //'type' => MENU_LOCAL_TASK,
+    'type' => MENU_LOCAL_TASK,
     'file' => 'includes/course.outline.inc',
   );
 
@@ -99,12 +99,6 @@ function course_menu() {
     'file' => 'includes/course.outline.inc',
   );
 
-  // AHAH handler.
-  $items['course-outline/js'] = array(
-    'page callback' => 'course_outline_overview_js_more',
-    'access callback' => TRUE,
-    'type' => MENU_CALLBACK,
-  );
 
   // Display the 'Take course' menu item as a tab or link, depending.
   $items['node/%course/takecourse'] = array(
@@ -159,20 +153,58 @@ function course_menu() {
   );
 
   // Course object edit
-  $items['node/%course/course-object/%course_object/%ctools_js/edit'] = array(
+  $items['node/%course/course-object/%ctools_js/%course_object/edit'] = array(
     'title' => 'Course object settings',
     'page callback' => 'course_object_edit',
     'page arguments' => array(1, 3, 4),
     'access callback' => TRUE,
   );
 
+  // Course object settings link
+  $items['node/%course/course-object/%ctools_js/store/%'] = array(
+    'page callback' => 'course_store_temp_object',
+    'page arguments' => array(1, 3, 5, 6),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  // AHAH handler.
+  $items['node/%course/course-outline/%ctools_js/more/%'] = array(
+    'page callback' => 'course_outline_overview_js_more',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'page arguments' => array(1, 3, 5),
+  );
+
   return $items;
+}
+
+/**
+ * When a user selects a new requirement_component, update it in the database so
+ * our modals etc use the right course object.
+ *
+ * @param type $node
+ * @param type $js
+ * @param type $uniqid
+ */
+function course_store_temp_object($node, $js, $uniqid) {
+  if ($js) {
+    $nid = $node->nid;
+    $changed = explode('-', $_POST['ctools_changed']);
+    $_SESSION['course'][$nid]['editing'][$uniqid]['requirement_type'] = $changed[0];
+    $_SESSION['course'][$nid]['editing'][$uniqid]['requirement_component'] = $changed[1];
+    ctools_include('ajax');
+    $output = array();
+    ctools_ajax_render($output);
+  }
+  else {
+    exit;
+  }
 }
 
 /**
  * Callback for modal window/nojs.
  */
-function course_object_edit($node, $courseObject, $js = FALSE) {
+function course_object_edit($node, $js, $courseObject) {
   if ($js) {
     ctools_include('ajax');
     ctools_include('modal');
@@ -203,16 +235,30 @@ function course_object_edit_form(&$form_state, $courseObject) {
 }
 
 function course_object_edit_form_submit(&$form, &$form_state) {
-  $courseObject = course_get_course_object($form_state['values']['snid']);
-  $courseObject->optionsSubmit($form, $form_state);
+  if ($form_state['values']['uniqid']) {
+    $nid = $form_state['values']['nid'];
+    $record = $_SESSION['course'][$nid]['editing'][$form_state['values']['uniqid']];
+    $courseObject = course_get_course_object($record);
+    $courseObject->setCourseNid($nid);
+    $courseObject->setId($form_state['values']['uniqid']);
+    $courseObject->optionsSubmit($form, $form_state);
+  }
 }
 
 /**
- * Menu loader for a course object.
+ * Load a course object from session cache or database.
  */
 function course_object_load($snid) {
   global $user;
-  $courseObject = course_get_course_object($snid, NULL, NULL, $user);
+  $nid = arg(0) == 'node' && is_numeric(arg(1)) ? arg(1) : 0;
+  if (!is_numeric($snid)) {
+    $courseObject = course_get_course_object($_SESSION['course'][$nid]['editing'][$snid]['requirement_type'], $_SESSION['course'][$nid]['editing'][$snid]['requirement_component']);
+    $courseObject->setId($snid);
+    $courseObject->setCourseNid($nid);
+  }
+  else {
+    $courseObject = course_get_course_object($snid, NULL, NULL, $user);
+  }
   return $courseObject;
 }
 
@@ -460,7 +506,7 @@ function course_can_take_course($node, $user) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, you are not yet enrolled in this course.',
-      ));
+        ));
     }
   }
 
@@ -470,7 +516,7 @@ function course_can_take_course($node, $user) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, your enrollment has expired for this course.',
-      ));
+        ));
     }
   }
 
@@ -479,7 +525,7 @@ function course_can_take_course($node, $user) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, this course is expired.',
-      ));
+        ));
     }
   }
 }
@@ -681,7 +727,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         }
         // Let other course modules know about the recently created course.
         $node->course['cid'] = $record['cid'];
-        course_outline_overview_save($node, $op);
+        //course_outline_overview_save($node, $op);
         module_invoke_all('course_nodeapi_extra', $node, $op);
         break;
       case 'load':
@@ -944,8 +990,8 @@ function course_form_alter(&$form, &$form_state, $form_id) {
       '#type' => 'select',
       '#options' => array('enduring' => 'Enduring', 'live' => 'Live'),
       '#default_value' => $node->course['type'],
-    // This help won't apply anymore. @todo
-    //'#description' => 'Live courses support attendance.',
+      // This help won't apply anymore. @todo
+      //'#description' => 'Live courses support attendance.',
     );
     if ($node->course['lms'] != '') {
       drupal_set_title(t("@title (@lms)", array('@lms' => $lapps[$node->course['lms']]['name'], '@title' => $node->title)));
@@ -1014,7 +1060,10 @@ function course_form_alter(&$form, &$form_state, $form_id) {
     );
 
     // Add the course objects form to the node form.
-    course_outline_overview_form($form, $form_state, $form_id);
+    // This worked for our initial requirements, but now, it's incredibly
+    // complicated. Move to a tab. Maybe we'll bring this back as a UI
+    // improvement. For the benefit of ctools and other libraries!
+    //course_outline_overview_form($form, $form_state, $form_id);
   }
 
   if ($form_id == 'course_admin_settings') {
@@ -1319,7 +1368,7 @@ function course_get_course_object($requirement_type, $requirement_component = NU
     $outline_entry = $requirement_type;
     $account = $requirement_component;
   }
-  else {
+  else if (!is_null($instance)) {
     // Search for context.
     $sql = "select * from {course_outline}
       where requirement_type = '%s'
@@ -1329,12 +1378,13 @@ function course_get_course_object($requirement_type, $requirement_component = NU
     if ($row = db_fetch_object($result)) {
       $outline_entry = $row;
     }
-    else {
-      $outline_entry = new stdClass;
-      $outline_entry->requirement_type = $requirement_type;
-      $outline_entry->requirement_component = $requirement_component;
-      $outline_entry->instance = $instance;
-    }
+  }
+
+  if (!$outline_entry) {
+    $outline_entry = new stdClass;
+    $outline_entry->requirement_type = $requirement_type;
+    $outline_entry->requirement_component = $requirement_component;
+    $outline_entry->instance = $instance;
   }
 
   $class = 'CourseObject';
@@ -1906,7 +1956,7 @@ function course_course_can_enrol($node, $user) {
             'message' => t('This course closed on %date and is no longer available for enrollments.', array(
               '%date' => format_date(strtotime($node->{$end['field']}[0]['value2']), 'custom', 'F, jS Y'),
             )),
-        ));
+          ));
       }
       else if (time() < strtotime($node->{$start['field']}[0]['value'] . ' UTC')) {
         return array(array(
@@ -1914,7 +1964,7 @@ function course_course_can_enrol($node, $user) {
             'message' => t('This course opens on %date.', array(
               '%date' => format_date(strtotime($node->{$start['field']}[0]['value']), 'custom', 'F, jS Y'),
             )),
-        ));
+          ));
       }
     }
   }
@@ -2081,7 +2131,6 @@ function course_outline_save_requirement(&$outline_entry, $node = NULL) {
   if (!$courseObject->getId()) {
     // Only creating new course objects right now. Can't update them yet
     $courseObject->setCourseNid($node->nid);
-    $courseObject->create();
   }
 
   $courseObject->save();

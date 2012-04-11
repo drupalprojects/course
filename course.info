@@ -1,6 +1,7 @@
 name = Course
 core = 6.x
 description = Integrate external courses with Drupal.
+dependencies[] = ahah_helper
 dependencies[] = autoload
 dependencies[] = ctools
 php = 5

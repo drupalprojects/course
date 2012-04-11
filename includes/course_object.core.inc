@@ -14,14 +14,10 @@ class CourseObject {
   private $courseObjectFulfillment = stdClass;
 
   /**
-   * Construct a course object.
+   * Construct a course object from a database record.
    *
-   * Constructing with a requirement array will pre-load this object. This is
-   * useful for query saving when constructing many objects at once is
-   * necessary. Passing a numeric requirement ID will load that requirement from
-   * the database in the context of the course. Providing the user will either
-   * load an existing fulfillment from the database or create a new fulfillment
-   * object.
+   * Use course_get_course_object to load an object when parameters are not
+   * already known.
    *
    * @param object $requirement
    *   An object with requirement_component, requirement_type, and instance
@@ -34,10 +30,16 @@ class CourseObject {
     }
 
     $this->requirement = $requirement;
-    $this->requirement->config = unserialize($this->requirement->config);
-    if (!$this->requirement->config) {
-      $this->requirement->config = array();
+
+    $config = (array) unserialize($this->requirement->config);
+
+    foreach ($config as $key => $value) {
+      if (!in_array($key, $this->getDatabaseFields())) {
+        $this->requirement->$key = $value;
+      }
     }
+
+    unset($this->requirement->config);
 
     $this->courseObjectFulfillment = new CourseObjectFulfillment($this, $account);
   }
@@ -60,9 +62,14 @@ class CourseObject {
 
     $form['header']['#value'] = t("<h2>Settings for %t</h2>", array('%t' => $this->getTitle()));
 
-    $form['snid'] = array(
+    $form['uniqid'] = array(
       '#type' => 'hidden',
-      '#value' => $this->getId(),
+      '#value' => arg(4),
+    );
+
+    $form['nid'] = array(
+      '#type' => 'hidden',
+      '#value' => arg(1),
     );
 
     /*
@@ -101,15 +108,12 @@ class CourseObject {
   }
 
   /**
-   * Save object configs to the database.
+   * Save object configs to cache.
    */
   public function optionsSubmit(&$form, &$form_state) {
-    $write = array();
     foreach (array_keys($this->optionsDefinition()) as $key) {
-      $write[$key] = $form_state['values'][$key];
+      $_SESSION['course'][$this->getCourseNid()]['editing'][$form_state['values']['uniqid']][$key] = $form_state['values'][$key];
     }
-    $this->requirement->config = $write;
-    $this->save();
   }
 
   /**
@@ -190,15 +194,6 @@ class CourseObject {
   }
 
   /**
-   * Get the title of this course object.
-   *
-   * @return string
-   */
-  public function getTitle() {
-    return $this->requirement->title;
-  }
-
-  /**
    * Get the status message of this course object.
    */
   public function getStatus($type = 'short') {
@@ -258,7 +253,7 @@ class CourseObject {
    * Get the course node ID this object belongs to.
    */
   function getCourseNid() {
-    return $this->requirement->nid;
+    return intval($this->requirement->nid);
   }
 
   /**
@@ -275,6 +270,10 @@ class CourseObject {
    */
   function setCourseNid($nid) {
     $this->requirement->nid = $nid;
+  }
+
+  function setId($snid) {
+    $this->requirement->snid = $snid;
   }
 
   /**
@@ -313,12 +312,45 @@ class CourseObject {
    */
   public function getOptions() {
     $defaults = $this->optionsDefinition();
-    return array_merge($defaults, $this->requirement->config);
+    $sessionDefaults = $_SESSION['course'][$this->getCourseNid()]['editing'][$this->getId()];
+    return array_merge($defaults, (array) $this->requirement, (array) $sessionDefaults);
+  }
+
+  /**
+   * Get an option.
+   */
+  public function getOption($key) {
+    $config = $this->getOptions();
+    return $config[$key];
   }
 
   public function setOption($option, $value) {
-    $this->requirement->config[$option] = $value;
+    if (in_array($option, $this->getDatabaseFields())) {
+      $this->requirement->$option = $value;
+    }
+    else {
+      $this->requirement->config[$option] = $value;
+    }
     return $this;
+  }
+
+  private function getDatabaseFields() {
+    return array(
+      'snid',
+      'nid',
+      'requirement_type',
+      'title',
+      'requirement_component',
+      'enabled',
+      'instance',
+      'required',
+      'weight',
+      'hidden',
+    );
+  }
+
+  function getTitle() {
+    return $this->requirement->title;
   }
 
 }
@@ -483,7 +515,7 @@ class CourseObjectNode extends CourseObject {
     preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $value, $matches);
     $nid = $matches[2];
     if ($nid) {
-      $this->setInstanceId($nid);
+      $this->setOption('instance', $nid);
     }
     parent::optionsSubmit($form, $form_state);
   }

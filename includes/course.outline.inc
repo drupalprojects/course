@@ -9,33 +9,54 @@
 /**
  * Theme all requirements as a table.
  */
-function course_outline_overview_form(&$form, &$form_state = NULL, $form_id = NULL) {
+function course_outline_overview_form(&$form_state) {
+  $form = array();
+
+  // Register the form with ahah_helper so we can use it. Also updates
+  // $form_state['storage'] to ensure it contains the latest values that have
+  // been entered, even when the form item has temporarily been removed from
+  // the form. So if a form item *once* had a value, you *always* can retrieve
+  // it.
+  ahah_helper_register($form, $form_state);
+
+  // Determine the default value of the 'usage' select. When nothing is stored
+  // in $form_state['storage'] yet, it's the form hasn't been submitted yet,
+  // thus it's the first time the form is being displayed.
   // Load the modal library and add the modal javascript.
+  ctools_include('ajax');
   ctools_include('modal');
   ctools_include('dependent');
+  ctools_include('object-cache');
   ctools_modal_add_js();
 
   // Wrapper for objects and more button.
-  $form['course_outline']['#cache'] = TRUE;
-  $form['course_outline']['#tree'] = TRUE;
-  $form['course_outline']['#type'] = 'fieldset';
-  $form['course_outline']['requirements']['#prefix'] = '<div class="clear-block" id="course-objects-wrapper">';
-  $form['course_outline']['requirements']['#suffix'] = '</div>';
+  $form['#tree'] = TRUE;
+  $form['#prefix'] = '<div class="clear-block" id="course-outline-wrapper">';
+  $form['#suffix'] = '</div>';
 
   // Shortcut.
   $cform = &$form['course_outline'];
-  $node = $form['#node'];
-  if (!$node) {
+
+  if ($form_state['values']['nid']) {
+    $node = node_load($form_state['values']['nid']);
+  }
+  else {
     $node = node_load(arg(1));
   }
+
+  $form['nid']['#type'] = 'hidden';
+  $form['nid']['#value'] = $node->nid;
+
+  // Grab requirements.
   $requirements = $node->course_outline['requirements'];
   if (is_array($form_state['values']['course_outline']['requirements'])) {
     $requirements = $form_state['values']['course_outline']['requirements'];
   }
 
   $cform['#title'] = 'Course objects';
-  $cform['requirements']['#theme'] = 'course_outline_overview_form';
+  $form['#theme'] = 'course_outline_overview_form';
 
+  // These are the available objects.
   $course_objects = course_available_objects();
   $options = array(
     '' => '- select new -',
@@ -64,8 +85,8 @@ function course_outline_overview_form(&$form, &$form_state = NULL, $form_id = NU
         // Do not print out hidden requirements yet, such as attendance/payment.
         continue;
       }
-      $uniqid = uniqid();
-      $rform = _course_outline_requirement_form($requirement, $uniqid);
+      $obj_uniqid = uniqid();
+      $rform = _course_outline_requirement_form($requirement, $obj_uniqid);
       if (empty($requirement['snid'])) {
         // User hasnt selected an object type yet, let them select.
         $rform['requirement_component'] = array(
@@ -85,34 +106,46 @@ function course_outline_overview_form(&$form, &$form_state = NULL, $form_id = NU
           '#value' => ucwords(str_replace('_', ' ', $requirement['requirement_type'])) . '<br/>' . $course_objects[$requirement['requirement_type']][$requirement['requirement_component']]['title'],
         );
       }
-      $cform['requirements'][$uniqid] = $rform;
+      ctools_ajax_associate_url_to_element($form, $rform['requirement_component'], "course-object/nojs/store/$obj_uniqid");
+      $cform['requirements'][$obj_uniqid] = $rform;
     }
   }
 
-  $uniqid = uniqid();
-  $new = _course_outline_requirement_form(array(), $uniqid);
-  $new['requirement_component'] = array(
-    '#title' => 'Component',
-    '#type' => 'select',
-    '#options' => $options,
-    '#suffix' => "<div id=\"edit-course-outline-add-scorm-file-div\">
-    </div>",
-  );
-  $cform['requirements'][$uniqid] = $new;
+  // Add a blank row.
+  if ($form_state['values']['op'] != 'Save') {
+    $obj_uniqid = uniqid();
+    $new['nid'] = $node->nid;
+    $new = _course_outline_requirement_form($new, $obj_uniqid);
+    $new['requirement_component'] = array(
+      '#title' => 'Component',
+      '#type' => 'select',
+      '#options' => $options,
+    );
+    ctools_ajax_associate_url_to_element($form, $new['requirement_component'], "course-object/nojs/store/$obj_uniqid");
+    $cform['requirements'][$obj_uniqid] = & $new;
+  }
 
-  $cform['course_object_more'] = array(
+  $form['course_object_more'] = array(
     '#type' => 'submit',
     '#value' => 'Add another',
-    '#submit' => array('course_outline_overview_add'),
     '#ahah' => array(
-      'path' => 'course-outline/js',
-      'wrapper' => 'course-objects-wrapper',
+      'event' => 'click',
+      'method' => 'replace',
+      'path' => ahah_helper_path(AHAH_HELPER_PARENTS_ENTIRE_FORM),
+      'wrapper' => 'course-outline-wrapper',
     ),
+    '#submit' => array('ahah_helper_submit'),
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Save',
+    '#submit' => array('course_outline_overview_form_submit'),
   );
 
   $cform['requirements']['#element_validate'] = array('_course_outline_overview_validate_requirements');
   //return for form on tab
-  return $form['course_outline'];
+  return $form;
 }
 
 /**
@@ -121,7 +154,6 @@ function course_outline_overview_form(&$form, &$form_state = NULL, $form_id = NU
  * To be re-used in listing requirements and creating new ones.
  */
 function _course_outline_requirement_form($requirement = array(), $uniqid = NULL) {
-  $courseObject = course_get_course_object($requirement);
   $rform['#tree'] = TRUE;
   $rform['snid'] = array(
     '#type' => 'value',
@@ -161,12 +193,12 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
     '#default_value' => isset($requirement['enabled']) ? $requirement['enabled'] : 1,
   );
   $rform['options']['delete'] = array(
-    '#title' => 'Delete',
+    '#title' => 'Remove',
     '#type' => 'checkbox',
   );
   if ($requirement['instance']) {
     $rform['options']['delete_instance'] = array(
-      '#title' => 'Delete instance too',
+      '#title' => 'Delete instance',
       '#type' => 'checkbox',
       '#process' => array('ctools_dependent_process'),
       '#dependency' => array('edit-course-outline-requirements-' . $uniqid . '-options-delete' => array(1)),
@@ -174,11 +206,10 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
   }
   $rform['operations'] = array(
     '#type' => 'markup',
+    '#value' => implode(' ', array(
+      l('Edit', "node/" . $requirement['nid'] . "/course-object/nojs/$uniqid/edit", array('attributes' => array('class' => "ctools-use-modal settings-$uniqid"))),
+    )),
   );
-  $rform['operations']['#value'] = implode(' ', array(
-    l('Edit', $courseObject->getEditUrl(), array('external' => TRUE, 'query' => drupal_get_destination())),
-    l('Settings', "node/" . arg(1) . '/course-object/' . $requirement['snid'] . '/nojs/edit', array('attributes' => array('class' => 'ctools-use-modal'))),
-    ));
   $rform['weight'] = array(
     '#type' => 'weight',
     '#default_value' => $requirement['weight'],
@@ -197,54 +228,16 @@ function course_outline_overview_add($form, $form_state) {
   // Non-ahah version.
 }
 
-/**
- * Rebuild the form with new fields.
- */
-function course_outline_overview_js_more() {
-  // The form is generated in an include file which we need to include manually.
-  include_once 'modules/node/node.pages.inc';
-
-  // We're starting in step #3, preparing for #4.
-  $form_state = array('storage' => NULL, 'submitted' => FALSE);
-  $form_build_id = $_POST['form_build_id'];
-  // Step #4.
-  $form = form_get_cache($form_build_id, $form_state);
-
-  // Preparing for #5.
-  $args = $form['#parameters'];
-  $form_id = array_shift($args);
-  $form_state['post'] = $form['#post'] = $_POST;
-  $form['#programmed'] = $form['#redirect'] = FALSE;
-
-  // Step #5.
-  drupal_process_form($form_id, $form, $form_state);
-
-  // Step #6 and #7 and #8.
-  $form = drupal_rebuild_form($form_id, $form_state, $args, $form_build_id);
-
-  $object_form = $form['course_outline']['requirements'];
-
-  $output = theme('status_messages') . drupal_render($object_form);
-
-  // Final rendering callback.
-  drupal_json(array('status' => TRUE, 'data' => $output));
-}
-
 function theme_course_outline_overview_form($form) {
-  if ($form['requirements']) {
-    $requirements = & $form['requirements'];
-  }
-  else {
-    $requirements = & $form;
-  }
+  $requirements = & $form['course_outline']['requirements'];
   drupal_add_tabledrag('course-objects', 'order', 'sibling', 'course-object-weight');
-  $node = $form['#node'];
 
   $headers = array('Title', 'Type', 'Options', 'Operations', 'Weight');
 
   $rows = array();
 
   foreach (element_children($requirements) as $key) {
+    $requirement = & $requirements[$key];
     unset($requirements[$key]['title']['#title']);
     unset($requirements[$key]['requirement_component']['#title']);
     $rows[$key]['data'][] = drupal_render($requirements[$key]['title']);
@@ -259,9 +252,7 @@ function theme_course_outline_overview_form($form) {
     // Mark everything else as printed.
     drupal_render($requirements[$key]);
   }
-  $table = theme('table', $headers, $rows, array('id' => 'course-objects'));
-  unset($form['#theme']);
-  unset($form['requirements']['#theme']);
+  $table = theme_table($headers, $rows, array('id' => 'course-objects'));
   $table .= drupal_render($form);
   return $table;
 }
@@ -280,26 +271,41 @@ function _course_outline_overview_validate_requirements(&$form, &$form_state) {
 /**
  * Submit handler.
  */
-function course_outline_overview_save($node, $op) {
-  if (isset($node->course_outline)) {
-    foreach ($node->course_outline['requirements'] as $key => $record) {
-      $record = array_merge($record, $record['options']);
-      $record = (object) $record;
-      $record->nid = $node->nid;
-      if ($record->delete && $record->snid) {
-        $courseObject = course_get_course_object($record);
-        if ($record->delete_instance) {
-          // Delete the instance (node, whatever).
-          $courseObject->delete();
-        }
-        course_outline_delete_requirement($record);
+function course_outline_overview_form_submit(&$form, &$form_state) {
+  $node = node_load($form['nid']['#value']);
+  foreach ($form_state['values']['course_outline']['requirements'] as $key => $record) {
+    $record = array_merge($record, $record['options']);
+    $record = (object) $record;
+    $record->nid = $node->nid;
+    if ($record->delete && $record->snid) {
+      $courseObject = course_get_course_object($record);
+      if ($record->delete_instance) {
+        // Delete the instance (node, whatever).
+        $courseObject->delete();
       }
-      else if (!$record->delete && !empty($record->requirement_component)) {
-        // Must have a component.
-        course_outline_save_requirement($record, $node);
+      course_outline_delete_requirement($record);
+    }
+    else if (!$record->delete && !empty($record->requirement_component)) {
+      // Must have a component.
+      $courseObject = course_outline_save_requirement($record, $node);
+    }
+
+    // Hey, now we have an ID. We might have settings for objects that didn't
+    // exist until now. Save them.
+    if ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$key]) {
+      foreach ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$key] as $key => $value) {
+        $courseObject->setOption($key, $value);
       }
+      $courseObject->save();
+    }
+
+    if (!$courseObject->getInstanceId()) {
+      $courseObject->create();
+      $courseObject->save();
     }
   }
+  drupal_set_message('Updated course.');
+  drupal_goto("node/$node->nid/course-outline");
 }
 
 /**
