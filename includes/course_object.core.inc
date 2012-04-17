@@ -127,7 +127,7 @@ class CourseObject {
    *   HTML content or a redirect.
    */
   public function takeCourseObject() {
-    $_SESSION['course'][$this->getCourseNid()]['current'] = $this->getId();
+    $_SESSION['course'][$this->getCourseNid()]['taking']['active'] = $this->getId();
 
     $url = $this->getTakeUrl();
     switch ($this->getTakeType()) {
