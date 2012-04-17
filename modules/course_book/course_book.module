@@ -5,7 +5,8 @@
  */
 function course_book_init() {
   $node = node_load(arg(1));
-  if ($course = course_determine_context('course_book', 'book', $node->book['bid'])) {
+  $search = $node->book['bid'] ? $node->book['bid'] : $node->nid;
+  if ($course = course_determine_context('course_book', 'book', $search)) {
     course_set_context($course);
   }
 }
