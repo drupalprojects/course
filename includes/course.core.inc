@@ -4,9 +4,13 @@
  * An object that holds CourseObjects and tracker functions?
  */
 class Course {
+
   private $node;
   private $user;
   private $courseObjects;
+  private $active;
+  private $next;
+  private $prev;
 
   public function __construct($node, $user) {
     if (is_object($node)) {
@@ -22,6 +26,44 @@ class Course {
     else {
       $this->user = user_load($user);
     }
+
+    $this->getObjects();
+    $this->setActive();
+  }
+
+  public function setActive($id = NULL) {
+    if (!$id) {
+      $id = $_SESSION['course'][$this->node->nid]['taking']['active'];
+    }
+
+    foreach ($this->getObjects() as $courseObject) {
+      if ($id == $courseObject->getId()) {
+        // Active - save old, store next.
+        if ($old) {
+          $this->prev = $old;
+        }
+
+        $storeNext = TRUE;
+      }
+      else if ($storeNext) {
+        $this->next = clone $courseObject;
+        $storeNext = FALSE;
+      }
+
+      $old = clone $courseObject;
+    }
+  }
+
+  public function getActive() {
+    return $this->active;
+  }
+
+  public function getNext() {
+    return $this->next;
+  }
+
+  public function getPrev() {
+    return $this->prev;
   }
 
   /**
@@ -72,17 +114,20 @@ class Course {
    */
   public function getObjects() {
     global $user;
+
     if (!$this->courseObjects) {
-      $sql = 'select * from {course_outline} co
-        order by weight asc';
-      $result = db_query($sql);
-      course_available_objects();
+      $sql = 'SELECT * FROM {course_outline} co
+        WHERE nid = %d
+        ORDER BY weight ASC';
+      $result = db_query($sql, $this->node->nid);
 
       while ($row = db_fetch_object($result)) {
-        $this->courseObjects[] = course_get_course_object($row, $user);
+        $courseObject = course_get_course_object($row, $user);
+        $this->courseObjects[] = $courseObject;
       }
     }
 
     return $this->courseObjects;
   }
+
 }
