@@ -219,12 +219,6 @@ function course_schema() {
         'default' => NULL,
         'description' => 'An optional external LMS course ID.',
       ),
-      'type' => array(
-        'type' => 'varchar',
-        'length' => '16',
-        'not null' => TRUE,
-        'description' => 'Live or enduring course.',
-      ),
       'credits' => array(
         'type' => 'float',
         'description' => 'Course credit.',
@@ -345,6 +339,12 @@ function course_schema() {
         'size' => 'medium',
         'serialize' => TRUE,
       ),
+      'duration' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Amount of time in seconds a user has to access this object.',
+      ),
     ),
     'primary key' => array('snid'),
   );
@@ -385,6 +385,13 @@ function course_schema() {
         'unsigned' => TRUE,
         'default' => 0,
         'description' => 'grade_result',
+      ),
+      'date_started' => array(
+        'type' => 'int',
+        'not null' => FALSE,
+        'unsigned' => TRUE,
+        'default' => NULL,
+        'description' => 'Date requirement was started.',
       ),
       'date_completed' => array(
         'type' => 'int',
@@ -447,5 +454,32 @@ function course_update_6123() {
     'size' => 'medium',
     'serialized' => TRUE,
   ));
+  return $ret;
+}
+
+/**
+ * Add date started field to to fulfillment, add duration to course outline
+ * object, remove type field.
+ */
+function course_update_6124() {
+  $ret = array();
+
+  db_add_field($ret, 'course_outline_fulfillment', 'date_started', array(
+    'type' => 'int',
+    'not null' => FALSE,
+    'unsigned' => TRUE,
+    'default' => NULL,
+    'description' => 'Date requirement was started.',
+  ));
+
+  db_add_field($ret, 'course_outline', 'duration', array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'Amount of time in seconds a user has to access this object.',
+  ));
+
+  db_drop_field($ret, 'course_node', 'type');
+
   return $ret;
 }
