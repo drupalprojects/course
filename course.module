@@ -985,14 +985,6 @@ function course_form_alter(&$form, &$form_state, $form_id) {
       '#default_value' => $node->course['lms'] ? $node->course['lms'] : $default_lms,
       '#description' => 'This cannot be changed after saving.',
     );
-    $form['course']['type'] = array(
-      '#title' => t('Course type'),
-      '#type' => 'select',
-      '#options' => array('enduring' => 'Enduring', 'live' => 'Live'),
-      '#default_value' => $node->course['type'],
-      // This help won't apply anymore. @todo
-      //'#description' => 'Live courses support attendance.',
-    );
     if ($node->course['lms'] != '') {
       drupal_set_title(t("@title (@lms)", array('@lms' => $lapps[$node->course['lms']]['name'], '@title' => $node->title)));
       $form['course']['lms']['#disabled'] = TRUE;
@@ -1023,20 +1015,6 @@ function course_form_alter(&$form, &$form_state, $form_id) {
       '#size' => 4,
       '#description' => 'Length in days a user can remain in the course. Enter 0 for unlimited.',
     );
-    $form['course']['transcript'] = array(
-      '#title' => t('Show on transcript'),
-      '#description' => "Whether or not this course will have a line item on the user's transcript.",
-      '#type' => 'checkbox',
-      '#default_value' => $node->course['transcript'] !== NULL ? $node->course['transcript'] : 1,
-      '#size' => 4,
-    );
-    $form['course']['catalog'] = array(
-      '#title' => t('Show on course catalog'),
-      '#description' => "Whether or not this course will have a line item on the course catalog.",
-      '#type' => 'checkbox',
-      '#default_value' => $node->course['catalog'] !== NULL ? $node->course['catalog'] : 1,
-      '#size' => 4,
-    );
     $form['course']['cid'] = array(
       '#title' => t('External LMS course ID'),
       '#description' => "If using an external LMS, the ID of the external course.",
@@ -1051,12 +1029,6 @@ function course_form_alter(&$form, &$form_state, $form_id) {
       '#type' => 'textfield',
       '#size' => 16,
       '#default_value' => $node->course['external_id'],
-    );
-    $form['course']['outline_custom_titles'] = array(
-      '#title' => t('Use custom outline titles'),
-      '#type' => 'checkbox',
-      '#default_value' => $node->course['outline_custom_titles'],
-      '#description' => 'The learner will see custom titles for the steps in the course outline.',
     );
 
     // Add the course objects form to the node form.
