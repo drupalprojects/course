@@ -17,25 +17,31 @@ function _course_block_outline() {
 }
 
 /**
- * Course navigation block. 
+ * Course navigation block.
  */
 function _course_block_navigation() {
   global $user;
   $node = course_get_context();
   if ($node) {
     $course = new Course($node, $user);
-    foreach ($course->getObjects() as $courseObject) {
-      if (!$courseObject->getFulfillment()->isComplete()) {
-        if ($previous) {
-          $back = $previous->getTakeUrl();
-        }
-      }
-      $previous = $courseObject;
+    $prev = $course->getPrev();
+    $next = $course->getNext();
+
+    $links = array();
+
+    if ($prev) {
+      $links[] = l('Back', "node/$node->nid/course-object/" . $prev->getId());
+    }
+
+    $links[] = l('Course', "node/$node->nid/takecourse");
+
+    if ($next) {
+      $links[] = l('Next', "node/$node->nid/course-object/" . $next->getId());
     }
 
     return array(
       'subject' => '',
-      'content' => l('Back', $back) . l('Forward', $forward),
+      'content' => theme_item_list($links),
     );
   }
 }
