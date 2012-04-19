@@ -23,7 +23,7 @@ function course_certificate_course_outline_completion_links_alter(&$links, $node
 function course_certificate_access_certificate($node, $user) {
   if (course_node_is_course($node)) {
     $sql = "select 1 from {course_report} where nid = %d and uid = %d and complete = %d";
-    return (bool) $node->course['certificate'] && (bool) db_result(db_query($sql, $node->nid, $user->uid, 1));
+    return (bool) db_result(db_query($sql, $node->nid, $user->uid, 1));
   }
 }
 
