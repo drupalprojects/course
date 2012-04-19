@@ -11,7 +11,9 @@ function course_book_init() {
   }
 }
 
-
+/**
+ * Implementation of hook_course_object_info().
+ */
 function course_book_course_object_info() {
   return array(
     'book' => array(
@@ -19,4 +21,17 @@ function course_book_course_object_info() {
       'class' => 'CourseObjectNode',
     ),
   );
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function course_book_nodeapi(&$node, $op, $a3, $a4) {
+  if ($op == 'view' && $a4 && $node->type == 'book') {
+    global $user;
+    $search = $node->book['bid'] ? $node->book['bid'] : $node->nid;
+    if ($courseObject = course_get_course_object('course_book', 'book', $search, $user)) {
+      $courseObject->getFulfillment()->setComplete()->save();
+    }
+  }
 }
