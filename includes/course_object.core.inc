@@ -364,8 +364,12 @@ class CourseObject {
 class CourseObjectFulfillment {
 
   // Fulfillment array.
-  private $fulfillment = array();
+  private $fulfillment = stdClass;
   private $courseObject;
+
+  public function getId() {
+    return $this->fulfillment->sfid;
+  }
 
   /**
    * Construct the fulfillment object.
