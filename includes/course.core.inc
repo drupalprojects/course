@@ -44,6 +44,7 @@ class Course {
         }
 
         $storeNext = TRUE;
+        $this->active = $courseObject;
       }
       else if ($storeNext) {
         $this->next = clone $courseObject;
