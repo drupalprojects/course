@@ -19,35 +19,36 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
   if (strpos($form_id, 'uc_product_add_to_cart') !== FALSE) {
     global $user;
     $node = node_load($form['nid']['#value']);
-
-    $result = course_take_course_access($node);
-    if (course_node_is_course($node) && $result['success'] && !$node->field_addtl_products[0]['nid']) {
-      $form['submit']['#access'] = FALSE;
-    }
-
-    if (!$user->uid) {
-      $form['submit']['#access'] = FALSE;
-      if ($node->sell_price > 0) {
-        $message = "You must !login or !register to purchase this course.";
-      }
-      else {
-        $message = "You must !login or !register to take this course.";
+    if (course_node_is_course($node)) {
+      $result = course_take_course_access($node);
+      if (course_node_is_course($node) && $result['success'] && !$node->field_addtl_products[0]['nid']) {
+        $form['submit']['#access'] = FALSE;
       }
 
-      $options = array(
-        'query' => array(
-          drupal_get_destination(),
-        ),
-      );
-      $message = t($message, array('!login' => l('login','user/login', $options), '!register' => l('register', 'user/register', $options)));
+      if (!$user->uid) {
+        $form['submit']['#access'] = FALSE;
+        if ($node->sell_price > 0) {
+          $message = "You must !login or !register to purchase this course.";
+        }
+        else {
+          $message = "You must !login or !register to take this course.";
+        }
 
-      $form['course_uc']['#value'] = $message;
-    }
+        $options = array(
+          'query' => array(
+            drupal_get_destination(),
+          ),
+        );
+        $message = t($message, array('!login' => l('login', 'user/login', $options), '!register' => l('register', 'user/register', $options)));
 
-    $result = course_enrol_access($node, $user);
-    if (!$result['success']) {
-      $form['submit']['#access'] = FALSE;
-      $form['course_uc']['#value'] = '<h2>' . $result['header'] . '</h2>' . $result['message'];
+        $form['course_uc']['#value'] = $message;
+      }
+
+      $result = course_enrol_access($node, $user);
+      if (!$result['success']) {
+        $form['submit']['#access'] = FALSE;
+        $form['course_uc']['#value'] = '<h2>' . $result['header'] . '</h2>' . $result['message'];
+      }
     }
   }
 }
@@ -133,7 +134,7 @@ function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
         return array(
           array(
             'success' => FALSE,
-            'message' => t("This course is already in your !cart.",array('!cart' => l('shopping cart','cart'))),
+            'message' => t("This course is already in your !cart.", array('!cart' => l('shopping cart', 'cart'))),
             'silent' => FALSE,
           )
         );
@@ -192,7 +193,7 @@ function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
  */
 function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_state) {
   if (variable_get('course_uc_restrict_qty', 1)) {
-    foreach($form['items'] as $key => &$item) {
+    foreach ($form['items'] as $key => &$item) {
       if (is_numeric($key)) {
         $node = node_load($item['nid']['#value']);
         if (course_node_is_course($node)) {
@@ -211,16 +212,16 @@ function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_stat
  * @return array
  */
 function course_uc_ca_action() {
-  $arg = array (
+  $arg = array(
     '#entity' => 'uc_order',
     '#title' => t('Order')
   );
 
-  $actions['course_uc_enrol_user_in_ordered_courses'] = array (
+  $actions['course_uc_enrol_user_in_ordered_courses'] = array(
     '#title' => t('Enroll user in course(s)'),
     '#category' => t('Order'),
     '#callback' => 'course_uc_enrol_user_in_ordered_courses',
-    '#arguments' => array (
+    '#arguments' => array(
       'order' => $arg,
     ),
   );
@@ -267,7 +268,7 @@ function course_uc_ca_predicate() {
         '#name' => 'course_uc_enrol_user_in_ordered_courses',
         '#title' => t('Enroll user in ordered courses'),
         '#argument_map' => array(
-           'order' => 'order',
+          'order' => 'order',
         ),
         '#settings' => array(),
       ),
@@ -290,7 +291,6 @@ function course_uc_token_list($type = 'all') {
 
   return $tokens;
 }
-
 
 /**
  * Implementation of hook_token_values().
