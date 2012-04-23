@@ -317,35 +317,36 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
 function course_get_outline($node) {
   global $user;
 
-  // Array of the available course objects (to lookup modules).
-  $object_map = course_available_objects();
-
-  // Create an array of the list of course objects.
-  $sql = "SELECT * FROM {course_outline} cr WHERE nid = %d AND enabled AND !hidden ORDER BY weight ASC";
-  $result = db_query($sql, $node->nid);
-  $course_reqs = array();
-  $course_objects = array();
-  while ($row = db_fetch_object($result)) {
-    $course_objects[] = course_get_course_object($row, $user);
-  }
+  $course = new Course($node, $user);
 
   // Iterate over objects.
-  foreach ($course_objects as $key => $courseObject) {
+  foreach ($course->getObjects() as $key => $courseObject) {
     $step = array();
 
     // Find out what this step's status is.
     // Check the previous step.
-    $prev_req = $course_objects[($key - 1)];
+
     if ($courseObject->getFulfillment()->isComplete()) {
       // Step is complete. User can access.
       $step['link_style'] = 'completed';
       $step['status_text'] = 'Complete';
       $step['link_to_step'] = 'node/' . $courseObject->getCourseNid() . '/course-object/' . $courseObject->getId();
     }
-    else if (!$courseObject->getFulfillment()->isComplete() && (!$prev_req || $prev_req->getFulfillment()->isComplete())) {
-      // Check if this is incomplete, but next. User can access.
+    else if (!$courseObject->getFulfillment()->isComplete()) {
       $step['link_style'] = 'in-progress';
-      $step['status_text'] = 'Begin';
+
+      if (!$prev_req || $prev_req->getFulfillment()->isComplete()) {
+        $step['status_text'] = 'Begin';
+      }
+
+      // Check if this is incomplete, but next. User can access.
+      if ($courseObject->getFulfillment()->getId()) {
+        $step['status_text'] = 'Continue';
+        if ($course->getActive() === $courseObject) {
+          $step['status_text'] = 'In progress';
+        }
+      }
+
       $step['link_to_step'] = 'node/' . $courseObject->getCourseNid() . '/course-object/' . $courseObject->getId();
     }
     else {
@@ -368,6 +369,8 @@ function course_get_outline($node) {
       'id' => $step['id_text'],
       'class' => "{$step['link_style']} $class_more $arrowclass",
     );
+
+    $prev_req = clone $courseObject;
   }
 
   $last_step_style = $link_style;

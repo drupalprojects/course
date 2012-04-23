@@ -353,6 +353,18 @@ class CourseObject {
     return $this->requirement->title;
   }
 
+  /**
+   * Return a list of warning strings about this object.
+   *
+   * For example, if a user
+   * adds a quiz to a course with no questions, trigger a message.
+   *
+   * @see CourseObjectQuiz
+   */
+  function getWarnings() {
+    return array();
+  }
+
 }
 
 /**
@@ -364,8 +376,12 @@ class CourseObject {
 class CourseObjectFulfillment {
 
   // Fulfillment array.
-  private $fulfillment = array();
+  private $fulfillment = stdClass;
   private $courseObject;
+
+  public function getId() {
+    return $this->fulfillment->sfid;
+  }
 
   /**
    * Construct the fulfillment object.
