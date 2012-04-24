@@ -495,8 +495,6 @@ function course_settings_access($node) {
  *
  * Check for built-in access restrictions (enrollment, release/expiration).
  *
- * @todo don't use field_course_date @see course_course_can_enrol
- *
  * @param object $node The course node.
  * @param object $user The user to check.
  */
@@ -1571,16 +1569,11 @@ function course_remove_enrollment_action(&$user, $context) {
  * @param type $context
  */
 function course_edit_enrollment_action(&$signup, $context) {
+  $enrolment = new stdClass;
   $enrolment->uid = $signup->uid;
   $enrolment->nid = $signup->nid;
   if ($context['enrol_end']) {
-    if (is_array($context['enrol_end'])) {
-      $unixtime = mktime(23, 59, 59, $context['enrol_end']['month'], $context['enrol_end']['day'], $context['enrol_end']['year']);
-    }
-    else {
-      $unixtime = strtotime($context['enrol_end']);
-    }
-
+    $unixtime = strtotime($context['enrol_end']);
     if ($unixtime) {
       $enrolment->enrol_end = $unixtime + 86399;
     }
@@ -1589,8 +1582,19 @@ function course_edit_enrollment_action(&$signup, $context) {
     $enrolment->status = $context['status'];
   }
 
+  drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
   $node = node_load($enrolment->nid);
   $account = user_load($enrolment->uid);
+
+  // Save completion.
+  $report = course_report_load($node, $account);
+  if ($context['complete'] != '') {
+    $report->complete = $context['complete'];
+    $report->nid = $node->nid;
+    $report->uid = $account->uid;
+    course_report_save($report);
+  }
+
   $fulfillments = course_outline_check_remaining_requirements($node, $account);
   foreach ($fulfillments as $snid => $fulfillment) {
     if ($context['course_objects'][$snid] != '' && $fulfillment->complete != $context['course_objects'][$snid]) {
@@ -1598,7 +1602,6 @@ function course_edit_enrollment_action(&$signup, $context) {
       $fulfillment->complete = $context['course_objects'][$snid];
       $fulfillment->uid = $account->uid;
       $fulfillment->info = "Requirement \"{$fulfillment->title}\" updated via bulk action.";
-      $fulfillment->snid = $fulfillment->snid;
 
       if ($fulfillment->complete == -1) {
         course_outline_delete_fulfillment($fulfillment);
@@ -1606,7 +1609,7 @@ function course_edit_enrollment_action(&$signup, $context) {
       else if ($fulfillment->complete == 0) {
         $fulfillment->complete = 0;
         $fulfillment->grade_result = 0;
-        course_outline_save_fulfillment($fulfillment);
+        course_outline_save_fulfillment($fulfillment, TRUE);
       }
       else {
         course_outline_save_fulfillment($fulfillment);
@@ -1614,41 +1617,20 @@ function course_edit_enrollment_action(&$signup, $context) {
     }
   }
 
-  drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
-  drupal_set_message(t('Updated enrollment for @user', array('@user' => $report->name)));
+  drupal_set_message(t('Updated enrollment for @user', array('@user' => $account->name)));
 }
 
 function course_edit_enrollment_action_form($context) {
   $form = array();
 
-  $form['enrol_end'] = array(
-    '#title' => 'Extend course enrollment until',
-    '#type' => module_exists('date_popup') ? 'date_popup' : 'date',
-    '#date_format' => 'm/d/Y',
-  );
-
-  $form['status'] = array(
-    '#title' => 'Set enrollment status to',
-    '#type' => 'select',
-    '#options' => array(
-      '' => '',
-      1 => 'active',
-      0 => 'inactive',
-    ),
-  );
-
   $node = node_load(arg(1));
+  $num_users = count($context['selection']);
 
-  $form['course_objects'] = array(
-    '#title' => 'Set completion status',
-    '#description' => 'Set the status of a course object to be applied to selected users.',
-    '#type' => 'fieldset',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#tree' => TRUE,
+  $form['header'] = array(
+    '#value' => 'Use this form to edit course enrollment and completion data for ' . format_plural($num_users, '1 user', '@c users', array('@c' => $num_users)) . '.',
   );
 
-  if (count($context['selection']) == 1) {
+  if ($num_users == 1) {
     // Only one user, so let's prefill values.
     $selection = reset($context['selection']);
     // Toggle for VBO being added to a signup view.
@@ -1659,9 +1641,57 @@ function course_edit_enrollment_action_form($context) {
       $uid = $selection->uid;
     }
     $account = user_load($uid);
+    // @todo use Course
     $fulfillments = course_outline_check_remaining_requirements($node, $account);
+
+    $enrol = course_enrolment_load($node->nid, $account->uid);
+    $course_report = course_report_load($node, $account);
   }
 
+  $form['enrol_end'] = array(
+    '#title' => 'Extend course enrollment until',
+    '#type' => module_exists('date_popup') ? 'date_popup' : 'date',
+    '#date_format' => 'm/d/Y',
+    '#default_value' => $enrol->enrol_end ? date('U', $enrol->enrol_end) : NULL,
+    '#description' => t('The date when the user will not be able to access the course.'),
+  );
+
+  $form['status'] = array(
+    '#title' => 'Set enrollment status to',
+    '#type' => 'select',
+    '#options' => array(
+      '' => '',
+      1 => 'active',
+      0 => 'inactive',
+    ),
+    '#default_value' => $enrol->status,
+    '#description' => t('Setting an enrollment to "inactive" will prevent a user from accessing the course.'),
+  );
+
+  $form['complete'] = array(
+    '#title' => 'Set completion status to',
+    '#type' => 'select',
+    '#options' => array(
+      '' => '',
+      1 => 'complete',
+      0 => 'incomplete',
+    ),
+    '#description' => t("This will change a user's course completion. Set to incomplete this to re-evaluate all requirements. Course will never be automatically un-completed once they have been marked completed."),
+    '#default_value' => $course_report->complete,
+  );
+
+  $form['course_objects'] = array(
+    '#title' => 'Set completion status',
+    '#description' => 'Set the status of a course object to be applied to selected users.',
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#tree' => TRUE,
+    '#prefix' => '<span id="course-objects-wrapper">',
+    '#suffix' => '</span>',
+  );
+
+  // deprecated, use Course
   $objects = course_outline_get_course_requirements($node);
 
   foreach ($objects as $snid => $object) {
@@ -1685,6 +1715,7 @@ function course_edit_enrollment_action_submit($form, $form_state) {
   return array(
     'enrol_end' => $form_state['values']['enrol_end'],
     'status' => $form_state['values']['status'],
+    'complete' => $form_state['values']['complete'],
     'course_objects' => $form_state['values']['course_objects'],
   );
 }
@@ -2188,7 +2219,7 @@ function course_outline_get_course_requirements($nid) {
       ORDER BY weight ASC";
     $result = db_query($query, $nid);
     while ($row = db_fetch_object($result)) {
-      $requirements[] = $row;
+      $requirements[$row->snid] = $row;
     }
   }
 
