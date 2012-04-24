@@ -1573,7 +1573,14 @@ function course_edit_enrollment_action(&$signup, $context) {
   $enrolment->uid = $signup->uid;
   $enrolment->nid = $signup->nid;
   if ($context['enrol_end']) {
-    $unixtime = strtotime($context['enrol_end']);
+    if (is_array($context['enrol_end'])) {
+      // Parse date from select boxes.
+      $unixtime = mktime(23, 59, 59, $context['enrol_end']['month'], $context['enrol_end']['day'], $context['enrol_end']['year']);
+    }
+    else {
+      // Parse date from popup/plain text.
+      $unixtime = strtotime($context['enrol_end']);
+    }
     if ($unixtime) {
       $enrolment->enrol_end = $unixtime + 86399;
     }
