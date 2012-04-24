@@ -81,6 +81,10 @@ function course_outline_overview_form(&$form_state) {
   if (count($requirements)) {
     foreach ($requirements as $uniqid => $requirement) {
       $requirement = (array) $requirement;
+      $courseObject = course_get_course_object($requirement['snid']);
+      foreach ($courseObject->getWarnings() as $warning) {
+        drupal_set_message($warning, 'warning');
+      }
       if ($requirement['hidden']) {
         // Do not print out hidden requirements yet, such as attendance/payment.
         continue;
@@ -102,7 +106,8 @@ function course_outline_overview_form(&$form_state) {
         );
         $rform['requirement_component_show'] = array(
           '#type' => 'markup',
-          '#value' => ucwords(str_replace('_', ' ', $requirement['requirement_type'])) . '<br/>' . $course_objects[$requirement['requirement_type']][$requirement['requirement_component']]['title'],
+          '#value' => $course_objects[$requirement['requirement_type']][$requirement['requirement_component']]['title'] . '<br/><small><i>'
+          . ucwords(str_replace('_', ' ', $requirement['requirement_type'])) . '</i></small>',
         );
       }
       ctools_ajax_associate_url_to_element($form, $rform['requirement_component'], "course-object/nojs/store/$uniqid");
@@ -454,7 +459,7 @@ function course_outline_check_remaining_requirements($course_node, $account) {
 
   $results = db_query($sql, $account->uid, $course_node->nid);
   while ($row = db_fetch_object($results)) {
-    $requirements_outstanding[] = $row;
+    $requirements_outstanding[$row->snid] = $row;
   }
 
   return $requirements_outstanding;
