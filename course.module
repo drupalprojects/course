@@ -1637,6 +1637,13 @@ function course_edit_enrollment_action_form($context) {
     '#value' => 'Use this form to edit course enrollment and completion data for ' . format_plural($num_users, '1 user', '@c users', array('@c' => $num_users)) . '.',
   );
 
+  $form['enrol_end'] = array(
+    '#title' => 'Extend course enrollment until',
+    '#type' => module_exists('date_popup') ? 'date_popup' : 'date',
+    '#date_format' => 'm/d/Y',
+    '#description' => t('The date when the user will not be able to access the course.'),
+  );
+
   if ($num_users == 1) {
     // Only one user, so let's prefill values.
     $selection = reset($context['selection']);
@@ -1653,15 +1660,19 @@ function course_edit_enrollment_action_form($context) {
 
     $enrol = course_enrolment_load($node->nid, $account->uid);
     $course_report = course_report_load($node, $account);
-  }
 
-  $form['enrol_end'] = array(
-    '#title' => 'Extend course enrollment until',
-    '#type' => module_exists('date_popup') ? 'date_popup' : 'date',
-    '#date_format' => 'm/d/Y',
-    '#default_value' => $enrol->enrol_end ? date('U', $enrol->enrol_end) : NULL,
-    '#description' => t('The date when the user will not be able to access the course.'),
-  );
+    // Fill in default value.
+    if ($form['enrol_end']['#type'] == 'date') {
+      $form['enrol_end']['#default_value'] = array(
+        'day' => date('d', $enrol->enrol_end),
+        'month' => date('m', $enrol->enrol_end),
+        'year' => date('Y', $enrol->enrol_end),
+      );
+    }
+    else {
+      $form['enrol_end']['#default_value'] = $enrol->enrol_end ? date('U', $enrol->enrol_end) : NULL;
+    }
+  }
 
   $form['status'] = array(
     '#title' => 'Set enrollment status to',
