@@ -117,6 +117,7 @@ class Course {
     global $user;
 
     if (!$this->courseObjects) {
+      $this->courseObjects = array();
       $sql = 'SELECT * FROM {course_outline} co
         WHERE nid = %d
         ORDER BY weight ASC';

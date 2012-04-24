@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Parent class for webform course tracking. 
+ * Parent class for webform course tracking.
  */
 class CourseObjectWebform extends CourseObjectNode {
 
@@ -13,5 +13,15 @@ class CourseObjectWebform extends CourseObjectNode {
     $webform->uid = $user->uid;
     node_save($webform);
     $this->setInstanceId($webform->nid);
+  }
+
+  public function getWarnings() {
+    $warnings = parent::getWarnings();
+
+    if (!$this->node->webform['components']) {
+      $warnings[] = t('The Webform %w has no questions.', array('%w' => $this->getTitle()));
+    }
+
+    return $warnings;
   }
 }
