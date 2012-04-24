@@ -88,4 +88,16 @@ class CourseObjectQuiz extends CourseObjectNode {
     parent::optionsSubmit($form, $form_state);
   }
 
+  public function getWarnings() {
+    $warnings = parent::getWarnings();
+
+    if ($this->node->nid) {
+      if (!quiz_get_number_of_questions($this->node->vid)) {
+        $warnings[] = t("The quiz %q in your course does not have any questions.", array('%q' => $this->getTitle()));
+      }
+    }
+
+    return $warnings;
+  }
+
 }
