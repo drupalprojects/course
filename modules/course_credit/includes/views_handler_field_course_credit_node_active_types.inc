@@ -49,15 +49,15 @@ class views_handler_field_course_credit_node_active_types extends views_handler_
           $sql .= $in;
         }
       }
-    }
-    $result = db_query($sql, $nids);
-    while ($row = db_fetch_array($result)) {
-      foreach ($row as $key => $value) {
-        $key = "[{$key}]";
-        $this->items[$row['nid']][$row['type']][$key] = $value;
+      $result = db_query($sql, $nids);
+      while ($row = db_fetch_array($result)) {
+        foreach ($row as $key => $value) {
+          $key = "[{$key}]";
+          $this->items[$row['nid']][$row['type']][$key] = $value;
+        }
+        $this->items[$row['nid']][$row['type']]["[max-s]"] = format_plural($row['max'], '', 's');
+        $this->items[$row['nid']][$row['type']]["[min-s]"] = format_plural($row['min'], '', 's');
       }
-      $this->items[$row['nid']][$row['type']]["[max-s]"] = format_plural($row['max'], '', 's');
-      $this->items[$row['nid']][$row['type']]["[min-s]"] = format_plural($row['min'], '', 's');
     }
   }
 

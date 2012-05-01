@@ -1,6 +1,6 @@
 <?php
 
-module_load_include('inc','views','handlers/views_handler_relationship');
+module_load_include('inc', 'views', 'handlers/views_handler_relationship');
 include_once 'includes/views_join_course_credit.inc';
 
 /**
@@ -40,6 +40,7 @@ function course_credit_views_handlers() {
  * This is for course relationships mostly.
  */
 class course_credit_node_awarded_credit_vhr extends views_handler_relationship {
+
   /**
    * Called to implement a relationship in a query.
    */
@@ -49,7 +50,7 @@ class course_credit_node_awarded_credit_vhr extends views_handler_relationship {
     if ($this->view->argument['uid']) {
       $account = user_load($this->view->args[0]);
     }
-    else{
+    else {
       $account = $user;
     }
     // Figure out what base table this relationship brings to the party.
@@ -71,9 +72,10 @@ class course_credit_node_awarded_credit_vhr extends views_handler_relationship {
     $join->construct();
     $this->ensure_my_table();
 
-    $alias = $join->definition['table'] .'_'. $join->definition['left_table'];
+    $alias = $join->definition['table'] . '_' . $join->definition['left_table'];
     $this->alias = $this->query->add_relationship($alias, $join, $this->definition['base'], $this->relationship);
   }
+
 }
 
 /**
@@ -194,13 +196,27 @@ function course_credit_views_data() {
   $data['course_credit_type']['type']['filter']['handler'] = 'views_handler_filter_course_credit_type';
   $data['course_credit_type']['title']['field']['handler'] = 'views_handler_field_course_credit_title';
 
-  // Extras for credit expiration.
-  $data['course_credit_awarded']['expiration']['field'] = array(
-    'handler' => 'views_handler_field_date',
-    'click sortable' => TRUE,
+  // Extras for credit dates.
+  $datefields = array(
+    'course_credit_awarded' => array(
+      'expiration',
+      'date',
+    ),
+    'course_credit' => array(
+      'expiration_date',
+    ),
   );
-  $data['course_credit_awarded']['expiration']['filter']['handler'] = 'views_handler_filter_date';
-  $data['course_credit_awarded']['expiration']['sort']['handler'] = 'views_handler_sort_date';
+
+  foreach ($datefields as $table => $fields) {
+    foreach ($fields as $field_name) {
+      $data[$table][$field_name]['field'] = array(
+        'handler' => 'views_handler_field_date',
+        'click sortable' => TRUE,
+      );
+      $data[$table][$field_name]['filter']['handler'] = 'views_handler_filter_date';
+      $data[$table][$field_name]['sort']['handler'] = 'views_handler_sort_date';
+    }
+  }
 
   return $data;
 }

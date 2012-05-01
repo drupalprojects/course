@@ -659,13 +659,8 @@ function course_credit_render_credit($node) {
 function course_credit_award_save($record = array()) {
   $node = node_load($record['nid']);
 
-  if ($record['type'] && !$record['type']) {
-    // Preparation for removing the type field and going by machine names instead. Much more reliable.
-    $record['type'] = db_result(db_query("select type from {course_credit_type} where type = '%s'", $record['type']));
-  }
-
   //check for the credit award record:
-  $existing = db_fetch_object(db_query("SELECT * FROM {course_credit_awarded} WHERE type = %d AND nid = %d AND uid = %d", $record['type'], $record['nid'], $record['uid']));
+  $existing = db_fetch_object(db_query("SELECT * FROM {course_credit_awarded} WHERE type = '%s' AND nid = %d AND uid = %d", $record['type'], $record['nid'], $record['uid']));
 
   if (!$existing->expiration && !isset($record['expiration'])) {
     // New record, or old record with no expiration, and expiration not
@@ -1089,11 +1084,13 @@ function course_credit_certificate_final_step_alter(&$step_array, $node, $accoun
 function course_credit_course_report_alter(&$entry, $account) {
   if (db_table_exists('content_type_course_credit_application')) {
     $field_info = content_fields('field_course_nid');
-    $db_info = content_database_info($field_info);
-    $table = $db_info['table'];
-    $app_node_nid = db_result(db_query("SELECT ca.nid FROM {{$table}} ca
-    LEFT JOIN {node} n on ca.nid = n.nid
-    WHERE type = 'course_credit_application' and field_course_nid_value = %d", $entry->nid));
+    if ($field_info) {
+      $db_info = content_database_info($field_info);
+      $table = $db_info['table'];
+      $app_node_nid = db_result(db_query("SELECT ca.nid FROM {{$table}} ca
+      LEFT JOIN {node} n on ca.nid = n.nid
+      WHERE type = 'course_credit_application' and field_course_nid_value = %d", $entry['coursenode']));
+    }
   }
 
   $sql = "SELECT 1 FROM {course_credit_awarded} WHERE nid = %d AND uid = %d";
@@ -1442,6 +1439,7 @@ function course_credit_token_list($type = 'all') {
       'max',
       'title',
       'code',
+      'ceu',
     );
     foreach ($rows as $row) {
       // We have to generate the tokens for every credit type.
@@ -1457,6 +1455,7 @@ function course_credit_token_list($type = 'all') {
       'max',
       'title',
       'code',
+      'ceu',
     );
     foreach ($rows as $row) {
       // We have to generate the tokens for every credit type.
@@ -1482,6 +1481,7 @@ function course_credit_token_values($type, $object = NULL) {
     where cca.nid = %d and cca.uid = %d";
     $result = db_query($sql, $object['node']->nid, $object['node']->nid, $object['user']->uid);
     while ($row = db_fetch_object($result)) {
+      $row->ceu = $row->credits/10;
       foreach ($row as $key => $value) {
         if (in_array($key, array('min','max', 'credits'))) {
           $value = number_format($value, 2);
@@ -1498,6 +1498,7 @@ function course_credit_token_values($type, $object = NULL) {
     $result = db_query($sql, $object->nid);
     while ($row = db_fetch_object($result)) {
       foreach ($row as $key => $value) {
+        $row->ceu = $row->max/10;
         if (in_array($key, array('min','max', 'credits'))) {
           $value = number_format($value, 2);
         }
