@@ -194,23 +194,23 @@ class CourseObject {
   }
 
   /**
-   * Get the status message of this course object.
+   * Get the user's status in this course object.
+   *
+   * This is how an object would notify the user why they cannot proceed to the
+   * next step from the course outline. For example, if this was a quiz and
+   * they failed, this should let them know.
    */
   public function getStatus($type = 'short') {
     /*
-     * if ($this->courseObjectFulfillment->isComplete()) {
-     *   // do other messages?
-     * }
-     * else {
-     *  if ($type == 'short') {
-     *  return "Not viewed";
-     * }
-     *
-     * if ($type == 'long') {
-     * return "You have not viewed $title";
-     * }
-     * }
-     */
+    if (!$this->courseObjectFulfillment->isComplete()) {
+      if ($type == 'short') {
+        return "Failed";
+      }
+      if ($type == 'long') {
+        return "You received an 80% on this quiz but the minimum grade is 90%. You may retake this quiz 5 times.";
+      }
+    }
+    */
   }
 
   /**
