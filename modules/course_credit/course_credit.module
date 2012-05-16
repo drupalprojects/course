@@ -58,15 +58,6 @@ function course_credit_menu() {
     'type' => MENU_LOCAL_TASK,
   );
 
-  $items['node/%course/course-credit-edit-app'] = array(
-    'title' => 'Edit App for Credit',
-    'access callback' => 'course_credit_edit_app_access',
-    'access arguments' => array(1),
-    'page arguments' => array(1),
-    'page callback' => 'course_credit_application_add',
-    'type' => MENU_LOCAL_TASK,
-  );
-
   // FAPI form.
   $items['node/%course/course-credit-app'] = array(
     'title' => 'Claim',
@@ -89,14 +80,6 @@ function course_credit_menu() {
   );
 
   return $items;
-}
-
-/**
- * Only show the edit application for credit tab if we actually have them.
- * Credit claiming is still possible without this.
- */
-function course_credit_edit_app_access($node) {
-  return db_table_exists('content_type_course_credit_application') && course_settings_access($node);
 }
 
 function course_credit_form_router($node) {
@@ -436,33 +419,6 @@ function course_credit_type_fieldset_summary($type, $form, $node) {
   return $summary;
 }
 
-/**
- *
- */
-function course_credit_application_add($node) {
-  if (db_table_exists('content_type_course_credit_application')) {
-    $field_info = content_fields('field_course_nid');
-    $db_info = content_database_info($field_info);
-    $table = $db_info['table'];
-    $app_id = db_result(db_query("SELECT ca.nid FROM {{$table}} ca
-    LEFT JOIN {node} n on ca.nid = n.nid
-    WHERE type = 'course_credit_application' and field_course_nid_value = %d", arg(1)));
-  }
-
-  $form_id = 'course_credit_application_node_form';
-  if ($app_id) {
-    $appnode = node_load($app_id);
-  }
-  else  {
-    $appnode->type = 'course_credit_application';
-    //node_object_prepare($appnode);
-  }
-  // Need this.
-  module_load_include('inc', 'node', 'node.pages');
-  drupal_set_title('Credit application for "' . drupal_get_title() . '"');
-  return drupal_get_form($form_id, $appnode);
-}
-
 function course_credit_save_credit_type(&$credit_type) {
   if (!course_credit_get_credit_type($credit_type['type'])) {
     return drupal_write_record('course_credit_type', $credit_type);
@@ -574,21 +530,6 @@ function course_credit_nodeapi(&$node, $op, $a3, $a4) {
       $max_credits = max($max_credits);
       $sql = "update {course_node} set credits = %f where nid = %d";
       db_query($sql, $max_credits, $node->nid);
-    }
-  }
-
-  if ($node->type == 'course_credit_application') {
-    if ($op == 'presave' && empty($node->field_course_nid[0]['value'])) {
-      // Associate node with this app for credit.
-      $node->field_course_nid[0]['value'] = arg(1);
-    }
-
-    switch ($op) {
-      case 'insert':
-      case 'update':
-        drupal_set_message(t('Application for credit has been updated.'));
-        drupal_goto("node/" . $node->field_course_nid[0]['value']);
-        break;
     }
   }
 
@@ -1073,31 +1014,6 @@ function course_credit_certificate_final_step_alter(&$step_array, $node, $accoun
       $step_array['link'] = url("node/{$node->nid}/course-credit-app");
       $step_array['target'] = "_top";
     }
-  }
-}
-
-/*
- * Implementation of course_report_alter
- *
- * @todo: remove dependency on node based credit application
- */
-function course_credit_course_report_alter(&$entry, $account) {
-  if (db_table_exists('content_type_course_credit_application')) {
-    $field_info = content_fields('field_course_nid');
-    if ($field_info) {
-      $db_info = content_database_info($field_info);
-      $table = $db_info['table'];
-      $app_node_nid = db_result(db_query("SELECT ca.nid FROM {{$table}} ca
-      LEFT JOIN {node} n on ca.nid = n.nid
-      WHERE type = 'course_credit_application' and field_course_nid_value = %d", $entry['coursenode']));
-    }
-  }
-
-  $sql = "SELECT 1 FROM {course_credit_awarded} WHERE nid = %d AND uid = %d";
-  $awarded = db_result(db_query($sql, $entry->nid, $account->uid));
-  if ($entry->complete && $app_node_nid && !$awarded) {
-    $entry->section = 'course_credit';
-    $entry->section_name = 'Application for Credit';
   }
 }
 

@@ -89,7 +89,7 @@ function course_credit_schema() {
         'type' => 'int',
       ),
     ),
-    'primary key' => array('nid','type'),
+    'primary key' => array('nid', 'type'),
   );
 
   $schema['course_credit_type'] = array(
@@ -179,6 +179,7 @@ function course_credit_schema() {
       ),
     ),
     'primary key' => array('type', 'nid', 'uid'),
+    'indexes' => array('nid_uid' => array('nid', 'uid')),
   );
 
   return $schema;
@@ -252,20 +253,17 @@ function course_credit_update_6008() {
 }
 
 /**
- * Add new fields.
+ * Add much needed indexes. 
  */
-function course_credit_update_6009() {
+function course_credit_update_6011() {
   $ret = array();
 
-  $schema = course_credit_schema();
+  db_add_index($ret, 'course_credit_awarded', 'type', array('type'));
+  db_add_index($ret, 'course_credit_awarded', 'nid_uid', array('nid', 'uid'));
 
-  foreach ($schema as $table => $table_schema) {
-    foreach ($table_schema['fields'] as $field => $spec) {
-      if (!db_column_exists($table, $field)) {
-        db_add_field($ret, $table, $field, $spec);
-      }
-    }
-  }
+  db_add_index($ret, 'course_credit', 'type', array('type'));
+  
+  db_add_index($ret, 'course_credit_type', 'type', array('type'));
 
   return $ret;
 }

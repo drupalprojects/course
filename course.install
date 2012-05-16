@@ -51,7 +51,7 @@ function course_schema() {
   $schema['course_report'] = array(
     'description' => "Stores users' course reports.",
     'fields' => array(
-      'id' => array(
+      'crid' => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
@@ -111,7 +111,6 @@ function course_schema() {
         'not null' => TRUE,
         'unsigned' => TRUE,
         'default' => 0,
-        'length' => 1,
         'description' => 'Flag to mark this course as complete.',
       ),
       'data' => array(
@@ -120,8 +119,12 @@ function course_schema() {
         'size' => 'medium',
       ),
     ),
-    'primary key' => array('id'),
+    'primary key' => array('crid'),
     'unique keys' => array('uk' => array('nid', 'uid')),
+    'indexes' => array(
+      'nid' => array('nid'),
+      'uid' => array('uid'),
+    ),
   );
 
   $schema['course_enrolment'] = array(
@@ -226,15 +229,13 @@ function course_schema() {
         'scale' => 2,
       ),
       'open' => array(
-        'type' => 'datetime',
-        'not null' => TRUE,
-        'default' => 0,
+        'type' => 'int',
+        'unsigned' => TRUE,
         'description' => 'Date course opens.',
       ),
       'close' => array(
-        'type' => 'datetime',
-        'not null' => TRUE,
-        'default' => 0,
+        'type' => 'int',
+        'unsigned' => TRUE,
         'description' => 'Date course closes.',
       ),
       'duration' => array(
@@ -347,6 +348,9 @@ function course_schema() {
       ),
     ),
     'primary key' => array('snid'),
+    'indexes' => array(
+      'nid' => array('nid'),
+    ),
   );
 
   $schema['course_outline_fulfillment'] = array(
@@ -382,7 +386,7 @@ function course_schema() {
       'grade_result' => array(
         'type' => 'int',
         'not null' => TRUE,
-        'unsigned' => TRUE,
+        'unsigned' => FALSE,
         'default' => 0,
         'description' => 'grade_result',
       ),
@@ -409,6 +413,12 @@ function course_schema() {
       ),
     ),
     'primary key' => array('sfid'),
+    'unique keys' => array(
+      'snid_uid' => array('snid', 'uid'),
+    ),
+    'indexes' => array(
+      'snid' => array('snid'),
+    ),
   );
 
   return $schema;
@@ -481,5 +491,110 @@ function course_update_6124() {
 
   db_drop_field($ret, 'course_node', 'type');
 
+  return $ret;
+}
+
+/**
+ * Add indexes to course report table.
+ */
+function course_update_6125() {
+  $ret = array();
+
+  db_add_index($ret, 'course_report', 'nid', array('nid'));
+  db_add_index($ret, 'course_report', 'uid', array('uid'));
+
+  return $ret;
+}
+
+/**
+ * Delete old fulfillment duplicates. Add indexes to outline and fulfillment
+ * table. Change grade_result to signed.
+ */
+function course_update_6126() {
+  $ret = array();
+
+  $sql = "select * from {course_outline_fulfillment} order by sfid asc";
+  $result = db_query($sql);
+  $tids = array();
+  $delete = array();
+
+  while ($row = db_fetch_object($result)) {
+    if ($sfids[$row->snid][$row->uid]) {
+      $delete[] = $sfids[$row->snid][$row->uid];
+    }
+    $sfids[$row->snid][$row->uid] = $row->sfid;
+  }
+
+  if ($delete) {
+    $values = implode(',', $delete);
+    $sql = "delete from {course_outline_fulfillment} where sfid in ($values)";
+    $ret[] = update_sql($sql);
+  }
+
+  db_add_unique_key($ret, 'course_outline_fulfillment', 'snid_uid', array('snid', 'uid'));
+  db_add_index($ret, 'course_outline_fulfillment', 'snid', array('snid'));
+  db_add_index($ret, 'course_outline', 'nid', array('nid'));
+
+  db_change_field($ret, 'course_outline_fulfillment', 'grade_result', 'grade_result', array('type' => 'int',
+    'not null' => TRUE,
+    'unsigned' => FALSE,
+    'default' => 0,
+    'description' => 'grade_result',
+  ));
+
+  return $ret;
+}
+
+/**
+ * Change primary key in course_report to `crid` (course report ID).
+ */
+function course_update_6127() {
+  $ret = array();
+
+  // Remove serialness of field.
+  db_change_field($ret, 'course_report', 'id', 'id', array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'unsigned' => TRUE,
+  ));
+
+  // Drop primary key.
+  db_drop_primary_key($ret, 'course_report');
+
+  // Rename field, add back serialness.
+  db_change_field($ret, 'course_report', 'id', 'crid', array(
+    'type' => 'serial',
+    'not null' => TRUE,
+    'unsigned' => TRUE,
+    ), array('primary key' => array('crid')));
+
+  return $ret;
+}
+
+/**
+ * Change open and close to integer.
+ */
+function course_update_6128() {
+  $ret = array();
+
+  db_change_field($ret, 'course_node', 'open', 'open', array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+  ));
+
+  db_change_field($ret, 'course_node', 'close', 'close', array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+  ));
+
+  return $ret;
+}
+
+/**
+ * Remove old attendance column. Using course objects now.
+ */
+function course_update_6129() {
+  $ret = array();
+  $ret = db_drop_field($ret, 'course_node', 'attendance');
   return $ret;
 }

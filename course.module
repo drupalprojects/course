@@ -2102,7 +2102,7 @@ function course_report_load($mixed, $user = NULL) {
   }
   else {
     return db_fetch_object(db_query('select cr.* from {course_report} cr
-    where id = %d', $mixed));
+    where crid = %d', $mixed));
   }
 }
 
@@ -2298,4 +2298,33 @@ function course_determine_context($requirement_type = NULL, $requirement_compone
   }
 
   return NULL;
+}
+
+/**
+ * Implementation of hook_date_api_fields().
+ *
+ * Expose the course date columns to date API.
+ */
+function course_date_api_fields($field) {
+  $values = array(
+    'sql_type' => DATE_UNIX,
+    'granularity' => array('year', 'month', 'day'),
+  );
+
+  switch ($field) {
+    case 'course_report.date_completed':
+    case 'course_report.updated':
+    case 'course_enrolment.timestamp':
+    case 'course_enrolment.enrol_end':
+    case 'course_node.open':
+    case 'course_node.close':
+      return $values;
+  }
+}
+
+/**
+ * Implementation of hook_date_api_tables().
+ */
+function course_date_api_tables() {
+  return array('course_report', 'course_enrolment', 'course_node');
 }
