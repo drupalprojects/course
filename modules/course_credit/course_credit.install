@@ -111,7 +111,6 @@ function course_credit_schema() {
         'description' => 'Credit type description.',
         'type' => 'text',
         'not null' => TRUE,
-        'default' => '',
       ),
       'increments' => array(
         'description' => 'Default increment by which credit can be awarded.',
@@ -148,6 +147,7 @@ function course_credit_schema() {
       'ccaid' => array(
         'description' => 'Course credit awarded ID',
         'type' => 'serial',
+        'not null' => TRUE,
       ),
       'nid' => array(
         'description' => 'Course node ID.',
