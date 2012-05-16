@@ -201,7 +201,7 @@ function course_views_data() {
   // report
   $data['course_report']['table']['group'] = t('Course report');
   $data['course_report']['table']['base'] = array(
-    'field' => 'id',
+    'field' => 'crid',
     'title' => t('Course report'),
     'help' => t('Aggregated table of reportable activities'),
   );
@@ -219,32 +219,26 @@ function course_views_data() {
   );
 
   $data['course_report']['nid'] = array(
-    'title' => t('Course Node'),
-    'help' => t('Create a relationship from the course report to the course node.'),
+    'title' => t('Course node'),
+    'help' => t('The node of this course report record.'),
     'relationship' => array(
       'handler' => 'views_handler_relationship',
       'base' => 'node',
       'base field' => 'nid',
-      'label' => t('Course Node'),
+      'label' => t('Course node'),
+      'help' => t('Create a relationship from the course report to the course node.'),
     ),
   );
 
   $data['course_report']['uid'] = array(
-    'title' => t('Course report user'),
-    'help' => t('Course report user'),
+    'title' => t('Course user'),
+    'help' => t('The user of this course report record.'),
     'relationship' => array(
       'handler' => 'views_handler_relationship',
       'base' => 'users',
       'base field' => 'uid',
-      'label' => t('Course report user'),
+      'label' => t('Course user'),
       'help' => t('Create a relationship from the course report to the course user.'),
-    ),
-    'argument' => array(
-      'handler' => 'views_handler_argument_numeric',
-    ),
-    'field' => array(
-      'label' => t('Course report User ID'),
-      'handler' => 'views_handler_field_numeric',
     ),
   );
 
