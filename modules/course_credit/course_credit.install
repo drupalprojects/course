@@ -145,6 +145,10 @@ function course_credit_schema() {
   $schema['course_credit_awarded'] = array(
     'description' => 'Holds information about course credit awarded.',
     'fields' => array(
+      'ccaid' => array(
+        'description' => 'Course credit awarded ID',
+        'type' => 'serial',
+      ),
       'nid' => array(
         'description' => 'Course node ID.',
         'type' => 'int',
@@ -178,8 +182,8 @@ function course_credit_schema() {
         'type' => 'int',
       ),
     ),
-    'primary key' => array('type', 'nid', 'uid'),
-    'indexes' => array('nid_uid' => array('nid', 'uid')),
+    'primary key' => array('ccaid'),
+    'unique keys' => array('triplet' => array('type', 'nid', 'uid')),
   );
 
   return $schema;
@@ -262,8 +266,22 @@ function course_credit_update_6011() {
   db_add_index($ret, 'course_credit_awarded', 'nid_uid', array('nid', 'uid'));
 
   db_add_index($ret, 'course_credit', 'type', array('type'));
-  
+
   db_add_index($ret, 'course_credit_type', 'type', array('type'));
+
+  return $ret;
+}
+
+/**
+ * Add ccaid field, convert existing primary key to unique, add new primary key
+ * (for views, services).
+ */
+function course_credit_update_6012() {
+  $ret = array();
+
+  db_drop_primary_key($ret, 'course_credit_awarded');
+  db_add_field($ret, 'course_credit_awarded', 'ccaid', array('type' => 'serial'), array('primary key' => array('ccaid')));
+  db_add_unique_key($ret, 'course_credit_awarded', 'triplet', array('type', 'nid', 'uid'));
 
   return $ret;
 }

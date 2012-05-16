@@ -642,6 +642,7 @@ function course_credit_award_save($record = array()) {
     watchdog("course_credit", "course credit awarded new for uid:{$record['uid']} type:{$record['type']} nid:{$record['nid']}");
   }
   else {
+    $record['ccaid'] = $existing->ccaid;
     $ret = drupal_write_record('course_credit_awarded', $record, array('type','nid', 'uid'));
     watchdog("course_credit", "course credit award updated for uid:{$record['uid']} type:{$record['type']} nid:{$record['nid']}");
   }
@@ -851,11 +852,11 @@ function course_credit_app_form(&$form_state, $node) {
  */
 function course_credit_app_form_submit(&$form, &$form_state) {
   global $user;
-  $account     = $user;
-  $app_node    = $form['#node'];
-  $nid         = $app_node->nid;
+  $account = $user;
+  $app_node = $form['#node'];
+  $nid = $app_node->nid;
   $course_node = node_load(arg(1));
-  $form_post   = $form_state['values'];
+  $form_post = $form_state['values'];
   $credits_claimed = $form_post['credits_claimed'];
 
   if (is_array($credits_claimed)) {
@@ -873,13 +874,13 @@ function course_credit_app_form_submit(&$form, &$form_state) {
 
       $ret = course_credit_award_save($award_save_array);
     }
-  }
 
-  if ($ret == SAVED_NEW) {
-    drupal_set_message('Awarded credit.');
-  }
-  else {
-    drupal_set_message('Updated credit.');
+    if ($ret == SAVED_NEW) {
+      drupal_set_message('Awarded credit.');
+    }
+    if ($ret == SAVED_UPDATED) {
+      drupal_set_message('Updated credit.');
+    }
   }
 
   module_invoke_all('credit_application_submit', $form_post, $course_node, $app_node, $account);
@@ -1321,19 +1322,28 @@ function course_credit_user_credit_types($node, $user) {
  * Block access to certificate if user can claim credit, but hasn't.
  */
 function course_credit_access_certificate($node, $user) {
+  $has_active = FALSE;
+
   if (course_credit_node_is_creditable($node)) {
-    $sql = "select 1 from  {course_report} where nid = %d and uid = %d and complete = 1";
-    if (!db_result(db_query($sql, $node->nid, $user->uid))) {
-      return FALSE;
+    // Check course for active credit.
+    foreach ($node->course['credit'] as $type) {
+      if ($type->active) {
+        $has_active = TRUE;
+        break;
+      }
     }
 
-    $sql = "select 1 from  {course_credit_awarded} where nid = %d and uid = %d limit 1";
-    if (db_result(db_query($sql, $node->nid, $user->uid))) {
-      return TRUE;
-    }
-    else {
-      if (arg(2) == 'certificate') {
-        drupal_goto("node/{$node->nid}/course-credit-app");
+    if ($has_active) {
+      $sql = "select 1 from  {course_credit_awarded} where nid = %d and uid = %d";
+      if (db_result(db_query($sql, $node->nid, $user->uid))) {
+        // User already claimed credit for this course. Allow the certificate.
+        return TRUE;
+      }
+      else {
+        // User did not claim credit for the course. Redirect to credit app.
+        if (arg(2) == 'certificate') {
+          drupal_goto("node/{$node->nid}/course-credit-app");
+        }
       }
     }
   }
@@ -1345,38 +1355,41 @@ function course_credit_access_certificate($node, $user) {
 function course_credit_token_list($type = 'all') {
   $tokens = array();
 
-  // Get credit types.
-  $rows = course_credit_get_credit_types();
+  if (in_array($type, array('certificate', 'node'))) {
 
-  if ($type == 'certificate') {
+    // Get credit types.
+    $rows = course_credit_get_credit_types();
+
     $fields = array(
-      'credits',
-      'min',
-      'max',
-      'title',
-      'code',
-      'ceu',
+      'credits' => 'credits awarded',
+      'min' => 'minimum variable credits',
+      'max' => 'maximum variable credits',
+      'title' => 'title',
+      'code' => 'code',
+      'ceu' => 'CEUs',
     );
-    foreach ($rows as $row) {
-      // We have to generate the tokens for every credit type.
-      foreach($fields as $field) {
-        $tokens['course credit']["course-credit-{$row->type}-$field"] = $field;
+
+    if ($type == 'certificate') {
+      foreach ($rows as $row) {
+        // We have to generate the tokens for every credit type.
+        foreach ($fields as $field => $desc) {
+          $tokens['course credit']["course-credit-{$row->type}-$field"] = "{$row->title} $desc";
+        }
+      }
+
+      foreach ($fields as $field => $desc) {
+        $tokens['course credit']["course-single-credit-{$field}"] = "Single type $desc";
       }
     }
-  }
 
-  if ($type == 'node') {
-    $fields = array(
-      'min',
-      'max',
-      'title',
-      'code',
-      'ceu',
-    );
-    foreach ($rows as $row) {
-      // We have to generate the tokens for every credit type.
-      foreach($fields as $field) {
-        $tokens['course credit']["course-node-credit-{$row->type}-$field"] = "Node $row->type $field";
+    if ($type == 'node') {
+      foreach ($rows as $row) {
+        // We have to generate the tokens for every credit type.
+        foreach ($fields as $field => $desc) {
+          if ($field != 'credits') {
+            $tokens['course credit']["course-node-credit-{$row->type}-$field"] = "Node {$row->title} {$desc}";
+          }
+        }
       }
     }
   }
@@ -1397,12 +1410,12 @@ function course_credit_token_values($type, $object = NULL) {
     where cca.nid = %d and cca.uid = %d";
     $result = db_query($sql, $object['node']->nid, $object['node']->nid, $object['user']->uid);
     while ($row = db_fetch_object($result)) {
-      $row->ceu = $row->credits/10;
+      $row->ceu = $row->credits / 10;
       foreach ($row as $key => $value) {
-        if (in_array($key, array('min','max', 'credits'))) {
+        if (in_array($key, array('min', 'max', 'credits'))) {
           $value = number_format($value, 2);
         }
-        $values["course-credit-$key"] = $values["course-credit-{$row->type}-$key"] = $value;
+        $values["course-single-credit-$key"] = $values["course-credit-{$row->type}-$key"] = $value;
       }
     }
   }
@@ -1414,8 +1427,8 @@ function course_credit_token_values($type, $object = NULL) {
     $result = db_query($sql, $object->nid);
     while ($row = db_fetch_object($result)) {
       foreach ($row as $key => $value) {
-        $row->ceu = $row->max/10;
-        if (in_array($key, array('min','max', 'credits'))) {
+        $row->ceu = $row->max / 10;
+        if (in_array($key, array('min', 'max', 'credits'))) {
           $value = number_format($value, 2);
         }
         $values["course-node-credit-{$row->type}-$key"] = $value;
@@ -1492,7 +1505,6 @@ function course_credit_type_features_export_render($module_name, $data, $export 
   $code[] = '$course_credit_type = array();';
   foreach ($data as $name) {
     $credit_type = course_credit_type_load($name);
-    unset($credit_type->type);
     $code[] = "  \$course_credit_type['{$name}'] = " . features_var_export($credit_type) .";";
   }
   $code[] = "return \$course_credit_type;";
@@ -1568,17 +1580,6 @@ function course_credit_node_is_creditable(&$node) {
  */
 function course_credit_user($op, &$edit, &$account, $category = NULL) {
   switch($op) {
-    case 'load':
-      global $user;
-      $account->credits_earned = array();
-      $account->courses_completed = db_result(db_query("select count(uid) from {course_credit_awarded} where uid=%d",$user->uid));
-      $res = db_query("select credits,nid from {course_credit_awarded} where uid=%d",$user->uid);
-      $account->credits_earned['total'] = 0;
-      while($row = db_fetch_array($res)) {
-        $account->credits_earned['total'] += $row['credits'];
-        $account->credits_earned[$row['nid']] = $row['credits'];
-      }
-      break;
     case 'delete':
       $sql = "DELETE FROM {course_credit_awarded} WHERE uid = %d";
       db_query($sql, $account->uid);
@@ -1752,4 +1753,28 @@ function course_credit_date_api_fields($field) {
  */
 function course_credit_date_api_tables() {
   return array('course_credit_awarded', 'course_credit');
+}
+
+/**
+ * Get the awarded credit for a user in a course.
+ */
+function course_credit_get_credit_awarded($nid, $uid) {
+  $awarded = array();
+
+  $sql = "select cca.*, cc.*, cct.title from {course_credit_awarded} cca
+    left join {course_credit} cc on (cca.nid = cc.nid)
+    left join {course_credit_type} cct on (cca.type = cct.type)
+    where (cca.nid = %d) and (cca.uid = %d)";
+  $result = db_query($sql, $nid, $uid);
+  while ($row = db_fetch_object($result)) {
+    $awarded[] = $row;
+  }
+  
+  return $awarded;
+}
+
+function course_credit_awarded_load($ccaid) {
+  $sql = "select * from {course_credit_awarded}
+    where ccaid = %d";
+  return db_fetch_object(db_query($sql, $ccaid));
 }
