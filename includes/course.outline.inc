@@ -336,6 +336,7 @@ function course_get_outline($node) {
       $step['link_style'] = 'completed';
       $step['status_text'] = 'Complete';
       $step['link_to_step'] = 'node/' . $courseObject->getCourseNid() . '/course-object/' . $courseObject->getId();
+      $step['image'] = 'misc/watchdog-ok.png';
     }
     else if (!$courseObject->getFulfillment()->isComplete()) {
       $step['link_style'] = 'in-progress';
@@ -348,7 +349,11 @@ function course_get_outline($node) {
       if ($courseObject->getFulfillment()->getId()) {
         $step['status_text'] = 'Continue';
         if ($course->getActive() === $courseObject) {
-          $step['status_text'] = 'In progress';
+          $step['status_text'] = $courseObject->getStatus();
+          if (!$step['status_text']) {
+            $step['status_text'] = 'In progress';
+            $step['image'] = 'misc/watchdog-warning.png';
+          }
         }
       }
 
@@ -360,26 +365,30 @@ function course_get_outline($node) {
       $step['link_to_step'] = '';
     }
 
-    // arrowitem = "<span class='arrow-step'></span>";
-    $class_more = '';
+    $img = theme_image($step['image']);
+
     drupal_alter('course_outline_step', $step, $node, $user);
     if (!$step['link_to_step']) {
       $data = $courseObject->getTitle();
     }
     else {
-      $data = l("{$courseObject->getTitle()}<br/>", $step['link_to_step'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status_text'] . '</span>';
+      $data = l("$img {$courseObject->getTitle()}<br/>", $step['link_to_step'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status_text'] . '</span>';
     }
     $workflow[] = array(
       'data' => $data,
       'id' => $step['id_text'],
-      'class' => "{$step['link_style']} $class_more $arrowclass",
+      'class' => "{$step['link_style']} $class_more",
     );
 
     $prev_req = clone $courseObject;
   }
 
-  $last_step_style = $link_style;
-  $link_to_step = url("node/{$node->nid}/course-complete");
+  if ($prev_req && $prev_req->getFulfillment()->isComplete()) {
+    $workflow[] = array(
+      'data' => l("$img Complete", "node/$node->nid/course-complete", array('html' => TRUE)),
+      'id' => 'complete',
+    );
+  }
 
   // Allow other modules to alter the workflow if needed.
   drupal_alter('course_outline', $workflow);
