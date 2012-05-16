@@ -5,7 +5,7 @@
  *
  * Join awarded.nid to instance.nid, awarded.type to instance.type
  */
-class course_credit_awarded_credit_instance_vhr extends views_handler_relationship {
+class course_credit_credit_awarded_credit_instance_vhr extends views_handler_relationship {
   /**
    * Called to implement a relationship in a query.
    */
