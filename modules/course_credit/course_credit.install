@@ -257,6 +257,20 @@ function course_credit_update_6008() {
 }
 
 /**
+ * Add ccaid field, convert existing primary key to unique, add new primary key
+ * (for views, services).
+ */
+function course_credit_update_6010() {
+  $ret = array();
+
+  db_drop_primary_key($ret, 'course_credit_awarded');
+  db_add_field($ret, 'course_credit_awarded', 'ccaid', array('type' => 'serial'), array('primary key' => array('ccaid')));
+  db_add_unique_key($ret, 'course_credit_awarded', 'triplet', array('type', 'nid', 'uid'));
+
+  return $ret;
+}
+
+/**
  * Add much needed indexes. 
  */
 function course_credit_update_6011() {
@@ -272,16 +286,3 @@ function course_credit_update_6011() {
   return $ret;
 }
 
-/**
- * Add ccaid field, convert existing primary key to unique, add new primary key
- * (for views, services).
- */
-function course_credit_update_6012() {
-  $ret = array();
-
-  db_drop_primary_key($ret, 'course_credit_awarded');
-  db_add_field($ret, 'course_credit_awarded', 'ccaid', array('type' => 'serial'), array('primary key' => array('ccaid')));
-  db_add_unique_key($ret, 'course_credit_awarded', 'triplet', array('type', 'nid', 'uid'));
-
-  return $ret;
-}
