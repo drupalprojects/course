@@ -1,6 +1,7 @@
-name = Ubercart Course
-core = 6.x
+name = Course ubercart
 description = Supports Course as an Ubercart product and restricts enrollment to paid courses.
+package = Course
+core = 6.x
 dependencies[] = uc_product
 dependencies[] = course
-package = Course
+files[] = course_uc.classes.inc

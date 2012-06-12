@@ -12,63 +12,73 @@ function course_uc_ctools_plugin_directory($owner, $plugin_type) {
 /**
  * Implementation of hook_form_alter().
  *
- * @todo We shouldn't be doing any specific logic in here, probably need
- * something like hook_course_can_enrol.
+ * Hide the add to cart button when the user satisfied the requirement.
  */
 function course_uc_form_alter(&$form, &$form_state, $form_id) {
   if (strpos($form_id, 'uc_product_add_to_cart') !== FALSE) {
     global $user;
     $node = node_load($form['nid']['#value']);
+
     if (course_node_is_course($node)) {
-      $result = course_take_course_access($node);
-      if (course_node_is_course($node) && $result['success'] && !$node->field_addtl_products[0]['nid']) {
-        $form['submit']['#access'] = FALSE;
-      }
+      $course = new Course($node, $user);
+    }
+    else {
+      $courseNode = course_get_context('course_uc', 'payment', $node->nid);
+      $course = new Course($courseNode, $user);
+    }
 
-      if (!$user->uid) {
-        $form['submit']['#access'] = FALSE;
-        if ($node->sell_price > 0) {
-          $message = "You must !login or !register to purchase this course.";
+    foreach ($course as $idx => $courseObject) {
+      if ($courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
+        if ($courseObject->getFulfillment()->isComplete()) {
+          $form['#access'] = FALSE;
         }
-        else {
-          $message = "You must !login or !register to take this course.";
-        }
-
-        $options = array(
-          'query' => array(
-            drupal_get_destination(),
-          ),
-        );
-        $message = t($message, array('!login' => l('login', 'user/login', $options), '!register' => l('register', 'user/register', $options)));
-
-        $form['course_uc']['#value'] = $message;
-      }
-
-      $result = course_enrol_access($node, $user);
-      if (!$result['success']) {
-        $form['submit']['#access'] = FALSE;
-        $form['course_uc']['#value'] = '<h2>' . $result['header'] . '</h2>' . $result['message'];
       }
     }
   }
 }
 
 function course_uc_nodeapi($node, $op, $a3, $a4) {
-  if ($op == 'view') {
-    if (course_node_is_course($node) && !($node->sell_price > 0)) {
-      $hides = array(
-        'sell_price',
-        'display_price',
-        'model',
-        'list_price',
-        'cost',
-        'weight',
-        'dimensions',
-      );
-      foreach ($hides as $hide) {
-        unset($node->content[$hide]);
+  switch ($op) {
+    case 'view':
+      if (course_node_is_course($node) && !($node->sell_price > 0)) {
+        $hides = array(
+          'sell_price',
+          'display_price',
+          'model',
+          'list_price',
+          'cost',
+          'weight',
+          'dimensions',
+        );
+        foreach ($hides as $hide) {
+          unset($node->content[$hide]);
+        }
       }
-    }
+      break;
+    case 'insert':
+    case 'update':
+      if (course_node_is_course($node) && $node->sell_price > 0) {
+        // Course has a sell price.
+        $course = new Course($node);
+        foreach ($course as $courseObject) {
+          if ($courseObject->getComponent() == 'payment') {
+            return;
+          }
+        }
+
+        // If we are here, the course did not have a payment object.
+        $newObject = new CourseObject();
+        $newObject->setCourse($course);
+        $newObject->setCourseNid($node->nid);
+        $newObject->setModule('course_uc');
+        $newObject->setComponent('payment');
+        $newObject->setInstanceId($node->nid);
+        $newObject->setOption('title', 'Payment required');
+        $newObject->setOption('required', TRUE);
+        $newObject->setOption('enabled', TRUE);
+        $newObject->setOption('hidden', TRUE);
+        $newObject->save();
+      }
   }
 
   if ($form_id == 'course_admin_settings') {
@@ -95,20 +105,10 @@ function course_uc_init() {
  * Satisfy payment requirement when manually enrolled.
  */
 function course_uc_course_enrol($node, $user) {
-  $reqs = course_outline_get_course_requirements($node);
-  if (!empty($reqs)) {
-    foreach ($reqs as $req) {
-      if ($req->requirement_type == 'ubercart_payment') {
-        $ubercart = course_outline_get_fulfillment($req->snid, $user->uid);
-        if (!$ubercart['complete']) {
-          $ubercart['snid'] = $req->snid;
-          $ubercart['uid'] = $user->uid;
-          $ubercart['complete'] = 1;
-          $ubercart['date_completed'] = time();
-          $ubercart['info'] = 'Completed payment requirement because user was enrolled.';
-          course_outline_save_fulfillment($ubercart);
-        }
-      }
+  $course = new Course($node, $user);
+  foreach ($course as $idx => $courseObject) {
+    if ($idx == 0 && $courseObject->getComponent() == 'payment') {
+      $courseObject->getFulfillment()->setComplete(TRUE)->save();
     }
   }
 }
@@ -236,8 +236,24 @@ function course_uc_enrol_user_in_ordered_courses($order) {
   foreach ($order->products as $product) {
     $node = node_load($product->nid);
     $user = user_load($order->uid);
+
     if (course_node_is_course($node)) {
+      // This product is an actual course. They have to be enrolled.
+      // This will also satisfy the first payment requirement.
+      // @see course_uc_course_enrol()
       course_enrol($node, $user, 'ubercart');
+    }
+
+    if ($courseNode = course_determine_context('course_uc', 'payment', $node->nid)) {
+      // This product is also a course requirement, other than the first one.
+      // Satisfy it!
+      $course = new Course($courseNode, $user);
+      foreach ($course as $idx => $courseObject) {
+        if ($idx != 0 && $courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
+          // Found the course object that matched the instance (product).
+          $courseObject->getFulfillment()->setComplete(TRUE)->save();
+        }
+      }
     }
   }
 }
@@ -303,6 +319,8 @@ function course_uc_token_values($type, $object = NULL, $options = array()) {
       $node = node_load($product->nid);
       if (course_node_is_course($node)) {
         $line = $node->title . ' - ' . l('View course page', "node/{$node->nid}");
+        // @todo should we be using a menu access callback like this? Why not
+        // use course_take_course_access() instead?
         if (course_node_is_course($node) && course_take_course_menu_access($node)) {
           $line .= ' or ' . l('Take course now', "node/{$node->nid}/takecourse");
         }
@@ -314,9 +332,53 @@ function course_uc_token_values($type, $object = NULL, $options = array()) {
     if ($show_header) {
       $values['course-products-header'] = t("Here are the courses you have purchased:");
     }
-    $values['course-products'] = theme_item_list($courses);
-    $values['all-products'] = theme_item_list($items);
+    $values['course-products'] = theme('item_list', $courses);
+    $values['all-products'] = theme('item_list', $items);
   }
 
   return $values;
 }
+
+/**
+ * Implementation of hook_course_object_info().
+ */
+function course_uc_course_handlers() {
+  return array(
+    'object' => array(
+      'payment' => array(
+        'name' => 'Payment',
+        'class' => 'CourseObjectUbercart',
+      ),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_course_can_enrol().
+ *
+ * Can the user self-enrol in this course? No, they have to pay for it.
+ */
+function course_uc_course_can_enrol($node, $user) {
+  $course = course_get_course($node, $user);
+  foreach ($course as $idx => $courseObject) {
+    if ($idx == 0) {
+      // Completely block access if it is the first object.
+      if ($courseObject->getComponent() == 'payment' && !$courseObject->getFulfillment()->isComplete()) {
+        return array(
+          array(
+            'success' => FALSE,
+            'message' => 'You must first purchase this course.',
+          )
+        );
+      }
+    }
+  }
+
+  return array(
+    array(
+      'success' => TRUE,
+      'message' => 'You have purchased this course.',
+    ),
+  );
+}
+
