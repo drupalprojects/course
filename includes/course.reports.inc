@@ -34,7 +34,7 @@ function course_object_reports_page($node) {
       }
     }
     if ($lis) {
-      $nav .= theme_item_list($lis, $courseObject->getTitle());
+      $nav .= theme('item_list', $lis, $courseObject->getTitle());
     }
   }
 
@@ -86,7 +86,7 @@ function theme_course_report($nav, $header, $body) {
 
   $rows[] = $row;
 
-  $out = theme_table(NULL, $rows, array(
+  $out = theme('table', NULL, $rows, array(
     'id' => 'course-object-reports',
     ));
 
