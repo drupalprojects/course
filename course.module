@@ -1,12 +1,9 @@
 <?php
 
 /**
- * @file
+ * @file course.module
  * Core functionality for Courses.
- *
  */
-// Load built-in LMS.
-require_once dirname(__FILE__) . '/includes/course.drupal.inc';
 
 // Course Outline functions
 require_once dirname(__FILE__) . '/includes/course.outline.inc';
@@ -17,57 +14,117 @@ require_once dirname(__FILE__) . '/includes/course.outline.inc';
 function course_menu() {
   $items = array();
 
-  // Main configuration.
+  // Base configuration.
   $items['admin/settings/course'] = array(
     'title' => 'Course',
     'description' => 'Configure courses.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('course_admin_settings'),
+    'page arguments' => array('course_settings_overview'),
     'access arguments' => array('administer course'),
+    'file' => 'includes/course.settings.inc',
   );
 
-  // Default tab for LMS.
-  $items['admin/settings/course/lms'] = array(
-    'title' => 'LMS',
+  // Default tab for settings.
+  $items['admin/settings/course/overview'] = array(
+    'title' => 'Overview',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
 
-  // Configure per-course user types.
-  $items['admin/settings/course/user-types'] = array(
-    'title' => 'User types',
-    'description' => 'Configure course user types.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('course_user_type_settings_form'),
-    'access arguments' => array('administer course'),
-    'type' => MENU_LOCAL_TASK,
-  );
+  // Course settings handler forms. This gives organization and consistency to
+  // form placement for each module that defines settings handlers through
+  // hook_course_handlers().
+  $modules = course_get_handlers('settings');
+  $default_set = array();
+  $handlers = array();
+  $packages = array();
+  // Flatten each module's settings handlers into one array, so we can get info
+  // about any other handler-package while looping over each handler below.
+  foreach ($modules as $module_key => $settings) {
+    if (is_array($settings)) {
+      // Define
+      foreach ($settings as $handler_key => $handler_info) {
+        // Manually set the implementing module key. It would be unnecessary to
+        // force implementing modules to set this, since we can get it here.
+        $handler_info['module'] = $module_key;
 
-  // Run install tasks for an LMS.
-  $items['admin/settings/course/%/install'] = array(
-    'title' => 'Install external application',
-    'access callback' => true,
-    'page callback' => '_course_lms_install',
-    'page arguments' => array(3),
-  );
+        // Manually set which package the handler belongs in. If one is not
+        // defined, assume the handler is it's own package.
+        $handler_info['package'] = $handler_info['package'] ? $handler_info['package'] : $handler_key;
 
-  // Run post-install tasks for an LMS.
-  $items['admin/settings/course/%/postinstall'] = array(
-    'title' => 'Perform post installation tasks',
-    'access callback' => true,
-    'page callback' => '_course_lms_postinstall',
-    'page arguments' => array(3),
-    'type' => MENU_CALLBACK,
-  );
+        // Build the array of handlers. Add this handler with a combined key,
+        // so module defined settings handlers can avoid namespace conflicts.
+        $module_handler_key = "{$module_key}_{$handler_key}";
+        $handlers[$module_handler_key] = $handler_info;
 
-  // Configure an LMS.
-  $items['admin/settings/course/%course_lms/configure'] = array(
-    'title' => 'Configure',
-    'description' => 'Configure courses.',
-    'page callback' => 'course_configure',
-    'page arguments' => array(3),
-    'access arguments' => array('administer course'),
-  );
+        // Build a reverse array of handler keys - keyed by package - so we can
+        // get package info below when we need it. If there are duplicate
+        // handler/package keys, use the first one for grouping the others.
+        $package_key = $handler_info['package'] ? $handler_info['package'] : $handler_key;
+        if (!$packages[$package_key]) {
+          $packages[$package_key] = $module_handler_key;
+        }
+      }
+    }
+  }
+  // Loop over each handler, and set tabs accordingly.
+  foreach ($handlers as $module_handler_key => $handler_info) {
+    // Get package info for this handler.
+    $package_key = $handler_info['package'];
+    $package_info = $handlers[$packages[$package_key]];
+
+    // Define a path for the handler's specified package.
+    $package_router = "admin/settings/course/{$package_key}";
+
+    // Define a path for the handler.
+    $handler_router = "admin/settings/course/{$package_key}/{$module_handler_key}";
+
+    // Add the handler item, either as the default page content
+    // (MENU_NORMAL_ITEM will work with the MENU_DEFAULT_LOCAL_TASK below)
+    // or as one of the other MENU_LOCAL_TASK tabs). If this is the deafult
+    // page content, the router path and title will be taken from the
+    // handler which defined the package.
+    $item_router = !$default_set[$package_key] ? $package_router : $handler_router;
+    $item_title = !$default_set[$package_key] ? $package_info['name'] : $handler_info['name'];
+    $item_type = !$default_set[$package_key] ? MENU_NORMAL_ITEM : MENU_LOCAL_TASK;
+    $items[$item_router] = array(
+      'title' => $item_title,
+      'description' => $handler_info['description'],
+      'access arguments' => array('administer course'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array($handler_info['callback']),
+      'type' => $item_type,
+    );
+    // Append file info to $items, if specified.
+    $file_info = array();
+    if (isset($handler_info['file'])) {
+      // Define the item 'file' key.
+      $items[$item_router]['file'] = $handler_info['file'];
+      // Define the item 'file path' key.
+      if ($handler_info['file path']) {
+        // Use the path if provided. If not provided, we need to specify the
+        // handler provider module path, otherwise hook_menu() assumes
+        // 'file path' is the path to it's implementing module (Course).
+        $items[$item_router]['file path'] = $handler_info['file path']
+          ? $handler_info['file path']
+          : drupal_get_path('module', $handler_info['module']);
+      }
+    }
+
+    // Check if a default tab has already been set for this module.
+    if (!$default_set[$package_key]) {
+      // Add the default tab with the handler router item and name. We do
+      // this here so the first handler settings form always displays as the
+      // default page content at the module router item path.
+      $items[$handler_router] = array(
+        'title' => $handler_info['name'],
+        'type' => MENU_DEFAULT_LOCAL_TASK,
+        'weight' => -10,
+      );
+      // Flag MENU_DEFAULT_LOCAL_TASK as set for this module.
+      $default_set[$package_key] = TRUE;
+    }
+  }
 
   // Per course user type selection.
   $items['node/%course/course-user-type'] = array(
@@ -149,7 +206,8 @@ function course_menu() {
     'title' => 'Course object router',
     'page callback' => 'course_object_take',
     'page arguments' => array(3),
-    'access callback' => TRUE,
+    'access callback' => 'course_access_object',
+    'access arguments' => array(1, 3),
   );
 
   // Course object edit
@@ -175,7 +233,134 @@ function course_menu() {
     'page arguments' => array(1, 3, 5),
   );
 
+  $items['node/%course/course-object/%course_object/%ctools_js/nav'] = array(
+    'page callback' => 'course_ajaj_fulfullment_check',
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+    'page arguments' => array(1, 3, 5),
+  );
+
   return $items;
+}
+
+/**
+ * Implements hook_course_handlers().
+ *
+ * @see course_menu()
+ */
+function course_course_handlers() {
+  $outline = 'includes/course.outline.inc';
+  $settings = 'includes/course.settings.inc';
+  return array(
+    'outline' => array(
+      'course' => array(
+        'name' => t('Course'),
+        'description' => t('Stock outline display.'),
+        'callback' => 'course_outline_list',
+        'file' => $outline,
+      ),
+      'none' => array(
+        'name' => t('None'),
+        'description' => t('No outline provided (placeholder course).'),
+      ),
+    ),
+    'settings' => array(
+      'appearance' => array(
+        'name' => t('Appearance'),
+        'description' => t('Configure the course appearance, including outline style, disabling regions, and <em>enroll</em> and <em>take course</em> links.'),
+        'callback' => 'course_settings_appearance_form',
+        'file' => $settings,
+      ),
+      'objects' => array(
+        'name' => t('Course objects'),
+        'description' => t('Course object settings.'),
+        'callback' => 'course_settings_objects_form',
+        'file' => $settings,
+      ),
+      'user_types' => array(
+        'name' => t('User types'),
+        'description' => t('Configure course user types.'),
+        'callback' => 'course_user_type_settings_form',
+        'file' => $settings,
+      ),
+    ),
+  );
+}
+
+/**
+ * Get course handlers.
+ *
+ * @param string $type
+ *   (optional) The course handler type to return.
+ *   If no type is specified, all types are returned.
+ *
+ * @return array
+ *   A merged, structured array of course handlers returned by all
+ *   implementations of hook_course_handlers(), optionally limited by type.
+ *
+ * @return array
+ *   An array of hook implementations keyed by module name, containing:
+ *   - A single handler type definition, if the $type parameter is passed.
+ *   - Or an associative array of all course handler definitions keyed by type.
+ */
+function course_get_handlers($type = NULL) {
+  static $all = array();
+  if (!$all) {
+    // Allow modules to define handlers that extend Course functionality.
+    // Do not use module_invoke_all() here because we need to know which module
+    // is providing the 'object' handler type. This is to avoid namespace
+    // conflicts between multiple modules providing a 'quiz' object for example.
+    $hook = 'course_handlers';
+    foreach (module_implements($hook) as $module) {
+      $function = $module . '_' . $hook;
+      $handlers = $function();
+
+      // Allow modules to alter each other's list of handlers.
+      drupal_alter($hook, $handlers, $module);
+
+      if (isset($handlers) && is_array($handlers)) {
+        $all[$module] = $handlers;
+      }
+    }
+  }
+
+  if (isset($type)) {
+    // Loop through each module's result again, and rebuild the array including
+    // only the specified handler type. We do this again so we can static cache
+    // the hook invocation and function calls above.
+    $filtered = array();
+    foreach ($all as $module => $handlers) {
+      $filtered[$module] = $handlers[$type];
+    }
+    // Return the keyed array of implementations, each filtered to include only
+    // the specified handler type definition.
+    return $filtered;
+  }
+  else {
+    // Return the keyed array of all implementations.
+    return $all;
+  }
+}
+
+/**
+ * Menu access for course object router.
+ */
+function course_access_object($node, $courseObject) {
+  global $user;
+  $course = new Course($node, $user);
+  $courseObject->setCourse($course);
+  $course->setActive($courseObject->getId());
+  return $courseObject->access('take');
+}
+
+function course_ajaj_fulfullment_check($node, $courseObject, $js = FALSE) {
+  $courseObject->checkFulfillment();
+  module_load_include('inc', 'course', 'includes/course.block');
+  $block = _course_block_navigation_view();
+  drupal_json(array(
+    'content' => $block['content'],
+    'complete' => $courseObject->getFulfillment()->isComplete(),
+  ));
 }
 
 /**
@@ -237,8 +422,8 @@ function course_object_edit_form(&$form_state, $courseObject) {
 function course_object_edit_form_submit(&$form, &$form_state) {
   if ($form_state['values']['uniqid']) {
     $nid = $form_state['values']['nid'];
-    $record = $_SESSION['course'][$nid]['editing'][$form_state['values']['uniqid']];
-    $courseObject = course_get_course_object($record);
+    // Get course object from session/database.
+    $courseObject = course_object_load($form_state['values']['uniqid']);
     $courseObject->setCourseNid($nid);
     $courseObject->setId($form_state['values']['uniqid']);
     $courseObject->optionsSubmit($form, $form_state);
@@ -301,11 +486,13 @@ function course_block($op = 'list', $delta = 0) {
         'navigation' => array('info' => t('Course: Navigation'), 'cache' => BLOCK_NO_CACHE),
       );
       return $info;
+    case 'configure':
     case 'view':
+    case 'save':
       module_load_include('inc', 'course', 'includes/course.block');
-      $function = "_course_block_{$delta}";
+      $function = "_course_block_{$delta}_{$op}";
       if (function_exists($function)) {
-        return call_user_func($function);
+        return $function($edit);
       }
       break;
   }
@@ -333,48 +520,6 @@ function course_load($arg) {
 }
 
 /**
- * Menu loader: load learning app.
- */
-function course_lms_load($arg) {
-  return course_get_lms($arg);
-}
-
-/**
- * Fire the submodule's postinstall implementation.
- */
-function _course_lms_postinstall($key) {
-  $lapp = course_get_lms($key);
-  module_invoke($lapp['module'], 'lms_postinstall', $key);
-  drupal_set_message(t('Post installation tasks for %lapp complete.', array('%lapp' => $lapp['name'])));
-  drupal_goto('admin/settings/course');
-}
-
-/**
- * Fire the submodule's install implementation.
- */
-function _course_lms_install($key) {
-  $lapp = course_get_lms($key);
-  if (!empty($lapp['install url'])) {
-    // If the installer URL is set then this is an external application.
-    $post = '';
-    $post .= '<h2>When you are finished installing, be sure to ' . l('run the post installation tasks', "admin/settings/course/$key/postinstall") . '.</h2>';
-    $post .= '<br/>';
-    return $post . course_iframe($lapp['install url']);
-  }
-  else {
-    // No installer URL, this is Drupal-based.
-    $out = module_invoke($lapp['module'], 'lms_install', $key);
-    if (module_invoke($lapp['module'], 'lms_status', $key)) {
-      $post = '<h2>Please ' . l('run the post installation tasks', "admin/settings/course/$key/postinstall") . '.</h2>';
-    }
-    else {
-      $post = '<h2>Installation failed...' . l('try again?', "admin/settings/course/$key/install") . '</h2>';
-    }
-    return $out . $post;
-  }
-}
-
-/**
  * Implementation of hook_perm().
  *
  * Define permissions to take courses and edit course settings.
@@ -395,15 +540,22 @@ function course_perm() {
 }
 
 /**
- * Should the take course button show on this node?
+ * Menu access callback to determins if the take course button should display
+ * on the course node.
  *
- * This differs from course_take_course_access as it only returns true/false.
+ * This differs from course_take_course_access() as it only returns a boolean.
+ *
+ * @param object $node
+ *   The course node.
+ *
+ * @see course_uc_token_values()
  */
 function course_take_course_menu_access($node) {
   global $user;
   static $courses = array();
 
   if (!isset($courses[$node->nid])) {
+    // Allow modules to restrict menu access to the take course tab.
     $hooks = module_invoke_all('course_has_takecourse', $node, $user);
     $courses[$node->nid] = !in_array(FALSE, $hooks);
   }
@@ -412,15 +564,17 @@ function course_take_course_menu_access($node) {
 }
 
 /**
- * Should the course settings tab show on this node?
+ * Menu access callback to determine if the course settings should tab should
+ * display on the course node.
  *
- * This differs from course_take_course_access as it only returns true/false. If a module's
+ * This differs from course_settings_access() as it only returns a boolean.
  */
 function course_settings_menu_access($node) {
   global $user;
   static $courses = array();
 
   if (!isset($courses[$node->nid])) {
+    // Allow modules to restrict menu access to the course setting tab.
     $hooks = module_invoke_all('course_has_settings', $node, $user);
     $courses[$node->nid] = !in_array(FALSE, $hooks) && course_settings_access($node);
   }
@@ -431,15 +585,16 @@ function course_settings_menu_access($node) {
 /**
  * Determine if taking this course should be restricted.
  *
- * If any module implementing hook_can_take_course() returns FALSE or an array
- * containing 'success' => FALSE, the course will be restricted.
+ * @param object $node
+ *   By reference. The course node.
  *
- * @see course_can_take_course() and hook_can_take_course() for an example of
- * how to use this hook.
+ * @return boolean|array
+ *   Either FALSE, or an array containing:
+ *   - success: Boolean. Indicates whether or not the user has permission to
+ *     take this course.
+ *   - message: String. If success is FALSE, a message to display to the user.
  *
- * @param object $node The course node.
- * @return array
- *   An array of 'success' and 'message'.
+ * @todo should the $node param be passed by reference?
  */
 function course_take_course_access(&$node) {
   global $user;
@@ -457,6 +612,7 @@ function course_take_course_access(&$node) {
 
   if (!isset($courses[$node->nid])) {
     $courses[$node->nid]['success'] = TRUE;
+    // Allow modules to determine if this course should be restricted.
     $hooks = module_invoke_all('can_take_course', $node, $user);
     foreach ($hooks as $key => $hook) {
       if (!$hook) {
@@ -499,15 +655,6 @@ function course_settings_access($node) {
  * @param object $user The user to check.
  */
 function course_can_take_course($node, $user) {
-  if (variable_get('course_access_restrict_enrol', 0) && !course_enrolment_check($node, $user)) {
-    if (!(variable_get('course_access_bypass_checkout', 1) && empty($node->sell_price))) {
-      return array(array(
-          'success' => FALSE,
-          'message' => 'Sorry, you are not yet enrolled in this course.',
-        ));
-    }
-  }
-
   $sql = "select * from {course_enrolment} where nid = %d and uid = %d";
   if ($row = db_fetch_object(db_query($sql, $node->nid, $user->uid))) {
     if ($node->course['duration'] > 0 && time() > $row->enrol_end) {
@@ -529,145 +676,6 @@ function course_can_take_course($node, $user) {
 }
 
 /**
- * Define the Course settings form.
- */
-function course_admin_settings() {
-  $lapps = course_available_lms();
-
-  $form['installation'] = array(
-    '#type' => 'fieldset',
-    '#title' => 'Available LMS backends',
-  );
-
-  foreach ($lapps as $key => &$lapp) {
-    $links = array();
-    if (module_invoke($lapp['module'], 'lms_status', $key)) {
-      $lapp['status'] = 'Installed.';
-      $links['postinstall'] = array(
-        'title' => 'Post-install',
-        'href' => "admin/settings/course/$key/postinstall",
-      );
-
-      $links['configure'] = array(
-        'title' => 'Configure',
-        'href' => "admin/settings/course/$key/configure",
-      );
-    }
-    else {
-      $lapp['status'] = 'Not installed.';
-      $links['install'] = array(
-        'title' => 'Install',
-        'href' => "admin/settings/course/$key/install",
-      );
-    }
-
-    unset($lapp['machine']);
-    unset($lapp['install url']);
-    unset($lapp['module']);
-    unset($lapp['weight']);
-    $lapp['action'] = theme_links($links);
-  }
-
-  $header = array('Name', 'Description', 'Status', 'Action');
-  $form['installation']['#value'] = theme_table($header, $lapps);
-
-  $form['course_take_course_button_show'] = array(
-    '#title' => 'Show take course button on',
-    '#type' => 'checkboxes',
-    '#options' => array(
-      'teaser' => 'Teaser',
-      'page' => 'Page',
-    ),
-    '#default_value' => variable_get('course_take_course_button_show', array()),
-    '#description' => 'Check to show the take course button on courses.',
-  );
-
-  $form['course_disable_builtin_lms'] = array(
-    '#title' => 'Disable built-in LMS',
-    '#type' => 'checkbox',
-    '#default_value' => variable_get('course_disable_builtin_lms', 0),
-    '#description' => 'Disables the built-in LMS using Drupal learning objects.',
-  );
-
-  $form['course_disable_regions'] = array(
-    '#title' => 'Disable theme regions when taking a course',
-    '#type' => 'checkboxes',
-    '#default_value' => variable_get('course_disable_regions', array()),
-    '#options' => system_region_list(variable_get('theme_default', '')),
-  );
-
-  $form['course_takecourse_tab_display'] = array(
-    '#title' => 'Show a "take course" tab on course nodes',
-    '#type' => 'checkbox',
-    '#default_value' => variable_get('course_takecourse_tab_display', 1),
-  );
-
-  $form['course_access_restrict_enrol'] = array(
-    '#title' => 'User must be enrolled to take course',
-    '#description' => 'Restricts taking courses to users who have been enrolled in the course by external methods (e.g. Ubercart "Enroll User" conditional action). If this is not checked, users will be automatically enrolled when they click Take Course. This box should be checked if courses are products.',
-    '#type' => 'checkbox',
-    '#default_value' => variable_get('course_access_restrict_enrol', 0),
-  );
-
-  $form['course_access_bypass_checkout'] = array(
-    '#title' => 'Bypass checkout for free courses',
-    '#description' => "If course is free, user may bypass checkout and be automatically enrolled in the course.",
-    '#type' => 'checkbox',
-    '#default_value' => variable_get('course_access_bypass_checkout', 1),
-  );
-
-  $form['course_object_custom_fields'] = array(
-    '#title' => 'Custom course object fields',
-    '#type' => 'textarea',
-    '#rows' => 5,
-    '#description' => 'Enter a key|value format to enable custom fields on course objects.',
-    '#default_value' => variable_get('course_object_custom_fields', ''),
-    '#element_validate' => array('course_check_keyval'),
-  );
-
-  return system_settings_form($form);
-}
-
-/**
- * Element validator to make sure all entries are in key|val format.
- */
-function course_check_keyval($element, &$form_state) {
-  $val = trim($element['#value']);
-  if ($val) {
-    if (substr_count($val, "\n") + 1 != substr_count($val, '|')) {
-      form_error($element, 'Please ensure all custom object fields are in the format key|value.');
-    }
-  }
-}
-
-/**
- * Get an array of custom course object fields.
- *
- * @return array
- *   An array of custom course object fields, in the format key => value.
- */
-function course_object_custom_fields() {
-  $fields = array();
-
-  $list = explode("\n", variable_get('course_object_custom_fields', ''));
-  $list = array_map('trim', $list);
-  $list = array_filter($list, 'strlen');
-  foreach ($list as $opt) {
-    // Sanitize the user input with a permissive filter.
-    $opt = content_filter_xss($opt);
-    if (strpos($opt, '|') !== FALSE) {
-      list($key, $value) = explode('|', $opt);
-      $fields[$key] = (isset($value) && $value !== '') ? $value : $key;
-    }
-    else {
-      $fields[$key] = $opt;
-    }
-  }
-
-  return $fields;
-}
-
-/**
  * Implementation of hook_nodeapi().
  *
  * When a course is saved, handles changes to the course outline and the
@@ -678,23 +686,6 @@ function course_object_custom_fields() {
 function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   if (course_node_is_course($node)) {
     switch ($op) {
-      case 'prepare':
-        if (count(course_available_lms()) == 0) {
-          drupal_set_message("You haven't installed an LMS yet. Please visit " . l('course configuration', 'admin/settings/course') . '.', 'error');
-        }
-        break;
-      case 'validate':
-        $lapp = course_get_lms($node->course['lms']);
-        $status = module_invoke($lapp['module'], 'lms_status', $node->course['lms']);
-        if ($status) {
-          // Validated OK! LMS module was installed
-        }
-        else {
-          $message = t("LMS (%application) not yet set up.", array('%application' => $lapp['name']));
-          $message .= " Please " . l('configure the Course module', 'admin/settings/course') . '.';
-          form_set_error('', $message);
-        }
-        break;
       case 'view':
         // Render take course button.
         $show = variable_get('course_take_course_button_show', array());
@@ -708,24 +699,12 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         $record['nid'] = $node->nid;
         unset($record['open']);
         unset($record['close']);
-        $lapp = course_get_lms($node->course['lms']);
-        // Invoke modules for creation of an external course.
-        $response = module_invoke($lapp['module'], 'course_create_external', $node);
-        if ($response) {
-          $record['cid'] = $response;
-        }
         $existing = db_result(db_query('select 1 from {course_node} where nid = %d', $node->nid));
-        if ($existing) {
-          // Don't save LMS. Cannot be changed currently.
-          unset($record['lms']);
-          drupal_write_record('course_node', $record, array('nid'));
-        }
-        else {
-          drupal_write_record('course_node', $record);
-        }
+        $update = $existing ? array('nid') : array();
+        drupal_write_record('course_node', $record, $update);
+
         // Let other course modules know about the recently created course.
         $node->course['cid'] = $record['cid'];
-        //course_outline_overview_save($node, $op);
         module_invoke_all('course_nodeapi_extra', $node, $op);
         break;
       case 'load':
@@ -763,20 +742,12 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
  * Check the permissions of showing the take course button, and return the HTML.
  */
 function course_render_button($node) {
-  $result = course_enrol_access($node);
-  if ($result['success']) {
-    $result = course_take_course_access($node);
-  }
-  // Allow another module to force the take course button to show.
-  drupal_alter('course_show_button', $result['success'], $node);
-  if ($result['success']) {
-    // The user is enrolled, purchased or was enrolled manually, and can take this course.
-    // @todo move all uc course display logic to uc_course.module.
-    if (!$node->field_addtl_products[0]['nid']) {
-      // If course has additional products, don't hide the UC form.
-      $node->content['add_to_cart']['#access'] = FALSE;
-    }
-    // Show the course button.
+  global $user;
+
+  $can_enrol = course_enrol_access($node, $user);
+
+  if ($can_enrol['success']) {
+    // User can self-enrol and take the course. Show the button.
     return course_take_course_button_html($node);
   }
 }
@@ -785,6 +756,7 @@ function course_render_button($node) {
  * Generate a button for taking the course.
  */
 function course_take_course_button_html(&$node) {
+  // Allow modules to provide the course button.
   $course_button = module_invoke_all('course_button', $node);
   if (isset($course_button[0])) {
     return $course_button[0];
@@ -801,8 +773,16 @@ function course_take_course_button_html(&$node) {
  * Timestamp is by design 0, so a user may purchase a course but start taking
  * it later.
  *
- * @param int NID of node.
- * @param int UID of user.
+ * @param object $node
+ *   By reference. The course node.
+ * @param object $user
+ *   By reference. The enrolling user.
+ * @param string $from
+ *   The type of enrollment, if applicable. {course_enrolment}.enrollmenttype.
+ * @param string $code
+ *   The access code used to enroll. {course_enrolment}.code.
+ * @param integer $status
+ *   The enrolment status. {course_enrolment}.status.
  */
 function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
   if (course_node_is_course($node)) {
@@ -821,18 +801,20 @@ function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
 
     $enrol = (object) $enrol;
 
+    $watchdog_variables = array('!uid' => $user->uid, '!nid' => $node->nid);
     if (!course_enrolment_check($node, $user)) {
       // User is not enrolled yet.
-      watchdog('course_enrol', "Enrolling user {$user->uid} into {$node->nid}");
+      watchdog('course_enrol', 'Enrolling user !uid into !nid', $watchdog_variables);
       course_enrolment_save($enrol);
       $op = 'insert';
     }
     else {
-      watchdog('course_enrol', "Re-enrolling user {$user->uid} into {$node->nid}");
+      watchdog('course_enrol', 'Re-enrolling user !uid into !nid', $watchdog_variables);
       // return drupal_write_record('course_enrolment', $enrol, array('nid', 'uid'));
       $op = 'update';
     }
-    // @todo figure $op out
+    // @todo figure $op out.
+    // Notify modules about a course enrollment.
     module_invoke_all('course_enrol', $node, $user, $from, $code, $status);
   }
   else {
@@ -856,14 +838,16 @@ function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
 function course_unenrol(&$node, &$user) {
   if (course_node_is_course($node)) {
     $sql = "delete from {course_report} where nid = %d and uid = %d";
-    db_query($node->nid, $user->uid);
+    db_query($sql, $node->nid, $user->uid);
     $sql = "DELETE FROM {course_enrolment} where nid = %d and uid = %d";
     db_query($sql, $node->nid, $user->uid);
     // @todo change to delete w/left join
     $sql = "DELETE FROM {course_outline_fulfillment} WHERE uid = %d AND snid IN (SELECT snid FROM {course_outline} WHERE nid = %d)";
     db_query($sql, $user->uid, $node->nid);
+    // Notify other modules after course unenrollment.
     module_invoke_all('course_unenrol', $node, $user);
-    watchdog('course_enrol', "Removed user {$user->uid} from {$node->nid}");
+    $watchdog_variables = array('!uid' => $user->uid, '!nid' => $node->nid);
+    watchdog('course_enrol', 'Removed user !uid from !nid', $watchdog_variables);
     return TRUE;
   }
   else {
@@ -933,60 +917,40 @@ function course_enable() {
 /**
  * Implementation of hook_form_alter().
  *
- * Hides Ubercart "add to cart button" if the user can take the course.
- * Show LMS selection.
+ * Course node settings form.
+ *
+ * @todo move this course node settings form to a secondary local task, under
+ * the course settings tab.
  */
 function course_form_alter(&$form, &$form_state, $form_id) {
   global $user;
   $node = $form['#node'];
 
+  // Course node settings form.
   if (course_node_is_course($node) && strpos($form_id, '_node_form') !== FALSE) {
-    $lapps = course_available_lms();
-    $options = array();
-    $default_lms = variable_get("default_lms_{$node->type}", 'none');
-    $lms_installed = FALSE;
-    foreach ($lapps as $key => $lapp) {
-      if (module_invoke($lapp['module'], 'lms_status', $key)) {
-        $options[$key] = $lapp['name'];
-        if ($key != 'none') {
-          $lms_installed = TRUE;
-        }
-        if ($key == $default_lms) {
-          $default_lms_installed = TRUE;
-        }
-      }
-    }
-    // Ensure LMS type set as default is still installed.
-    $default_lms = $default_lms_installed ? $default_lms : 'none';
-    if (!$lms_installed) {
-      $messages = array();
-      // Inform the user the lapp is not installed.
-      $messages[] = t('The learning application for this course is not installed.');
-      // Add additional information for course admins or learners.
-      if ($is_course_admin) {
-        $configure = url('admin/settings/course', array('query' => drupal_get_destination()));
-        $messages[] = t('Please <a href="@configure">configure the Course module</a>.', array('@configure' => $configure));
-      }
-      else {
-        $messages[] = t('Please contact the site administrator for more information.');
-      }
-      drupal_set_message(implode(' ', $messages), 'warning');
-    }
     $form['course']['#tree'] = TRUE;
     $form['course']['#type'] = 'fieldset';
     $form['course']['#title'] = t('Course settings');
     $form['course']['#group'] = TRUE;
-    $form['course']['lms'] = array(
-      '#title' => t('LMS'),
-      '#type' => 'select',
-      '#options' => $options,
-      '#default_value' => $node->course['lms'] ? $node->course['lms'] : $default_lms,
-      '#description' => 'This cannot be changed after saving.',
-    );
-    if ($node->course['lms'] != '') {
-      drupal_set_title(t("@title (@lms)", array('@lms' => $lapps[$node->course['lms']]['name'], '@title' => $node->title)));
-      $form['course']['lms']['#disabled'] = TRUE;
+
+    // Course outline display handler.
+    $outlines = array();
+    $handlers = course_get_handlers('outline');
+    foreach ($handlers as $module => $outline_handlers) {
+      if ($outline_handlers) {
+        foreach ($outline_handlers as $key => $outline_handler) {
+          $outlines[$key] = $outline_handler['name'];
+        }
+      }
     }
+
+    $form['course']['outline'] = array(
+      '#title' => t('Available outline displays'),
+      '#type' => 'radios',
+      '#options' => $outlines,
+      '#default_value' => $node->course['outline'],
+    );
+
     $form['course']['credits'] = array(
       '#title' => t('Credit hours'),
       '#type' => 'textfield',
@@ -1007,41 +971,26 @@ function course_form_alter(&$form, &$form_state, $form_id) {
       '#access' => FALSE,
     );
     $form['course']['duration'] = array(
-      '#title' => 'Duration',
+      '#title' => t('Duration'),
       '#type' => 'textfield',
       '#default_value' => $node->course['duration'],
       '#size' => 4,
-      '#description' => 'Length in days a user can remain in the course. Enter 0 for unlimited.',
+      '#description' => t('Length in days a user can remain in the course. Enter 0 for unlimited.'),
     );
     $form['course']['cid'] = array(
-      '#title' => t('External LMS course ID'),
-      '#description' => "If using an external LMS, the ID of the external course.",
+      '#title' => t('External learning application course ID'),
+      '#description' => t('If using an external learning application, the ID of the external course.'),
       '#type' => 'textfield',
       '#default_value' => $node->course['cid'] !== NULL ? $node->course['cid'] : NULL,
       '#size' => 4,
       '#access' => FALSE,
     );
     $form['course']['external_id'] = array(
-      '#title' => 'External course ID',
-      '#description' => 'Course ID used to relate to an outside system.',
+      '#title' => t('External course ID'),
+      '#description' => t('Course ID used to relate to an outside system.'),
       '#type' => 'textfield',
       '#size' => 16,
       '#default_value' => $node->course['external_id'],
-    );
-
-    // Add the course objects form to the node form.
-    // This worked for our initial requirements, but now, it's incredibly
-    // complicated. Move to a tab. Maybe we'll bring this back as a UI
-    // improvement. For the benefit of ctools and other libraries!
-    //course_outline_overview_form($form, $form_state, $form_id);
-  }
-
-  if ($form_id == 'course_admin_settings') {
-    $form['load_balanced_base_url'] = array(
-      '#title' => 'Load Balanced Base URL',
-      '#type' => 'textfield',
-      '#description' => t('Optional. If this installation of Drupal is using a load balancer, it is recommended that you enter a domain here for API posts to work. Accepted format: <i>http://www.yoursitename.com</i>'),
-      '#default_value' => variable_get('load_balanced_base_url', ''),
     );
   }
 }
@@ -1050,7 +999,6 @@ function course_form_alter(&$form, &$form_state, $form_id) {
  * Implementation of hook_form_FORM_ID_alter().
  */
 function course_form_node_type_form_alter(&$form, &$form_state) {
-  ctools_include('dependent');
   // Alter the node type's configuration form to add our setting.
   $form['course'] = array(
     '#type' => 'fieldset',
@@ -1065,26 +1013,10 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
     '#type' => 'checkbox',
     '#default_value' => variable_get("course_use_{$form['#node_type']->type}", 0),
   );
-  // LMS options.
-  $options = array('');
-  $lapps = course_available_lms();
-  foreach ($lapps as $key => $lapp) {
-    if (module_invoke($lapp['module'], 'lms_status', $key)) {
-      $options[$key] = $lapp['name'];
-      if ($key != 'none') {
-        $lms_installed = TRUE;
-      }
-    }
-  }
-  if (!$lms_installed) {
-    $description = '<div class="messages warning">' . t('No LMS installed. Please <a href="@confirure">configure the Course module</a>.', array('@configure' => url('admin/settings/course'))) . '</div>';
-  }
-  $form['course']['default_lms'] = array(
-    '#title' => t('Default LMS for %name', array('%name' => $form['#node_type']->name)),
-    '#type' => 'select',
-    '#options' => $options,
-    '#default_value' => variable_get("default_lms_{$form['#node_type']->type}", 'none'),
-    '#description' => $description,
+
+  // Ctools dependency.
+  ctools_include('dependent');
+  $dependent = array(
     '#process' => array('ctools_dependent_process'),
     '#dependency' => array('edit-course-use' => array(1)),
   );
@@ -1118,14 +1050,14 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
       '#options' => $options,
       '#default_value' => variable_get("course_start_date_{$form['#node_type']->type}", 0),
       '#prefix' => '<h3>' . t('Enduring course dates') . '</h3>',
-    );
+    ) + $dependent;
     $form['course']['course_expiration_date'] = array(
       '#title' => t('Field to use for enduring-course expiration date'),
       '#description' => t('Select the field to use for enduring-course expiration date.'),
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_expiration_date_{$form['#node_type']->type}", 0),
-    );
+    ) + $dependent;
     // Live course dates.
     $form['course']['course_live_from_date'] = array(
       '#title' => t('Field to use for live-course start date'),
@@ -1134,14 +1066,14 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
       '#options' => $options,
       '#default_value' => variable_get("course_live_from_date_{$form['#node_type']->type}", 0),
       '#prefix' => '<h3>' . t('Live course dates') . '</h3>',
-    );
+    ) + $dependent;
     $form['course']['course_live_to_date'] = array(
       '#title' => t('Field to use for live-course end date'),
       '#description' => t('Select the field to use for live-course end date.'),
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_live_to_date_{$form['#node_type']->type}", 0),
-    );
+    ) + $dependent;
   }
 }
 
@@ -1163,25 +1095,11 @@ function course_iframe($url = NULL, $height = '600px', $class = NULL) {
 }
 
 /**
- * Invoke the LMS submodule's configuration form.
- */
-function course_configure($lapp) {
-  drupal_set_title('Course: Configure ' . $lapp['name']);
-  $form_id = $lapp['module'] . '_lms_settings_form';
-  return drupal_get_form('course_settings_form', $lapp);
-}
-
-/**
- * Form definition for submodule's configuration form.
- */
-function course_settings_form($form_state, $lapp) {
-  $form_id = $lapp['module'] . '_lms_settings_form';
-  $form = $form_id($lapp['machine']);
-  return system_settings_form($form);
-}
-
-/**
- * Fire submodule's implementation of course taking.
+ * Take a course.
+ *
+ * - Enroll the user, if allowed.
+ * - Block the user if not allowed.
+ * - Fire the outline handler.
  */
 function course_take_course($node) {
   global $user;
@@ -1202,16 +1120,35 @@ function course_take_course($node) {
       // If user hasn't started course, mark start of enrolment.
       $enrolment->timestamp = time();
       course_enrolment_save($enrolment);
-      drupal_set_message("Your enrollment in this course has been recorded.");
+      drupal_set_message(t('Your enrollment in this course has been recorded.'));
     }
-    $lapp = course_get_lms($node->course['lms']);
-    return ($ret = module_invoke($lapp['module'], 'lms_take_course', $node->course['lms'], $node)) ? $ret : "hook_lms_take_course not implemented";
+
+    // Display the configured outline handler output.
+    $key = $node->course['outline'] ? $node->course['outline'] : 'course';
+    $handlers = course_get_handlers('outline');
+    foreach ($handlers as $module => $outline_handlers) {
+      if ($outline_handlers) {
+        foreach ($outline_handlers as $key2 => $outline_handler) {
+          if ($key == $key2) {
+            $callback = $outline_handler['callback'];
+          }
+        }
+      }
+    }
+
+    if (function_exists($callback)) {
+      $outline = $callback($node, $user);
+    }
+    else {
+      $outline = t('Outline not provided.');
+    }
+    return $outline;
   }
   else {
     drupal_set_header('HTTP/1.1 403 Forbidden');
     drupal_set_title(t('Access denied'));
     if (empty($result['message'])) {
-      return "Sorry, you do not have access to take this course. (No message provided by module).";
+      return t('Sorry, you do not have access to take this course. (No message provided by module).');
     }
     return "<h2>" . $result['header'] . "</h2>" . $result['message'];
   }
@@ -1237,80 +1174,22 @@ function course_enrolment_save($enrolment) {
 }
 
 /**
- * Fire submodule's implementation of course settings.
- */
-function course_edit_course($node) {
-  $lapp = course_get_lms($node->course['lms']);
-  return ($ret = module_invoke($lapp['module'], 'lms_edit_course', $node->course['lms'], $node)) ? $ret : "hook_lms_edit_course not implemented";
-}
-
-/**
- * Get all available LMS.
+ * CourseObject factory. Get a loaded course object from database or build one
+ * from arguments.
  *
- * @todo Cache LMS apps?
- */
-function course_available_lms() {
-  static $lapps;
-  if (!$lapps) {
-    $lapps = module_invoke_all('lms_info');
-  }
-
-  uasort($lapps, '_course_weight_lapps');
-  return $lapps;
-}
-
-function _course_weight_lapps($a1, $a2) {
-  return $a1['weight'] > $a2['weight'];
-}
-
-/**
- * Build a list of available course objects from module implementations.
- *
- * @return array
- *   An array of course objects, keyed by module and then object key.
- */
-function course_available_objects($reset = FALSE) {
-  static $course_objects = array();
-
-  if (!$course_objects || $reset) {
-    $implementations = module_implements('course_object_info');
-    $course_objects = array();
-    foreach ($implementations as $implementor) {
-      $objects = module_invoke($implementor, 'course_object_info');
-      if (is_array($objects)) {
-        foreach ($objects as $key => &$object) {
-          if (!$object['module']) {
-            $object['module'] = $implementor;
-          }
-          $course_objects[$object['module']][$key] = $object;
-        }
-      }
-    }
-    drupal_alter('course_object_info', $course_objects);
-  }
-
-  return $course_objects;
-}
-
-/**
- * Get a loaded course object.
- *
- * @param object $course
- *   The course node this object belongs to.
  * @param mixed $requirement_type
- *   The type, e.g. 'course_quiz', or an snid, or an object.
- * @param string $requirement_component
- *   The component, e.g. 'quiz'.
+ *   @todo
+ * @param mixed $requirement_component
+*   @todo
  * @param string $instance
- *   The instance ID (remote ID)
+*   @todo
  * @param object $account
- *   The user for the fulfillment object.
+*   @todo
  *
- *
- * @return object|boolean
+ * @return CourseObject|FALSE
  */
 function course_get_course_object($requirement_type, $requirement_component = NULL, $instance = NULL, $account = NULL) {
-  $available = course_available_objects();
+  $available = course_get_handlers('object');
 
   if (!$requirement_type) {
     return new CourseObject;
@@ -1320,13 +1199,27 @@ function course_get_course_object($requirement_type, $requirement_component = NU
     $requirement_type = (object) $requirement_type;
   }
 
+  if (is_object($requirement_type) && $requirement_type->snid > 0) {
+    $requirement_type = $requirement_type->snid;
+  }
+
+  if (is_array($requirement_type) && $requirement_type['snid'] > 0) {
+    $requirement_type = $requirement_type['snid'];
+  }
+
   if (is_numeric($requirement_type)) {
     // Passed a course object ID. Load it from the database and return an object.
     $sql = 'select * from {course_outline} where snid = %d';
     $result = db_query($sql, $requirement_type);
     if ($row = db_fetch_object($result)) {
       $ret = $available[$row->requirement_type][$row->requirement_component];
-      return new $ret['class']($row, $requirement_component);
+      if (!class_exists($ret['class'])) {
+        drupal_set_message(t("Could not find class for %m-%c!", array('%m' => $row->requirement_type, '%c' => $row->requirement_component)), 'error');
+        return new CourseObject();
+      }
+      else {
+        return new $ret['class']($row, $requirement_component);
+      }
     }
     else {
       return FALSE;
@@ -1338,7 +1231,7 @@ function course_get_course_object($requirement_type, $requirement_component = NU
     $outline_entry = $requirement_type;
     $account = $requirement_component;
   }
-  else if (!is_null($instance)) {
+  elseif (!is_null($instance)) {
     // Search for context.
     $sql = "select * from {course_outline}
       where requirement_type = '%s'
@@ -1375,11 +1268,16 @@ function course_get_course_object($requirement_type, $requirement_component = NU
 }
 
 /**
- * Get specific LMS info by key.
+ * Get a loaded Course.
+ *
+ * @todo cache?
+ *
+ * @param object $node
+ *
+ * @return Course
  */
-function course_get_lms($key) {
-  $lapps = course_available_lms();
-  return $lapps[$key];
+function course_get_course($node, $user = NULL) {
+  return new Course($node, $user);
 }
 
 /**
@@ -1602,25 +1500,32 @@ function course_edit_enrollment_action(&$signup, $context) {
     course_report_save($report);
   }
 
-  $fulfillments = course_outline_check_remaining_requirements($node, $account);
-  foreach ($fulfillments as $snid => $fulfillment) {
-    if ($context['course_objects'][$snid] != '' && $fulfillment->complete != $context['course_objects'][$snid]) {
+  $course = new Course($node, $account);
+  foreach ($course as $key => $courseObject) {
+    $snid = $courseObject->getId();
+    $fulfillment = $courseObject->getFulfillment();
+    if ($context['course_objects'][$snid] != '') {
       // There was a change
-      $fulfillment->complete = $context['course_objects'][$snid];
-      $fulfillment->uid = $account->uid;
-      $fulfillment->info = "Requirement \"{$fulfillment->title}\" updated via bulk action.";
 
-      if ($fulfillment->complete == -1) {
-        course_outline_delete_fulfillment($fulfillment);
+      if ($context['course_objects'][$snid] == 1) {
+        // Completed
+        $fulfillment->setData('info', "Fulfillment completed via bulk action.");
+        $fulfillment->setComplete($context['course_objects'][$snid]);
       }
-      else if ($fulfillment->complete == 0) {
-        $fulfillment->complete = 0;
-        $fulfillment->grade_result = 0;
-        course_outline_save_fulfillment($fulfillment, TRUE);
+
+      if ($context['course_objects'][$snid] == -1) {
+        // Delete attempt
+        $fulfillment->delete();
       }
-      else {
-        course_outline_save_fulfillment($fulfillment);
+
+      if ($context['course_objects'][$snid] == 0) {
+        // Fail user
+        $fulfillment->setData('info', "Fulfillment failed via bulk action.");
+        $fulfillment->setComplete(0);
+        $fulfillment->setData('grade_result', 0);
       }
+
+      $fulfillment->save();
     }
   }
 
@@ -1634,11 +1539,13 @@ function course_edit_enrollment_action_form($context) {
   $num_users = count($context['selection']);
 
   $form['header'] = array(
-    '#value' => 'Use this form to edit course enrollment and completion data for ' . format_plural($num_users, '1 user', '@c users', array('@c' => $num_users)) . '.',
+    '#value' => format_plural($num_users,
+      'Use this form to edit course enrollment and completion data for 1 user',
+      'Use this form to edit course enrollment and completion data for @count users'),
   );
 
   $form['enrol_end'] = array(
-    '#title' => 'Extend course enrollment until',
+    '#title' => t('Extend course enrollment until'),
     '#type' => module_exists('date_popup') ? 'date_popup' : 'date',
     '#date_format' => 'm/d/Y',
     '#description' => t('The date when the user will not be able to access the course.'),
@@ -1675,7 +1582,7 @@ function course_edit_enrollment_action_form($context) {
   }
 
   $form['status'] = array(
-    '#title' => 'Set enrollment status to',
+    '#title' => t('Set enrollment status to'),
     '#type' => 'select',
     '#options' => array(
       '' => '',
@@ -1687,20 +1594,20 @@ function course_edit_enrollment_action_form($context) {
   );
 
   $form['complete'] = array(
-    '#title' => 'Set completion status to',
+    '#title' => t('Set completion status to'),
     '#type' => 'select',
     '#options' => array(
       '' => '',
-      1 => 'complete',
-      0 => 'incomplete',
+      1 => t('Complete'),
+      0 => t('Incomplete'),
     ),
     '#description' => t("This will change a user's course completion. Set to incomplete this to re-evaluate all requirements. Course will never be automatically un-completed once they have been marked completed."),
     '#default_value' => $course_report->complete,
   );
 
   $form['course_objects'] = array(
-    '#title' => 'Set completion status',
-    '#description' => 'Set the status of a course object to be applied to selected users.',
+    '#title' => t('Set completion status'),
+    '#description' => t('Set the status of a course object to be applied to selected users.'),
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
@@ -1709,20 +1616,19 @@ function course_edit_enrollment_action_form($context) {
     '#suffix' => '</span>',
   );
 
-  // deprecated, use Course
-  $objects = course_outline_get_course_requirements($node);
+  $course = new Course($node);
 
-  foreach ($objects as $snid => $object) {
-    $form['course_objects'][$snid] = array(
+  foreach ($course as $key => $courseObject) {
+    $form['course_objects'][$courseObject->getId()] = array(
       '#type' => 'select',
-      '#title' => $object->title,
+      '#title' => check_plain($courseObject->getTitle()),
       '#options' => array(
         '' => '- no change - ',
-        1 => 'Complete',
-        -1 => 'Incomplete',
-        0 => 'Failed',
+        1 => t('Complete'),
+        -1 => t('Incomplete'),
+        0 => t('Failed'),
       ),
-      '#default_value' => $fulfillments[$snid]->complete,
+      '#default_value' => $fulfillments[$courseObject->getId()]->complete,
     );
   }
 
@@ -1762,97 +1668,6 @@ function course_ctools_plugin_directory($owner, $plugin_type) {
 }
 
 /**
- * Form for configuring user types.
- */
-function course_user_type_settings_form() {
-  drupal_set_title('Course: Enrollment user types');
-
-  $form = array();
-
-  $form['header'] = array(
-    '#value' => 'User types allow a user to select their type only for the enrollment duration of taking the course. For example, other modules may implement a mapping from the user type to course credit or a certificate while leaving a global profile field unchanged.',
-  );
-
-  $form['course_user_types_enabled'] = array(
-    '#title' => 'Use course enrollment user types',
-    '#type' => 'checkbox',
-    '#validate' => 'course_user_type_settings_form_validate',
-    '#default_value' => variable_get('course_user_types_enabled', ''),
-  );
-
-  $form['course_user_types_field'] = array(
-    '#title' => 'Profile field to pull types from',
-    '#type' => 'select',
-    '#default_value' => variable_get('course_user_types_field', ''),
-    '#options' => course_cck_kv_fields(),
-  );
-
-  $form['course_user_types'] = array(
-    '#title' => 'Additional user types',
-    '#type' => 'textarea',
-    '#rows' => 5,
-    '#validate' => 'course_user_type_settings_form_validate',
-    '#default_value' => variable_get('course_user_types', ''),
-    '#description' => 'Input course enrollment user types in the format "key|value", one per line.',
-  );
-
-  return system_settings_form($form);
-}
-
-function course_user_type_settings_form_validate(&$form, &$form_state) {
-  $lines = explode("\n", trim($form_state['values']['course_user_types']));
-  foreach ($lines as $line) {
-    if (empty($line)) {
-      return;
-    }
-    $kv = explode('|', $line);
-    if (count($kv) != 2) {
-      form_set_error('course_user_types', 'Each user type must be in key|value format.');
-    }
-  }
-}
-
-function course_cck_kv_fields() {
-  $field_options = array();
-
-  $field_options[] = 'none';
-
-  if (module_exists('content')) {
-    foreach (content_fields() as $key => $field) {
-      // If field isn't a profile field with allowed values, do not allow it to be selectable. It wouldn't work anyways.
-      if ($field['type_name'] == 'profile' && ($field['allowed_values'] != '' || $field['allowed_values_php'] != '')) {
-        $field_options[$key] = $field['widget']['label'];
-      }
-    }
-  }
-
-  return $field_options;
-}
-
-/**
- * Get all the options for a user type selection.
- */
-function course_user_type_get_options() {
-  $field_name = variable_get('course_user_types_field', '');
-  $options = array();
-
-  if (!empty($field_name)) {
-    $options = content_allowed_values(content_fields($field_name));
-  }
-
-  $lines = explode("\n", variable_get('course_user_types', ''));
-  $additional = array();
-  foreach ($lines as $line) {
-    $line = explode('|', $line);
-    if ($line[0]) {
-      $additional[$line[0]] = $line[1];
-    }
-  }
-
-  return array_merge($options, $additional);
-}
-
-/**
  * Implementation of course_credit_check_completion().
  *
  * Require the user to choose a user type before they claim credit.
@@ -1887,8 +1702,8 @@ function course_user_type_form($form_state, $node) {
   $form['#node'] = $node;
 
   $form['course_user_type'] = array(
-    '#title' => 'Please select your user type',
-    '#description' => 'Please select your user type. This will affect the credit and certificate you will receive.',
+    '#title' => t('Please select your user type'),
+    '#description' => t('Please select your user type. This will affect the credit and certificate you will receive.'),
     '#options' => array_merge(array(''), course_user_type_get_options()),
     '#type' => 'select',
     '#required' => TRUE,
@@ -1896,7 +1711,7 @@ function course_user_type_form($form_state, $node) {
 
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => 'Next',
+    '#value' => t('Next'),
   );
 
   return $form;
@@ -1920,9 +1735,6 @@ function course_user_type_form_submit(&$form, $form_state) {
  * of self-enrollment (e.g., course_uc, course_signup) then act accordingly by
  * blocking that ability.
  *
- * Modules implementating hook_course_can_enrol should return the status and a
- * failure message. @see hook_course_can_enrol
- *
  * @staticvar array $courses
  *   Cache of hook results.
  * @param object $node
@@ -1943,6 +1755,7 @@ function course_enrol_access($node, $user = NULL) {
 
   if (!isset($courses[$node->nid])) {
     $courses[$node->nid]['success'] = TRUE;
+    // Allow modules to set self-enrollment access for a user.
     $hooks = module_invoke_all('course_can_enrol', $node, $user);
     foreach ($hooks as $key => $hook) {
       if (!$hook) {
@@ -1979,7 +1792,7 @@ function course_course_can_enrol($node, $user) {
             )),
           ));
       }
-      else if (time() < strtotime($node->{$start['field']}[0]['value'] . ' UTC')) {
+      elseif (time() < strtotime($node->{$start['field']}[0]['value'] . ' UTC')) {
         return array(array(
             'success' => FALSE,
             'message' => t('This course opens on %date.', array(
@@ -1992,20 +1805,25 @@ function course_course_can_enrol($node, $user) {
 }
 
 /**
- * Inserts or updates a course report record. Check for missing fields.
+ * Inserts or updates a course report record.
  *
  * @param object $entry
- *   Object to be inserted or updated into the course report table. Required
- *   fields are nid (Drupal node ID) and uid (Drupal user ID).
+ *   The report entry to be saved into {course_report}, containing:
+ *   - nid: Required. the node id.
+ *   - uid: Required. the user id.
+ *   - data: An array containing:
+ *     - user: The serialized user object at the time of entry.
+ *     - profile: The serialized user profile at the time of entry.
+ *   - updated: Timestamp. The entry time.
  *
- * @todo Other fields are...
+ * @todo Check for missing fields.
  */
 function course_report_save($entry) {
   // No shenanigans.
   if (!$entry->nid > 0 || !$entry->uid > 0) {
     $message = t('Report not entered because entry must have nid and uid.');
-    drupal_set_message($message, 'error');
     watchdog('course_report', $message, WATCHDOG_ERROR);
+    drupal_set_message(check_plain($message), 'error');
     return FALSE;
   }
 
@@ -2032,8 +1850,8 @@ function course_report_save($entry) {
   $old = db_fetch_object($query);
 
 
-  //declare hook_course_report_alter for altering course report
-  $course_report_alter = drupal_alter('course_report', $entry, $account, $old);
+  // Allow modules to alter course reports.
+  drupal_alter('course_report', $entry, $account, $old);
 
   if ($entry->complete && empty($entry->date_completed)) {
     $entry->date_completed = time();
@@ -2047,6 +1865,7 @@ function course_report_save($entry) {
     drupal_write_record('course_report', $entry);
   }
 
+  // Notify modules that a course report has been saved.
   module_invoke_all('course_report_saved', $entry, $account, $old);
 
   return $entry;
@@ -2096,7 +1915,7 @@ function course_report_load($mixed, $user = NULL) {
     return db_fetch_object(db_query('select cr.* from {course_report} cr
     where nid = %d and uid = %d', $mixed->nid, $user->uid));
   }
-  else if (is_numeric($user)) {
+  elseif (is_numeric($user)) {
     return db_fetch_object(db_query('select cr.* from {course_report} cr
     where nid = %d and uid = %d', $mixed, $user));
   }
@@ -2172,76 +1991,6 @@ function course_outline_delete_requirement($mixed) {
   db_query($sql, $mixed['snid']);
   $sql = "delete from {course_outline_fulfillment} where snid = %d";
   db_query($sql, $mixed['snid']);
-}
-
-/**
- * Save a fulfillment record.
- *
- * Creates or updates a fulfillment record based on requirement ID and user ID.
- *
- * @param array $mixed
- *   An array of the fulfillment record to save. Must contain `snid` and `uid`.
- */
-function course_outline_save_fulfillment($mixed) {
-  if (!$fulfillment = course_outline_get_fulfillment($mixed->snid, $mixed->uid)) {
-    // Doesn't exist
-    drupal_write_record('course_outline_fulfillment', $mixed);
-  }
-  else {
-    // Fulfillment record already exists.
-    if ($fulfillment->complete) {
-      // If it was previously complete, keep it.
-      $mixed->complete = 1;
-    }
-    drupal_write_record('course_outline_fulfillment', $mixed, array('snid', 'uid'));
-  }
-}
-
-/**
- * Get a fulfillment record from a requirement ID and user ID.
- *
- * @param int $snid
- *   The requirement ID.
- * @param int $uid
- *   The user ID.
- * @return object
- *   An object representing a fulfillment record.
- */
-function course_outline_get_fulfillment($snid, $uid) {
-  $results = db_query("SELECT * FROM {course_outline_fulfillment} WHERE snid = %d AND uid = %d", $snid, $uid);
-  while ($row = db_fetch_array($results)) {
-    return $row;
-  }
-  return FALSE;
-}
-
-/**
- * Get all the requirements for a course.
-
- * @param mixed $nid
- *   A course node object, or node identifier integer.
- * @return array
- *   An array of course outline objects.
- */
-function course_outline_get_course_requirements($nid) {
-  $requirements = array();
-
-  if (is_object($nid)) {
-    $nid = $nid->nid;
-  }
-
-  if ($nid) {
-    $query = "SELECT *
-      FROM {course_outline}
-      WHERE nid = %d
-      ORDER BY weight ASC";
-    $result = db_query($query, $nid);
-    while ($row = db_fetch_object($result)) {
-      $requirements[$row->snid] = $row;
-    }
-  }
-
-  return $requirements;
 }
 
 /**
@@ -2327,4 +2076,19 @@ function course_date_api_fields($field) {
  */
 function course_date_api_tables() {
   return array('course_report', 'course_enrolment', 'course_node');
+}
+
+/**
+ * Implementation of hook_services_resources().
+ */
+function course_services_resources() {
+  require_once("services/course_report_resource.inc");
+  require_once("services/course_credit_resource.inc");
+
+  $resources = array();
+
+  $resources += _course_report_resource();
+  $resources += _course_credit_resource();
+
+  return $resources;
 }
