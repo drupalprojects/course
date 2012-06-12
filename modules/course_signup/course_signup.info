@@ -1,8 +1,8 @@
-name = Course signups
+name = Course signup
 description = Use Signup as an enrollment and attendance system for courses.
+package = Course
 core = 6.x
 dependencies[] = course
 dependencies[] = signup
 dependencies[] = views_bulk_operations
 files[] = course_signup.classes.inc
-package = Course

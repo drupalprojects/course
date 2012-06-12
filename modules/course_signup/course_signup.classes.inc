@@ -1,6 +1,6 @@
 <?php
 
-class CourseObjectSignup extends CourseObject {
+class CourseObjectSignup extends CourseObjectNode {
 
   public function getTakeType() {
     return 'content';
@@ -15,37 +15,12 @@ class CourseObjectSignup extends CourseObject {
     }
   }
 
-  public function optionsDefinition() {
-    $options = parent::optionsDefinition();
-    $options['signup_this_course'] = NULL;
-    $options['signup_nid'] = NULL;
-    return $options;
-  }
-
   public function optionsForm(&$form, &$form_state) {
     parent::optionsForm($form, $form_state);
-    $defaults = $this->getOptions();
-    ctools_add_js('dependent');
-    ctools_include('dependent');
 
-    $form['signup_this_course'] = array(
-      '#title' => 'Check attendance for this course',
-      '#type' => 'checkbox',
-      '#default_value' => $defaults['signup_this_course'],
-      '#description' => 'Check this course for attendance.'
-    );
-
-    $form['signup_nid'] = array(
-      '#title' => t('Check a different signup'),
-      '#type' => 'textfield',
-      '#maxlength' => 512,
-      '#description' => 'Check a different signup-enabled node for attendance.',
-      '#autocomplete_path' => 'course-signup/autocomplete',
-      '#process' => array('ctools_dependent_process'),
-      '#dependency' => array(
-        'edit-signup-this-course' => array(0),
-      ),
-    );
+    $form['instance']['#title'] = t('Signup to check');
+    $form['instance']['#description'] .= '</br>' . t('Check a different signup-enabled product for attendance. Defaults to this course.');
+    $form['instance']['#autocomplete_path'] = 'course-signup/autocomplete';
 
     return $form;
   }
@@ -56,8 +31,8 @@ class CourseObjectSignup extends CourseObject {
    * Either the course node ID, or another signup node ID.
    */
   public function optionsSubmit(&$form, &$form_state) {
-    if ($form_state['values']['signup_this_course']) {
-      $this->setInstanceId($this->getCourseNid());
+    if (!$form_state['values']['instance']) {
+      $form_state['values']['instance'] = $this->getCourseNid();
     }
     parent::optionsSubmit($form, $form_state);
   }

@@ -49,14 +49,6 @@ function course_signup_menu() {
     'title' => 'Signup',
   );
 
-  $items['node/%course/signup-course'] = array(
-    'title' => 'Quick course registration',
-    'page callback' => 'course_signup_quick_register',
-    'access callback' => 'course_signup_access_quick_register',
-    'access arguments' => array(1),
-    'page arguments' => array(1),
-  );
-
   $items['course-signup/autocomplete'] = array(
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
@@ -104,24 +96,6 @@ function course_signup_tab_title($node) {
 }
 
 /**
- * Check for quick registration.
- *
- * User should be logged in, bypass checkout should be enabled. Course can
- * not be relationships. Node must be a signup, and have no sell price or a sell
- * price set to 0.
- */
-function course_signup_access_quick_register($node) {
-  global $user;
-  $result = course_enrol_access($node, $user);
-  if ($user->uid > 0 && $node->signup_status && variable_get('course_signup_bypass_checkout', 1) && !($node->sell_price > 0) && $node->course['lms'] != 'relationships' && $result['success']) {
-    //@todo check for attributes
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-/**
  * Do a quick registration.
  *
  * @param $node Course node object.
@@ -135,10 +109,26 @@ function course_signup_quick_register($node, $account = NULL, $notify = TRUE) {
 
   if (!$signup = db_fetch_object(db_query('select * from {signup_log} where nid = %d and uid = %d', $node->nid, $account->uid))) {
     // Save a new signup.
-    signup_sign_up_user(array(
-      'nid' => $node->nid,
-      'uid' => $account->uid,
-      ), $notify);
+    if ($node->signup_status && $notify) {
+      // Signup is open so we can use signup's function.
+      signup_sign_up_user(array(
+        'nid' => $node->nid,
+        'uid' => $account->uid,
+        ), $notify);
+    }
+    else {
+      // The signup was closed. Do it silently. We can't use
+      // signup_sign_up_user() because this would result in a
+      // drupal_access_denied() call.
+      $signup = new stdClass();
+      $signup->uid = $account->uid;
+      $signup->nid = $node->nid;
+      $signup->signup_time = time();
+      $signup->attended = 0;
+      $signup->form_data = array();
+      $signup->count_towards_limit = 1;
+      signup_save_signup($signup);
+    }
   }
   else {
     // Maybe we are "approving" an enrollment.
@@ -197,25 +187,6 @@ function course_signup_signup_enroll($signup) {
  * Implementation of hook_form_alter().
  */
 function course_signup_form_alter(&$form, &$form_state, $form_id) {
-  if ($form_id == 'signup_form') {
-    global $user;
-    $node = node_load($form['nid']['#value']);
-    $result = course_enrol_access($node, $user);
-    if (!$result['success']) {
-      $form = array();
-      if ($result['header']) {
-        $form['closed-header']['#value'] = '<h2>' . $result['header'] . '</h2>';
-      }
-      $form['closed-message']['#value'] = $result['message'];
-    }
-  }
-
-  if ($form_id == 'uc_product_add_to_cart_form') {
-    if (course_signup_access_quick_register($form['node']['#value'])) {
-      $form['#access'] = FALSE;
-    }
-  }
-
   if ($form_id == 'signup_node_admin_summary_form') {
     $node = node_load($form['nid']['#value']);
     if (course_node_is_course($node)) {
@@ -273,25 +244,6 @@ function course_signup_init() {
     $conf['signup_fieldset_collapsed'] = 0;
     $conf['uc_signup_add_cart_text'] = 'Register';
     $conf['uc_signup_signups_closed_text'] = 'Registration is closed for this activity.';
-  }
-
-  // Check if we can quick register.
-  if (course_signup_access_quick_register($node) && !course_enrolment_check($node, $user)) {
-    if (arg(2) == 'takecourse') {
-      course_signup_quick_register($node);
-    }
-  }
-}
-
-/**
- * Implementation of hook_course_show_button_alter().
- *
- * If user can quick register (free course) then always show the take course
- * button.
- */
-function course_signup_course_show_button_alter(&$show, $node) {
-  if (course_signup_access_quick_register($node)) {
-    $show = TRUE;
   }
 }
 
@@ -355,16 +307,6 @@ function course_signup_views_query_alter(&$view, &$query) {
 }
 
 /**
- * Implementation of hook_signup_suppress().
- *
- * Hide signup form complete if sell price > 0 or user has access to quick
- * register through the take course button.
- */
-function course_signup_signup_suppress($node) {
-  return $node->sell_price > 0 || course_signup_access_quick_register($node);
-}
-
-/**
  * Implementation of hook_add_to_cart().
  *
  * Skip the uc_signup screens for course signups.
@@ -400,7 +342,20 @@ function course_signup_course_can_enrol($node, $user) {
     $hooks[] = $check;
   }
 
-  return $hooks;
+  if ($node->signup) {
+    // This node is signup-enabled.
+    if (!db_result(db_query('select 1 from {signup_log} where nid = %d and uid = %d', $node->nid, $user->uid))) {
+      if ($signups[$node->nid]) {
+        // Block enrollments until the user is signed up.
+        $hooks[] = array(
+          'success' => FALSE,
+          'message' => 'You must be signed up for this course to enroll.',
+        );
+      }
+    }
+
+    return $hooks;
+  }
 }
 
 /**
@@ -413,13 +368,16 @@ function course_signup_views_api() {
 }
 
 /**
- * Implementation of hook_course_object_info().
+ * Implements hook_course_handlers().
  */
-function course_signup_course_object_info() {
+function course_signup_course_handlers() {
   return array(
-    'signup_attendance' => array(
-      'title' => 'Attendance',
-      'class' => 'CourseObjectSignup',
+    'object' => array(
+      'signup_attendance' => array(
+        'name' => t('Attendance'),
+        'class' => 'CourseObjectSignup',
+        'description' => t('An attendance course object.'),
+      ),
     ),
   );
 }
