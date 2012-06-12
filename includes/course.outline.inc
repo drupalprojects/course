@@ -57,21 +57,23 @@ function course_outline_overview_form(&$form_state) {
   $form['#theme'] = 'course_outline_overview_form';
 
   // These are the available objects.
-  $course_objects = course_available_objects();
+  $course_objects = course_get_handlers('object');
   $options = array(
     '' => '- select new -',
   );
   foreach ($course_objects as $module => $objects) {
-    if (count($objects) == 1) {
-      $pair = each($objects);
-      $key = $pair[0];
-      $object = $pair[1];
-      $options[$object['module'] . '-' . $key] = $object['title'];
-    }
-    else {
-      foreach ($objects as $key => $object) {
-        $module_string = ucwords(str_replace('_', ' ', $module));
-        $options[$object['module'] . '-' . $key] = $module_string . ': ' . $object['title'];
+    if ($objects) {
+      if (count($objects) == 1) {
+        $pair = each($objects);
+        $key = $pair[0];
+        $object = $pair[1];
+        $options[$module . '-' . $key] = $object['name'];
+      }
+      else {
+        foreach ($objects as $key => $object) {
+          $module_string = ucwords(str_replace('_', ' ', $module));
+          $options[$module . '-' . $key] = $module_string . ': ' . $object['name'];
+        }
       }
     }
   }
@@ -83,11 +85,7 @@ function course_outline_overview_form(&$form_state) {
       $requirement = (array) $requirement;
       $courseObject = course_get_course_object($requirement['snid']);
       foreach ($courseObject->getWarnings() as $warning) {
-        drupal_set_message($warning, 'warning');
-      }
-      if ($requirement['hidden']) {
-        // Do not print out hidden requirements yet, such as attendance/payment.
-        continue;
+        drupal_set_message(filter_xss($warning), 'warning');
       }
       $rform = _course_outline_requirement_form($requirement, $uniqid);
       if (empty($requirement['snid'])) {
@@ -106,7 +104,7 @@ function course_outline_overview_form(&$form_state) {
         );
         $rform['requirement_component_show'] = array(
           '#type' => 'markup',
-          '#value' => $course_objects[$requirement['requirement_type']][$requirement['requirement_component']]['title'] . '<br/><small><i>'
+          '#value' => $course_objects[$requirement['requirement_type']][$requirement['requirement_component']]['name'] . '<br/><small><i>'
           . ucwords(str_replace('_', ' ', $requirement['requirement_type'])) . '</i></small>',
         );
       }
@@ -183,8 +181,8 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
     '#title' => 'Title',
     '#type' => 'textfield',
     '#size' => 16,
-    '#default_value' => $requirement['title'],
-    '#description' => $requirement['add'],
+    '#default_value' => check_plain($requirement['title']),
+    '#description' => check_plain($requirement['add']),
   );
   $rform['options']['required'] = array(
     '#title' => 'Required',
@@ -256,7 +254,7 @@ function theme_course_outline_overview_form($form) {
     // Mark everything else as printed.
     drupal_render($requirements[$key]);
   }
-  $table = theme_table($headers, $rows, array('id' => 'course-objects'));
+  $table = theme('table', $headers, $rows, array('id' => 'course-objects'));
   $table .= drupal_render($form);
   return $table;
 }
@@ -281,33 +279,40 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
     $record = array_merge($record, $record['options']);
     $record = (object) $record;
     $record->nid = $node->nid;
+    if (!$record->requirement_type) {
+      list($record->requirement_type, $record->requirement_component) = explode('-', $record->requirement_component);
+    }
+    $courseObject = course_get_course_object($record);
     if ($record->delete && $record->snid) {
-      $courseObject = course_get_course_object($record);
       if ($record->delete_instance) {
         // Delete the instance (node, whatever).
         $courseObject->delete();
       }
       course_outline_delete_requirement($record);
     }
-    else if (!$record->delete && !empty($record->requirement_component)) {
-      // Must have a component.
-      $courseObject = course_outline_save_requirement($record, $node);
-    }
-
-    // Hey, now we have an ID. We might have settings for objects that didn't
-    // exist until now. Save them.
-    if ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$key]) {
-      foreach ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$key] as $key => $value) {
+    elseif (!$record->delete && !empty($record->requirement_component)) {
+      // Set the options, but don't overwrite any that weren't provided.
+      foreach ($record as $key => $value) {
         $courseObject->setOption($key, $value);
+      }
+
+      // Hey, now we have an ID. We might have settings for objects that didn't
+      // exist until now. Save them.
+      if ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$key]) {
+        foreach ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$key] as $key => $value) {
+          if (!is_null($value)) {
+            $courseObject->setOption($key, $value);
+          }
+        }
+      }
+
+      if (!$courseObject->getInstanceId()) {
+        $courseObject->create();
       }
       $courseObject->save();
     }
-
-    if (!$courseObject->getInstanceId()) {
-      $courseObject->create();
-      $courseObject->save();
-    }
   }
+  unset($_SESSION['course'][$node->nid]['editing']);
   drupal_set_message('Updated course.');
   drupal_goto("node/$node->nid/course-outline");
 }
@@ -319,67 +324,70 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
  *
  * @return course outline list.
  */
-function course_get_outline($node) {
+function course_outline_list($node) {
   global $user;
 
   $course = new Course($node, $user);
 
   // Iterate over objects.
-  foreach ($course->getObjects() as $key => $courseObject) {
+  foreach ($course as $key => $courseObject) {
     $step = array();
 
-    // Find out what this step's status is.
-    // Check the previous step.
-
-    if ($courseObject->getFulfillment()->isComplete()) {
-      // Step is complete. User can access.
-      $step['link_style'] = 'completed';
-      $step['status_text'] = 'Complete';
-      $step['link_to_step'] = 'node/' . $courseObject->getCourseNid() . '/course-object/' . $courseObject->getId();
-      $step['image'] = 'misc/watchdog-ok.png';
+    if (!$courseObject->access('see')) {
+      if ($status = $courseObject->getStatus()) {
+        drupal_set_message(filter_xss($status), 'info');
+      }
+      continue;
     }
-    else if (!$courseObject->getFulfillment()->isComplete()) {
-      $step['link_style'] = 'in-progress';
+    if ($courseObject->access('take')) {
+      // User can take this course object.
+      $step['link'] = $courseObject->getUrl();
 
       if (!$prev_req || $prev_req->getFulfillment()->isComplete()) {
-        $step['status_text'] = 'Begin';
+        $step['status'] = 'Begin';
       }
 
-      // Check if this is incomplete, but next. User can access.
-      if ($courseObject->getFulfillment()->getId()) {
-        $step['status_text'] = 'Continue';
+      // Step is complete.
+      if ($courseObject->getFulfillment()->isComplete()) {
+        $step['class'] = 'completed';
+        $step['status'] = 'Complete';
+        $step['image'] = 'misc/watchdog-ok.png';
+      }
+      elseif ($courseObject->getFulfillment()->getId()) {
+        $step['status'] = 'Continue';
+        $step['class'] = 'continue';
+        $step['image'] = 'misc/menu-collapsed.png';
         if ($course->getActive() === $courseObject) {
-          $step['status_text'] = $courseObject->getStatus();
-          if (!$step['status_text']) {
-            $step['status_text'] = 'In progress';
+          $step['status'] = $courseObject->getStatus();
+          if (!$step['status'] && $courseObject->getCourse()->getActive() === $courseObject) {
+            $step['status'] = 'In progress';
+            $step['class'] = 'in-progress';
             $step['image'] = 'misc/watchdog-warning.png';
           }
         }
       }
-
-      $step['link_to_step'] = 'node/' . $courseObject->getCourseNid() . '/course-object/' . $courseObject->getId();
     }
     else {
       // User cannot access this step yet.
-      $step['link_style'] = 'not-started';
-      $step['link_to_step'] = '';
+      $step['style'] = 'not-started';
+      $step['status'] = implode('<br/>', $courseObject->getAccessMessages());
     }
 
-    $img = theme_image($step['image']);
+    $img = theme('image', $step['image']);
 
-    drupal_alter('course_outline_step', $step, $node, $user);
-    if (!$step['link_to_step']) {
-      $data = $courseObject->getTitle();
+    if (!$step['link']) {
+      $data = $courseObject->getTitle() .  '<br/><span class="course-outline-status">' . $step['status'] . '</span>';
     }
     else {
-      $data = l("$img {$courseObject->getTitle()}<br/>", $step['link_to_step'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status_text'] . '</span>';
+      $data = l("$img {$courseObject->getTitle()}<br/>", $step['link'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status'] . '</span>';
     }
     $workflow[] = array(
       'data' => $data,
-      'id' => $step['id_text'],
-      'class' => "{$step['link_style']} $class_more",
+      'id' => $step['id'],
+      'class' => $step['style'],
     );
 
+    // We have to clone it, otherwise $courseObject becomes the next object.
     $prev_req = clone $courseObject;
   }
 
@@ -390,23 +398,22 @@ function course_get_outline($node) {
     );
   }
 
-  // Allow other modules to alter the workflow if needed.
-  drupal_alter('course_outline', $workflow);
-
-  $output .= theme_item_list($workflow);
-
+  $output .= '<div id="course-toc">';
+  $output .= '<div id="course-toc-trigger" class="trigger"></div>';
+  $output .= theme('item_list', $workflow);
+  $output .= '</div>';
   return $output;
 }
 
 /**
  * Render a landing page for course completion.
  *
- * Modules can use hook_course_outline_completion_links_alter() to add links
- * to this page, such as post-course actions.
- *
  * @param $course_node A course node.
  *
  * @return string HTML for the landing page.
+ *
+ * @todo change the name of this function (since it's more than just completion
+ * links).
  */
 function course_outline_show_complete_links($course_node) {
   global $user;
@@ -417,9 +424,22 @@ function course_outline_show_complete_links($course_node) {
     $links = array(
       'course' => array('Return to course', "node/$course_node->nid", 'Return to the course to view course details and material.'),
     );
+    // Allow modules to add links to the course completion landing page, such as
+    // post-course actions.
     drupal_alter('course_outline_completion_links', $links, $course_node, $account);
     foreach ($links as $link) {
-      $txt_out .= theme_form_element(array('#description' => $link[2]), l($link[0], $link[1]));
+      // @todo change the way $links work. Replace the three element array with
+      // something else. Maybe $element and $value from theme_form_element() if
+      // we must be this controlling?
+      // Example:
+      // @code
+      //   $element = t('A description');
+      //   $value = l($text, $path);
+      //   $links = array('element' => $element, 'value' => $value).
+      // @endcode
+      // But why not allow modules to alter the landing page however they want
+      // (instead of requiring 'links' with this very specific output format)?
+      $txt_out .= theme('form_element', array('#description' => $link[2]), l($link[0], $link[1]));
     }
   }
   else {
@@ -432,13 +452,13 @@ function course_outline_show_complete_links($course_node) {
       $grade = $req['graded'] ? ' - Your grade: ' . $req['grade_result'] . '%, Pass grade: ' . $req['passing_grade'] . '%' : '';
       $items[] = array(
         array(
-          'data' => theme_image("misc/watchdog-{$status_img}.png", $status_css),
+          'data' => theme('image', "misc/watchdog-{$status_img}.png", $status_css),
           'width' => 20,
         ),
         $req['title'] . $status_optional . $grade,
       );
     }
-    $reqs_txt = theme_table(NULL, $items);
+    $reqs_txt = theme('table', NULL, $items);
 
     $txt_out .= '<p>' . t('You must complete the remaining requirements to proceed.') . '</p>';
     $txt_out .= $reqs_txt . '<div class="homelink"><p>' . l($course_out_return_array['course_outline_link_text'], $course_out_return_array['course_outline_link']) . '</p></div>';
@@ -446,9 +466,11 @@ function course_outline_show_complete_links($course_node) {
     $links = array(
       'course' => array('Return to course', "node/$course_node->nid/takecourse", 'Return to the course to view course details and material.'),
     );
+    // Allow modules to alter remaining requirement links on the course
+    // completion landing page.
     drupal_alter('course_outline_incomplete_links', $links, $course_node, $account);
     foreach ($links as $link) {
-      $txt_out .= theme_form_element(array('#description' => $link[2]), l($link[0], $link[1]));
+      $txt_out .= theme('form_element', array('#description' => $link[2]), l($link[0], $link[1]));
     }
   }
 
