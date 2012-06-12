@@ -1,26 +1,29 @@
 <?php
 
 /**
- * Implementation of hook_course_object_info().
+ * Implements hook_course_handlers().
  */
-function course_scorm_course_object_info() {
+function course_scorm_course_handlers() {
+  $handlers = array();
+
+  // Dynamically generate the object handlers.
   $types = content_types();
+  $handlers['object'] = array();
   $fields = content_fields();
   foreach ($fields as $name => $field) {
     if ($field['type'] == 'filefield' && $field['widget']['type'] == 'SCORM_widget') {
       if (variable_get("course_content_use_{$field['type_name']}", 0)) {
-        $course_objects[$field['type_name']] = array(
-          'title' => $types[$field['type_name']]['name'],
-          'suggested title' => 'Course',
+        $handlers['object'][$field['type_name']] = array(
+          'name' => $types[$field['type_name']]['name'],
           'class' => 'CourseObjectScorm',
-          'description' => 'A SCORM object to be used in a course workflow.',
-          'graded' => TRUE,
+          'description' => t('A SCORM object to be used in a course workflow.'),
         );
       }
     }
   }
 
-  return $course_objects;
+  // Return the handlers array.
+  return $handlers;
 }
 
 /**
