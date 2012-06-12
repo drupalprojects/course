@@ -197,6 +197,25 @@ function course_views_data() {
   $data['course_node']['transcript']['filter']['label'] = 'Transcript';
   $data['course_node']['type']['filter']['handler'] = 'views_handler_filter_course_type';
 
+  // Open/close dates.
+  $data['course_node']['open'] = $data['course_node']['close'] = array(
+    'field' => array(
+      'handler' => 'views_handler_field_date',
+    ),
+    'filter' => array(
+      'handler' => 'views_handler_filter_date',
+    ),
+    'argument' => array(
+      'handler' => 'views_handler_argument_date',
+    ),
+    'sort' => array(
+      'handler' => 'views_handler_sort_date',
+    ),
+  );
+  $data['course_node']['open']['title'] = 'Release';
+  $data['course_node']['open']['help'] = 'Date course opens';
+  $data['course_node']['close']['title'] = 'Expiration';
+  $data['course_node']['close']['help'] = 'Date course closes';
 
   // report
   $data['course_report']['table']['group'] = t('Course report');
