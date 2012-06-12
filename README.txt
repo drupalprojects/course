@@ -7,12 +7,11 @@ number of graded or ungraded course objects.
 
 Features
 --------
-* Course object API (Drupal LMS)
+* Course object API
     * Allow any Drupal node to be part of a course requirement workflow
     * Built in support for several course objects (see Getting started)
 * Course API to allow access to taking courses/enrolling into courses
-* External LMS support such as Moodle
-    * Built-in Moodle/Drupal course integration, SSO
+* Framework for external learning application integration (such as Moodle).
 * Views integration, including several default views for course listings and
   user status
 
