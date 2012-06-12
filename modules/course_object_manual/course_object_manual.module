@@ -6,15 +6,16 @@
  */
 
 /**
- * Implementation of hook_course_object_info().
+ * Implements hook_course_handlers().
  */
-function course_object_manual_course_object_info() {
+function course_object_manual_course_handlers() {
   return array(
-    'manual' => array(
-      'title' => 'Manual step',
-      'suggested title' => 'Manual step',
-      'class' => 'CourseObjectManual',
-      'description' => 'A manual step to be used in a course workflow, only marked complete by administrators.',
+    'object' => array(
+      'manual' => array(
+        'name' => t('Manual step'),
+        'class' => 'CourseObjectManual',
+        'description' => t('A manual step to be used in a course workflow, only marked complete by administrators.'),
+      ),
     ),
   );
 }
