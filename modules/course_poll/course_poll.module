@@ -11,15 +11,16 @@ function course_poll_init() {
 }
 
 /**
- * Implementation of hook_course_object_info().
+ * Implementation of hook_course_handlers().
  */
-function course_poll_course_object_info() {
+function course_poll_course_handlers() {
   return array(
-    'poll' => array(
-      'title' => 'Poll',
-      'suggested title' => 'Poll',
-      'class' => 'CourseObjectPoll',
-      'description' => 'A poll to be used in a course workflow.',
+    'object' => array(
+      'poll' => array(
+        'name' => t('Poll'),
+        'class' => 'CourseObjectPoll',
+        'description' => t('A poll to be used in a course workflow.'),
+      ),
     ),
   );
 }

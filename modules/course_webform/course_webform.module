@@ -11,16 +11,23 @@ function course_webform_init() {
 }
 
 /**
- * Implementation of hook_course_object_info().
+ * Implements hook_course_handlers().
  */
-function course_webform_course_object_info() {
+function course_webform_course_handlers() {
   return array(
-    'webform' => array(
-      'title' => 'Webform',
-      'suggested title' => 'Evaluation',
-      'class' => 'CourseObjectWebform',
-      'description' => 'A webform to be used in a course workflow.',
-      'graded' => FALSE,
+    'object' => array(
+      'webform' => array(
+        'name' => t('Webform'),
+        'class' => 'CourseObjectWebform',
+        'description' => t('A webform to be used in a course workflow.'),
+      ),
+    ),
+    'settings' => array(
+      'webform' => array(
+        'name' => t('Webform'),
+        'description' => t('Course webform configurations.'),
+        'callback' => 'course_webform_settings',
+      ),
     ),
   );
 }
@@ -34,4 +41,18 @@ function course_webform_webform_submission_insert($node, $submission) {
   // Find the course object associated with this webform.
   $courseObject = course_get_course_object('course_webform', 'webform', arg(1), $user);
   $courseObject->getFulfillment()->setComplete()->save();
+}
+
+function course_webform_settings() {
+  $form = array();
+
+  $form['course_webform_settings_test'] = array(
+    '#title' => t('Test'),
+    '#type' => 'textarea',
+    '#rows' => 5,
+    '#description' => t('Test.'),
+    '#default_value' => variable_get('course_webform_settings_test', ''),
+  );
+
+  return system_settings_form($form);
 }

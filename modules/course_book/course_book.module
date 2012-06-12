@@ -12,13 +12,16 @@ function course_book_init() {
 }
 
 /**
- * Implementation of hook_course_object_info().
+ * Implements hook_course_handlers().
  */
-function course_book_course_object_info() {
+function course_book_course_handlers() {
   return array(
-    'book' => array(
-      'title' => 'Book',
-      'class' => 'CourseObjectNode',
+    'object' => array(
+      'book' => array(
+        'name' => t('Book'),
+        'description' => t('A book course object.'),
+        'class' => 'CourseObjectNode',
+      ),
     ),
   );
 }

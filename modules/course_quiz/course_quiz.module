@@ -11,13 +11,16 @@ function course_quiz_init() {
 }
 
 /**
- * Implementation of hook_course_object_info().
+ * Implements hook_course_handlers().
  */
-function course_quiz_course_object_info() {
+function course_quiz_course_handlers() {
   return array(
-    'quiz' => array(
-      'title' => 'Quiz',
-      'class' => 'CourseObjectQuiz',
+    'object' => array(
+      'quiz' => array(
+        'name' => t('Quiz'),
+        'class' => 'CourseObjectQuiz',
+        'description' => t('A Quiz course object.'),
+      ),
     ),
   );
 }
