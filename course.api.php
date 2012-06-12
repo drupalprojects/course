@@ -2,7 +2,7 @@
 
 /**
  * @file
- * This file contains documentation about hooks invoked by course module.
+ * Hooks provided by Course module.
  *
  * @todo until we finish cleaning up all files and submodules, grep through
  * everything for 'drupal_alter', 'module_invoke_all', 'module_invoke', and
@@ -10,289 +10,318 @@
  */
 
 /**
- * @defgroup course_hooks Course's hooks
+ * @addtogroup hooks
  * @{
- * Hooks that can be implemented by other modules to implement the Course API.
  */
 
-////////////////////////////////////////////////////////////////////////////////
-// Strongly recommended hooks.
-
 /**
- * Hook allowing modules to provide lms types to course module.
+ * Allow modules to define handlers that extend Course functionality.
  *
  * @return array
- *   An array of LMS declarations, keyed by LMS type, containing:
- *   - name: The LMS label.
- *   - description: The LMS description.
- *   - module: the implementing module. @todo remove this!
- *   - install url: optional LMS installation URL.
- *   - weight: the order of LMS selection appearance. @todo maybe remove this?
- *
- * @see course_available_lms()
- *
- * @todo consider globally replacing 'lms' (learning management system) with
- * 'lapp' (learning application), since normally course module is used to build
- * a Drupal-based learning management system.
- *
- * Required course submodule hook.
+ *   A associative array of handler declarations, keyed by type:
+ *   - object: An associative array of course object types, keyed by type:
+ *     - name: A string to reference this type on administrative forms.
+ *     - description: A string to display more information to administrators.
+ *     - class: (optional) A class name which will override the default
+ *       CourseObject class.
+ *   - outline: An asociative array of outline handlers, keyed by type:
+ *     - name: A string to reference this type on administrative forms.
+ *     - description: A string to display more information to administrators.
+ *     - callback: A function name that will return themed course outline HTML.
+ *     - file: (optional) A string to locate the callback file. This should be
+ *       specified if not located in the implementing module's .module file.
+ *     - file path: (optional) The path to the directory containing the file
+ *       specified in 'file'. Defaults to the implementing module path.
+ *   - settings: An associative array of configurations, which will be available
+ *     as secondary tabs from the Course sitewide settings form:
+ *     - name: A string to reference this type on administrative forms.
+ *     - description: A string to display more information to administrators.
+ *     - callback: A function name that will return a Drupal form API array.
+ *     - file: (optional) A string to locate the callback file. This should be
+ *       specified if not located in the implementing module's .module file.
+ *     - file path: (optional) The path to the directory containing the file
+ *       specified in 'file'. Defaults to the implementing module path.
+ *     - package: (optional) The key of the settings package this form should be
+ *       grouped with.
  */
-function hook_lms_info() {
-  // @todo add an even more generic example.
-  if (!variable_get('course_disable_builtin_lms', 0)) {
-    return array(
-      'drupal' => array(
-        'name' => 'Drupal',
-        'description' => 'Provides courses based on Drupal Quiz learning objects.',
-        'module' => 'course',
-        'install url' => '',
-        'weight' => 5,
-      ),
-      'none' => array(
-        'name' => 'Placeholder',
-        'description' => 'A course with no course objects.',
-        'module' => 'course',
-        'weight' => 10,
-      ),
-    );
-  }
-}
-
-/**
- * Hook allowing course modules to extend the course settings form.
- *
- * @todo UX review of course settings.
- */
-function hook_lms_settings_form($lapp_id) {
-  $form = array();
-
-  switch ($lapp_id) {
-    case 'drupal':
-      $form['course_something']['#type'] = 'radios';
-      $form['course_something']['#options'] = array('Something','Something else');
-      $form['course_something']['#default_value'] = variable_get('course_something','');
-      break;
-  }
-
-  return system_settings_form($form);
-}
-
-/**
- * Defines the installation status of an LMS.
- *
- * @param $lapp_id
- *   The learning application ID.
- *
- * @return bool
- *   The LMS installation status.
- */
-function hook_lms_status($lapp_id) {
-  if ($lapp_id == 'drupal') {
-    $modules = _course_required_modules();
-    foreach ($modules as $module) {
-      if (!module_exists($module)) {
-        return FALSE;
-      }
-    }
-    return TRUE;
-  }
-  if ($lapp_id == 'none') {
-    return TRUE;
-  }
-}
-
-/**
- * Hook allowing lms include files to list other modules necessary for this LMS
- * LMS to function properly. The only reason we have this was a decision to use
- * inc files for LMS types rather than modules. Otherwise we would use Drupal's
- * built-in module dependency system.
- */
-function hook_lms_install($lapp_id) {
-  // @todo add an even more generic example.
-  if ($lapp_id == 'drupal') {
-    $out = '<h3>' . 'Module status' . '</h3>';
-    $headers = array('Module', 'Status');
-    $modules = _course_required_modules();
-    foreach ($modules as $module) {
-      if (module_exists($module)) {
-        $rows[] = array($module, 'OK');
-      }
-      else {
-        $rows[] = array($module, 'Not installed');
-      }
-    }
-    return $out . theme_table($headers, $rows);
-  }
-}
-
-/**
- * Hook allowing modules to run operations after installation, such as pre-set
- * quiz settings, etc.
- */
-function hook_lms_postinstall() {
-  // @todo document this.
-}
-
-/**
- * Modules declaring LMS types must return takecourse HTML through this hook.
- *
- * @param $key string
- *   The LMS key as defined in hook_lms_info().
- * @param $node object
- *   The course node.
- *
- * @see course_take_course()
- *   Useses this hook to determine if any LMS has been installed.
- * @see hook_lms_info()
- *   Defines the need for this hook.
- * @see course_lms_take_course()
- *   Implements this hook.
- *
- * @return string
- *   HTML output for the takecourse page.
- */
-function hook_lms_take_course($key, $node) {
-  // Example from course_lms_take_course().
-  if ($key == 'drupal') {
-    return course_get_outline($node);
-  }
-}
-
-/**
- * @todo explain this hook.
- */
-function hook_lms_edit_course($key, $node) {
-  // @todo add an even more generic example.
-  if ($key == 'drupal') {
-    // Do something.
-  }
-}
-
-/**
- * Expose objects to Course.
- *
- * Implementations should return a keyed array of course objects.
- *
- * @return array
- *   An array of course objects. The course object list is an associative array
- *   where the key is the machine name of the object. Each course object may
- *   contain the following key-value pairs:
- *     - 'title': The name to appear in object add forms
- *     - 'suggested title': The title to show by default in the workflow
- *     - 'graded': True or false, can this type be graded
- *     - 'class': The course object's class
- *     - 'description': A brief description of the course object.
- */
-function hook_course_object_info() {
-  // Example from course_quiz module.
+function hook_course_handlers() {
+  // Example: a custom module definition.
   return array(
-    'quiz' => array(
-      'title' => 'Drupal Quiz',
-      'suggested title' => 'Quiz',
-      'graded' => TRUE,
-      'class' => 'QuizCourseObject',
-      'description' => 'A drupal quiz as a course object.',
+    'object' => array(
+      'custom' => array(
+        'name' => t('Custom'),
+        'class' => 'CustomCourseObject',
+        'description' => t('A custom course object.'),
+      ),
+    ),
+    'outline' => array(
+      'custom' => array(
+        'name' => t('Custom'),
+        'description' => t('Custom outline display.'),
+        'callback' => 'custom_outline',
+      ),
+    ),
+    'settings' => array(
+      'custom' => array(
+        'name' => t('Custom'),
+        'description' => t('Course custom configurations.'),
+        'callback' => 'custom_course_settings',
+      ),
+      'followup' => array(
+        'name' => t('Follow up'),
+        'description' => t('Course custom followup configurations.'),
+        'callback' => 'custom_course_followup_settings',
+        'file' => 'includes/another_module.followup.inc',
+        'file path' => drupal_get_path('module', 'another_module'),
+        'package' => 'custom',
+      ),
     ),
   );
 }
 
 /**
- * Allow external LMSs to add a unique identifier to the drupal course object on
- * save and update.
+ * Allow modules to alter each other's list of handlers.
  *
- * @param $node object
+ * @param array $handlers
+ *   By reference. The return value from each module that implements
+ *   hook_course_handlers().
+ * @param type $module
+ *
+ * @see course_get_handlers()
+ */
+function hook_course_handlers_alter(&$handlers, $module) {
+  // Example: alter the class of a course object handler.
+  $is_quiz_type = isset($handlers['object']) && isset($handlers['object']['quiz']);
+  if ($module == 'course_quiz' && $is_quiz_type) {
+    // Change which class should be used.
+    $handlers['object']['quiz']['class'] = 'CustomQuizCourseObject';
+  }
+}
+
+/**
+ * Allow modules to add links to the course completion landing page, such as
+ * post-course actions.
+ *
+ * @param array $links
+ *   By reference. Currently an array of three elements:
+ *   - 0: $path param for l().
+ *   - 1: $text param for l().
+ *   - 2: A description, suitable for theme_form_element().
+ * @param object $course_node
+ *   The course node object.
+ * @param object $account
+ *   The user who just took the course.
+ *
+ * @see course_outline_show_complete_links()
+ */
+function hook_course_outline_completion_links(&$links, $course_node, $account) {
+  // Example: add a link.
+  $links[] = array(t('Go home!'), '<front>', t('If you got this far, you
+    deserve a link back home'));
+}
+
+/**
+ * Allow modules to alter remaining requirement links on the course completion
+ * landing page.
+ *
+ * @param array $links
+ *   Same as $links param for hook_course_outline_completion_links().
+ * @param object $course_node
+ *   The course node object.
+ * @param object $account
+ *   The user who just took the course.
+ *
+ * @see course_outline_show_complete_links()
+ */
+function hook_course_outline_incomplete_links(&$links, $course_node, $account) {
+  // Example: change the default link.
+  $links['course'] = array(t("Let's try that again"), "node/$course_node->nid/takecourse", t('Looks like you missed something.'));
+}
+
+/**
+ * Invoke modules for creation of an external course.
+ *
+ * This hook allows external learning applications to add a unique identifier to
+ * the drupal course object on save and update.
+ *
+ * @param object $node
  *   The course node.
  *
- * @return int
- *   An enternal LMS course identifier.
+ * @return string
+ *   An enternal learning application course identifier.
  *
  * @see course_nodeapi()
+ *
+ * @todo do we need this, since we have hook_course_nodeapi_extra()?
  */
 function hook_course_create_external($node) {
-  // Example from course_moodle module, returning a numeric moodle course id.
+  // Example from course_moodle module, returning a numeric Moodle course id.
   return course_moodle_api_course_post($node);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Optional hooks.
-
 /**
- * Hook allowing modules to determine course take button display.
+ * Allow modules to restrict menu access to the take course tab.
+ *
+ * @param object $node
+ *   The course node.
+ * @param object $user
+ *   The user to check access.
+ *
+ * @return boolean
+ *   Any hook returning FALSE will restrict access to the take course tab.
  */
 function hook_course_has_takecourse($node, $user) {
-  // @todo document this.
+  // @todo add example.
 }
 
 /**
- * @todo explain this hook.
+ * Allow modules to restrict menu access to the course setting tab.
+ *
+ * @param object $node
+ *   The course node.
+ * @param object $user
+ *   The user to check access.
+ *
+ * @return boolean
+ *   Any hook returning FALSE will restrict access to the course settings tab.
+ *
+ * @see course_settings_menu_access()
+ *
+ * @todo why would we want this hook? Modules can already use hook_menu_alter().
  */
 function hook_course_has_settings($node, $user) {
-  // @todo document this.
+  // @todo add example.
 }
 
 /**
- * Hook allowing modules to determine if this course should be restricted.
+ * Allow modules to determine if this course should be restricted.
+ *
+ * If any module implementing this hook returns FALSE or an array containing
+ * 'success' => FALSE, the course will be restricted.
+ *
+ * @param object $node
+ *   The course node.
+ * @param object $user
+ *   The user who may or may not take the course.
+ *
+ * @return boolean|array
+ *   Either FALSE, or an array containing:
+ *   - success: Boolean. Indicates whether or not the user has permission to
+ *     take this course.
+ *   - message: String. If success is FALSE, a message to display to the user.
+ *
+ * @see course_take_course_access()
  */
 function hook_can_take_course($node, $user) {
-  // @todo document this.
+  // @see course_can_take_course() and hook_can_take_course() for examples of
+  // how to use this hook.
 }
 
 /**
- * Hook allowing other course modules to know about the recently created course.
+ * Allow modules to extend course module's implementation of hook_nodeapi().
  *
  * @param $node
  *   The fully loaded node object.
  *
  * @param $op
- *   Accepts $op values from hook_nodeapi().
+ *   Accepts $op values from hook_nodeapi(). Applicable values are:
+ *   - insert|update: Notify modules about the recently saved course.
+ *   - load: Attach additional module provided info to $node->course.
+ *
+ * @see course_nodeapi()
  */
 function hook_course_nodeapi_extra($node, $op) {
-  // @todo document this.
+  // @todo add example.
 }
 
 /**
- * @todo explain this hook.
+ * Allow modules to provide the course button.
+ *
+ * @param object $node
+ *   The course node.
+ *
+ * @see course_take_course_button_html()
  */
 function hook_course_button($node) {
-  // @todo document this.
+  // Example: change the button text, and add a custom class.
+  $link = l(t('Take Me'), "node/{$node->nid}/takecourse");
+  return '<div class="action-link my-custom-class">' . $link . '</div>';
 }
 
 /**
- * Hook notifying other modules about a course enrollment.
+ * Notify modules about a course enrollment.
  *
- * @todo document params.
+ * @param object $node
+ *   The course node.
+ * @param object $user
+ *   The enrolling user.
+ * @param string $from
+ *   The type of enrollment, if applicable. {course_enrolment}.enrollmenttype.
+ * @param string $code
+ *   The access code used to enroll. {course_enrolment}.code.
+ * @param integer $status
+ *   The enrolment status. {course_enrolment}.status.
+ *
+ * @see course_enrol()
  */
 function hook_course_enrol($node, $user, $from, $code, $status) {
-  // @todo document this.
+  // @todo add example.
 }
 
 /**
- * Hook notifying other modules after course unenrollment.
+ * Notify other modules after course unenrollment.
  *
- * @todo document params.
+ * @param object $node
+ *   The course node.
+ * @param object $user.
+ *   The unenrolled user.
+ *
+ * @see course_unenrol()
  */
 function hook_course_unenrol($node, $user) {
-  // @todo document this.
+  // @todo add example.
 }
 
 /**
- * Hook allowing other modules to force the take course button to show.
- */
-function hook_course_show_button_alter(&$success, $node) {
-  // @todo document this.
-}
-
-/**
- * Hook allowing other modules to alter course report.
+ * Allow modules to set self-enrollment access for a user.
  *
- * @param $entry object
- *   The report entry containing:
- *   - nid: the node id.
- *   - uid: the user id.
- *   - data: an array containing.
- *     - user: the serialized user object at the time of entry.
- *     - profile: the serialized user profile at the time of entry.
- *   - updated: the entry time.
+ * Modules implementating This hook should return the status, and optionally a
+ * failure message if success is FALSE.
+ *
+ * @param object $node
+ *   The course node.
+ * @param object $user
+ *   The user who may or may not take the course.
+ *
+ * @return array
+ *   An associative array of access arrays, each containing an array of:
+ *   - success: Boolean. Indicates whether or not the user has permission to
+ *     self-enroll in this course.
+ *   - message: String. If success is FALSE, a message to display to the user.
+ *
+ * @see course_enrol_access()
+ */
+function hook_course_can_enrol($node, $user) {
+  // Example: do not allow users to take courses on Wednesdays.
+  if (date('L') == 'wednesday') {
+    $hooks[] = array(
+      'success' => FALSE,
+      'message' => t('Courses are closed on Wednesdays.'),
+    );
+  }
+  // Example: however allow users to bypass enrollment restriction on Christmas.
+  elseif ((date('m') == 12) && (date('d') == 25)) {
+    $hooks[] = array('success' => TRUE);
+  }
+
+  return $hooks;
+}
+
+/**
+ * Allow modules to alter course reports before saving.
+ *
+ * @param object $entry
+ *   By reference. The object parameter from course_report_save().
  * @param $account object
  *   The fully loaded report user.
  * @param $old
@@ -301,7 +330,27 @@ function hook_course_show_button_alter(&$success, $node) {
  * @see course_report_save()
  */
 function hook_course_report_alter(&$entry, $account, $old) {
-  // @todo add example.
+  // @see course_relationships_course_report_alter()
+}
+
+/**
+ * Notify modules that a course report has been saved.
+ *
+ * @param object $entry
+ *   By reference. The object parameter from course_report_save(), now including
+ *   the 'crid': course report record ID from drupal_write_record().
+ * @param $account object
+ *   The fully loaded report user.
+ * @param $old
+ *   The former saved version of the user's report for a course.
+ *
+ * @see course_report_save()
+ */
+function hook_course_report_saved($entry, $account, $old) {
+  // Example: Do something completely unnecesary.
+  if ($entry->crid == 1000000) {
+    drupal_set_message(t('Congratulations %name, you have just saved the one millionth course report!', array('%name' => theme_username($account))));
+  }
 }
 
 /**
