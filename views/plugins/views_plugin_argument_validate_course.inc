@@ -4,8 +4,9 @@
  * Validate whether an argument is a course.
  */
 class views_plugin_argument_validate_course extends views_plugin_argument_validate {
+
   function validate_form(&$form, &$form_state) {
-   
+
     $form[$this->option_name] = array(
       '#type' => 'checkbox',
       '#title' => t('Is Live Course'),
@@ -20,12 +21,13 @@ class views_plugin_argument_validate_course extends views_plugin_argument_valida
 
   function validate_argument($argument) {
     $node = node_load($argument);
-    if ($this->argument->options[$this->option_name]){
+    if ($this->argument->options[$this->option_name]) {
       if ($node->field_course_type[0]['value'] != 'live') {
         return FALSE;
       }
-    }    
+    }
     $this->argument->validated_title = check_plain($node->title);
     return course_node_is_course($node);
   }
+
 }
