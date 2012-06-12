@@ -7,10 +7,12 @@
  *
  * Also holds a fulfillment record if a user is given.
  */
-class CourseObject {
+class CourseObject extends CourseHandler {
+
+  // Hold course.
+  private $course = stdClass;
 
   // Hold requirement/object from database and the fulfillment object.
-  private $requirement = stdClass;
   private $courseObjectFulfillment = stdClass;
 
   /**
@@ -23,25 +25,84 @@ class CourseObject {
    *   An object with requirement_component, requirement_type, and instance
    * @param object $user
    */
-  function __construct($requirement = NULL, $account = NULL) {
-    if (!$user) {
+  function __construct($config = NULL, $account = NULL) {
+    $this->serializedField = 'data';
+    $this->handlerType = 'course_object';
+
+    // Pass configuration to parent.
+    parent::__construct($config);
+
+    if (!$account) {
       global $user;
       $account = $user;
     }
 
-    $this->requirement = $requirement;
+    $this->courseObjectFulfillment = new CourseObjectFulfillment($this, $account);
+  }
 
-    $config = (array) unserialize($this->requirement->config);
+  /**
+   * Access functionality for course objects.
+   *
+   * Possible values for $op are 'see', 'view', 'take'.
+   *
+   * "see" means see it in a course outline. For example, a followup survey
+   * should not be seen in the course outline. A quiz at the end of the course,
+   * should show up, but the user must not be able to take it.
+   *
+   * "view" means view and interact with the object, but nothing would be
+   * recorded. For example, accessing a quiz but not being able to submit
+   * responses.
+   *
+   * Subclasses may override this functionality.
+   */
+  public function access($op = 'view', $user = NULL) {
+    $access = FALSE;
 
-    foreach ($config as $key => $value) {
-      if (!in_array($key, $this->getDatabaseFields())) {
-        $this->requirement->$key = $value;
-      }
+    if (!$user) {
+      global $user;
     }
 
-    unset($this->requirement->config);
+    switch ($op) {
+      case 'see':
+        // If this is a followup object, this should return FALSE if it's not
+        // time to show it.
+        return !$this->getOption('hidden');
+      case 'take':
+        if (!$user->uid) {
+          return FALSE;
+        }
 
-    $this->courseObjectFulfillment = new CourseObjectFulfillment($this, $account);
+        if (time() < strtotime($this->getOption('release'))) {
+          $this->setAccessMessage('not-open', 'This activity will be available on ' . $this->getOption('release'));
+          return FALSE;
+        }
+        if (time() > strtotime($this->getOption('expiration'))) {
+          $this->setAccessMessage('closed', 'This activity closed on ' . $this->getOption('expiration'));
+          return FALSE;
+        }
+      case 'view':
+        // Get a copy of the course, so we can run setActive() without changing
+        // the global course.
+        $course = clone $this->getCourse();
+        $course->setActive($this->getId());
+
+        if ($course->key() == 0 && $course->current()->getId() === $this->getId()) {
+          // Check if this is the first object.
+          $access = TRUE;
+        }
+
+        if ($course->getPrev() && $course->getPrev()->getFulfillment()->isComplete()) {
+          // If last object was complete, and we are on the current object,
+          // grant access.
+          $access = TRUE;
+        }
+
+        return $access;
+    }
+  }
+
+  public function isActive() {
+    return $this->getCourse()->current()->getId() == $this->getId();
   }
 
   /**
@@ -51,14 +112,26 @@ class CourseObject {
    * parent's configuration.
    */
   public function optionsDefinition() {
-    return array();
+    $defaults = parent::optionsDefinition();
+
+    $defaults += array(
+      'hidden' => 0,
+      'instance' => NULL,
+      'duration' => NULL,
+      'release' => NULL,
+      'expiration' => NULL,
+    );
+
+    return $defaults;
   }
 
   /**
    * Default options form for all course objects.
    */
   public function optionsForm(&$form, &$form_state) {
-    $form = array();
+    parent::optionsForm($form, $form_state);
+
+    $config = $this->getOptions();
 
     $form['header']['#value'] = t("<h2>Settings for %t</h2>", array('%t' => $this->getTitle()));
 
@@ -72,23 +145,34 @@ class CourseObject {
       '#value' => arg(1),
     );
 
-    /*
-      $form['duration'] = array(
-      '#title' => 'Length of time in minutes a user can remain in this object before it is closed.',
+    $form['hidden'] = array(
+      '#title' => t('Hidden'),
+      '#type' => 'checkbox',
+      '#description' => t('Hide this course object in the course outline. If this object is required, progress through the course will be blocked until this object is complete.'),
+      '#default_value' => $config['hidden'],
+    );
+
+    $form['duration'] = array(
+      '#title' => t('Duration'),
+      '#description' => 'Length of time in minutes a user can remain in this object before it is closed.',
       '#type' => 'textfield',
       '#size' => 2,
-      );
+      '#default_value' => $config['duration'],
+    );
 
-      $form['release'] = array(
-      '#title' => 'When this object can be accessed.',
-      '#type' => 'date',
-      );
+    $form['release'] = array(
+      '#title' => t('Release date'),
+      '#description' => t('When this object can be accessed. If this object is required, users will not be able to proceed until after this date.'),
+      '#type' => 'date_popup',
+      '#default_value' => $config['release'],
+    );
 
-      $form['expiration'] = array(
-      '#title' => 'When this object will close.',
-      '#type' => 'date',
-      );
-     */
+    $form['expiration'] = array(
+      '#title' => t('Expiration date'),
+      '#description' => t('When this object will close. If this object is required, users will not be able to proceed to the next activity after this date.'),
+      '#type' => 'date_popup',
+      '#default_value' => $config['expiration'],
+    );
 
     // Submit
     $form['submit'] = array(
@@ -101,19 +185,21 @@ class CourseObject {
   }
 
   /**
-   * Validate?
-   */
-  public function optionsValidate(&$form, &$form_state) {
-
-  }
-
-  /**
    * Save object configs to cache.
    */
   public function optionsSubmit(&$form, &$form_state) {
-    foreach (array_keys($this->optionsDefinition()) as $key) {
+    foreach (array_keys($this->getOptions()) as $key) {
       $_SESSION['course'][$this->getCourseNid()]['editing'][$form_state['values']['uniqid']][$key] = $form_state['values'][$key];
     }
+  }
+
+  /**
+   * Get options, with session options having precedence.
+   */
+  public function getOptions() {
+    $options = parent::getOptions();
+    $sessionDefaults = array_filter((array) $_SESSION['course'][$options['nid']]['editing'][$options['snid']]);
+    return array_merge($options, (array) $sessionDefaults);
   }
 
   /**
@@ -129,6 +215,15 @@ class CourseObject {
   public function takeCourseObject() {
     $_SESSION['course'][$this->getCourseNid()]['taking']['active'] = $this->getId();
 
+    // Run access checks.
+    if (!$this->access('take')) {
+      return FALSE;
+    }
+
+    // If we're not displaying any content but we want to fire take() anyway, to
+    // let the course object know we sent the user.
+    $out = $this->take();
+
     $url = $this->getTakeUrl();
     switch ($this->getTakeType()) {
       case 'iframe':
@@ -136,7 +231,7 @@ class CourseObject {
       case 'popup':
         return "will popup $url";
       case 'content':
-        return $this->take();
+        return $out;
       case 'redirect':
       default:
         // This URL should have already been url()'d (it might be external).
@@ -167,11 +262,20 @@ class CourseObject {
   }
 
   /**
+   * Return the URL to the course object router.
+   */
+  public function getUrl() {
+    return 'node/' . $this->getCourseNid() . '/course-object/' . $this->getId();
+  }
+
+  /**
    * Get the URL to take this course object, if any.
+   *
+   * Outline handlers or subclasses should use getUrl().
    *
    * @return string
    */
-  public function getTakeUrl() {
+  protected function getTakeUrl() {
 
   }
 
@@ -190,7 +294,7 @@ class CourseObject {
    * @return bool
    */
   public function isRequired() {
-    return $this->requirement->required;
+    return (bool) $this->getOption('required');
   }
 
   /**
@@ -202,15 +306,15 @@ class CourseObject {
    */
   public function getStatus($type = 'short') {
     /*
-    if (!$this->courseObjectFulfillment->isComplete()) {
+      if (!$this->courseObjectFulfillment->isComplete()) {
       if ($type == 'short') {
-        return "Failed";
+      return "Failed";
       }
       if ($type == 'long') {
-        return "You received an 80% on this quiz but the minimum grade is 90%. You may retake this quiz 5 times.";
+      return "You received an 80% on this quiz but the minimum grade is 90%. You may retake this quiz 5 times.";
       }
-    }
-    */
+      }
+     */
   }
 
   /**
@@ -219,7 +323,7 @@ class CourseObject {
    * @return int
    */
   public function getId() {
-    return $this->requirement->snid;
+    return $this->getOption('snid');
   }
 
   /**
@@ -237,7 +341,7 @@ class CourseObject {
    * @return int
    */
   function getInstanceId() {
-    return $this->requirement->instance;
+    return $this->getOption('instance');
   }
 
   /**
@@ -246,42 +350,93 @@ class CourseObject {
    * @param mixed $id The external ID of this course object.
    */
   function setInstanceId($id) {
-    $this->requirement->instance = $id;
+    $this->setOption('instance', $id);
   }
 
   /**
    * Get the course node ID this object belongs to.
    */
   function getCourseNid() {
-    return intval($this->requirement->nid);
+    return intval($this->getOption('nid'));
+  }
+
+  function setCourse($course) {
+    $this->course = $course;
+  }
+
+  function getCourse() {
+    return $this->course;
+  }
+
+  /**
+   * Get the module that provides this course object.
+   */
+  function getModule() {
+    return $this->getOption('requirement_type');
   }
 
   /**
    * Get the object component for this course object.
    */
   function getComponent() {
-    return $this->requirement->requirement_component;
+    return $this->getOption('requirement_component');
+  }
+
+  /**
+   * Set the module that provides this course object.
+   */
+  function setModule($module) {
+    $this->setOption('requirement_type', $module);
+  }
+
+  /**
+   * Set the object component for this course object.
+   */
+  function setComponent($component) {
+    $this->setOption('requirement_component', $component);
   }
 
   /**
    * Set the course node ID this object belongs to.
    *
-   * @param int $nid The node ID this object should be added to.
+   * @param int $nid
+   *   The node ID this object should be added to.
    */
   function setCourseNid($nid) {
-    $this->requirement->nid = $nid;
+    $this->setOption('nid', $nid);
   }
 
+  /**
+   * Set the internal course object ID.
+   *
+   * @param int $snid
+   *   ID of the course object.
+   */
   function setId($snid) {
-    $this->requirement->snid = $snid;
+    $this->setOption('snid', $snid);
   }
 
   /**
    * Save the course object to the database.
+   *
+   * @return CourseObject
    */
   public function save() {
-    $keys = $this->requirement->snid ? array('snid') : array();
-    return drupal_write_record('course_outline', $this->requirement, $keys);
+    $options = $this->getOptions();
+    if (!$options['uuid']) {
+      $options['uuid'] = uuid_uuid();
+    }
+
+    $dbfields = $this->getDatabaseFields();
+    foreach ($options as $key => $value) {
+      if (array_search($key, $dbfields) === FALSE) {
+        $options['data'][$key] = $value;
+      }
+    }
+
+    $keys = $this->getId() ? array('snid') : array();
+    drupal_write_record('course_outline', $options, $keys);
+    return $this;
   }
 
   /**
@@ -292,49 +447,35 @@ class CourseObject {
    *
    * Do not confuse this with save(), which saves the course outline record for
    * tracking.
+   *
+   * Course objects should call setInstanceId() if this is a course object
+   * that creates external resources.
    */
-  public function create() {
-    // Stub. This should set $this->setInstanceId().
-  }
+  public function create() {}
 
   /**
-   * Deletes a course object.
+   * Deletes a course object's external resources.
    *
    * For example, this would delete the associated node (if this was a
    * CourseObjectNode) and delete all other associated data.
    */
-  public function delete() {
-    // Stub. Clean up everything appropriate to this object.
+  public function delete() {}
+
+  function getTitle() {
+    return $this->getOption('title');
   }
 
   /**
-   * Get an object's configuration.
+   * Give the course object a chance to check for fulfillment and set completion
+   * on demand.
+   *
+   * Useful for external objects.
    */
-  public function getOptions() {
-    $defaults = $this->optionsDefinition();
-    $sessionDefaults = $_SESSION['course'][$this->getCourseNid()]['editing'][$this->getId()];
-    return array_merge($defaults, (array) $this->requirement, (array) $sessionDefaults);
+  function checkFulfillment() {
+
   }
 
-  /**
-   * Get an option.
-   */
-  public function getOption($key) {
-    $config = $this->getOptions();
-    return $config[$key];
-  }
-
-  public function setOption($option, $value) {
-    if (in_array($option, $this->getDatabaseFields())) {
-      $this->requirement->$option = $value;
-    }
-    else {
-      $this->requirement->config[$option] = $value;
-    }
-    return $this;
-  }
-
-  private function getDatabaseFields() {
+  protected function getDatabaseFields() {
     return array(
       'snid',
       'nid',
@@ -349,22 +490,6 @@ class CourseObject {
     );
   }
 
-  function getTitle() {
-    return $this->requirement->title;
-  }
-
-  /**
-   * Return a list of warning strings about this object.
-   *
-   * For example, if a user
-   * adds a quiz to a course with no questions, trigger a message.
-   *
-   * @see CourseObjectQuiz
-   */
-  function getWarnings() {
-    return array();
-  }
-
 }
 
 /**
@@ -373,7 +498,7 @@ class CourseObject {
  * Represents the fulfillment record in the database.
  *
  */
-class CourseObjectFulfillment {
+class CourseObjectFulfillment extends CourseHandler {
 
   // Fulfillment array.
   private $fulfillment = stdClass;
@@ -417,6 +542,10 @@ class CourseObjectFulfillment {
    *   Set to 0 to un-complete, 1 or omit to complete.
    */
   function setComplete($complete = 1) {
+    if (!$this->fulfillment->date_completed) {
+      $this->fulfillment->date_completed = time();
+    }
+
     $this->fulfillment->complete = $complete;
     return $this;
   }
@@ -452,6 +581,14 @@ class CourseObjectFulfillment {
    * Save this fulfillment to the database.
    */
   function save() {
+    if (!$this->fulfillment->uuid) {
+      $this->fulfillment->uuid = uuid_uuid();
+    }
+
+    if (!$this->fulfillment->date_started) {
+      $this->fulfillment->date_started = time();
+    }
+
     $keys = $this->fulfillment->sfid ? array('sfid') : array();
     $ret = drupal_write_record('course_outline_fulfillment', $this->fulfillment, $keys);
 
@@ -460,6 +597,15 @@ class CourseObjectFulfillment {
     $course->track();
 
     return $ret;
+  }
+
+  public function delete() {
+    $sql = "delete from {course_outline_fulfillment} where sfid = %d";
+    db_query($sql, $this->getId());
+  }
+
+  function setData($param, $data) {
+    $this->fulfillment->info[$param] = $data;
   }
 
 }
@@ -472,8 +618,13 @@ class CourseObjectNode extends CourseObject {
   protected $node;
 
   public function __construct($requirement, $user = NULL) {
+    // Pass configuration to parent.
     parent::__construct($requirement, $user);
     $this->node = node_load($this->getInstanceId());
+  }
+
+  public function checkPrivacySupport() {
+    return module_exists('content_access') && module_exists('acl');
   }
 
   /**
@@ -507,13 +658,33 @@ class CourseObjectNode extends CourseObject {
     node_delete($this->getInstanceId());
   }
 
+  public function optionsDefinition() {
+    $defaults = parent::optionsDefinition();
+
+    $defaults['private'] = 0;
+
+    return $defaults;
+  }
+
   public function optionsForm(&$form, &$form_state) {
     $form = parent::optionsForm($form, $form_state);
+
+    $instance = $this->getOption('instance');
+
+    $config = $this->getOptions();
 
     $form['instance'] = array(
       '#title' => 'Existing node',
       '#autocomplete_path' => 'ctools/autocomplete/node',
       '#type' => 'textfield',
+    );
+
+    $form['private'] = array(
+      '#title' => t('Private'),
+      '#description' => $this->checkPrivacySupport() ? t('This content will not be available to users who are not enrolled in this course.') : t('You must enable content_access and acl in order to restrict course content to users who are enrolled in this course.'),
+      '#type' => 'checkbox',
+      '#default_value' => $config['private'],
+      '#disabled' => !($this->checkPrivacySupport()),
     );
 
     $nid = $this->getInstanceId();
@@ -527,13 +698,51 @@ class CourseObjectNode extends CourseObject {
   }
 
   public function optionsSubmit(&$form, &$form_state) {
-    $value = $form_state['values']['instance'];
-    preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $value, $matches);
-    $nid = $matches[2];
-    if ($nid) {
-      $this->setOption('instance', $nid);
+    $nid = $form_state['values']['instance'];
+
+    if (!is_numeric($nid)) {
+      preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $nid, $matches);
+      $nid = $matches[2];
     }
+
+    if ($nid) {
+      $form_state['values']['instance'] = $nid;
+    }
+
     parent::optionsSubmit($form, $form_state);
+  }
+
+  public function getWarnings() {
+    $warnings = parent::getWarnings();
+    if ($this->getOption('private')) {
+      $settings = variable_get('content_access_settings', array());
+
+      if (!$settings['per_node'][$this->getComponent()]) {
+        $warnings[] = t('%t is set to Private, but the content type %c does not have per-content restriction <strong>and is visible to all users</strong>. Please visit !l to set up content access settings.', array(
+          '%t' => $this->getTitle(),
+          '%c' => $this->getComponent(),
+          '!l' => l('Access control', "admin/content/node-type/{$this->getComponent()}/access"),
+          ));
+      }
+    }
+    return $warnings;
+  }
+
+  /**
+   * Grant access to course content before going to it.
+   */
+  function takeCourseObject() {
+    if ($this->checkPrivacySupport()) {
+      global $user;
+      if ($this->getOption('private')) {
+        module_load_include('inc', 'content_access', 'content_access.admin');
+        $acl_id = content_access_get_acl_id($this->node, 'view');
+        acl_add_user($acl_id, $user->uid);
+        acl_node_add_acl($this->node->nid, $acl_id, 1, 0, 0, content_access_get_settings('priority', $this->node->type));
+        node_save($this->node);
+      }
+    }
+    return parent::takeCourseObject();
   }
 
 }
