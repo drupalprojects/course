@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Implements hook_init().
+ */
 function course_content_init() {
   $node = node_load(arg(1));
   if ($course = course_determine_context('course_content', $node->type, $node->nid)) {
@@ -8,25 +11,31 @@ function course_content_init() {
 }
 
 /**
- * Implementation of hook_course_object_info().
+ * Implements hook_course_handlers().
  */
-function course_content_course_object_info() {
+function course_content_course_handlers() {
+  $handlers = array();
+
+  // Dynamically generate the object handlers.
+  $handlers['object'] = array();
   $types = content_types();
   foreach ($types as $type => $info) {
     if (variable_get("course_content_use_$type", 0)) {
-      $course_objects[$type] = array(
-        'title' => $info['name'],
-        'suggested title' => 'Course',
+      $handlers['object'][$type] = array(
+        'name' => $info['name'],
         'class' => 'CourseObjectNode',
-        'description' => 'A node to be used in a course workflow.',
-        'graded' => FALSE,
+        'description' => t('A node to be used in a course workflow.'),
       );
     }
   }
 
-  return $course_objects;
+  // Return the handlers array.
+  return $handlers;
 }
 
+/**
+ * Implements hook_nodeapi().
+ */
 function course_content_nodeapi(&$node, $op, $a3, $a4) {
   if ($op == 'view' && $a4 && variable_get("course_content_use_{$node->type}", 0)) {
     global $user;
