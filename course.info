@@ -4,6 +4,7 @@ description = Integrate external courses with Drupal.
 dependencies[] = ahah_helper
 dependencies[] = autoload
 dependencies[] = ctools
+dependencies[] = uuid
 php = 5
 files[] = includes/course_object.core.inc
 files[] = includes/course.core.inc
