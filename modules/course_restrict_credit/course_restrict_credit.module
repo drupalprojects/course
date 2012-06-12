@@ -57,9 +57,9 @@ function course_restrict_credit_course_credit_check_completion($node) {
  * external ID. Invoke other modules to provide restrictions.
  *
  * @return array
- *   An array with "takecourse" and "message" as keys.
- *    takecourse: boolean, whether or not to allow the user to take the course
- *    message: translated string
+ *   A course restriction array, containing:
+ *    - takecourse: boolean, whether or not the user may take the course.
+ *    - message: translated string to display to the user.
  */
 function course_restrict_credit_check($node) {
   global $user;
@@ -69,6 +69,7 @@ function course_restrict_credit_check($node) {
   $ret = FALSE;
 
   if (!$cache[$node->nid]) {
+    // Allow modules to restrict credit for a course.
     $rets = module_invoke_all('course_restrict', $node, $user);
     if (count($rets)) {
       $ret = $rets[0];

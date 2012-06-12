@@ -1,6 +1,4 @@
 <?php
-// $Id$
-
 
 /**
  * @file course_credit.module
@@ -13,33 +11,11 @@
 function course_credit_menu() {
   $items = array();
 
-  $items['admin/settings/course/credit'] = array(
-    'title' => 'Credit',
-    'access arguments' => array('administer course'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('course_credit_settings_form'),
-    'type' => MENU_LOCAL_TASK,
-  );
-
-  $items['admin/settings/course/credit/settings'] = array(
-    'title' => 'Settings',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-
-  $items['admin/settings/course/credit/types'] = array(
-    'title' => 'Credit types',
-    'access arguments' => array('administer course'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('course_credit_types_form'),
-    'type' => MENU_LOCAL_TASK,
-  );
-
   $items['admin/settings/course/credit/types/%/map'] = array(
     'title' => 'Credit Map',
     'access arguments' => array('administer course'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_credit_type_map_form', 5),
-    'type' => MENU_LOCAL_TASK,
   );
 
   $items['admin/settings/course/credit/types/%/delete'] = array(
@@ -47,7 +23,6 @@ function course_credit_menu() {
     'access arguments' => array('administer course'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_credit_type_delete_form', 5),
-    'type' => MENU_LOCAL_TASK,
   );
 
   $items['admin/settings/course/credit/add-type'] = array(
@@ -55,7 +30,6 @@ function course_credit_menu() {
     'access arguments' => array('administer course'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_credit_type_add_form'),
-    'type' => MENU_LOCAL_TASK,
   );
 
   // FAPI form.
@@ -82,6 +56,41 @@ function course_credit_menu() {
   return $items;
 }
 
+/**
+ * Implements hook_course_handlers().
+ */
+function course_credit_course_handlers() {
+  //$settings = 'includes/course_credit.settings.inc';
+  return array(
+    'settings' => array(
+      'credit' => array(
+        'name' => t('Credit settings'),
+        'description' => t('Configure course credit settings.'),
+        'callback' => 'course_credit_settings_form',
+      ),
+      'types' => array(
+        'name' => t('Credit types'),
+        'description' => t('Course credit types.'),
+        'callback' => 'course_credit_types_form',
+        'package' => 'credit',
+      ),
+    ),
+  );
+}
+
+/**
+ * Display the credit form, with configured options, for submission within the
+ * course workflow.
+ *
+ * @global object $user
+ *   The user taking the course.
+ *
+ * @param object $node
+ *   The course node.
+ *
+ * @return array
+ *   The appropriate credit form.
+ */
 function course_credit_form_router($node) {
   global $user;
 
@@ -158,7 +167,6 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
     foreach ($types as $type) {
       // @todo pass type identifier once we migrate from type to type.
       #$form['course_credit']['type'] = array('#type' => 'value', '#value' => $type->type);
-
       // After a preview or form reload, the course credit types must be
       // converted to objects. This is because because during preview, the
       // object in $form['#node'] isn't a real node, but a converted form array.
@@ -252,7 +260,7 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
       // Display if credit expiration is enabled.
       if (variable_get('course_credit_expiration', 1)) {
         // We don't have drupal_clean_css_identifier() until Drupal 7.
-        $credit_type_html = strtr($type->type, '_', '-');;
+        $credit_type_html = strtr($type->type, '_', '-');
 
         $expiration_types = array(
           'date' => t('Specify date'),
@@ -301,7 +309,7 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
           '#size' => 16,
           '#default_value' => $default_values['expiration_date'],
           '#description' => t('For absolute date use mm/dd/yyyy.'),
-        ) + $date_dependent;
+          ) + $date_dependent;
         // Make this a date popup field if available.
         // @see date_popup_elements()
         if (module_exists('date_popup')) {
@@ -321,14 +329,14 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
           // Convert seconds (from DB) to days (for human readability).
           '#default_value' => $default_values['expiration_offset'],
           '#description' => t('For relative types, optionally specify an offset (in days) from the selected type.'),
-        ) + $date_independent;
+          ) + $date_independent;
       }
       // Add settings summary to fieldset title, so it can be quickly scanned
       // when collapsed. Similar to verticaltab summary.
       $summary = course_credit_type_fieldset_summary($type->type, $form, $node);
       if (!empty($summary)) {
         // Append the summary to the fieldset title.
-        $form['course_credit'][$type->type]['#title'] .= ' ('. implode(' | ', $summary) .')';
+        $form['course_credit'][$type->type]['#title'] .= ' (' . implode(' | ', $summary) . ')';
       }
 
       // Prefill with global defaults if no values provided.
@@ -401,7 +409,7 @@ function course_credit_type_fieldset_summary($type, $form, $node) {
               $summary[] = t('Expires on @type@plus', array(
                 '@type' => $type_name = $form_elements[$element]['#options'][$node_values->$element],
                 '@plus' => $offset ? t(' plus @offset days', array('@offset' => $offset)) : NULL,
-              ));
+                ));
             }
           }
         }
@@ -423,7 +431,7 @@ function course_credit_save_credit_type(&$credit_type) {
   if (!course_credit_get_credit_type($credit_type['type'])) {
     return drupal_write_record('course_credit_type', $credit_type);
   }
-  else  {
+  else {
     return drupal_write_record('course_credit_type', $credit_type, array('type'));
   }
 }
@@ -435,7 +443,7 @@ function course_credit_save_course_credit_type_instance(&$credit_type_instance) 
   if (!course_credit_get_credit_type_instance($credit_type_instance['nid'], $credit_type_instance['type'])) {
     return drupal_write_record('course_credit', $credit_type_instance);
   }
-  else  {
+  else {
     return drupal_write_record('course_credit', $credit_type_instance, array('nid', 'type'));
   }
 }
@@ -450,7 +458,7 @@ function course_credit_get_credit_type($type) {
     $sql = "SELECT * FROM  {course_credit_type} WHERE type = %d";
     $result = db_query($sql, $type);
   }
-  else  {
+  else {
     $sql = "SELECT * FROM  {course_credit_type} WHERE type = '%s'";
     $result = db_query($sql, $type);
   }
@@ -586,7 +594,7 @@ function course_credit_render_credit($node) {
           '@credits' => number_format($credit_instance->max, 2),
           '!title' => $credit_instance->title,
           '!desc' => $token ? token_replace($credit_instance->description, 'accreditation', $node) : $credit_instance->description,
-        ));
+          ));
       }
     }
 
@@ -643,7 +651,7 @@ function course_credit_award_save($record = array()) {
   }
   else {
     $record['ccaid'] = $existing->ccaid;
-    $ret = drupal_write_record('course_credit_awarded', $record, array('type','nid', 'uid'));
+    $ret = drupal_write_record('course_credit_awarded', $record, array('type', 'nid', 'uid'));
     watchdog("course_credit", "course credit award updated for uid:{$record['uid']} type:{$record['type']} nid:{$record['nid']}");
   }
 
@@ -678,7 +686,7 @@ function course_credit_settings_form() {
   $fallback_options[] = 'none';
   $sql = "select title, type from {course_credit_type}";
   $result = db_query($sql);
-  while($row = db_fetch_object($result)) {
+  while ($row = db_fetch_object($result)) {
     $fallback_options[$row->type] = strip_tags($row->title);
   }
 
@@ -705,7 +713,7 @@ function course_credit_settings_form() {
   );
 
   $form['creditable_types'] = array(
-    '#type'=> 'fieldset',
+    '#type' => 'fieldset',
     '#title' => 'Extra creditable types',
     '#description' => 'By default, courses are creditable. For some edge cases, crediting other content types may be useful.',
     '#collapsible' => TRUE,
@@ -753,7 +761,7 @@ function course_credit_app_form(&$form_state, $node) {
   drupal_set_title($node->title . ': Credit claiming');
 
   if (count($node->course_credit)) {
-    foreach($node->course_credit as $credit_type) {
+    foreach ($node->course_credit as $credit_type) {
       if ($credit_type->enable_variable_credit) {
         $needs_credit_app = TRUE;
         break;
@@ -787,7 +795,7 @@ function course_credit_app_form(&$form_state, $node) {
       $form['credits_claimed'][$credit_type_info->type] = array(
         '#type' => 'textfield',
         '#prefix' => t('!title credit can be claimed in @increments increments up to a maximum of @credits', array(
-          '!title' => str_replace(' credit', '',$credit_type_info->title),
+          '!title' => str_replace(' credit', '', $credit_type_info->title),
           '@credits' => number_format($credit_type->max, 2),
           '@plural' => format_plural($credit_type->max, 'credits', 'credits'),
           '@increments' => $credit_type->increments,
@@ -805,7 +813,7 @@ function course_credit_app_form(&$form_state, $node) {
       $form['credits_claimed'][$credit_type_info->type] = array(
         '#type' => 'textfield',
         '#prefix' => t('You can claim @credits !title @plural', array(
-          '!title' => str_replace(' credit', '',$credit_type_info->title),
+          '!title' => str_replace(' credit', '', $credit_type_info->title),
           '@credits' => number_format($credit_type->max, 2),
           '@plural' => format_plural($credit_type->max, 'credit', 'credits'),
         )),
@@ -847,8 +855,8 @@ function course_credit_app_form(&$form_state, $node) {
   return $form;
 }
 
-/*
- *
+/**
+ * @todo document me.
  */
 function course_credit_app_form_submit(&$form, &$form_state) {
   global $user;
@@ -863,7 +871,7 @@ function course_credit_app_form_submit(&$form, &$form_state) {
     foreach ($credits_claimed as $credit_type_name => $credits_value) {
       $credit_type = course_credit_get_credit_type($credit_type_name);
 
-      //save the array to a credit award record.
+      // Save the array to a credit award record.
       $award_save_array = array(
         'type' => $credit_type->type,
         'nid' => $course_node->nid,
@@ -883,11 +891,14 @@ function course_credit_app_form_submit(&$form, &$form_state) {
     }
   }
 
+  // Notify modules that course credit application form has been submitted.
+  // @todo Remove this hook. Modules should add their own submit handler through
+  // hook_form_alter().
   module_invoke_all('credit_application_submit', $form_post, $course_node, $app_node, $account);
   $send_to = "node/{$course_node->nid}/course-complete";
-  //update course report with credits and status update
+  // Update course report with credits and status update.
   db_query("UPDATE {course_report} SET cecredits = %f, section = '%s', section_name = '%s' WHERE nid = %d AND uid = %d", $variable_credits_claimed, 'complete', 'Complete', $course_node->nid, $account->uid);
-  //send to recieve certificate
+  // Send to recieve certificate.
   $form['#redirect'] = $send_to;
 }
 
@@ -899,6 +910,9 @@ function course_credit_app_form_submit(&$form, &$form_state) {
  * @ingroup themeable
  * @ingroup forms
  * @see course_credit_app_form()
+ *
+ * @todo remove this. If we want modules to theme the form, they can use
+ * hook_theme() and their own theme function.
  */
 function theme_course_credit_app_form($form) {
   $output = '';
@@ -934,8 +948,8 @@ function course_credit_app_form_validate($form, &$form_state) {
   // Validate credits claimed.
   // Get course node.
   $credits_claimed = $values['credits_claimed'];
-  $course_node     = node_load(arg(1));
-  $credit_types    = course_credit_user_credit_types($course_node, $user);
+  $course_node = node_load(arg(1));
+  $credit_types = course_credit_user_credit_types($course_node, $user);
 
   // Alter the eligible types.
   drupal_alter('course_credit_user_credit_types', $credit_types, $course_node, $user);
@@ -952,21 +966,21 @@ function course_credit_app_form_validate($form, &$form_state) {
   if (is_array($credits_claimed)) {
     foreach ($credits_claimed as $key => $claim) {
       if ($credits_claimed_params[$key]['max'] < $claim) {
-        form_set_error('credits_claimed', t('Credits claimed exceed maximum of '. $credits_claimed_params[$key]['max'] .'.'));
+        form_set_error('credits_claimed', t('Credits claimed exceed maximum of ' . $credits_claimed_params[$key]['max'] . '.'));
       }
 
       if ($credits_claimed_params[$key]['min'] > $claim) {
-        form_set_error('credits_claimed', t('Credits claimed below minimum of '. $credits_claimed_params[$key]['min'] .'.'));
+        form_set_error('credits_claimed', t('Credits claimed below minimum of ' . $credits_claimed_params[$key]['min'] . '.'));
       }
 
-      $claim = (float)$claim;
-      $credit_increment = (float)$credits_claimed_params[$key]['increment'];
+      $claim = (float) $claim;
+      $credit_increment = (float) $credits_claimed_params[$key]['increment'];
       if ($credit_increment) {
         $mod = ($claim * 100) % ($credit_increment * 100);
       }
 
       if ($mod) {
-        form_set_error('credits_claimed', t('Credits claimed must be in increments of '. $credits_claimed_params[$key]['increment'] .'.'));
+        form_set_error('credits_claimed', t('Credits claimed must be in increments of ' . $credits_claimed_params[$key]['increment'] . '.'));
       }
     }
   }
@@ -990,10 +1004,10 @@ function course_credit_can_apply_access($course_node) {
   // allowed for admin to bypass this, but it confuses people who have the
   // permissions and are testing a course.
   if (!$has_completed_course && arg(2) == 'course-credit-app') {
-      // If certificate requirements exist and they do not have a completion
-      // record, we redirect them to a nice view of all the remaining
-      // requirements.
-      drupal_goto("node/{$course_node->nid}/course-complete");
+    // If certificate requirements exist and they do not have a completion
+    // record, we redirect them to a nice view of all the remaining
+    // requirements.
+    drupal_goto("node/{$course_node->nid}/course-complete");
   }
   return TRUE;
 }
@@ -1003,14 +1017,15 @@ function course_credit_can_apply_access($course_node) {
  *
  * If user is eligible for credit and hasn't claimed, alter the final link.
  */
+
 function course_credit_certificate_final_step_alter(&$step_array, $node, $account) {
   global $base_url;
 
-   if (count(course_credit_user_credit_types($node, $account))) {
-     // Found eligible credit type.
+  if (count(course_credit_user_credit_types($node, $account))) {
+    // Found eligible credit type.
     $sql = "SELECT 1 FROM {course_credit_awarded} WHERE nid = %d AND uid = %d";
     $awarded = db_result(db_query($sql, $node->nid, $account->uid));
-    if (!$awarded && $step_array['link']!='#') {
+    if (!$awarded && $step_array['link'] != '#') {
       // User hasn't claimed credit.
       $step_array['link'] = url("node/{$node->nid}/course-credit-app");
       $step_array['target'] = "_top";
@@ -1019,10 +1034,10 @@ function course_credit_certificate_final_step_alter(&$step_array, $node, $accoun
 }
 
 function course_credit_type_map_form(&$form_state, $type) {
-  // @todo set this properly in the menu using placeholders.
+  // @todo set this properly in the menu using title callback.
   drupal_set_title(t('Edit credit type mapping for %type', array('%type' => $type)));
 
-  $stored = variable_get('course_credit_type_map_'. $type, array());
+  $stored = variable_get('course_credit_type_map_' . $type, array());
 
   $form = array();
 
@@ -1060,7 +1075,7 @@ function course_credit_type_map_form(&$form_state, $type) {
   if (module_exists('content_profile') && module_exists('optionwidgets')) {
     $types = content_types();
     foreach ($types as $key => $type) {
-      if (variable_get('content_profile_use_'. $key, 0)) {
+      if (variable_get('content_profile_use_' . $key, 0)) {
         $profile_types[] = $key;
       }
     }
@@ -1109,7 +1124,7 @@ function course_credit_type_map_form(&$form_state, $type) {
     );
   }
 
-  $form['#redirect'] = 'admin/settings/course/credit/types';
+  $form['#redirect'] = 'admin/settings/course/credit/course_credit_types';
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -1120,7 +1135,7 @@ function course_credit_type_map_form(&$form_state, $type) {
 }
 
 function course_credit_type_map_form_submit(&$form, &$form_state) {
-  variable_set('course_credit_type_map_'. $form_state['values']['type'], $form_state['values']['map']);
+  variable_set('course_credit_type_map_' . $form_state['values']['type'], $form_state['values']['map']);
   drupal_set_message(t('Credit type %type mappings saved.', array('%type' => $form_state['values']['type'])));
 }
 
@@ -1133,7 +1148,7 @@ function course_credit_types_form() {
   $types = course_credit_get_credit_types();
 
   $form['credit_types']['#tree'] = TRUE;
-  foreach($types as $type) {
+  foreach ($types as $type) {
     $form['credit_types'][$type->type] = array(
       '#tree' => TRUE,
       'title' => array(
@@ -1186,29 +1201,33 @@ function course_credit_types_form() {
  * Theme credit types form as a table.
  */
 function theme_course_credit_types_form($form) {
-  $rows = array();
-  $out = '<p>These are the default settings that will be used when creating a course.</p>';
+  $out = '';
+  // Help text.
+  $out .= '<div class="description">' . t('These are the default settings that will be used when creating a course.') . '</div>';
+  // Add new type link.
+  // @todo in Drupal 7 replace with contextual links.
+  $out .= '<div class="links">' . l(t('+ Add type'), 'admin/settings/course/credit/add-type') . '</div>';
 
   $headers = array('Title', 'Type', 'Description', 'Min', 'Max', 'Increments', 'Variable', 'Map');
-
+  $rows = array();
   foreach (element_children($form) as $key) {
-    if ($key == 'credit_types') {
-      foreach (element_children($form[$key]) as $credit_type) {
-        $row = array();
-        foreach (element_children($form['credit_types'][$credit_type]) as $credit_field) {
-          // Add as cell.
-          $row[] = drupal_render($form['credit_types'][$credit_type][$credit_field]);
-        }
-
-        // Add credit type row to table.
-        $rows[] = $row;
+    foreach (element_children($form[$key]) as $credit_type) {
+      $row = array();
+      foreach (element_children($form['credit_types'][$credit_type]) as $credit_field) {
+        // Add as cell.
+        $row[] = drupal_render($form['credit_types'][$credit_type][$credit_field]);
       }
-    }
-    else  {
-      $out .= drupal_render($form[$key]);
+
+      // Add credit type row to table.
+      $rows[] = $row;
     }
   }
-  return theme_table($headers, $rows) . $out;
+  $out .= theme('table', $headers, $rows);
+
+  // Render any additional elements.
+  $out .= drupal_render($form);
+
+  return $out;
 }
 
 function course_credit_types_form_submit($form, $form_state) {
@@ -1260,16 +1279,15 @@ function course_credit_user_credit_types($node, $user) {
       }
 
       // If credit type is active, try mappings.
-
       // Match against certificate field groups.
-      $mappings = variable_get('course_credit_type_map_'. $ct_instance->type, array());
+      $mappings = variable_get('course_credit_type_map_' . $ct_instance->type, array());
       if ($mappings['certificate']) {
         $fieldgroups = variable_get('certificate_field_groups', array());
         foreach ($mappings['certificate']['fieldgroups'] as $valid_group) {
           // $valid_group = the name of the fieldgroup (eg Physician) that we should allow claiming for
           foreach ($fieldgroups[$valid_group] as $valid_value) {
             //$valid_value = the value that triggers the fieldgroup
-            if (is_array($profile->$cck_profile_field) && count($profile->$cck_profile_field)){
+            if (is_array($profile->$cck_profile_field) && count($profile->$cck_profile_field)) {
               foreach ($profile->$cck_profile_field as $item) {
                 if ($item['value'] !== NULL && $item['value'] == $valid_value) {
                   //Trigger met. Pass this credit type.
@@ -1297,7 +1315,7 @@ function course_credit_user_credit_types($node, $user) {
       // Match against course user_types.
       if (is_array($mappings['course']['user_type'])) {
         if (in_array($enrolment->user_type, $mappings['course']['user_type'])) {
-            $valid_credit_instances[$ct_instance->type] = $ct_instance;
+          $valid_credit_instances[$ct_instance->type] = $ct_instance;
         }
       }
 
@@ -1505,7 +1523,7 @@ function course_credit_type_features_export_render($module_name, $data, $export 
   $code[] = '$course_credit_type = array();';
   foreach ($data as $name) {
     $credit_type = course_credit_type_load($name);
-    $code[] = "  \$course_credit_type['{$name}'] = " . features_var_export($credit_type) .";";
+    $code[] = "  \$course_credit_type['{$name}'] = " . features_var_export($credit_type) . ";";
   }
   $code[] = "return \$course_credit_type;";
   $code = implode("\n", $code);
@@ -1550,18 +1568,23 @@ function course_credit_type_features_revert($module_name) {
 
 /**
  * Hide course-credit-app in menu.
+ *
+ * @todo find a better way to do this, or do it as a course object.
  */
 function phptemplate_menu_local_task($link, $active = FALSE) {
   $kill = array(
     'course-credit-app',
   );
 
-  //Check each tab being rendered for our victim
+  // Check each tab being rendered for our victim.
   foreach ($kill as $drupal) {
-    if (strpos($link, $drupal) !==FALSE) {
+    if (strpos($link, $drupal) !== FALSE) {
       return '';
     }
   }
+
+  // Note that we intentionally call this theme function directly, because
+  // theme('menu_local_task', $link, $active) would cause an endless loop here.
   return theme_menu_local_task($link, $active);
 }
 
@@ -1579,7 +1602,7 @@ function course_credit_node_is_creditable(&$node) {
  * Implementation of hook_user().
  */
 function course_credit_user($op, &$edit, &$account, $category = NULL) {
-  switch($op) {
+  switch ($op) {
     case 'delete':
       $sql = "DELETE FROM {course_credit_awarded} WHERE uid = %d";
       db_query($sql, $account->uid);
@@ -1637,7 +1660,7 @@ function course_credit_type_add_form() {
     '#value' => 'Save',
   );
 
-  $form['#redirect'] = 'admin/settings/course/credit/types';
+  $form['#redirect'] = 'admin/settings/course/credit/course_credit_types';
 
   $form['#validate'][] = 'course_credit_type_add_form_validate';
 
@@ -1669,8 +1692,8 @@ function course_credit_type_add_form_submit(&$form, &$form_state) {
 function course_credit_type_delete_form(&$form_state, $type) {
   $form['type']['#type'] = 'hidden';
   $form['type']['#value'] = $type;
-  $form['#redirect'] = 'admin/settings/course/credit/types';
-  return confirm_form($form, t('Are you sure you want to delete the credit type %type?', array('%type' => $type)), 'admin/settings/course/credit/types', 'Disabling it is probably a better idea. This cannot be un-done, and course credit will be deleted from users who received this credit type.');
+  $form['#redirect'] = 'admin/settings/course/credit/course_credit_types';
+  return confirm_form($form, t('Are you sure you want to delete the credit type %type?', array('%type' => $type)), 'admin/settings/course/credit/course_credit_types', 'Disabling it is probably a better idea. This cannot be un-done, and course credit will be deleted from users who received this credit type.');
 }
 
 /**
@@ -1696,14 +1719,14 @@ function course_credit_course_unenrol($node, $user) {
 function course_credit_certificate_map_options() {
   $options = array();
 
-  foreach(course_credit_get_credit_types() as $cc) {
+  foreach (course_credit_get_credit_types() as $cc) {
     $options[$cc->type] = $cc->title;
   }
   return array(
     'course_credit_awarded' => array(
       'title' => 'Awarded course credit',
       'options' => $options,
-      'description' => t('Using this mapping will award a certificate based on the credit type the user claimed after completing a course.<br/>You may set up eligibilty for credit types on the !link page.', array('!link' => l('credit types', 'admin/settings/course/credit/types'))),
+      'description' => t('Using this mapping will award a certificate based on the credit type the user claimed after completing a course.<br/>You may set up eligibilty for credit types on the !link page.', array('!link' => l('credit types', 'admin/settings/course/credit/course_credit_types'))),
     ),
   );
 }
@@ -1769,7 +1792,7 @@ function course_credit_get_credit_awarded($nid, $uid) {
   while ($row = db_fetch_object($result)) {
     $awarded[] = $row;
   }
-  
+
   return $awarded;
 }
 

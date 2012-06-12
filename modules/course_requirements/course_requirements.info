@@ -1,5 +1,5 @@
 name = Course requirements
 description = Set requirements on courses before a learner may take them.
-core = 6.x
 package = Course
+core = 6.x
 dependencies[] = course

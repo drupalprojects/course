@@ -65,11 +65,13 @@ function course_requirements_can_take_course($node, $user) {
   }
 
   if ($block) {
-    return array(array(
-      'success' => FALSE,
-      'header' => 'You must complete the following courses before taking this course.',
-      'message' => theme_table(array('Course','Your Status'), $rows),
-    ));
+    return array(
+      array(
+        'success' => FALSE,
+        'header' => 'You must complete the following courses before taking this course.',
+        'message' => theme('table', array('Course', 'Your Status'), $rows),
+      ),
+    );
   }
 }
 
@@ -82,8 +84,7 @@ function course_requirements_course_can_enrol($node, $user) {
     if ($result[0]) {
       $result[0]['header'] = 'You must complete the following courses before enrolling in this course.';
       return $result;
-    }
-    else if ($node->cr_parent) {
+    } elseif ($node->cr_parent) {
       $parent = node_load($node->cr_parent);
       return course_requirements_course_can_enrol($parent, $user);
     }
@@ -105,9 +106,12 @@ function course_requirements_course_outline_completion_links_alter(&$links, $nod
     $courses[] = l($row->title, "node/$row->nid");
   }
 
-  $links['course_requirements'] = array(
-    ' ',
-    ' ',
-    t('This course is a dependency of !courses', array('!courses' => implode(',', $courses))),
- );
+  if ($courses) {
+
+    $links['course_requirements'] = array(
+      ' ',
+      ' ',
+      t('This course is a dependency of !courses', array('!courses' => implode(',', $courses))),
+    );
+  }
 }
