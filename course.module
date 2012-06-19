@@ -9,7 +9,7 @@
 require_once dirname(__FILE__) . '/includes/course.outline.inc';
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function course_menu() {
   $items = array();
@@ -247,6 +247,7 @@ function course_menu() {
  * Implements hook_course_handlers().
  *
  * @see course_menu()
+ * @see course_settings_overview()
  */
 function course_course_handlers() {
   $outline = 'includes/course.outline.inc';
@@ -262,6 +263,11 @@ function course_course_handlers() {
       'none' => array(
         'name' => t('None'),
         'description' => t('No outline provided (placeholder course).'),
+      ),
+    ),
+    'context' => array(
+      'node' => array(
+        'callback' => 'course_context',
       ),
     ),
     'settings' => array(
@@ -456,7 +462,7 @@ function course_object_take($courseObject) {
 }
 
 /**
- * Implementation of hook_menu_alter().
+ * Implements hook_menu_alter().
  *
  * Look at a variable to determine the default course report. Did this to avoid
  * any one module having to define itself as a default local task.
@@ -520,7 +526,7 @@ function course_load($arg) {
 }
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_perm().
  *
  * Define permissions to take courses and edit course settings.
  */
@@ -593,20 +599,14 @@ function course_settings_menu_access($node) {
  *   - success: Boolean. Indicates whether or not the user has permission to
  *     take this course.
  *   - message: String. If success is FALSE, a message to display to the user.
- *
- * @todo should the $node param be passed by reference?
  */
-function course_take_course_access(&$node) {
+function course_take_course_access($node) {
   global $user;
   static $courses = array();
 
   // Don't let anonymous users see /takecourse. Also keeps from being indexed.
   if (arg(2) == 'takecourse' && !user_is_logged_in() && $_SERVER['SCRIPT_NAME'] != '/cron.php') {
     drupal_set_message(t('You must login or register before taking this course.'));
-    // Remove desination temporarily.
-    // @todo find out why this causes an infinite loop on sites with existing drupal_goto()
-    // in $items['user/login']['page callback'] via hook_menu_alter().
-    // Does this todo still apply?
     drupal_goto('user/login', drupal_get_destination());
   }
 
@@ -647,7 +647,7 @@ function course_settings_access($node) {
 }
 
 /**
- * Implementation of hook_can_take_course().
+ * Implements hook_can_take_course().
  *
  * Check for built-in access restrictions (enrollment, release/expiration).
  *
@@ -676,7 +676,7 @@ function course_can_take_course($node, $user) {
 }
 
 /**
- * Implementation of hook_nodeapi().
+ * Implements hook_nodeapi().
  *
  * When a course is saved, handles changes to the course outline and the
  * creation of external courses.
@@ -901,7 +901,7 @@ function course_enrolment_load($nid, $uid) {
 }
 
 /**
- * Implementation of hook_enable().
+ * Implements hook_enable().
  *
  * Insert course as product and add admin theme to course settings.
  */
@@ -915,7 +915,7 @@ function course_enable() {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  *
  * Course node settings form.
  *
@@ -996,7 +996,7 @@ function course_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
- * Implementation of hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter().
  */
 function course_form_node_type_form_alter(&$form, &$form_state) {
   // Alter the node type's configuration form to add our setting.
@@ -1080,9 +1080,12 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
 /**
  * Generic Course IFrame function.
  *
- * @param $url
- * @param $height
- * @param $class
+ * @param string $url
+ *   An iframe HTML element src attribute.
+ * @param string $height
+ *   A string representing an iframe height.
+ * @param string $class
+ *   A HTML class attribute for the iframe.
  */
 function course_iframe($url = NULL, $height = '600px', $class = NULL) {
   $style = 'border:none; margin:0; width:100%; height:' . $height . ';';
@@ -1178,13 +1181,14 @@ function course_enrolment_save($enrolment) {
  * from arguments.
  *
  * @param mixed $requirement_type
- *   @todo
+ *   @todo explain this better. Could be the implementing module name, an array,
+ *   or an object.
  * @param mixed $requirement_component
-*   @todo
+ *   @todo explain this better.
  * @param string $instance
-*   @todo
+ *   The course object instance ID, from {course_outline}.instance.
  * @param object $account
-*   @todo
+ *   The user object.
  *
  * @return CourseObject|FALSE
  */
@@ -1270,11 +1274,12 @@ function course_get_course_object($requirement_type, $requirement_component = NU
 /**
  * Get a loaded Course.
  *
- * @todo cache?
- *
  * @param object $node
+ *   The course node object.
  *
  * @return Course
+ *
+ * @todo cache?
  */
 function course_get_course($node, $user = NULL) {
   return new Course($node, $user);
@@ -1303,6 +1308,9 @@ function course_views_plugins() {
   );
 }
 
+/**
+ * Implements hook_views_api().
+ */
 function course_views_api() {
   return array(
     'api' => 2,
@@ -1311,7 +1319,7 @@ function course_views_api() {
 }
 
 /**
- * Implementation of hook_content_extra_fields().
+ * Implements of hook_content_extra_fields().
  */
 function course_content_extra_fields($type) {
   $extras = array();
@@ -1330,6 +1338,9 @@ function course_content_extra_fields($type) {
   return $extras;
 }
 
+/**
+ * Implements hook_preprocess_page().
+ */
 function course_preprocess_page(&$variables) {
   if (arg(2) == 'takecourse') {
     $regions = variable_get('course_disable_regions', array());
@@ -1362,7 +1373,7 @@ function course_get_types() {
 }
 
 /**
- * Implementation of hook_token_list().
+ * Implements hook_token_list().
  */
 function course_token_list($type = 'all') {
   $tokens = array();
@@ -1379,7 +1390,7 @@ function course_token_list($type = 'all') {
 }
 
 /**
- * Implementation of hook_token_values().
+ * Implements hook_token_values().
  */
 function course_token_values($type, $object = NULL, $options = array()) {
   $values = array();
@@ -1397,7 +1408,7 @@ function course_token_values($type, $object = NULL, $options = array()) {
 }
 
 /**
- * Implementation of hook_action_info().
+ * Implements hook_action_info().
  */
 function course_action_info() {
   $actions = array();
@@ -1422,7 +1433,7 @@ function course_action_info() {
 }
 
 /**
- * VBO to enrol a user in current course.
+ * Action to enrol a user in current course.
  *
  * @todo replace this with course object API implementation, in uc_course.
  */
@@ -1463,8 +1474,13 @@ function course_remove_enrollment_action(&$user, $context) {
  * @todo use the CourseObject class for deleting/modifying/fulfilling
  * requirements
  *
- * @param type $signup
- * @param type $context
+ * @param object $signup
+ *   A course enrollment signup object.
+ * @param array $context
+ *   @todo explain this param.
+ *
+ * @todo use the CourseObject class for deleting/modifying/fulfilling
+ * requirements
  */
 function course_edit_enrollment_action(&$signup, $context) {
   $enrolment = new stdClass;
@@ -1532,6 +1548,9 @@ function course_edit_enrollment_action(&$signup, $context) {
   drupal_set_message(t('Updated enrollment for @user', array('@user' => $account->name)));
 }
 
+/**
+ * Edit enrollment action form.
+ */
 function course_edit_enrollment_action_form($context) {
   $form = array();
 
@@ -1635,6 +1654,9 @@ function course_edit_enrollment_action_form($context) {
   return $form;
 }
 
+/**
+ * Submit handler for course_edit_enrollment_action_form().
+ */
 function course_edit_enrollment_action_submit($form, $form_state) {
   return array(
     'enrol_end' => $form_state['values']['enrol_end'],
@@ -1649,17 +1671,38 @@ function course_edit_enrollment_action_validate($form, $form_state) {
 }
 
 /**
- * Implementatin of hook_init().
+ * Implements hook_init().
  */
 function course_init() {
-  // Determine context.
+  // Set course context for all modules that define course context handlers.
+  // @see hook_course_handlers().
+  // @todo consider tying more closely to course_determine_context(), so each
+  //   callback could specify the necessary params and all route through there?
+  $modules = course_get_handlers('context');
+  foreach ($modules as $module => $handlers) {
+    if (is_array($handlers)) {
+      foreach ($handlers as $handler) {
+        $callback = $handler['callback'];
+        if (function_exists($callback)) {
+          $callback();
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Course context handler callback.
+ */
+function course_context() {
+  // Determine node context.
   if ($course_node = course_determine_context()) {
     course_set_context($course_node);
   }
 }
 
 /**
- * Implementation of hook_ctools_plugin_directory().
+ * Implements hook_ctools_plugin_directory().
  */
 function course_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'ctools' && $plugin_type == 'content_types') {
@@ -1668,7 +1711,7 @@ function course_ctools_plugin_directory($owner, $plugin_type) {
 }
 
 /**
- * Implementation of course_credit_check_completion().
+ * Implements course_credit_check_completion().
  *
  * Require the user to choose a user type before they claim credit.
  */
@@ -1774,7 +1817,7 @@ function course_enrol_access($node, $user = NULL) {
 }
 
 /**
- * Implementation of hook_course_can_enrol().
+ * Implements hook_course_can_enrol().
  *
  * Block enrollments when a course has either not yet started or is expired.
  */
@@ -1872,7 +1915,7 @@ function course_report_save($entry) {
 }
 
 /**
- * Implementation of hook_user().
+ * Implements hook_user().
  *
  * Delete the user's course records, fulfillments, and enrollments upon
  * deletion.
@@ -1889,7 +1932,7 @@ function course_user($op, &$edit, &$account, $category = NULL) {
 }
 
 /**
- * Implementation of hook_views_bulk_operations_object_info().
+ * Implements hook_views_bulk_operations_object_info().
  *
  * Expose information about the course report object to VBO.
  */
@@ -1926,7 +1969,7 @@ function course_report_load($mixed, $user = NULL) {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function course_theme() {
   return array(
@@ -2050,7 +2093,7 @@ function course_determine_context($requirement_type = NULL, $requirement_compone
 }
 
 /**
- * Implementation of hook_date_api_fields().
+ * Implements hook_date_api_fields().
  *
  * Expose the course date columns to date API.
  */
@@ -2072,14 +2115,14 @@ function course_date_api_fields($field) {
 }
 
 /**
- * Implementation of hook_date_api_tables().
+ * Implements hook_date_api_tables().
  */
 function course_date_api_tables() {
   return array('course_report', 'course_enrolment', 'course_node');
 }
 
 /**
- * Implementation of hook_services_resources().
+ * Implements hook_services_resources().
  */
 function course_services_resources() {
   require_once("services/course_report_resource.inc");
