@@ -13,9 +13,8 @@ function course_object_reports_page($node) {
   $report_key = arg(5);
   $report_subkey = arg(6);
 
-  $reqs = course_outline_get_course_requirements($node);
-  foreach ($reqs as $req) {
-    $courseObject = course_get_course_object($req);
+  $course = course_get_course($node);
+  foreach ($course as $courseObject) {
     $lis = array();
     if (method_exists($courseObject, 'getReports')) {
       foreach ($courseObject->getReports() as $key => $report) {
@@ -39,7 +38,7 @@ function course_object_reports_page($node) {
   }
 
   if ($snid) {
-    $courseObject = course_get_course_object($reqs[$snid]);
+    $courseObject = course_get_course_object($snid);
     $report = $courseObject->getReport($report_key, $report_subkey);
     if ($report) {
       if ($report['url']) {
@@ -64,8 +63,6 @@ function course_object_single_report_link($courseObject, $key, $report) {
 }
 
 function theme_course_report($nav, $header, $body) {
-  $out = '';
-
   if (!$nav) {
     $body = t('None of the objects in your course have reports associated with them.');
   }
