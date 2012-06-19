@@ -4,7 +4,7 @@ module_load_include('inc', 'views', 'handlers/views_handler_relationship');
 include_once 'includes/views_join_course_credit.inc';
 
 /**
- * Implementation of hook_views_handlers() to register all of the basic handlers
+ * Implements hook_views_handlers() to register all of the basic handlers
  * views uses.
  */
 function course_credit_views_handlers() {
@@ -79,7 +79,7 @@ class course_credit_node_awarded_credit_vhr extends views_handler_relationship {
 }
 
 /**
- * Implementation of hook_views_data().
+ * Implements hook_views_data().
  */
 function course_credit_views_data() {
   $data = array();

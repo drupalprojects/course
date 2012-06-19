@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_nodeapi().
+ * Implements hook_nodeapi().
  *
  * Display a message when a node is loaded that matches an already completed
  * sister Course.
@@ -16,7 +16,7 @@ function course_restrict_credit_nodeapi(&$node, $op, $a3, $a4) {
 
 
 /**
- * Implementation of hook_panels_post_render().
+ * Implements hook_panels_post_render().
  *
  * Nodeapi view is never called on a panel page, so display the message here.
  */
@@ -41,7 +41,7 @@ function course_restrict_credit_message($restriction) {
 }
 
 /**
- * Implementation of hook_course_credit_check_completion().
+ * Implements hook_course_credit_check_completion().
  *
  * Prevent the user from claiming credit if they're already taken a sister
  * course.

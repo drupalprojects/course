@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  */
 function course_credit_menu() {
   $items = array();
@@ -125,7 +125,7 @@ function course_credit_form_router($node) {
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function course_credit_theme() {
   return array(
@@ -139,7 +139,7 @@ function course_credit_theme() {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  */
 function course_credit_form_alter(&$form, &$form_state, $form_id) {
   if (strpos($form_id, '_node_form') !== FALSE && course_credit_node_is_creditable($form['#node'])) {
@@ -477,7 +477,7 @@ function course_credit_get_credit_type_instance($nid, $type) {
 }
 
 /**
- * Implementation of hook_course_nodeapi_extra().
+ * Implements hook_course_nodeapi_extra().
  *
  * Load credit type instances for this course.
  */
@@ -499,7 +499,7 @@ function course_credit_course_nodeapi_extra($node, $op) {
 }
 
 /**
- * Implementation of hook_nodeapi().
+ * Implements hook_nodeapi().
  */
 function course_credit_nodeapi(&$node, $op, $a3, $a4) {
   global $user;
@@ -937,7 +937,7 @@ function theme_course_credit_app_form($form) {
 }
 
 /**
- * Implementation of hook_validate.
+ * Implements hook_validate.
  *
  * @see course_credit_app_form().
  */
@@ -1013,7 +1013,7 @@ function course_credit_can_apply_access($course_node) {
 }
 
 /*
- * Implementation of hook_certificate_final_step_alter().
+ * Implements hook_certificate_final_step_alter().
  *
  * If user is eligible for credit and hasn't claimed, alter the final link.
  */
@@ -1335,7 +1335,7 @@ function course_credit_user_credit_types($node, $user) {
 }
 
 /**
- * Implementation of hook_access_certificate().
+ * Implements hook_access_certificate().
  *
  * Block access to certificate if user can claim credit, but hasn't.
  */
@@ -1368,7 +1368,7 @@ function course_credit_access_certificate($node, $user) {
 }
 
 /**
- * Implementation of hook_token_list().
+ * Implements hook_token_list().
  */
 function course_credit_token_list($type = 'all') {
   $tokens = array();
@@ -1416,7 +1416,7 @@ function course_credit_token_list($type = 'all') {
 }
 
 /**
- * Implementation of hook_token_values().
+ * Implements hook_token_values().
  */
 function course_credit_token_values($type, $object = NULL) {
   $values = array();
@@ -1458,7 +1458,7 @@ function course_credit_token_values($type, $object = NULL) {
 }
 
 /**
- * Implementation of hook_views_api().
+ * Implements hook_views_api().
  */
 function course_credit_views_api() {
   return array(
@@ -1467,7 +1467,7 @@ function course_credit_views_api() {
 }
 
 /**
- * Implementation of hook_content_extra_weights().
+ * Implements hook_content_extra_weights().
  */
 function course_credit_content_extra_fields($type) {
   $extras = array();
@@ -1485,7 +1485,7 @@ function course_credit_content_extra_fields($type) {
 }
 
 /**
- * Implementation of hook_features_api().
+ * Implements hook_features_api().
  */
 function course_credit_features_api() {
   return array(
@@ -1499,7 +1499,7 @@ function course_credit_features_api() {
 }
 
 /**
- * Implementation of hook_features_export().
+ * Implements hook_features_export().
  *
  * Add profile/certificate mappings to pipe.
  */
@@ -1516,7 +1516,7 @@ function course_credit_type_features_export($data, &$export, $module_name) {
 }
 
 /**
- * Implementation of hook_features_export_render().
+ * Implements hook_features_export_render().
  */
 function course_credit_type_features_export_render($module_name, $data, $export = NULL) {
   $code = array();
@@ -1538,7 +1538,7 @@ function course_credit_type_load($type) {
 }
 
 /**
- * Implementation of hook_features_export_options().
+ * Implements hook_features_export_options().
  */
 function course_credit_type_features_export_options() {
   $options = array();
@@ -1553,7 +1553,7 @@ function course_credit_type_features_export_options() {
 }
 
 /**
- * Implementation of hook_features_revert().
+ * Implements hook_features_revert().
  *
  * Revert credit types. Search for an existing machine name, and update it if it
  * exists. Otherwise create a new one.
@@ -1599,7 +1599,7 @@ function course_credit_node_is_creditable(&$node) {
 }
 
 /**
- * Implementation of hook_user().
+ * Implements hook_user().
  */
 function course_credit_user($op, &$edit, &$account, $category = NULL) {
   switch ($op) {
@@ -1611,7 +1611,7 @@ function course_credit_user($op, &$edit, &$account, $category = NULL) {
 }
 
 /**
- * Implementation of hook_ctools_plugin_directory().
+ * Implements hook_ctools_plugin_directory().
  */
 function course_credit_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'ctools' && $plugin_type == 'content_types') {
@@ -1705,14 +1705,14 @@ function course_credit_type_delete_form_submit(&$form, &$form_state) {
 }
 
 /**
- * Implementation of hook_course_unenrol().
+ * Implements hook_course_unenrol().
  */
 function course_credit_course_unenrol($node, $user) {
   db_query("DELETE FROM {course_credit_awarded} WHERE nid = %d AND uid = %d", $node->nid, $user->uid);
 }
 
 /**
- * Implementation of certificate_map_options().
+ * Implements certificate_map_options().
  *
  * Return a list of options.
  */
@@ -1732,7 +1732,7 @@ function course_credit_certificate_map_options() {
 }
 
 /**
- * Implementation of certificate_map().
+ * Implements certificate_map().
  *
  * Return which options match.
  */
@@ -1752,7 +1752,7 @@ function course_credit_certificate_map($node, $user, $map_type, $options) {
 }
 
 /**
- * Implementation of hook_date_api_fields().
+ * Implements hook_date_api_fields().
  *
  * Expose the awarded expiration date, credit claim time, and hard expiration
  * date for course credit to date API.
@@ -1772,7 +1772,7 @@ function course_credit_date_api_fields($field) {
 }
 
 /**
- * Implementation of hook_date_api_tables().
+ * Implements hook_date_api_tables().
  */
 function course_credit_date_api_tables() {
   return array('course_credit_awarded', 'course_credit');

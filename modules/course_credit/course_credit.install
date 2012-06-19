@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  *
  * Install a default content type, set some defaults.
  */
@@ -11,14 +11,14 @@ function course_credit_install() {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function course_credit_uninstall() {
   drupal_uninstall_schema('course_credit');
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function course_credit_schema() {
   $schema = array();

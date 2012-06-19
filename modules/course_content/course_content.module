@@ -46,7 +46,7 @@ function course_content_nodeapi(&$node, $op, $a3, $a4) {
 }
 
 /**
- * Implementation of hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter().
  */
 function course_content_form_node_type_form_alter(&$form, &$form_state) {
   // Alter the node type's configuration form to add our setting.

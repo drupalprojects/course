@@ -76,7 +76,7 @@ function course_requirements_can_take_course($node, $user) {
 }
 
 /**
- * Implementation of hook_course_can_enrol().
+ * Implements hook_course_can_enrol().
  */
 function course_requirements_course_can_enrol($node, $user) {
   if (!variable_get('course_requirements_allow_enrollments', 0)) {
@@ -92,7 +92,7 @@ function course_requirements_course_can_enrol($node, $user) {
 }
 
 /**
- * Implementation of hook_course_outline_completion_links_alter().
+ * Implements hook_course_outline_completion_links_alter().
  */
 function course_requirements_course_outline_completion_links_alter(&$links, $node, $user) {
   $field_name = variable_get('course_requirements_cck_field', 'field_course_requirements');

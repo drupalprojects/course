@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_ctools_plugin_directory().
+ * Implements hook_ctools_plugin_directory().
  */
 function course_uc_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'ctools' && $plugin_type == 'content_types') {
@@ -10,7 +10,7 @@ function course_uc_ctools_plugin_directory($owner, $plugin_type) {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_alter().
  *
  * Hide the add to cart button when the user satisfied the requirement.
  */
@@ -100,7 +100,7 @@ function course_uc_init() {
 }
 
 /**
- * Implementation of hook_course_enrol().
+ * Implements hook_course_enrol().
  *
  * Satisfy payment requirement when manually enrolled.
  */
@@ -114,7 +114,7 @@ function course_uc_course_enrol($node, $user) {
 }
 
 /**
- * Implementation of hook_add_to_cart().
+ * Implements hook_add_to_cart().
  */
 function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
   if (variable_get('course_uc_restrict_qty', 1)) {
@@ -168,7 +168,7 @@ function course_uc_restrict_qty_check_cart($uid, $nid) {
 }
 
 /**
- * Implementation of hook_uc_cart_alter().
+ * Implements hook_uc_cart_alter().
  */
 function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
   if (variable_get('course_uc_restrict_qty', 1)) {
@@ -189,7 +189,7 @@ function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
 }
 
 /**
- * Implementation of hook_form_FORM_ID_alter().
+ * Implements hook_form_FORM_ID_alter().
  */
 function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_state) {
   if (variable_get('course_uc_restrict_qty', 1)) {
@@ -205,7 +205,7 @@ function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_stat
 }
 
 /**
- * Implementation of hook_ca_action().
+ * Implements hook_ca_action().
  *
  * Add action to enrol a user in a course.
  *
@@ -295,7 +295,7 @@ function course_uc_ca_predicate() {
 }
 
 /**
- * Implementation of hook_token_list().
+ * Implements hook_token_list().
  */
 function course_uc_token_list($type = 'all') {
   $tokens = array();
@@ -309,7 +309,7 @@ function course_uc_token_list($type = 'all') {
 }
 
 /**
- * Implementation of hook_token_values().
+ * Implements hook_token_values().
  */
 function course_uc_token_values($type, $object = NULL, $options = array()) {
   $values = array();
@@ -340,7 +340,7 @@ function course_uc_token_values($type, $object = NULL, $options = array()) {
 }
 
 /**
- * Implementation of hook_course_object_info().
+ * Implements hook_course_object_info().
  */
 function course_uc_course_handlers() {
   return array(
@@ -354,7 +354,7 @@ function course_uc_course_handlers() {
 }
 
 /**
- * Implementation of hook_course_can_enrol().
+ * Implements hook_course_can_enrol().
  *
  * Can the user self-enrol in this course? No, they have to pay for it.
  */

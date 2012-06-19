@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_init().
+ * Implements hook_init().
  */
 function course_webform_init() {
   $node = node_load(arg(1));
@@ -33,7 +33,7 @@ function course_webform_course_handlers() {
 }
 
 /**
- * Implementation of hook_webform_submission_insert().
+ * Implements hook_webform_submission_insert().
  */
 function course_webform_webform_submission_insert($node, $submission) {
   global $user;
