@@ -27,7 +27,7 @@ function course_scorm_course_handlers() {
 }
 
 /**
- * Implementation of hook_exit().
+ * Implements hook_exit().
  *
  * Track the SCORM object completion. We can get away from this if [#1392824] is
  * addressed.

@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Implementation of hook_init().
+ * Course context handler callback.
  */
-function course_book_init() {
+function course_book_context() {
   $node = node_load(arg(1));
   $search = $node->book['bid'] ? $node->book['bid'] : $node->nid;
   if ($course = course_determine_context('course_book', 'book', $search)) {
@@ -23,11 +23,16 @@ function course_book_course_handlers() {
         'class' => 'CourseObjectNode',
       ),
     ),
+    'context' => array(
+      'book' => array(
+        'callback' => 'course_book_context',
+      ),
+    ),
   );
 }
 
 /**
- * Implementation of hook_nodeapi().
+ * Implements hook_nodeapi().
  */
 function course_book_nodeapi(&$node, $op, $a3, $a4) {
   if ($op == 'view' && $a4 && $node->type == 'book') {

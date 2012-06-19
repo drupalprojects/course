@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_install().
+ * Implements hook_install().
  *
  * Install a default content type, set some defaults.
  */
@@ -40,14 +40,14 @@ function course_install() {
 }
 
 /**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function course_uninstall() {
   drupal_uninstall_schema('course');
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function course_schema() {
   $schema = array();

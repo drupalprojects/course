@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_init().
+ * Implements hook_init().
  */
 function course_quiz_init() {
   $node = node_load(arg(1));
@@ -26,7 +26,7 @@ function course_quiz_course_handlers() {
 }
 
 /**
- * Implementation of hook_quiz_finished().
+ * Implements hook_quiz_finished().
  *
  * Update the fulfillment record.
  */
@@ -38,7 +38,7 @@ function course_quiz_quiz_finished($quiz, $score, $rid) {
 }
 
 /**
- * Implementation of hook_nodeapi().
+ * Implements hook_nodeapi().
  *
  * Update passing grade.
  */
