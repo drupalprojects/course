@@ -13,6 +13,7 @@ class CourseHandler {
   public $serializedField = NULL;
   // Configuration for this handler.
   protected $config = array();
+  private $accessMessages = array();
 
   function __construct($config) {
     foreach ($config as $key => $value) {
@@ -158,13 +159,11 @@ class CourseHandler {
    *   Message text.
    */
   public function setAccessMessage($key = NULL, $message = NULL) {
-    static $messages;
-
     if ($key == NULL) {
-      return $messages;
+      return $this->accessMessages;
     }
     elseif ($message != NULL) {
-      $messages[$key] = $message;
+      $this->accessMessages[$key] = $message;
     }
   }
 

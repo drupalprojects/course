@@ -76,7 +76,7 @@ class CourseObject extends CourseHandler {
           $this->setAccessMessage('not-open', 'This activity will be available on ' . $this->getOption('release'));
           return FALSE;
         }
-        if (time() > strtotime($this->getOption('expiration'))) {
+        if ($this->getOption('expiration') && time() > strtotime($this->getOption('expiration'))) {
           $this->setAccessMessage('closed', 'This activity closed on ' . $this->getOption('expiration'));
           return FALSE;
         }
