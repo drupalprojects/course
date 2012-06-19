@@ -24,6 +24,13 @@
  *     - description: A string to display more information to administrators.
  *     - class: (optional) A class name which will override the default
  *       CourseObject class.
+ *   - context: An asociative array of context handlers, keyed by type:
+ *     - callback: A function name that will set course context for special
+ *       cases not already covered by Course module.
+ *     - file: (optional) A string to locate the callback file. This should be
+ *       specified if not located in the implementing module's .module file.
+ *     - file path: (optional) The path to the directory containing the file
+ *       specified in 'file'. Defaults to the implementing module path.
  *   - outline: An asociative array of outline handlers, keyed by type:
  *     - name: A string to reference this type on administrative forms.
  *     - description: A string to display more information to administrators.
@@ -59,6 +66,11 @@ function hook_course_handlers() {
         'name' => t('Custom'),
         'description' => t('Custom outline display.'),
         'callback' => 'custom_outline',
+      ),
+    ),
+    'context' => array(
+      'custom' => array(
+        'callback' => 'custom_course_context',
       ),
     ),
     'settings' => array(
