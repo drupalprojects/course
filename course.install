@@ -295,7 +295,7 @@ function course_schema() {
         'length' => 255,
         'not null' => TRUE,
         'default' => '',
-        'description' => "The course object key as defined by hook_course_object_info()",
+        'description' => "The course object key as defined by hook_course_handlers()",
       ),
       'enabled' => array(
         'type' => 'int',
