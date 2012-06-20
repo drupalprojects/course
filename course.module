@@ -457,7 +457,6 @@ function course_object_load($snid) {
  */
 function course_object_take($courseObject) {
   drupal_set_title($courseObject->getTitle());
-  $courseObject->getFulfillment()->save();
   return $courseObject->takeCourseObject();
 }
 

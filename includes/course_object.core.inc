@@ -218,6 +218,9 @@ class CourseObject extends CourseHandler {
       return FALSE;
     }
 
+    // Save fulfillment record.
+    $courseObject->getFulfillment()->save();
+
     // If we're not displaying any content but we want to fire take() anyway, to
     // let the course object know we sent the user.
     $out = $this->take();
