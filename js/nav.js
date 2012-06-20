@@ -1,18 +1,24 @@
 // @todo the only interval ajax we have so far. consider comet for the future
 // and maybe use this as a fallback for servers that don't have node.js etc.
 
-var courseInterval;
-
 Drupal.behaviors.CourseNav = function() {
-  courseInterval = setInterval('CourseFulfillmentCheck();', 2500);
+  var url = Drupal.settings.courseAjaxNavPath;
+  if (Drupal.settings.courseAjaxNavPath.length > 0) {
+    setTimeout('CourseFulfillmentCheck();', 2500);
+  }
 }
 
 function CourseFulfillmentCheck() {
-  var url = Drupal.settings.activePath + '/ajax/nav';
-  $.getJSON(url, {}, function (response) {
-    if (response.complete) {
-      $('#course-nav').html(response.content);
-      clearInterval(courseInterval);
-    }
-  });
+  var url = Drupal.settings.courseAjaxNavPath;
+    $.getJSON(url, {}, function (response) {
+      if (response.complete) {
+        // Load up new nav buttons.
+        $('#course-nav').html(response.content);
+      }
+      else {
+        // Call again.
+        setTimeout('CourseFulfillmentCheck();', 2500);
+      }
+    });
+  }
 }

@@ -4,7 +4,6 @@
  * @file course.module
  * Core functionality for Courses.
  */
-
 // Course Outline functions
 require_once dirname(__FILE__) . '/includes/course.outline.inc';
 
@@ -105,9 +104,7 @@ function course_menu() {
         // Use the path if provided. If not provided, we need to specify the
         // handler provider module path, otherwise hook_menu() assumes
         // 'file path' is the path to it's implementing module (Course).
-        $items[$item_router]['file path'] = $handler_info['file path']
-          ? $handler_info['file path']
-          : drupal_get_path('module', $handler_info['module']);
+        $items[$item_router]['file path'] = $handler_info['file path'] ? $handler_info['file path'] : drupal_get_path('module', $handler_info['module']);
       }
     }
 
@@ -1050,14 +1047,14 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
       '#options' => $options,
       '#default_value' => variable_get("course_start_date_{$form['#node_type']->type}", 0),
       '#prefix' => '<h3>' . t('Enduring course dates') . '</h3>',
-    ) + $dependent;
+      ) + $dependent;
     $form['course']['course_expiration_date'] = array(
       '#title' => t('Field to use for enduring-course expiration date'),
       '#description' => t('Select the field to use for enduring-course expiration date.'),
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_expiration_date_{$form['#node_type']->type}", 0),
-    ) + $dependent;
+      ) + $dependent;
     // Live course dates.
     $form['course']['course_live_from_date'] = array(
       '#title' => t('Field to use for live-course start date'),
@@ -1066,14 +1063,14 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
       '#options' => $options,
       '#default_value' => variable_get("course_live_from_date_{$form['#node_type']->type}", 0),
       '#prefix' => '<h3>' . t('Live course dates') . '</h3>',
-    ) + $dependent;
+      ) + $dependent;
     $form['course']['course_live_to_date'] = array(
       '#title' => t('Field to use for live-course end date'),
       '#description' => t('Select the field to use for live-course end date.'),
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_live_to_date_{$form['#node_type']->type}", 0),
-    ) + $dependent;
+      ) + $dependent;
   }
 }
 
@@ -1558,9 +1555,7 @@ function course_edit_enrollment_action_form($context) {
   $num_users = count($context['selection']);
 
   $form['header'] = array(
-    '#value' => format_plural($num_users,
-      'Use this form to edit course enrollment and completion data for 1 user',
-      'Use this form to edit course enrollment and completion data for @count users'),
+    '#value' => format_plural($num_users, 'Use this form to edit course enrollment and completion data for 1 user', 'Use this form to edit course enrollment and completion data for @count users'),
   );
 
   $form['enrol_end'] = array(
@@ -1674,20 +1669,45 @@ function course_edit_enrollment_action_validate($form, $form_state) {
  * Implements hook_init().
  */
 function course_init() {
-  // Set course context for all modules that define course context handlers.
-  // @see hook_course_handlers().
-  // @todo consider tying more closely to course_determine_context(), so each
-  //   callback could specify the necessary params and all route through there?
-  $modules = course_get_handlers('context');
-  foreach ($modules as $module => $handlers) {
-    if (is_array($handlers)) {
-      foreach ($handlers as $handler) {
-        $callback = $handler['callback'];
-        if (function_exists($callback)) {
-          $callback();
+  course_context();
+
+  if (!$courseNode = course_get_context()) {
+    // Set course context for all modules that define course context handlers.
+    // @see hook_course_handlers().
+    $modules = course_get_handlers('context');
+    foreach ($modules as $module => $handlers) {
+      if (is_array($handlers)) {
+        foreach ($handlers as $handler) {
+          $callback = $handler['callback'];
+
+          // Calculate and include the file for each callback, if specified.
+          if ($handler['file']) {
+            $file_path = $handler['file path'] ? $handler['file path'] : drupal_get_path('module', $module);
+            $include_file = $file_path . '/' . $handler['file'];
+            include_once($include_file);
+          }
+
+          // We expect query parameters suitable for course_determine_context().
+          if (function_exists($callback)) {
+            $params = $callback();
+            if (is_array($params) && isset($params['object_type']) && isset($params['instance'])) {
+              if ($courseNode = course_determine_context($module, $params['object_type'], $params['instance'])) {
+                course_set_context($courseNode);
+              }
+            }
+          }
         }
       }
     }
+  }
+
+  $course = new Course($courseNode);
+  if ($course && $course->getActive()) {
+    drupal_add_js(
+      array(
+      'courseAjaxNavPath' => url('node/' . $courseNode->nid . '/course-object/' . $course->getActive()->getId() . '/ajax/nav'),
+      ), 'setting'
+    );
   }
 }
 
@@ -1695,9 +1715,10 @@ function course_init() {
  * Course context handler callback.
  */
 function course_context() {
-  // Determine node context.
-  if ($course_node = course_determine_context()) {
-    course_set_context($course_node);
+  // If we are on the course node, set the context immediately.
+  $node = node_load(arg(1));
+  if (course_node_is_course($node)) {
+    course_set_context($node);
   }
 }
 
@@ -2065,27 +2086,33 @@ function course_set_context($node = NULL, $clear = FALSE) {
 }
 
 /**
- * Get the course node from a requirement type + component + instance.
+ * Get the course node automatically, or from a optional query parameters.
  *
- * @param string $requirement_type
- * @param string $requirement_component
+ * @param string $module
+ *   The implementing course object provider module name.
+ * @param string $object_type
+ *   The course object key as defined by hook_course_handlers().
  * @param string $instance
+ *   A key used internally by the implementing course object provider module,
+ *   to identify an instance of *something* used by this course object type.
  *
  * @return mixed
  *   A course node or NULL if course context not found.
+ *
+ * @todo change the params when we change {course_outline} schema fields:
+ *   @see http://drupal.org/node/1517320
+ *   - Change 'snid' to 'coid' (course object ID)
+ *   - Change 'requirement_type' to 'module' (implementing module name)
+ *   - Change 'requirement_component' to 'object_type' (object type key)
  */
-function course_determine_context($requirement_type = NULL, $requirement_component = NULL, $instance = NULL) {
-  $node = node_load(arg(1));
-  if (course_node_is_course($node)) {
-    return $node;
-  }
-
+function course_determine_context($module = NULL, $object_type = NULL, $instance = NULL) {
+  // Determine the course node based on passed query parameters.
   $sql = "select nid from {course_outline}
       where instance = '%s'
       and requirement_type = '%s'
       and requirement_component = '%s'";
 
-  if ($course_nid = db_result(db_query($sql, $instance, $requirement_type, $requirement_component))) {
+  if ($course_nid = db_result(db_query($sql, $instance, $module, $object_type))) {
     return node_load($course_nid);
   }
 
