@@ -10,15 +10,15 @@ Drupal.behaviors.CourseNav = function() {
 
 function CourseFulfillmentCheck() {
   var url = Drupal.settings.courseAjaxNavPath;
-    $.getJSON(url, {}, function (response) {
-      if (response.complete) {
-        // Load up new nav buttons.
-        $('#course-nav').html(response.content);
-      }
-      else {
-        // Call again.
-        setTimeout('CourseFulfillmentCheck();', 2500);
-      }
-    });
-  }
+  $.getJSON(url, {}, function (response) {
+    if (response.complete) {
+      // Load up new nav buttons.
+      $('#course-nav').html(response.content);
+    }
+    else {
+      // Call again.
+      setTimeout('CourseFulfillmentCheck();', 2500);
+    }
+  });
 }
+
