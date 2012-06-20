@@ -33,9 +33,8 @@ function course_certificate_update_6101() {
       );
       drupal_write_record('course_outline', $object);
     }
+    db_drop_field($ret, 'course_node', 'certificate');
   }
-
-  db_drop_field($ret, 'course_node', 'certificate');
 
   return $ret;
 }
