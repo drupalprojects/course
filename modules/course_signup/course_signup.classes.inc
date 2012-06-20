@@ -21,8 +21,6 @@ class CourseObjectSignup extends CourseObjectNode {
     $form['instance']['#title'] = t('Signup to check');
     $form['instance']['#description'] .= '</br>' . t('Check a different signup-enabled product for attendance. Defaults to this course.');
     $form['instance']['#autocomplete_path'] = 'course-signup/autocomplete';
-
-    return $form;
   }
 
   /**

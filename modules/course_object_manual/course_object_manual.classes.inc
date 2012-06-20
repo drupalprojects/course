@@ -63,8 +63,6 @@ class CourseObjectManual extends CourseObject {
       '#title' => 'Incomplete message',
       '#default_value' => $config['incomplete_msg'],
     );
-
-    return $form;
   }
 
 }

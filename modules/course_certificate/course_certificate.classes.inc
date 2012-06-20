@@ -22,8 +22,6 @@ class CourseObjectCertificate extends CourseObject {
       '#default_value' => $options['certificate_node'],
       '#description' => 'This will direct the user to node/' . $this->getCourseNid() . '/certificate',
     );
-
-    return $form;
   }
 
   public function getTakeType() {

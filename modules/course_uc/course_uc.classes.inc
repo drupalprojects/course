@@ -27,8 +27,6 @@ class CourseObjectUbercart extends CourseObjectNode {
 
     $form['instance']['#title'] = t('Product to check');
     $form['instance']['#description'] .= '</br>' . t('Check a different ubercart-enabled product for purchase. Defaults to this course.');
-
-    return $form;
   }
 
   /**
