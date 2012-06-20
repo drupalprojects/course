@@ -40,7 +40,7 @@ class CourseObjectQuiz extends CourseObjectNode {
     $nid = (int) $this->getInstanceId();
 
     $result = reset(quiz_get_score_data(array($nid), $user->uid));
-    if ($result && ($result->percent_score >= $result->percent_pass)) {
+    if ($result && ($result->percent_score >= $this->getOption('passing_grade'))) {
       $this->getFulfillment()->setGrade($result->percent_score)->setComplete()->save();
     }
     else {
@@ -71,21 +71,6 @@ class CourseObjectQuiz extends CourseObjectNode {
       '#type' => 'textfield',
       '#default_value' => $defaults['passing_grade'],
     );
-
-    return $form;
-  }
-
-  /**
-   * Update the Quiz's passing grade.
-   *
-   * Let's do this as a courtesy.
-   */
-  public function optionsSubmit(&$form, &$form_state) {
-    $passing_grade = $form_state['values']['passing_grade'];
-    $quiz = node_load($this->getInstanceId());
-    $quiz->pass_rate = $passing_grade;
-    node_save($quiz);
-    parent::optionsSubmit($form, $form_state);
   }
 
   public function getWarnings() {
