@@ -1,12 +1,16 @@
 <?php
 
 /**
- * Implements hook_init().
+ * Course context handler callback.
  */
-function course_poll_init() {
+function course_poll_context() {
   $node = node_load(arg(1));
-  if ($course = course_determine_context('course_poll', 'poll', $node->nid)) {
-    course_set_context($course);
+
+  if (isset($node)) {
+    return array(
+      'object_type' => 'poll',
+      'instance' => $node->nid,
+    );
   }
 }
 
@@ -20,6 +24,11 @@ function course_poll_course_handlers() {
         'name' => t('Poll'),
         'class' => 'CourseObjectPoll',
         'description' => t('A poll to be used in a course workflow.'),
+      ),
+    ),
+    'context' => array(
+      'poll' => array(
+        'callback' => 'course_poll_context',
       ),
     ),
   );

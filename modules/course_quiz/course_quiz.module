@@ -1,12 +1,16 @@
 <?php
 
 /**
- * Implements hook_init().
+ * Course context handler callback.
  */
-function course_quiz_init() {
+function course_quiz_context() {
   $node = node_load(arg(1));
-  if ($course = course_determine_context('course_quiz', 'quiz', $node->nid)) {
-    course_set_context($course);
+
+  if (isset($node)) {
+    return array(
+      'object_type' => 'quiz',
+      'instance' => $node->nid,
+    );
   }
 }
 
@@ -20,6 +24,11 @@ function course_quiz_course_handlers() {
         'name' => t('Quiz'),
         'class' => 'CourseObjectQuiz',
         'description' => t('A Quiz course object.'),
+      ),
+    ),
+    'context' => array(
+      'quiz' => array(
+        'callback' => 'course_quiz_context',
       ),
     ),
   );

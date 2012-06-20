@@ -5,9 +5,13 @@
  */
 function course_book_context() {
   $node = node_load(arg(1));
-  $search = $node->book['bid'] ? $node->book['bid'] : $node->nid;
-  if ($course = course_determine_context('course_book', 'book', $search)) {
-    course_set_context($course);
+  $bid = $node->book['bid'] ? $node->book['bid'] : $node->nid;
+
+  if ($bid) {
+    return array(
+      'object_type' => 'book',
+      'instance' => $bid,
+    );
   }
 }
 

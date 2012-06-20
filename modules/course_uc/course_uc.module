@@ -340,7 +340,7 @@ function course_uc_token_values($type, $object = NULL, $options = array()) {
 }
 
 /**
- * Implements hook_course_object_info().
+ * Implements hook_course_handlers().
  */
 function course_uc_course_handlers() {
   return array(

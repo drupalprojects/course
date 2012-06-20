@@ -1,12 +1,16 @@
 <?php
 
 /**
- * Implements hook_init().
+ * Course context handler callback.
  */
-function course_content_init() {
+function course_content_context() {
   $node = node_load(arg(1));
-  if ($course = course_determine_context('course_content', $node->type, $node->nid)) {
-    course_set_context($course);
+
+  if (isset($node)) {
+    return array(
+      'object_type' => $node->type,
+      'instance' => $node->nid
+    );
   }
 }
 
@@ -28,6 +32,13 @@ function course_content_course_handlers() {
       );
     }
   }
+
+  // Set context handler.
+  $handlers['context'] = array(
+    'content' => array(
+      'callback' => 'course_content_context',
+    ),
+  );
 
   // Return the handlers array.
   return $handlers;
