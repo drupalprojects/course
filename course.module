@@ -419,7 +419,9 @@ function course_object_edit($node, $js, $courseObject) {
  * Return the course object's edit form.
  */
 function course_object_edit_form(&$form_state, $courseObject) {
-  return $courseObject->optionsForm($form, $form_state);
+  $form = array();
+  $courseObject->optionsForm($form, $form_state);
+  return $form;
 }
 
 function course_object_edit_form_submit(&$form, &$form_state) {
@@ -455,6 +457,7 @@ function course_object_load($snid) {
  */
 function course_object_take($courseObject) {
   drupal_set_title($courseObject->getTitle());
+  $courseObject->getFulfillment()->save();
   return $courseObject->takeCourseObject();
 }
 

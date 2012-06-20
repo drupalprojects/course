@@ -180,8 +180,6 @@ class CourseObject extends CourseHandler {
       '#weight' => 999,
       '#type' => 'submit',
     );
-
-    return $form;
   }
 
   /**
@@ -198,7 +196,7 @@ class CourseObject extends CourseHandler {
    */
   public function getOptions() {
     $options = parent::getOptions();
-    $sessionDefaults = array_filter((array) $_SESSION['course'][$options['nid']]['editing'][$options['snid']]);
+    $sessionDefaults = array_filter((array) $_SESSION['course'][$options['nid']]['editing'][$options['snid']], create_function('$a', 'return !is_null($a);'));
     return array_merge($options, (array) $sessionDefaults);
   }
 
@@ -426,6 +424,9 @@ class CourseObject extends CourseHandler {
     if (!$options['uuid']) {
       $options['uuid'] = uuid_uuid();
     }
+
+    // Set up serialized field for non-schema fields.
+    $options['data'] = array();
 
     $dbfields = $this->getDatabaseFields();
     foreach ($options as $key => $value) {
@@ -667,7 +668,7 @@ class CourseObjectNode extends CourseObject {
   }
 
   public function optionsForm(&$form, &$form_state) {
-    $form = parent::optionsForm($form, $form_state);
+    parent::optionsForm($form, $form_state);
 
     $instance = $this->getOption('instance');
 
@@ -693,8 +694,6 @@ class CourseObjectNode extends CourseObject {
       $link = l(t("'%title' [node id %nid]", array('%title' => $node->title, '%nid' => $node->nid)), "node/$node->nid", array('attributes' => array('target' => '_blank', 'title' => t('Open in new window')), 'html' => TRUE));
       $form['instance']['#description'] = t('Currently set to !link', array('!link' => $link));
     }
-
-    return $form;
   }
 
   public function optionsSubmit(&$form, &$form_state) {
@@ -707,6 +706,11 @@ class CourseObjectNode extends CourseObject {
 
     if ($nid) {
       $form_state['values']['instance'] = $nid;
+    }
+    else {
+      // Unset it, or we'll erase the relationship (since the textfield is
+      // actually blank).
+      unset($form_state['values']['instance']);
     }
 
     parent::optionsSubmit($form, $form_state);
