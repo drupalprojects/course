@@ -15,7 +15,7 @@ class CourseHandler {
   protected $config = array();
   private $accessMessages = array();
 
-  function __construct($config) {
+  function __construct($config = array()) {
     foreach ($config as $key => $value) {
       if ($key === $this->serializedField && !is_array($value)) {
         $data = unserialize($value);
@@ -104,10 +104,7 @@ class CourseHandler {
   /**
    * Handlers can declare a form.
    */
-  public function optionsForm() {
-    $form = array();
-
-    return $form;
+  public function optionsForm(&$form, &$form_state) {
   }
 
   /**
@@ -366,6 +363,10 @@ class Course extends CourseIterator {
     }
 
     return $this->courseObjects;
+  }
+
+  public function getNode() {
+    return $this->node;
   }
 
 }
