@@ -275,7 +275,7 @@ function _course_outline_overview_validate_requirements(&$form, &$form_state) {
  */
 function course_outline_overview_form_submit(&$form, &$form_state) {
   $node = node_load($form['nid']['#value']);
-  foreach ($form_state['values']['course_outline']['requirements'] as $key => $record) {
+  foreach ($form_state['values']['course_outline']['requirements'] as $coid => $record) {
     $record = array_merge($record, $record['options']);
     $record = (object) $record;
     $record->nid = $node->nid;
@@ -292,16 +292,16 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
     }
     elseif (!$record->delete && !empty($record->requirement_component)) {
       // Set the options, but don't overwrite any that weren't provided.
-      foreach ($record as $key => $value) {
-        $courseObject->setOption($key, $value);
+      foreach ($record as $rKey => $value) {
+        $courseObject->setOption($rKey, $value);
       }
 
       // Hey, now we have an ID. We might have settings for objects that didn't
       // exist until now. Save them.
-      if ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$key]) {
-        foreach ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$key] as $key => $value) {
+      if ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$coid]) {
+        foreach ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$coid] as $oKey => $value) {
           if (!is_null($value)) {
-            $courseObject->setOption($key, $value);
+            $courseObject->setOption($oKey, $value);
           }
         }
       }

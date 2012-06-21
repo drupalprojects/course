@@ -25,7 +25,7 @@ class CourseObject extends CourseHandler {
    *   An object with requirement_component, requirement_type, and instance
    * @param object $user
    */
-  function __construct($config = NULL, $account = NULL) {
+  function __construct($config = array(), $account = NULL) {
     $this->serializedField = 'data';
     $this->handlerType = 'course_object';
 
@@ -187,7 +187,9 @@ class CourseObject extends CourseHandler {
    */
   public function optionsSubmit(&$form, &$form_state) {
     foreach (array_keys($this->getOptions()) as $key) {
-      $_SESSION['course'][$this->getCourseNid()]['editing'][$form_state['values']['uniqid']][$key] = $form_state['values'][$key];
+      if ($form_state['values'][$key]) {
+        $_SESSION['course'][$this->getCourseNid()]['editing'][$form_state['values']['uniqid']][$key] = $form_state['values'][$key];
+      }
     }
   }
 
