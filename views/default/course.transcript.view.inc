@@ -22,12 +22,12 @@ $handler->display->display_options['pager']['options']['offset'] = '0';
 $handler->display->display_options['pager']['options']['id'] = '0';
 $handler->display->display_options['pager']['options']['expose']['items_per_page_options_all'] = 0;
 $handler->display->display_options['style_plugin'] = 'table';
-/* Relationship: Course report: Course Node */
+/* Relationship: Course report: Course node */
 $handler->display->display_options['relationships']['nid']['id'] = 'nid';
 $handler->display->display_options['relationships']['nid']['table'] = 'course_report';
 $handler->display->display_options['relationships']['nid']['field'] = 'nid';
 $handler->display->display_options['relationships']['nid']['required'] = 1;
-/* Relationship: Course report: Course report user */
+/* Relationship: Course report: Course user */
 $handler->display->display_options['relationships']['uid']['id'] = 'uid';
 $handler->display->display_options['relationships']['uid']['table'] = 'course_report';
 $handler->display->display_options['relationships']['uid']['field'] = 'uid';
@@ -45,89 +45,27 @@ $handler->display->display_options['relationships']['course_enrollment']['field'
 $handler->display->display_options['relationships']['credit_awarded']['id'] = 'credit_awarded';
 $handler->display->display_options['relationships']['credit_awarded']['table'] = 'course_report';
 $handler->display->display_options['relationships']['credit_awarded']['field'] = 'credit_awarded';
-/* Field: Node: Title */
-$handler->display->display_options['fields']['title']['id'] = 'title';
-$handler->display->display_options['fields']['title']['table'] = 'node';
-$handler->display->display_options['fields']['title']['field'] = 'title';
-$handler->display->display_options['fields']['title']['relationship'] = 'nid';
-$handler->display->display_options['fields']['title']['alter']['alter_text'] = 0;
-$handler->display->display_options['fields']['title']['alter']['make_link'] = 0;
-$handler->display->display_options['fields']['title']['alter']['word_boundary'] = 1;
-$handler->display->display_options['fields']['title']['alter']['ellipsis'] = 1;
-$handler->display->display_options['fields']['title']['alter']['strip_tags'] = 0;
-$handler->display->display_options['fields']['title']['alter']['trim'] = 0;
-$handler->display->display_options['fields']['title']['alter']['html'] = 0;
-$handler->display->display_options['fields']['title']['hide_empty'] = 0;
-$handler->display->display_options['fields']['title']['empty_zero'] = 0;
-$handler->display->display_options['fields']['title']['link_to_node'] = 1;
-/* Field: Course report: Credits */
-$handler->display->display_options['fields']['cecredits']['id'] = 'cecredits';
-$handler->display->display_options['fields']['cecredits']['table'] = 'course_report';
-$handler->display->display_options['fields']['cecredits']['field'] = 'cecredits';
-$handler->display->display_options['fields']['cecredits']['alter']['alter_text'] = 0;
-$handler->display->display_options['fields']['cecredits']['alter']['make_link'] = 0;
-$handler->display->display_options['fields']['cecredits']['alter']['word_boundary'] = 1;
-$handler->display->display_options['fields']['cecredits']['alter']['ellipsis'] = 1;
-$handler->display->display_options['fields']['cecredits']['alter']['strip_tags'] = 0;
-$handler->display->display_options['fields']['cecredits']['alter']['trim'] = 0;
-$handler->display->display_options['fields']['cecredits']['alter']['html'] = 0;
-$handler->display->display_options['fields']['cecredits']['hide_empty'] = 0;
-$handler->display->display_options['fields']['cecredits']['empty_zero'] = 0;
-/* Field: Course report: Max credits */
-$handler->display->display_options['fields']['cecreditsmax']['id'] = 'cecreditsmax';
-$handler->display->display_options['fields']['cecreditsmax']['table'] = 'course_report';
-$handler->display->display_options['fields']['cecreditsmax']['field'] = 'cecreditsmax';
-$handler->display->display_options['fields']['cecreditsmax']['label'] = 'Max Credits';
-$handler->display->display_options['fields']['cecreditsmax']['alter']['alter_text'] = 0;
-$handler->display->display_options['fields']['cecreditsmax']['alter']['make_link'] = 0;
-$handler->display->display_options['fields']['cecreditsmax']['alter']['word_boundary'] = 1;
-$handler->display->display_options['fields']['cecreditsmax']['alter']['ellipsis'] = 1;
-$handler->display->display_options['fields']['cecreditsmax']['alter']['strip_tags'] = 0;
-$handler->display->display_options['fields']['cecreditsmax']['alter']['trim'] = 0;
-$handler->display->display_options['fields']['cecreditsmax']['alter']['html'] = 0;
-$handler->display->display_options['fields']['cecreditsmax']['hide_empty'] = 0;
-$handler->display->display_options['fields']['cecreditsmax']['empty_zero'] = 0;
-/* Field: Course report: Credits claimed */
-$handler->display->display_options['fields']['credits_claimed']['id'] = 'credits_claimed';
-$handler->display->display_options['fields']['credits_claimed']['table'] = 'course_report';
-$handler->display->display_options['fields']['credits_claimed']['field'] = 'credits_claimed';
-$handler->display->display_options['fields']['credits_claimed']['label'] = 'Claimed Credits';
-$handler->display->display_options['fields']['credits_claimed']['alter']['alter_text'] = 0;
-$handler->display->display_options['fields']['credits_claimed']['alter']['make_link'] = 0;
-$handler->display->display_options['fields']['credits_claimed']['alter']['word_boundary'] = 1;
-$handler->display->display_options['fields']['credits_claimed']['alter']['ellipsis'] = 1;
-$handler->display->display_options['fields']['credits_claimed']['alter']['strip_tags'] = 0;
-$handler->display->display_options['fields']['credits_claimed']['alter']['trim'] = 0;
-$handler->display->display_options['fields']['credits_claimed']['alter']['html'] = 0;
-$handler->display->display_options['fields']['credits_claimed']['hide_empty'] = 0;
-$handler->display->display_options['fields']['credits_claimed']['empty_zero'] = 0;
-/* Field: Course report: Course status */
-$handler->display->display_options['fields']['section_name']['id'] = 'section_name';
-$handler->display->display_options['fields']['section_name']['table'] = 'course_report';
-$handler->display->display_options['fields']['section_name']['field'] = 'section_name';
-$handler->display->display_options['fields']['section_name']['alter']['alter_text'] = 0;
-$handler->display->display_options['fields']['section_name']['alter']['make_link'] = 0;
-$handler->display->display_options['fields']['section_name']['alter']['word_boundary'] = 1;
-$handler->display->display_options['fields']['section_name']['alter']['ellipsis'] = 1;
-$handler->display->display_options['fields']['section_name']['alter']['strip_tags'] = 0;
-$handler->display->display_options['fields']['section_name']['alter']['trim'] = 0;
-$handler->display->display_options['fields']['section_name']['alter']['html'] = 0;
-$handler->display->display_options['fields']['section_name']['hide_empty'] = 0;
-$handler->display->display_options['fields']['section_name']['empty_zero'] = 0;
-/* Field: Course enrolments: Start of enrolment */
-$handler->display->display_options['fields']['timestamp']['id'] = 'timestamp';
-$handler->display->display_options['fields']['timestamp']['table'] = 'course_enrolment';
-$handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
-$handler->display->display_options['fields']['timestamp']['label'] = 'Enrolled date';
-$handler->display->display_options['fields']['timestamp']['alter']['alter_text'] = 0;
-$handler->display->display_options['fields']['timestamp']['alter']['make_link'] = 0;
-$handler->display->display_options['fields']['timestamp']['alter']['word_boundary'] = 1;
-$handler->display->display_options['fields']['timestamp']['alter']['ellipsis'] = 1;
-$handler->display->display_options['fields']['timestamp']['alter']['strip_tags'] = 0;
-$handler->display->display_options['fields']['timestamp']['alter']['trim'] = 0;
-$handler->display->display_options['fields']['timestamp']['alter']['html'] = 0;
-$handler->display->display_options['fields']['timestamp']['hide_empty'] = 0;
-$handler->display->display_options['fields']['timestamp']['empty_zero'] = 0;
+/* Field: Course report: Crid */
+$handler->display->display_options['fields']['crid']['id'] = 'crid';
+$handler->display->display_options['fields']['crid']['table'] = 'course_report';
+$handler->display->display_options['fields']['crid']['field'] = 'crid';
+$handler->display->display_options['fields']['crid']['alter']['alter_text'] = 0;
+$handler->display->display_options['fields']['crid']['alter']['make_link'] = 0;
+$handler->display->display_options['fields']['crid']['alter']['absolute'] = 0;
+$handler->display->display_options['fields']['crid']['alter']['external'] = 0;
+$handler->display->display_options['fields']['crid']['alter']['replace_spaces'] = 0;
+$handler->display->display_options['fields']['crid']['alter']['trim_whitespace'] = 0;
+$handler->display->display_options['fields']['crid']['alter']['nl2br'] = 0;
+$handler->display->display_options['fields']['crid']['alter']['word_boundary'] = 1;
+$handler->display->display_options['fields']['crid']['alter']['ellipsis'] = 1;
+$handler->display->display_options['fields']['crid']['alter']['strip_tags'] = 0;
+$handler->display->display_options['fields']['crid']['alter']['trim'] = 0;
+$handler->display->display_options['fields']['crid']['alter']['html'] = 0;
+$handler->display->display_options['fields']['crid']['element_label_colon'] = 1;
+$handler->display->display_options['fields']['crid']['element_default_classes'] = 1;
+$handler->display->display_options['fields']['crid']['hide_empty'] = 0;
+$handler->display->display_options['fields']['crid']['empty_zero'] = 0;
+$handler->display->display_options['fields']['crid']['hide_alter_empty'] = 1;
 /* Argument: User: Uid */
 $handler->display->display_options['arguments']['uid']['id'] = 'uid';
 $handler->display->display_options['arguments']['uid']['table'] = 'users';
@@ -150,7 +88,7 @@ $handler->display->display_options['arguments']['uid']['not'] = 0;
 $handler->display->display_options['filters']['complete']['id'] = 'complete';
 $handler->display->display_options['filters']['complete']['table'] = 'course_report';
 $handler->display->display_options['filters']['complete']['field'] = 'complete';
-/* Filter: Course: Transcript */
+/* Filter: Course:  */
 $handler->display->display_options['filters']['transcript']['id'] = 'transcript';
 $handler->display->display_options['filters']['transcript']['table'] = 'course_node';
 $handler->display->display_options['filters']['transcript']['field'] = 'transcript';
@@ -172,12 +110,12 @@ $handler->display->display_options['empty']['text']['empty'] = FALSE;
 $handler->display->display_options['empty']['text']['content'] = 'You don\'t have any pending activities.';
 $handler->display->display_options['empty']['text']['format'] = '2';
 $handler->display->display_options['defaults']['relationships'] = FALSE;
-/* Relationship: Course report: Course Node */
+/* Relationship: Course report: Course node */
 $handler->display->display_options['relationships']['nid']['id'] = 'nid';
 $handler->display->display_options['relationships']['nid']['table'] = 'course_report';
 $handler->display->display_options['relationships']['nid']['field'] = 'nid';
 $handler->display->display_options['relationships']['nid']['required'] = 1;
-/* Relationship: Course report: Course report user */
+/* Relationship: Course report: Course user */
 $handler->display->display_options['relationships']['uid']['id'] = 'uid';
 $handler->display->display_options['relationships']['uid']['table'] = 'course_report';
 $handler->display->display_options['relationships']['uid']['field'] = 'uid';
@@ -242,13 +180,6 @@ $handler->display->display_options['defaults']['filters'] = FALSE;
 $handler->display->display_options['filters']['complete']['id'] = 'complete';
 $handler->display->display_options['filters']['complete']['table'] = 'course_report';
 $handler->display->display_options['filters']['complete']['field'] = 'complete';
-/* Filter: Course: Transcript */
-$handler->display->display_options['filters']['transcript']['id'] = 'transcript';
-$handler->display->display_options['filters']['transcript']['table'] = 'course_node';
-$handler->display->display_options['filters']['transcript']['field'] = 'transcript';
-$handler->display->display_options['filters']['transcript']['relationship'] = 'nid';
-$handler->display->display_options['filters']['transcript']['value'] = '1';
-$handler->display->display_options['filters']['transcript']['expose']['operator'] = FALSE;
 $handler->display->display_options['path'] = 'user/%/activities/pending';
 $handler->display->display_options['menu']['type'] = 'tab';
 $handler->display->display_options['menu']['title'] = 'Courses (in progress)';
@@ -268,12 +199,12 @@ $handler->display->display_options['empty']['text']['empty'] = FALSE;
 $handler->display->display_options['empty']['text']['content'] = 'You don\'t have any completed activities.';
 $handler->display->display_options['empty']['text']['format'] = '2';
 $handler->display->display_options['defaults']['relationships'] = FALSE;
-/* Relationship: Course report: Course Node */
+/* Relationship: Course report: Course node */
 $handler->display->display_options['relationships']['nid']['id'] = 'nid';
 $handler->display->display_options['relationships']['nid']['table'] = 'course_report';
 $handler->display->display_options['relationships']['nid']['field'] = 'nid';
 $handler->display->display_options['relationships']['nid']['required'] = 1;
-/* Relationship: Course report: Course report user */
+/* Relationship: Course report: Course user */
 $handler->display->display_options['relationships']['uid']['id'] = 'uid';
 $handler->display->display_options['relationships']['uid']['table'] = 'course_report';
 $handler->display->display_options['relationships']['uid']['field'] = 'uid';
@@ -330,29 +261,47 @@ $handler->display->display_options['fields']['credits']['field'] = 'credits';
 $handler->display->display_options['fields']['credits']['relationship'] = 'credit_awarded';
 $handler->display->display_options['fields']['credits']['alter']['alter_text'] = 0;
 $handler->display->display_options['fields']['credits']['alter']['make_link'] = 0;
+$handler->display->display_options['fields']['credits']['alter']['absolute'] = 0;
+$handler->display->display_options['fields']['credits']['alter']['external'] = 0;
+$handler->display->display_options['fields']['credits']['alter']['replace_spaces'] = 0;
+$handler->display->display_options['fields']['credits']['alter']['trim_whitespace'] = 0;
+$handler->display->display_options['fields']['credits']['alter']['nl2br'] = 0;
 $handler->display->display_options['fields']['credits']['alter']['word_boundary'] = 1;
 $handler->display->display_options['fields']['credits']['alter']['ellipsis'] = 1;
 $handler->display->display_options['fields']['credits']['alter']['strip_tags'] = 0;
 $handler->display->display_options['fields']['credits']['alter']['trim'] = 0;
 $handler->display->display_options['fields']['credits']['alter']['html'] = 0;
-$handler->display->display_options['fields']['credits']['hide_empty'] = 0;
+$handler->display->display_options['fields']['credits']['element_label_colon'] = 1;
+$handler->display->display_options['fields']['credits']['element_default_classes'] = 1;
+$handler->display->display_options['fields']['credits']['hide_empty'] = 1;
 $handler->display->display_options['fields']['credits']['empty_zero'] = 0;
+$handler->display->display_options['fields']['credits']['hide_alter_empty'] = 1;
 $handler->display->display_options['fields']['credits']['set_precision'] = 1;
 $handler->display->display_options['fields']['credits']['precision'] = '2';
+$handler->display->display_options['fields']['credits']['format_plural'] = 0;
 /* Field: Course credit type: Title */
 $handler->display->display_options['fields']['title_1']['id'] = 'title_1';
 $handler->display->display_options['fields']['title_1']['table'] = 'course_credit_type';
 $handler->display->display_options['fields']['title_1']['field'] = 'title';
 $handler->display->display_options['fields']['title_1']['relationship'] = 'ctid_global';
+$handler->display->display_options['fields']['title_1']['label'] = 'Type';
 $handler->display->display_options['fields']['title_1']['alter']['alter_text'] = 0;
 $handler->display->display_options['fields']['title_1']['alter']['make_link'] = 0;
+$handler->display->display_options['fields']['title_1']['alter']['absolute'] = 0;
+$handler->display->display_options['fields']['title_1']['alter']['external'] = 0;
+$handler->display->display_options['fields']['title_1']['alter']['replace_spaces'] = 0;
+$handler->display->display_options['fields']['title_1']['alter']['trim_whitespace'] = 0;
+$handler->display->display_options['fields']['title_1']['alter']['nl2br'] = 0;
 $handler->display->display_options['fields']['title_1']['alter']['word_boundary'] = 1;
 $handler->display->display_options['fields']['title_1']['alter']['ellipsis'] = 1;
 $handler->display->display_options['fields']['title_1']['alter']['strip_tags'] = 0;
 $handler->display->display_options['fields']['title_1']['alter']['trim'] = 0;
 $handler->display->display_options['fields']['title_1']['alter']['html'] = 0;
-$handler->display->display_options['fields']['title_1']['hide_empty'] = 0;
+$handler->display->display_options['fields']['title_1']['element_label_colon'] = 1;
+$handler->display->display_options['fields']['title_1']['element_default_classes'] = 1;
+$handler->display->display_options['fields']['title_1']['hide_empty'] = 1;
 $handler->display->display_options['fields']['title_1']['empty_zero'] = 0;
+$handler->display->display_options['fields']['title_1']['hide_alter_empty'] = 1;
 /* Field: Course report: Course status */
 $handler->display->display_options['fields']['section_name']['id'] = 'section_name';
 $handler->display->display_options['fields']['section_name']['table'] = 'course_report';
@@ -406,22 +355,6 @@ $handler->display->display_options['fields']['date_completed']['hide_empty'] = 0
 $handler->display->display_options['fields']['date_completed']['empty_zero'] = 0;
 $handler->display->display_options['fields']['date_completed']['date_format'] = 'custom';
 $handler->display->display_options['fields']['date_completed']['custom_date_format'] = 'm/d/Y';
-/* Field: Course: Certificate */
-$handler->display->display_options['fields']['certificate']['id'] = 'certificate';
-$handler->display->display_options['fields']['certificate']['table'] = 'course_node';
-$handler->display->display_options['fields']['certificate']['field'] = 'certificate';
-$handler->display->display_options['fields']['certificate']['relationship'] = 'nid';
-$handler->display->display_options['fields']['certificate']['alter']['alter_text'] = 1;
-$handler->display->display_options['fields']['certificate']['alter']['text'] = 'Download';
-$handler->display->display_options['fields']['certificate']['alter']['make_link'] = 1;
-$handler->display->display_options['fields']['certificate']['alter']['path'] = 'node/[nid]/certificate';
-$handler->display->display_options['fields']['certificate']['alter']['word_boundary'] = 1;
-$handler->display->display_options['fields']['certificate']['alter']['ellipsis'] = 1;
-$handler->display->display_options['fields']['certificate']['alter']['strip_tags'] = 0;
-$handler->display->display_options['fields']['certificate']['alter']['trim'] = 0;
-$handler->display->display_options['fields']['certificate']['alter']['html'] = 0;
-$handler->display->display_options['fields']['certificate']['hide_empty'] = 1;
-$handler->display->display_options['fields']['certificate']['empty_zero'] = 1;
 $handler->display->display_options['defaults']['filters'] = FALSE;
 /* Filter: Course report: Complete */
 $handler->display->display_options['filters']['complete']['id'] = 'complete';
@@ -429,13 +362,6 @@ $handler->display->display_options['filters']['complete']['table'] = 'course_rep
 $handler->display->display_options['filters']['complete']['field'] = 'complete';
 $handler->display->display_options['filters']['complete']['value'] = '1';
 $handler->display->display_options['filters']['complete']['expose']['operator'] = FALSE;
-/* Filter: Course: Transcript */
-$handler->display->display_options['filters']['transcript']['id'] = 'transcript';
-$handler->display->display_options['filters']['transcript']['table'] = 'course_node';
-$handler->display->display_options['filters']['transcript']['field'] = 'transcript';
-$handler->display->display_options['filters']['transcript']['relationship'] = 'nid';
-$handler->display->display_options['filters']['transcript']['value'] = '1';
-$handler->display->display_options['filters']['transcript']['expose']['operator'] = FALSE;
 $handler->display->display_options['path'] = 'user/%/activities/completed';
 $handler->display->display_options['menu']['type'] = 'default tab';
 $handler->display->display_options['menu']['title'] = 'Transcript';
@@ -570,7 +496,7 @@ $handler->display->display_options['filters']['complete']['table'] = 'course_rep
 $handler->display->display_options['filters']['complete']['field'] = 'complete';
 $handler->display->display_options['filters']['complete']['value'] = '1';
 $handler->display->display_options['filters']['complete']['expose']['operator'] = FALSE;
-/* Filter: Course: Transcript */
+/* Filter: Course:  */
 $handler->display->display_options['filters']['transcript']['id'] = 'transcript';
 $handler->display->display_options['filters']['transcript']['table'] = 'course_node';
 $handler->display->display_options['filters']['transcript']['field'] = 'transcript';
