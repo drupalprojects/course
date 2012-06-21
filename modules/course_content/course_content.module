@@ -22,11 +22,11 @@ function course_content_course_handlers() {
 
   // Dynamically generate the object handlers.
   $handlers['object'] = array();
-  $types = content_types();
+  $types = node_get_types();
   foreach ($types as $type => $info) {
     if (variable_get("course_content_use_$type", 0)) {
       $handlers['object'][$type] = array(
-        'name' => $info['name'],
+        'name' => $info->name,
         'class' => 'CourseObjectNode',
         'description' => t('A node to be used in a course workflow.'),
       );
