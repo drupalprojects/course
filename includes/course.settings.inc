@@ -202,26 +202,3 @@ function course_cck_kv_fields() {
 
   return $field_options;
 }
-
-/**
- * Get all the options for a user type selection.
- */
-function course_user_type_get_options() {
-  $field_name = variable_get('course_user_types_field', '');
-  $options = array();
-
-  if (!empty($field_name)) {
-    $options = content_allowed_values(content_fields($field_name));
-  }
-
-  $lines = explode("\n", variable_get('course_user_types', ''));
-  $additional = array();
-  foreach ($lines as $line) {
-    $line = explode('|', $line);
-    if ($line[0]) {
-      $additional[$line[0]] = $line[1];
-    }
-  }
-
-  return array_merge($options, $additional);
-}
