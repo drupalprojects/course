@@ -911,6 +911,9 @@ function course_enable() {
     $paths .= "\n*/coursesettings";
     variable_set('admin_theme_path', $paths);
   }
+
+  // Flush autoload caches.
+  autoload_flush_caches();
 }
 
 /**
@@ -1703,13 +1706,18 @@ function course_init() {
     }
   }
 
-  $course = new Course($courseNode);
-  if ($course && $course->getActive()) {
-    drupal_add_js(
-      array(
-      'courseAjaxNavPath' => url('node/' . $courseNode->nid . '/course-object/' . $course->getActive()->getId() . '/ajax/nav'),
-      ), 'setting'
-    );
+  if (class_exists('Course')) {
+    // Check that Course exists for a special use case where Autoload hasn't yet
+    // cached the Course class.
+
+    $course = new Course($courseNode);
+    if ($course && $course->getActive()) {
+      drupal_add_js(
+        array(
+        'courseAjaxNavPath' => url('node/' . $courseNode->nid . '/course-object/' . $course->getActive()->getId() . '/ajax/nav'),
+        ), 'setting'
+      );
+    }
   }
 }
 
