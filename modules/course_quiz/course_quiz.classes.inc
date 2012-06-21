@@ -28,6 +28,9 @@ class CourseObjectQuiz extends CourseObjectNode {
     $this->setInstanceId($quiz->nid);
   }
 
+  /**
+   * The take URL of the quiz is /take.
+   */
   function getTakeUrl() {
     return url("node/{$this->node->nid}/take");
   }
@@ -73,6 +76,9 @@ class CourseObjectQuiz extends CourseObjectNode {
     );
   }
 
+  /**
+   * Let the user know if they have a Quiz without questions.
+   */
   public function getWarnings() {
     $warnings = parent::getWarnings();
 

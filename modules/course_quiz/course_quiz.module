@@ -45,17 +45,3 @@ function course_quiz_quiz_finished($quiz, $score, $rid) {
   $courseObject = course_get_course_object('course_quiz', 'quiz', $quiz->nid, $user);
   $courseObject->grade($user);
 }
-
-/**
- * Implements hook_nodeapi().
- *
- * Update passing grade.
- */
-function course_quiz_nodeapi($node, $op, $a3, $a4) {
-  if ($node->type == 'quiz') {
-    if ($op == 'update') {
-      $courseObject = course_get_course_object('course_quiz', 'quiz', $node->nid);
-      $courseObject->setOption('passing_grade', $node->pass_rate)->save();
-    }
-  }
-}
