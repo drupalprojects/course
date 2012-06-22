@@ -67,7 +67,7 @@ function _course_block_navigation_view() {
       $links[] = l('Next', $next->getUrl(), array('html' => TRUE));
     }
 
-    drupal_add_js(drupal_get_path('module', 'course') . '/js/nav.js');
+    drupal_add_js(drupal_get_path('module', 'course') . '/js/nav.js', 'module', 'header', FALSE, FALSE, FALSE);
 
     return array(
       'subject' => '',
