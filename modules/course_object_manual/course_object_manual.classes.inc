@@ -31,8 +31,8 @@ class CourseObjectManual extends CourseObject {
     }
   }
 
-  public function getOptions() {
-    $defaults = parent::getOptions();
+  public function optionsDefinition() {
+    $defaults = parent::optionsDefinition();
 
     $defaults['complete_msg'] = 'Your instructor has marked you as passed.';
     $defaults['incomplete_msg'] = 'Your instructor has not given you a pass/fail grade yet.';
