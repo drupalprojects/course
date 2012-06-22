@@ -1,6 +1,11 @@
 <?php
 
 class CourseObjectSignup extends CourseObjectNode {
+  public function create() {
+    if (!$this->getOption('instance')) {
+      $this->setOption('instance', $this->getCourseNid());
+    }
+  }
 
   public function getTakeType() {
     return 'content';
