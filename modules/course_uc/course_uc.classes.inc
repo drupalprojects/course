@@ -41,4 +41,12 @@ class CourseObjectUbercart extends CourseObjectNode {
     parent::optionsSubmit($form, $form_state);
   }
 
+  /**
+   * Don't create new products.
+   */
+  public function create() {
+    if (!$this->getInstanceId()) {
+      $this->setOption('instance', $this->getCourseNid());
+    }
+  }
 }
