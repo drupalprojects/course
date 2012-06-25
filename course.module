@@ -1473,50 +1473,44 @@ function course_remove_enrollment_action(&$user, $context) {
 /**
  * Edit enrolment action
  *
- * @todo use the CourseObject class for deleting/modifying/fulfilling
- * requirements
- *
- * @param object $signup
- *   A course enrollment signup object.
+ * @param object $object
+ *   An object containing nid and uid properties.
  * @param array $context
- *   @todo explain this param.
- *
- * @todo use the CourseObject class for deleting/modifying/fulfilling
- * requirements
+ *   Values from user input.
  */
-function course_edit_enrollment_action(&$signup, $context) {
-  $enrolment = new stdClass;
-  $enrolment->uid = $signup->uid;
-  $enrolment->nid = $signup->nid;
-  if ($context['enrol_end']) {
-    if (is_array($context['enrol_end'])) {
-      // Parse date from select boxes.
-      $unixtime = mktime(23, 59, 59, $context['enrol_end']['month'], $context['enrol_end']['day'], $context['enrol_end']['year']);
-    }
-    else {
-      // Parse date from popup/plain text.
-      $unixtime = strtotime($context['enrol_end']);
-    }
-    if ($unixtime) {
-      $enrolment->enrol_end = $unixtime + 86399;
-    }
-  }
+function course_edit_enrollment_action($object, $context) {
+  $enrollment = course_enrolment_load($object->nid, $object->uid);
+  $node = node_load($enrollment->nid);
+  $account = user_load($enrollment->uid);
+  $course_report = course_report_load($node, $account);
+
+  // Update enrollment status.
   if ($context['status'] != '') {
-    $enrolment->status = $context['status'];
+    $enrollment->status = $context['status'];
   }
 
-  drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
-  $node = node_load($enrolment->nid);
-  $account = user_load($enrolment->uid);
+  // Update enrollment duration.
+  if ($context['enrol_end']) {
+    // Parse date from popup/plain text.
+    if ($unixtime = strtotime($context['enrol_end'])) {
+      $enrollment->enrol_end = $unixtime + 86399;
+    }
+  }
 
-  // Save completion.
-  $report = course_report_load($node, $account);
+  // Update completion.
   if ($context['complete'] != '') {
-    $report->complete = $context['complete'];
-    $report->nid = $node->nid;
-    $report->uid = $account->uid;
-    course_report_save($report);
+    $course_report->complete = $context['complete'];
   }
+
+  // Update date completed.
+  if ($context['date_completed'] != '') {
+    if ($unixtime = strtotime($context['date_completed'])) {
+      $course_report->date_completed = $unixtime;
+    }
+  }
+
+  course_enrolment_save($enrollment);
+  course_report_save($course_report);
 
   $course = new Course($node, $account);
   foreach ($course as $key => $courseObject) {
@@ -1547,7 +1541,7 @@ function course_edit_enrollment_action(&$signup, $context) {
     }
   }
 
-  drupal_set_message(t('Updated enrollment for @user', array('@user' => $account->name)));
+  drupal_set_message(t('Updated enrollment for %user', array('%user' => $account->name)));
 }
 
 /**
@@ -1561,13 +1555,6 @@ function course_edit_enrollment_action_form($context) {
 
   $form['header'] = array(
     '#value' => format_plural($num_users, 'Use this form to edit course enrollment and completion data for 1 user', 'Use this form to edit course enrollment and completion data for @count users'),
-  );
-
-  $form['enrol_end'] = array(
-    '#title' => t('Extend course enrollment until'),
-    '#type' => module_exists('date_popup') ? 'date_popup' : 'date',
-    '#date_format' => 'm/d/Y',
-    '#description' => t('The date when the user will not be able to access the course.'),
   );
 
   if ($num_users == 1) {
@@ -1586,18 +1573,6 @@ function course_edit_enrollment_action_form($context) {
 
     $enrol = course_enrolment_load($node->nid, $account->uid);
     $course_report = course_report_load($node, $account);
-
-    // Fill in default value.
-    if ($form['enrol_end']['#type'] == 'date') {
-      $form['enrol_end']['#default_value'] = array(
-        'day' => date('d', $enrol->enrol_end),
-        'month' => date('m', $enrol->enrol_end),
-        'year' => date('Y', $enrol->enrol_end),
-      );
-    }
-    else {
-      $form['enrol_end']['#default_value'] = $enrol->enrol_end ? date('U', $enrol->enrol_end) : NULL;
-    }
   }
 
   $form['status'] = array(
@@ -1605,12 +1580,21 @@ function course_edit_enrollment_action_form($context) {
     '#type' => 'select',
     '#options' => array(
       '' => '',
-      1 => 'active',
-      0 => 'inactive',
+      1 => 'Active',
+      0 => 'Inactive',
     ),
     '#default_value' => $enrol->status,
     '#description' => t('Setting an enrollment to "inactive" will prevent a user from accessing the course.'),
   );
+
+  $form['enrol_end'] = array(
+    '#title' => t('Extend course enrollment until'),
+    '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
+    '#date_format' => 'm/d/Y H:i',
+    '#description' => t('The date when the user will not be able to access the course.'),
+    '#default_value' => date('Y-m-d H:i:s', $enrol->enrol_end),
+  );
+
 
   $form['complete'] = array(
     '#title' => t('Set completion status to'),
@@ -1622,6 +1606,14 @@ function course_edit_enrollment_action_form($context) {
     ),
     '#description' => t("This will change a user's course completion. Set to incomplete this to re-evaluate all requirements. Course will never be automatically un-completed once they have been marked completed."),
     '#default_value' => $course_report->complete,
+  );
+
+  $form['date_completed'] = array(
+    '#title' => t('Set completion date to'),
+    '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
+    '#date_format' => 'm/d/Y H:i',
+    '#description' => t('The date of completion.'),
+    '#default_value' => date('Y-m-d H:i:s', $course_report->date_completed),
   );
 
   $form['course_objects'] = array(
@@ -1662,6 +1654,7 @@ function course_edit_enrollment_action_submit($form, $form_state) {
     'enrol_end' => $form_state['values']['enrol_end'],
     'status' => $form_state['values']['status'],
     'complete' => $form_state['values']['complete'],
+    'date_completed' => $form_state['values']['date_completed'],
     'course_objects' => $form_state['values']['course_objects'],
   );
 }
@@ -1904,25 +1897,11 @@ function course_report_save($entry) {
   // Load user so we can serialize it.
   $account = user_load($entry->uid);
 
-  // Load profile so we can serialize it.
-  if (module_exists('content_profile')) {
-    $content_profile = content_profile_load('profile', $entry->uid);
-    if (!empty($content_profile)) {
-      foreach ($content_profile as $key => $val) {
-        if (strpos($key, 'field_') != FALSE) {
-          $profile->${$key} = $val;
-        }
-      }
-    }
-  }
-  $entry->data = serialize(array('user' => $account, 'profile' => $profile));
-
   $entry->updated = time();
 
   $sql = "select * from {course_report} where nid = %d and uid = %d";
-  $query = db_query($sql, $entry->nid, $entry->uid);
-  $old = db_fetch_object($query);
-
+  $result = db_query($sql, $entry->nid, $entry->uid);
+  $old = db_fetch_object($result);
 
   // Allow modules to alter course reports.
   drupal_alter('course_report', $entry, $account, $old);
@@ -1941,8 +1920,6 @@ function course_report_save($entry) {
 
   // Notify modules that a course report has been saved.
   module_invoke_all('course_report_saved', $entry, $account, $old);
-
-  return $entry;
 }
 
 /**

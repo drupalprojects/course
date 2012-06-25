@@ -310,10 +310,12 @@ class Course extends CourseIterator {
     where nid = %d and enabled
     order by weight asc";
     $result = db_query($sql, $this->user->uid, $this->node->nid, $this->user->uid);
-    $report = new stdClass();
+    if (!$course_report = course_report_load($this->node, $this->user)) {
+      $course_report = new stdClass;
+    }
     while ($row = db_fetch_object($result)) {
       if (!$prev) {
-        $report->section_name = $row->title;
+        $course_report->section_name = $row->title;
       }
 
       // Count required objects.
@@ -323,7 +325,7 @@ class Course extends CourseIterator {
       $required_complete += ($row->required && $row->complete);
 
       if (!$row->complete && $prev->complete) {
-        $report->section_name = $row->title;
+        $course_report->section_name = $row->title;
       }
 
       $prev = clone $row;
@@ -331,14 +333,14 @@ class Course extends CourseIterator {
 
     if ($required_complete >= $required) {
       // Course requirements have been met.
-      $report->section = 'complete';
-      $report->section_name = 'Complete';
-      $report->complete = TRUE;
+      $course_report->section = 'complete';
+      $course_report->section_name = 'Complete';
+      $course_report->complete = TRUE;
     }
 
-    $report->nid = $this->node->nid;
-    $report->uid = $this->user->uid;
-    course_report_save($report);
+    $course_report->nid = $this->node->nid;
+    $course_report->uid = $this->user->uid;
+    course_report_save($course_report);
   }
 
   /**
