@@ -1436,29 +1436,11 @@ function course_action_info() {
 
 /**
  * Action to enrol a user in current course.
- *
- * @todo replace this with course object API implementation, in uc_course.
  */
-function course_add_enrollment_action(&$user, $context) {
+function course_add_enrollment_action($user, $context) {
   if ($node = node_load(arg(1))) {
     course_enrol($node, $user);
-    $reqs = course_outline_get_course_requirements($node);
-    if (!empty($reqs)) {
-      foreach ($reqs as $req) {
-        if ($req->requirement_type == 'ubercart_payment') {
-          $ubercart = array(
-            'snid' => $req->snid,
-            'uid' => $user->uid,
-            'complete' => 1,
-            'date_completed' => time(),
-            'info' => 'Payment marked as complete because user was manually enrolled.',
-          );
-          course_outline_save_fulfillment($ubercart);
-        }
-      }
-    }
-
-    drupal_set_message(t("User @user enrolled in @node.", array('@user' => $user->name, '@node' => $node->title)));
+    drupal_set_message(t("Enrolled %name in %title.", array('%name' => $user->name, '%title' => $node->title)));
   }
 }
 
