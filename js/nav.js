@@ -3,7 +3,7 @@
 
 Drupal.behaviors.CourseNav = function() {
   var url = Drupal.settings.courseAjaxNavPath;
-  if (Drupal.settings.courseAjaxNavPath.length > 0) {
+  if (Drupal.settings.courseAjaxNavPath && Drupal.settings.courseAjaxNavPath.length > 0) {
     setTimeout('CourseFulfillmentCheck();', 2500);
   }
 }
