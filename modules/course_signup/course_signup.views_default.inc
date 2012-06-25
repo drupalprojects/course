@@ -484,6 +484,11 @@ function course_signup_views_default_views() {
   $handler->display->display_options['relationships']['uid']['table'] = 'signup_log';
   $handler->display->display_options['relationships']['uid']['field'] = 'uid';
   $handler->display->display_options['relationships']['uid']['required'] = 1;
+  /* Relationship: Signup: Course enrollment */
+  $handler->display->display_options['relationships']['course_enrollment']['id'] = 'course_enrollment';
+  $handler->display->display_options['relationships']['course_enrollment']['table'] = 'signup_log';
+  $handler->display->display_options['relationships']['course_enrollment']['field'] = 'course_enrollment';
+  $handler->display->display_options['relationships']['course_enrollment']['required'] = 0;
   /* Field: User: Name */
   $handler->display->display_options['fields']['name']['id'] = 'name';
   $handler->display->display_options['fields']['name']['table'] = 'users';
@@ -509,7 +514,7 @@ function course_signup_views_default_views() {
   $handler->display->display_options['fields']['timestamp']['id'] = 'timestamp';
   $handler->display->display_options['fields']['timestamp']['table'] = 'course_enrolment';
   $handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
-  $handler->display->display_options['fields']['timestamp']['relationship'] = 'nid';
+  $handler->display->display_options['fields']['timestamp']['relationship'] = 'course_enrollment';
   $handler->display->display_options['fields']['timestamp']['label'] = 'Enroll start';
   $handler->display->display_options['fields']['timestamp']['alter']['alter_text'] = 0;
   $handler->display->display_options['fields']['timestamp']['alter']['make_link'] = 0;
@@ -532,7 +537,7 @@ function course_signup_views_default_views() {
   $handler->display->display_options['fields']['enrol_end']['id'] = 'enrol_end';
   $handler->display->display_options['fields']['enrol_end']['table'] = 'course_enrolment';
   $handler->display->display_options['fields']['enrol_end']['field'] = 'enrol_end';
-  $handler->display->display_options['fields']['enrol_end']['relationship'] = 'nid';
+  $handler->display->display_options['fields']['enrol_end']['relationship'] = 'course_enrollment';
   $handler->display->display_options['fields']['enrol_end']['label'] = 'Enroll End';
   $handler->display->display_options['fields']['enrol_end']['alter']['alter_text'] = 0;
   $handler->display->display_options['fields']['enrol_end']['alter']['make_link'] = 0;
