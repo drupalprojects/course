@@ -10,6 +10,8 @@ class CourseHandler {
   public $handlerType = NULL;
   // For objects that store things in the database, this is the field where all
   // non-schema fields will be serialized to.
+  public $table = NULL;
+  public $primaryKey = NULL;
   public $serializedField = NULL;
   // Configuration for this handler.
   protected $config = array();
@@ -105,6 +107,7 @@ class CourseHandler {
    * Handlers can declare a form.
    */
   public function optionsForm(&$form, &$form_state) {
+
   }
 
   /**
@@ -129,7 +132,8 @@ class CourseHandler {
    * serialized instead of stored.
    */
   protected function getDatabaseFields() {
-    return array();
+    $schema = drupal_get_schema($this->table);
+    return array_keys($schema['fields']);
   }
 
   /**
@@ -171,6 +175,27 @@ class CourseHandler {
    */
   public function getAccessMessages() {
     return $this->setAccessMessage();
+  }
+
+  public function save() {
+    $options = $this->getOptions();
+    if (!$options['uuid']) {
+      $options['uuid'] = uuid_uuid();
+    }
+
+    // Set up serialized field for non-schema fields.
+    $options[$this->serializedField] = array();
+
+    $dbfields = $this->getDatabaseFields();
+    foreach ($options as $key => $value) {
+      if (array_search($key, $dbfields) === FALSE) {
+        $options[$this->serializedField][$key] = $value;
+      }
+    }
+
+    $keys = $this->getId() ? array($this->primaryKey) : array();
+    drupal_write_record($this->table, $options, $keys);
+    return $this;
   }
 
 }
@@ -369,6 +394,10 @@ class Course extends CourseIterator {
 
   public function getNode() {
     return $this->node;
+  }
+
+  public function getUser() {
+    return $this->user;
   }
 
 }
