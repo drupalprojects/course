@@ -1503,7 +1503,7 @@ function course_edit_enrollment_action($object, $context) {
 
       if ($context['course_objects'][$snid] == 1) {
         // Completed
-        $fulfillment->setData('info', "Fulfillment completed via bulk action.");
+        $fulfillment->setOption('message', "Fulfillment completed via bulk action.");
         $fulfillment->setComplete($context['course_objects'][$snid]);
       }
 
@@ -1514,9 +1514,9 @@ function course_edit_enrollment_action($object, $context) {
 
       if ($context['course_objects'][$snid] == 0) {
         // Fail user
-        $fulfillment->setData('info', "Fulfillment failed via bulk action.");
-        $fulfillment->setComplete(0);
-        $fulfillment->setData('grade_result', 0);
+        $fulfillment->setOption('message', "Fulfillment failed via bulk action.");
+        $fulfillment->setComplete(FALSE);
+        $fulfillment->setOption('failed', TRUE);
       }
 
       $fulfillment->save();
