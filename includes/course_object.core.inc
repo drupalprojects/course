@@ -27,6 +27,9 @@ class CourseObject extends CourseHandler {
   function __construct($config = array(), $account = NULL) {
     $this->serializedField = 'data';
     $this->handlerType = 'course_object';
+    $this->primaryKey = 'snid';
+    $this->table = 'course_outline';
+
 
     // Pass configuration to parent.
     parent::__construct($config);
@@ -69,6 +72,15 @@ class CourseObject extends CourseHandler {
       case 'take':
         if (!$user->uid) {
           return FALSE;
+        }
+
+        if ($this->getOption('duration')) {
+          $duration_end = $this->getFulfillment()->getOption('date_started') + (60 * $this->getOption('duration'));
+          if (time() > $duration_end) {
+            $duration_end_h = date('Y-m-d H:i:s', $duration_end);
+            $this->setAccessMessage('duration-expired', 'Your enrollment in this activity expired on ' . $duration_end_h);
+            return FALSE;
+          }
         }
 
         if (time() < strtotime($this->getOption('release'))) {
@@ -186,7 +198,7 @@ class CourseObject extends CourseHandler {
    */
   public function optionsSubmit(&$form, &$form_state) {
     foreach (array_keys($this->getOptions()) as $key) {
-      if ($form_state['values'][$key]) {
+      if (!is_null($form_state['values'][$key])) {
         $_SESSION['course'][$this->getCourseNid()]['editing'][$form_state['values']['uniqid']][$key] = $form_state['values'][$key];
       }
     }
@@ -215,7 +227,18 @@ class CourseObject extends CourseHandler {
     $_SESSION['course'][$this->getCourseNid()]['taking']['active'] = $this->getId();
 
     // Run access checks.
-    if (!$this->access('take')) {
+    if ($this->access('take')) {
+      // Grant access to external course object.
+      $this->grant();
+
+      // Record start date.
+      if (!$this->getFulfillment()->getOption('date_started')) {
+        $this->getFulfillment()->setOption('date_started', time());
+      }
+    }
+    else {
+      // User can't access this object, revoke access.
+      $this->revoke();
       return FALSE;
     }
 
@@ -419,32 +442,6 @@ class CourseObject extends CourseHandler {
   }
 
   /**
-   * Save the course object to the database.
-   *
-   * @return CourseObject
-   */
-  public function save() {
-    $options = $this->getOptions();
-    if (!$options['uuid']) {
-      $options['uuid'] = uuid_uuid();
-    }
-
-    // Set up serialized field for non-schema fields.
-    $options['data'] = array();
-
-    $dbfields = $this->getDatabaseFields();
-    foreach ($options as $key => $value) {
-      if (array_search($key, $dbfields) === FALSE) {
-        $options['data'][$key] = $value;
-      }
-    }
-
-    $keys = $this->getId() ? array('snid') : array();
-    drupal_write_record('course_outline', $options, $keys);
-    return $this;
-  }
-
-  /**
    * Creates a course object.
    *
    * For example, this would create the new node and return the node ID if this
@@ -499,6 +496,29 @@ class CourseObject extends CourseHandler {
     );
   }
 
+  /**
+   * Grant access to the external course object.
+   *
+   * For example, adding a user to an access control list.
+   *
+   * @see CourseObjectNode::grant()
+   */
+  function grant() {
+
+  }
+
+  /**
+   * Revoke access to the external course object.
+   *
+   * For example, removing a user to an access control list.
+   *
+   * @todo This isn't called anywhere useful, yet.
+   * @see CourseObjectNode::revoke()
+   */
+  function revoke() {
+
+  }
+
 }
 
 /**
@@ -514,7 +534,7 @@ class CourseObjectFulfillment extends CourseHandler {
   private $courseObject;
 
   public function getId() {
-    return $this->fulfillment->sfid;
+    return $this->getOption('sfid');
   }
 
   /**
@@ -526,13 +546,21 @@ class CourseObjectFulfillment extends CourseHandler {
    * @param Object $user
    */
   function __construct($courseObject, $user) {
+    // Set storage.
+    $this->handlerType = 'course_object_fulfillment';
+    $this->table = 'course_outline_fulfillment';
+    $this->primaryKey = 'sfid';
+    $this->serializedField = 'info';
+
     $this->courseObject = $courseObject;
     $sql = "select * from {course_outline_fulfillment} where snid = %d and uid = %d";
-    $this->fulfillment = db_fetch_object(db_query($sql, $this->courseObject->getId(), $user->uid));
+    $fulfillment = db_fetch_array(db_query($sql, $this->courseObject->getId(), $user->uid));
+
+    $this->setOptions($fulfillment);
 
     // Set requirement ID.
-    $this->fulfillment->snid = $this->courseObject->getId();
-    $this->fulfillment->uid = $user->uid;
+    $this->setOption('snid', $this->courseObject->getId());
+    $this->setOption('uid', $user->uid);
   }
 
   /**
@@ -541,7 +569,7 @@ class CourseObjectFulfillment extends CourseHandler {
    * @return bool
    */
   function isComplete() {
-    return (bool) $this->fulfillment->complete;
+    return (bool) $this->getOption('complete');
   }
 
   /**
@@ -551,11 +579,11 @@ class CourseObjectFulfillment extends CourseHandler {
    *   Set to 0 to un-complete, 1 or omit to complete.
    */
   function setComplete($complete = 1) {
-    if (!$this->fulfillment->date_completed) {
-      $this->fulfillment->date_completed = time();
+    if (!$this->getOption('date_completed')) {
+      $this->setOption('date_completed', time());
     }
 
-    $this->fulfillment->complete = $complete;
+    $this->setOption('complete', $complete);
     return $this;
   }
 
@@ -565,7 +593,7 @@ class CourseObjectFulfillment extends CourseHandler {
    * @param float $grade
    */
   function setGrade($grade) {
-    $this->fulfillment->grade_result = $grade;
+    $this->setOption('grade', $grade);
     return $this;
   }
 
@@ -576,7 +604,7 @@ class CourseObjectFulfillment extends CourseHandler {
    *   A float value of the user's grade for this fulfillment.
    */
   function getGrade() {
-    return $this->fulfillment->grade_result;
+    return $this->getOption('grade_result');
   }
 
   /**
@@ -586,42 +614,9 @@ class CourseObjectFulfillment extends CourseHandler {
     return $this->courseObject;
   }
 
-  /**
-   * Save this fulfillment to the database.
-   *
-   * @return int
-   *   Return value of drupal_write_record, or FALSE if trying to save a
-   *   fulfillment for a course object that does not physically exist.
-   */
-  function save() {
-    if ($this->getCourseObject()->getId()) {
-      if (!$this->fulfillment->uuid) {
-        $this->fulfillment->uuid = uuid_uuid();
-      }
-
-      if (!$this->fulfillment->date_started) {
-        $this->fulfillment->date_started = time();
-      }
-
-      $keys = $this->fulfillment->sfid ? array('sfid') : array();
-      $ret = drupal_write_record('course_outline_fulfillment', $this->fulfillment, $keys);
-
-      // Create a Course to track the user's progress.
-      $course = new Course($this->getCourseObject()->getCourseNid(), $this->fulfillment->uid);
-      $course->track();
-
-      return $ret;
-    }
-    return FALSE;
-  }
-
   public function delete() {
     $sql = "delete from {course_outline_fulfillment} where sfid = %d";
     db_query($sql, $this->getId());
-  }
-
-  function setData($param, $data) {
-    $this->fulfillment->info[$param] = $data;
   }
 
 }
@@ -750,18 +745,32 @@ class CourseObjectNode extends CourseObject {
   /**
    * Grant access to course content before going to it.
    */
-  function takeCourseObject() {
+  function grant() {
     if ($this->checkPrivacySupport()) {
-      global $user;
       if ($this->getOption('private')) {
+        $uid = $this->getCourse()->getUser()->uid;
         module_load_include('inc', 'content_access', 'content_access.admin');
         $acl_id = content_access_get_acl_id($this->node, 'view');
-        acl_add_user($acl_id, $user->uid);
+        acl_add_user($acl_id, $uid);
         acl_node_add_acl($this->node->nid, $acl_id, 1, 0, 0, content_access_get_settings('priority', $this->node->type));
         node_save($this->node);
       }
     }
-    return parent::takeCourseObject();
+  }
+
+  /**
+   * Duration expired (or something) - CourseObject is telling us so.
+   */
+  function revoke() {
+    if ($this->checkPrivacySupport()) {
+      if ($this->getOption('private')) {
+        $uid = $this->getCourse()->getUser()->uid;
+        module_load_include('inc', 'content_access', 'content_access.admin');
+        $acl_id = content_access_get_acl_id($this->node, 'view');
+        acl_remove_user($acl_id, $uid);
+        node_save($this->node);
+      }
+    }
   }
 
 }
