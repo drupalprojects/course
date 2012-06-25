@@ -11,7 +11,6 @@ class CourseObject extends CourseHandler {
 
   // Hold course.
   private $course = stdClass;
-
   // Hold requirement/object from database and the fulfillment object.
   private $courseObjectFulfillment = stdClass;
 
@@ -457,7 +456,9 @@ class CourseObject extends CourseHandler {
    * Course objects should call setInstanceId() if this is a course object
    * that creates external resources.
    */
-  public function create() {}
+  public function create() {
+    //$this->setInstanceId($id);
+  }
 
   /**
    * Deletes a course object's external resources.
@@ -465,7 +466,9 @@ class CourseObject extends CourseHandler {
    * For example, this would delete the associated node (if this was a
    * CourseObjectNode) and delete all other associated data.
    */
-  public function delete() {}
+  public function delete() {
+    //something_delete($this->getInstanceId());
+  }
 
   function getTitle() {
     return $this->getOption('title');
@@ -585,24 +588,31 @@ class CourseObjectFulfillment extends CourseHandler {
 
   /**
    * Save this fulfillment to the database.
+   *
+   * @return int
+   *   Return value of drupal_write_record, or FALSE if trying to save a
+   *   fulfillment for a course object that does not physically exist.
    */
   function save() {
-    if (!$this->fulfillment->uuid) {
-      $this->fulfillment->uuid = uuid_uuid();
+    if ($this->getCourseObject()->getId()) {
+      if (!$this->fulfillment->uuid) {
+        $this->fulfillment->uuid = uuid_uuid();
+      }
+
+      if (!$this->fulfillment->date_started) {
+        $this->fulfillment->date_started = time();
+      }
+
+      $keys = $this->fulfillment->sfid ? array('sfid') : array();
+      $ret = drupal_write_record('course_outline_fulfillment', $this->fulfillment, $keys);
+
+      // Create a Course to track the user's progress.
+      $course = new Course($this->getCourseObject()->getCourseNid(), $this->fulfillment->uid);
+      $course->track();
+
+      return $ret;
     }
-
-    if (!$this->fulfillment->date_started) {
-      $this->fulfillment->date_started = time();
-    }
-
-    $keys = $this->fulfillment->sfid ? array('sfid') : array();
-    $ret = drupal_write_record('course_outline_fulfillment', $this->fulfillment, $keys);
-
-    // Create a Course to track the user's progress.
-    $course = new Course($this->getCourseObject()->getCourseNid(), $this->fulfillment->uid);
-    $course->track();
-
-    return $ret;
+    return FALSE;
   }
 
   public function delete() {
