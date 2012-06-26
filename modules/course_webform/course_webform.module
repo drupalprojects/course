@@ -75,7 +75,9 @@ function course_webform_form_alter(&$form, &$form_state, $form_id) {
   if (strpos($form_id, 'webform_client_form') === 0) {
     $node = course_get_context();
     $course = course_get_course($node);
-    $url = $course->getNext()->getUrl();
-    //$form['#node']->webform['redirect_url'] = $url;
+    if ($courseObject = $course->getNext()) {
+      $url = $courseObject->getUrl();
+      //$form['#node']->webform['redirect_url'] = $url;
+    }
   }
 }

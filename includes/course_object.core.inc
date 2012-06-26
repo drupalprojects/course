@@ -185,6 +185,16 @@ class CourseObject extends CourseHandler {
       '#default_value' => $config['expiration'],
     );
 
+    $form['followup'] = array(
+      '#title' => 'followup',
+      '#type' => 'fieldset',
+    );
+
+    $form['followup']['followup_type'] = array(
+      'title' => 'Followup type',
+      'type' => 'select',
+    );
+
     // Submit
     $form['submit'] = array(
       '#value' => 'Save',
