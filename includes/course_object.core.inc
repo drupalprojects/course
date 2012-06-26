@@ -176,6 +176,7 @@ class CourseObject extends CourseHandler {
       '#default_value' => $config['hidden'],
     );
 
+    // Timing settings.
     $form['timing'] = array(
       '#type' => 'fieldset',
       '#title' => 'Timing',
@@ -183,17 +184,28 @@ class CourseObject extends CourseHandler {
       '#collapsed' => TRUE,
     );
 
-    $duration = duration_create();
-    $duration->set_seconds($config['duration']);
-    $duration->normalize();
-    $form['timing']['duration'] = array(
-      '#title' => t('Duration'),
-      '#description' => 'Length of time in minutes a user can remain in this object before it is closed.',
-      '#type' => 'duration_combo',
-      '#largest_metric' => 'days',
-      '#smallest_metric' => 'minutes',
-      '#default_value' => $duration,
-    );
+    if (module_exists('duration_element')) {
+      $duration = duration_create();
+      $duration->set_seconds($config['duration']);
+      $duration->normalize();
+      $form['timing']['duration'] = array(
+        '#title' => t('Duration'),
+        '#description' => 'Length of time in minutes a user can remain in this object before it is closed.',
+        '#type' => 'duration_combo',
+        '#largest_metric' => 'days',
+        '#smallest_metric' => 'minutes',
+        '#default_value' => $duration,
+      );
+    }
+    else {
+      $form['timing']['duration'] = array(
+        '#title' => t('Duration'),
+        '#description' => 'Length of time in seconds a user can remain in this object before it is closed.',
+        '#type' => 'textfield',
+        '#size' => 8,
+        '#default_value' => $config['duration'],
+      );
+    }
 
     $form['timing']['release'] = array(
       '#title' => t('Release date'),
@@ -222,6 +234,7 @@ class CourseObject extends CourseHandler {
       '#default_value' => $config['expiration_hidden'],
     );
 
+    // Conditional object settings.
     $form['conditional'] = array(
       '#title' => 'Conditionals',
       '#type' => 'fieldset',
@@ -245,17 +258,28 @@ class CourseObject extends CourseHandler {
       $options[$courseObject->getId()] = $courseObject->getTitle();
     }
 
-    $conditional_time = duration_create();
-    $conditional_time->set_seconds($config['conditional_time']);
-    $conditional_time->normalize();
-    $form['conditional']['conditional_time'] = array(
-      '#title' => t('Time'),
-      '#type' => 'duration_combo',
-      '#description' => t('Length of time in minutes after the event happens when this course object should be accessible.'),
-      '#largest_metric' => 'days',
-      '#smallest_metric' => 'minutes',
-      '#default_value' => $conditional_time,
-    );
+    if (module_exists('duration_element')) {
+      $conditional_time = duration_create();
+      $conditional_time->set_seconds($config['conditional_time']);
+      $conditional_time->normalize();
+      $form['conditional']['conditional_time'] = array(
+        '#title' => t('Time'),
+        '#type' => 'duration_combo',
+        '#description' => t('Length of time in minutes after the event happens when this course object should be accessible.'),
+        '#largest_metric' => 'days',
+        '#smallest_metric' => 'minutes',
+        '#default_value' => $conditional_time,
+      );
+    }
+    else {
+      $form['conditional']['conditional_time'] = array(
+        '#title' => t('Time'),
+        '#type' => 'textfield',
+        '#size' => 8,
+        '#description' => t('Length of time in seconds after the event happens when this course object should be accessible.'),
+        '#default_value' => $config['conditional_time'],
+      );
+    }
 
     $form['conditional']['conditional_object'] = array(
       '#title' => t('Course object'),
@@ -279,7 +303,7 @@ class CourseObject extends CourseHandler {
       if ($key != 'conditional_time') {
         $form['conditional'][$key]['#default_value'] = $config[$key];
       }
-      
+
       if ($key != 'conditional_type' && $key != 'conditional_time') {
         $form['conditional'][$key] += $conditional_dependent;
       }
@@ -294,8 +318,10 @@ class CourseObject extends CourseHandler {
   }
 
   public function optionsValidate(&$form, &$form_state) {
-    $form_state['values']['duration'] = $form_state['values']['duration']->to_single_metric('seconds');
-    $form_state['values']['conditional_time'] = $form_state['values']['conditional_time']->to_single_metric('seconds');
+    if (module_exists('duration_element')) {
+      $form_state['values']['duration'] = $form_state['values']['duration']->to_single_metric('seconds');
+      $form_state['values']['conditional_time'] = $form_state['values']['conditional_time']->to_single_metric('seconds');
+    }
   }
 
   /**
