@@ -47,13 +47,15 @@ class CourseObject extends CourseHandler {
    *
    * Possible values for $op are 'see', 'view', 'take'.
    *
-   * "see" means see it in a course outline. For example, a followup survey
+   * "see" means see it in a course outline. For example, a conditional survey
    * should not be seen in the course outline. A quiz at the end of the course,
    * should show up, but the user must not be able to take it.
    *
    * "view" means view and interact with the object, but nothing would be
    * recorded. For example, accessing a quiz but not being able to submit
    * responses.
+   *
+   * "take" means interact with the object in a way that records data.
    *
    * Subclasses may override this functionality.
    */
@@ -66,7 +68,7 @@ class CourseObject extends CourseHandler {
 
     switch ($op) {
       case 'see':
-        // If this is a followup object, this should return FALSE if it's not
+        // If this is a conditional object, this should return FALSE if it's not
         // time to show it.
         return !$this->getOption('hidden');
       case 'take':
@@ -74,20 +76,24 @@ class CourseObject extends CourseHandler {
           return FALSE;
         }
 
+        $time = time();
+
         if ($this->getOption('duration')) {
-          $duration_end = $this->getFulfillment()->getOption('date_started') + (60 * $this->getOption('duration'));
-          if (time() > $duration_end) {
-            $duration_end_h = date('Y-m-d H:i:s', $duration_end);
-            $this->setAccessMessage('duration-expired', 'Your enrollment in this activity expired on ' . $duration_end_h);
-            return FALSE;
+          if ($this->getFulfillment()->getOption('date_started')) {
+            $duration_end = $this->getFulfillment()->getOption('date_started') + ($this->getOption('duration'));
+            if ($time > $duration_end) {
+              $duration_end_h = date('Y-m-d H:i:s', $duration_end);
+              $this->setAccessMessage('duration-expired', 'Your enrollment in this activity expired on ' . $duration_end_h);
+              return FALSE;
+            }
           }
         }
 
-        if (time() < strtotime($this->getOption('release'))) {
+        if ($time < strtotime($this->getOption('release'))) {
           $this->setAccessMessage('not-open', 'This activity will be available on ' . $this->getOption('release'));
           return FALSE;
         }
-        if ($this->getOption('expiration') && time() > strtotime($this->getOption('expiration'))) {
+        if ($this->getOption('expiration') && $time > strtotime($this->getOption('expiration'))) {
           $this->setAccessMessage('closed', 'This activity closed on ' . $this->getOption('expiration'));
           return FALSE;
         }
@@ -131,6 +137,12 @@ class CourseObject extends CourseHandler {
       'duration' => NULL,
       'release' => NULL,
       'expiration' => NULL,
+      'release_hidden' => NULL,
+      'expiration_hidden' => NULL,
+      'conditional_type' => NULL,
+      'conditional_time' => NULL,
+      'conditional_hidden' => NULL,
+      'conditional_object' => NULL,
     );
 
     return $defaults;
@@ -140,6 +152,7 @@ class CourseObject extends CourseHandler {
    * Default options form for all course objects.
    */
   public function optionsForm(&$form, &$form_state) {
+    ctools_include('dependent');
     parent::optionsForm($form, $form_state);
 
     $config = $this->getOptions();
@@ -163,37 +176,114 @@ class CourseObject extends CourseHandler {
       '#default_value' => $config['hidden'],
     );
 
-    $form['duration'] = array(
-      '#title' => t('Duration'),
-      '#description' => 'Length of time in minutes a user can remain in this object before it is closed.',
-      '#type' => 'textfield',
-      '#size' => 2,
-      '#default_value' => $config['duration'],
+    $form['timing'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Timing',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
     );
 
-    $form['release'] = array(
+    $duration = duration_create();
+    $duration->set_seconds($config['duration']);
+    $duration->normalize();
+    $form['timing']['duration'] = array(
+      '#title' => t('Duration'),
+      '#description' => 'Length of time in minutes a user can remain in this object before it is closed.',
+      '#type' => 'duration_combo',
+      '#largest_metric' => 'days',
+      '#smallest_metric' => 'minutes',
+      '#default_value' => $duration,
+    );
+
+    $form['timing']['release'] = array(
       '#title' => t('Release date'),
       '#description' => t('When this object can be accessed. If this object is required, users will not be able to proceed until after this date.'),
       '#type' => 'date_popup',
       '#default_value' => $config['release'],
     );
 
-    $form['expiration'] = array(
+    $form['timing']['expiration'] = array(
       '#title' => t('Expiration date'),
       '#description' => t('When this object will close. If this object is required, users will not be able to proceed to the next activity after this date.'),
       '#type' => 'date_popup',
       '#default_value' => $config['expiration'],
     );
 
-    $form['followup'] = array(
-      '#title' => 'followup',
-      '#type' => 'fieldset',
+    $form['timing']['release_hidden'] = array(
+      '#title' => 'Hide until release date',
+      '#type' => 'checkbox',
+      '#default_value' => $config['release_hidden'],
     );
 
-    $form['followup']['followup_type'] = array(
-      'title' => 'Followup type',
-      'type' => 'select',
+    $form['timing']['expiration_hidden'] = array(
+      '#title' => 'Hide after expiration date',
+      '#type' => 'checkbox',
+      '#description' => 'Hide the object after the expiration. For example, an optional pre-test that expires.',
+      '#default_value' => $config['expiration_hidden'],
     );
+
+    $form['conditional'] = array(
+      '#title' => 'Conditionals',
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+
+    $form['conditional']['conditional_type'] = array(
+      '#title' => t('Event'),
+      '#type' => 'select',
+      '#options' => array(
+        '',
+        'started' => t('User started course object.'),
+        'completed' => t('User completed course object.'),
+      ),
+      '#description' => t('This sets the conditional behavior.'),
+    );
+
+    $options = array('');
+    foreach ($this->getCourse() as $courseObject) {
+      $options[$courseObject->getId()] = $courseObject->getTitle();
+    }
+
+    $conditional_time = duration_create();
+    $conditional_time->set_seconds($config['conditional_time']);
+    $conditional_time->normalize();
+    $form['conditional']['conditional_time'] = array(
+      '#title' => t('Time'),
+      '#type' => 'duration_combo',
+      '#description' => t('Length of time in minutes after the event happens when this course object should be accessible.'),
+      '#largest_metric' => 'days',
+      '#smallest_metric' => 'minutes',
+      '#default_value' => $conditional_time,
+    );
+
+    $form['conditional']['conditional_object'] = array(
+      '#title' => t('Course object'),
+      '#type' => 'select',
+      '#options' => $options,
+      '#description' => t('The course object to check for the type and time of conditional display.'),
+    );
+
+    $form['conditional']['conditional_hidden'] = array(
+      '#title' => t('Hide object until ready'),
+      '#type' => 'checkbox',
+      '#description' => t('This will prevent the course object from appearing in the course outline until it is ready.'),
+    );
+
+    $conditional_dependent = array(
+      '#process' => array('ctools_dependent_process'),
+      '#dependency' => array('edit-conditional-type' => array('completed', 'started')),
+    );
+
+    foreach (element_children($form['conditional']) as $key) {
+      if ($key != 'conditional_time') {
+        $form['conditional'][$key]['#default_value'] = $config[$key];
+      }
+      
+      if ($key != 'conditional_type' && $key != 'conditional_time') {
+        $form['conditional'][$key] += $conditional_dependent;
+      }
+    }
 
     // Submit
     $form['submit'] = array(
@@ -201,6 +291,11 @@ class CourseObject extends CourseHandler {
       '#weight' => 999,
       '#type' => 'submit',
     );
+  }
+
+  public function optionsValidate(&$form, &$form_state) {
+    $form_state['values']['duration'] = $form_state['values']['duration']->to_single_metric('seconds');
+    $form_state['values']['conditional_time'] = $form_state['values']['conditional_time']->to_single_metric('seconds');
   }
 
   /**
