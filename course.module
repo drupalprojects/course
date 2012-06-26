@@ -454,9 +454,18 @@ function course_object_load($snid) {
 
 /**
  * Take the course object.
+ *
+ * @return string
+ *   Themed output.
  */
 function course_object_take($courseObject) {
   drupal_set_title($courseObject->getTitle());
+  
+  // Preserve course tabs
+  $course = $courseObject->getCourse();
+  $item = menu_get_item($course->getUrl());
+  menu_set_item(NULL, $item);
+
   return $courseObject->takeCourseObject();
 }
 
