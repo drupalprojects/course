@@ -21,14 +21,6 @@ function course_object_reports_page($node) {
         $report_li = array(
           'data' => course_object_single_report_link($courseObject, $key, $report),
         );
-        if (count($report['children'])) {
-          foreach ($report['children'] as $subkey => $subreport) {
-            $report_key_subkey = "$key/$subkey";
-            $report_li['children'] = array(
-              'data' => course_object_single_report_link($courseObject, $report_key_subkey, $subreport),
-            );
-          }
-        }
         $lis[] = $report_li;
       }
     }
@@ -47,7 +39,7 @@ function course_object_reports_page($node) {
       if ($report['content']) {
         $content = $report['content'];
       }
-      $header = '<p>' . 'Viewing: ' . $courseObject->getTitle() . ' - ' . $report['title'] . '</p>';
+      $header = '<h3>' . $courseObject->getTitle() . ': ' . $report['title'] . '</h3>';
     }
     else {
       $content = 'Sorry, no report is available for this type.';
@@ -74,10 +66,12 @@ function theme_course_report($nav, $header, $body) {
       'data' => $nav,
       'width' => 200,
       'id' => 'course-object-reports-nav',
+      'valign' => 'top',
     ),
     array(
       'data' => $body,
       'id' => 'course-object-reports-content',
+      'valign' => 'top',
     ),
   );
 

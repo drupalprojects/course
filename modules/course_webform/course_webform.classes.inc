@@ -24,4 +24,40 @@ class CourseObjectWebform extends CourseObjectNode {
 
     return $warnings;
   }
+
+  public function getReports() {
+    return array(
+      'submissions' => array(
+        'title' => 'Submissions',
+      ),
+      'analysis' => array(
+        'title' => 'Analysis',
+      ),
+      'download' => array(
+        'title' => 'Download',
+      ),
+    );
+  }
+
+  public function getReport($key) {
+    module_load_include('inc', 'webform', 'includes/webform.report');
+    switch ($key) {
+      case 'submissions':
+        return array(
+          'title' => t('Webform results'),
+          'content' => webform_results_submissions($this->node, FALSE, 50),
+        );
+      case 'analysis':
+        return array(
+          'title' => t('Webform results'),
+          'content' => webform_results_analysis($this->node),
+        );
+      case 'download':
+        return array(
+          'title' => t('Webform results'),
+          'content' => drupal_get_form('webform_results_download_form', $this->node),
+        );
+    }
+  }
+
 }

@@ -389,6 +389,11 @@ class CourseObject extends CourseHandler {
     $this->course = $course;
   }
 
+  /**
+   * Get the Course that contains this CourseObject.
+   * 
+   * @return Course
+   */
   function getCourse() {
     return $this->course;
   }
@@ -517,6 +522,35 @@ class CourseObject extends CourseHandler {
    */
   function revoke() {
 
+  }
+
+  /**
+   * Let the course object provide its own reports.
+   *
+   * @return array
+   *   An array indexed by report key, containing 'title' which is the menu link
+   *   in the course object reports.
+   *
+   * @see CourseObjectQuiz::getReports()
+   */
+  function getReports() {
+    return array();
+  }
+
+  /**
+   * Let the course object provide its own reports.
+   *
+   * @return array
+   *   An array containing:
+   *     - title: The title of this report as show on the page
+   *     - content: Content to be displayed.
+   *     - url: URL to be loaded in an iframe.
+   *   Reports should return either 'content' or 'url'.
+   *
+   * @see CourseObjectQuiz::getReports()
+   */
+  function getReport($key) {
+    return array();
   }
 
 }

@@ -90,5 +90,24 @@ class CourseObjectQuiz extends CourseObjectNode {
 
     return $warnings;
   }
+  
+  public function getReports() {
+    return array(
+      'results' => array(
+        'title' => 'Results',
+      ),
+    );
+  }
+
+  public function getReport($key) {
+    module_load_include('inc', 'quiz', 'quiz.admin');
+    switch ($key) {
+      case 'results':
+        return array(
+          'title' => t('Quiz results'),
+          'content' => drupal_get_form('quiz_results_manage_results_form', $this->node),
+        );
+    }
+  }
 
 }

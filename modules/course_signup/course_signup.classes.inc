@@ -1,6 +1,7 @@
 <?php
 
 class CourseObjectSignup extends CourseObjectNode {
+
   public function create() {
     if (!$this->getOption('instance')) {
       $this->setOption('instance', $this->getCourseNid());
@@ -38,6 +39,25 @@ class CourseObjectSignup extends CourseObjectNode {
       $form_state['values']['instance'] = $this->getCourseNid();
     }
     parent::optionsSubmit($form, $form_state);
+  }
+
+  public function getReports() {
+    return array(
+      'attendance' => array(
+        'title' => 'Attendance',
+      ),
+    );
+  }
+
+  public function getReport($key) {
+    module_load_include('inc', 'signup', 'includes/node_admin');
+    switch ($key) {
+      case 'attendance':
+        return array(
+          'title' => t('Attendance'),
+          'content' => signup_node_admin_page($this->node),
+        );
+    }
   }
 
 }
