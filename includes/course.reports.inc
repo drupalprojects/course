@@ -14,7 +14,7 @@ function course_object_reports_page($node) {
   $report_subkey = arg(6);
 
   $course = course_get_course($node);
-  foreach ($course as $courseObject) {
+  foreach ($course->getObjects() as $courseObject) {
     $lis = array();
     if (method_exists($courseObject, 'getReports')) {
       foreach ($courseObject->getReports() as $key => $report) {
