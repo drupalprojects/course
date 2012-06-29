@@ -27,7 +27,7 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
       $course = new Course($courseNode, $user);
     }
 
-    foreach ($course as $idx => $courseObject) {
+    foreach ($course->getObjects() as $idx => $courseObject) {
       if ($courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
         if ($courseObject->getFulfillment()->isComplete()) {
           $form['#access'] = FALSE;
@@ -60,7 +60,7 @@ function course_uc_nodeapi($node, $op, $a3, $a4) {
       if (course_node_is_course($node) && $node->sell_price > 0) {
         // Course has a sell price.
         $course = new Course($node);
-        foreach ($course as $courseObject) {
+        foreach ($course->getObjects() as $courseObject) {
           if ($courseObject->getComponent() == 'payment') {
             return;
           }
@@ -106,7 +106,7 @@ function course_uc_init() {
  */
 function course_uc_course_enrol($node, $user) {
   $course = new Course($node, $user);
-  foreach ($course as $idx => $courseObject) {
+  foreach ($course->getObjects() as $idx => $courseObject) {
     if ($idx == 0 && $courseObject->getComponent() == 'payment') {
       $courseObject->getFulfillment()->setComplete(TRUE)->save();
     }
@@ -248,7 +248,7 @@ function course_uc_enrol_user_in_ordered_courses($order) {
       // This product is also a course requirement, other than the first one.
       // Satisfy it!
       $course = new Course($courseNode, $user);
-      foreach ($course as $idx => $courseObject) {
+      foreach ($course->getObjects() as $idx => $courseObject) {
         if ($idx != 0 && $courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
           // Found the course object that matched the instance (product).
           $courseObject->getFulfillment()->setComplete(TRUE)->save();
@@ -360,7 +360,7 @@ function course_uc_course_handlers() {
  */
 function course_uc_course_can_enrol($node, $user) {
   $course = course_get_course($node, $user);
-  foreach ($course as $idx => $courseObject) {
+  foreach ($course->getObjects() as $idx => $courseObject) {
     if ($idx == 0) {
       // Completely block access if it is the first object.
       if ($courseObject->getComponent() == 'payment' && !$courseObject->getFulfillment()->isComplete()) {
