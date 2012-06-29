@@ -97,11 +97,10 @@ Release schedule
 Roadmap
 -------
 
-* Integration with the Rules module for access to taking courses
+* #1649996: Course Services integration
 * #1390058: Support for SCORM
 * #1361754: Support books as course objects
-* Reporting (other than built in course report, transcript views)
-* LTI support for external courses/objects
+* #1650646: LTI support for external courses and objects
 
 Documentation
 -------------
