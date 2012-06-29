@@ -455,11 +455,13 @@ function course_object_load($snid) {
   global $user;
   $nid = arg(0) == 'node' && is_numeric(arg(1)) ? arg(1) : 0;
   if (!is_numeric($snid)) {
+    // Temporary course object.
     $courseObject = course_get_course_object($_SESSION['course'][$nid]['editing'][$snid]['requirement_type'], $_SESSION['course'][$nid]['editing'][$snid]['requirement_component']);
     $courseObject->setId($snid);
     $courseObject->setCourseNid($nid);
   }
   else {
+    // Stored course object.
     $courseObject = course_get_course_object($snid, NULL, NULL, $user);
   }
   return $courseObject;
@@ -732,7 +734,10 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         if ($course = db_fetch_array(db_query('select * from {course_node} where nid = %d', $node->nid))) {
           // Attach additional module provided info to $node->course.
           $hooks = module_invoke_all('course_nodeapi_extra', $node, 'load');
-          $load['course'] = array_merge($course, $hooks);
+          $load = array_merge($course, $hooks);
+          foreach ($load as $key => $data) {
+            $node->course[$key] = $data;
+          }
         }
 
         // Load the course outline to the node.
@@ -746,8 +751,8 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           }
         }
 
-        $load['course_outline'] = array('requirements' => $rarray);
-        return $load;
+
+        $node->course['objects'] = $rarray;
         break;
       case 'delete':
         // Clean up course specific settings and enrollments when a course is
@@ -970,7 +975,7 @@ function course_form_alter(&$form, &$form_state, $form_id) {
 
     $form['course']['outline'] = array(
       '#title' => t('Available outline displays'),
-      '#type' => 'radios',
+      '#type' => 'select',
       '#options' => $outlines,
       '#default_value' => $node->course['outline'],
     );
@@ -1133,11 +1138,12 @@ function course_take_course($node) {
   drupal_set_title($node->title);
 
   $result = course_enrol_access($node);
-  if ($result['success']) {
+  $enrolment = course_enrolment_load($node, $user);
+  // Check enroll access or if user is already enrolled.
+  if ($result['success'] || $enrolment->status) {
     $result = course_take_course_access($node);
   }
   if ($result['success'] === TRUE) {
-    $enrolment = course_enrolment_load($node, $user);
     if (empty($enrolment->eid)) {
       // User has access to take this course, but they haven't been enrolled. So
       // enroll them now.
@@ -1166,7 +1172,7 @@ function course_take_course($node) {
     if (function_exists($callback)) {
       $outline = $callback($node, $user);
     }
-    else {
+    if (!$outline) {
       $outline = t('Outline not provided.');
     }
     return $outline;
@@ -1305,8 +1311,19 @@ function course_get_course_object($requirement_type, $requirement_component = NU
  *
  * @todo cache?
  */
-function course_get_course($node, $user = NULL) {
-  return new Course($node, $user);
+function course_get_course($node, $account = NULL) {
+  if (!$account) {
+    global $user;
+    $account = $user;
+  }
+  static $courses = array();
+
+  if (!isset($courses[$node->nid])) {
+    $course = new Course($node, $user);
+    $courses[$node->nid] = $course;
+  }
+
+  return $courses[$node->nid];
 }
 
 /**
@@ -1517,7 +1534,7 @@ function course_edit_enrollment_action($object, $context) {
   course_report_save($course_report);
 
   $course = new Course($node, $account);
-  foreach ($course as $key => $courseObject) {
+  foreach ($course->getObjects() as $key => $courseObject) {
     $snid = $courseObject->getId();
     $fulfillment = $courseObject->getFulfillment();
     if ($context['course_objects'][$snid] != '') {
@@ -1633,7 +1650,7 @@ function course_edit_enrollment_action_form($context) {
 
   $course = new Course($node);
 
-  foreach ($course as $key => $courseObject) {
+  foreach ($course->getObjects() as $key => $courseObject) {
     $form['course_objects'][$courseObject->getId()] = array(
       '#type' => 'select',
       '#title' => check_plain($courseObject->getTitle()),
@@ -1722,10 +1739,12 @@ function course_init() {
  * Course context handler callback.
  */
 function course_context() {
-  // If we are on the course node, set the context immediately.
-  $node = node_load(arg(1));
-  if (course_node_is_course($node)) {
-    course_set_context($node);
+  if (arg(0) == 'node') {
+    // If we are on the course node, set the context immediately.
+    $node = node_load(arg(1));
+    if (course_node_is_course($node)) {
+      course_set_context($node);
+    }
   }
 }
 
@@ -1735,6 +1754,9 @@ function course_context() {
 function course_ctools_plugin_directory($owner, $plugin_type) {
   if ($owner == 'ctools' && $plugin_type == 'content_types') {
     return 'plugins/content_types';
+  }
+  if ($owner == 'course') {
+    return "plugins/course/$plugin_type";
   }
 }
 
@@ -2077,7 +2099,7 @@ function course_set_context($node = NULL, $clear = FALSE) {
 }
 
 /**
- * Get the course node automatically, or from a optional query parameters.
+ * Get the course node automatically, or from optional query parameters.
  *
  * @param string $module
  *   The implementing course object provider module name.
@@ -2086,6 +2108,9 @@ function course_set_context($node = NULL, $clear = FALSE) {
  * @param string $instance
  *   A key used internally by the implementing course object provider module,
  *   to identify an instance of *something* used by this course object type.
+ * @param bool $flush
+ *   Flush the static cache. By default, course_determine_context will stop
+ *   processing once a course is found, and continue to return it.
  *
  * @return mixed
  *   A course node or NULL if course context not found.
@@ -2096,18 +2121,38 @@ function course_set_context($node = NULL, $clear = FALSE) {
  *   - Change 'requirement_type' to 'module' (implementing module name)
  *   - Change 'requirement_component' to 'object_type' (object type key)
  */
-function course_determine_context($module = NULL, $object_type = NULL, $instance = NULL) {
-  // Determine the course node based on passed query parameters.
-  $sql = "select nid from {course_outline}
+function course_determine_context($module = NULL, $object_type = NULL, $instance = NULL, $flush = FALSE) {
+  static $context = NULL;
+
+  if (!$context || $flush) {
+    // Determine the course node based on passed query parameters.
+    $sql = "select nid from {course_outline}
       where instance = '%s'
       and requirement_type = '%s'
       and requirement_component = '%s'";
 
-  if ($course_nid = db_result(db_query($sql, $instance, $module, $object_type))) {
-    return node_load($course_nid);
+    $result = db_query($sql, $instance, $module, $object_type);
+    $nids = array();
+    while ($course_outline = db_fetch_object($result)) {
+      $nids[] = $course_outline->nid;
+    }
+
+    if (count($nids) > 1) {
+      if (in_array($_SESSION['course']['active'], $nids)) {
+        // The active course in the session is one of the courses this object
+        // belongs to.
+        $context = node_load($_SESSION['course']['active']);
+      }
+    }
+    else {
+      // We don't have an active session (or, the course in the active session
+      // didn't contain this course object). So we just guess the first one.
+      $_SESSION['course']['active'] = $nids[0];
+      $context = node_load($nids[0]);
+    }
   }
 
-  return NULL;
+  return $context;
 }
 
 /**
