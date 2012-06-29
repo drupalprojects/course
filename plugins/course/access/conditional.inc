@@ -34,7 +34,7 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
                 $access = FALSE;
               }
               else {
-                $access = $time > ($completed + $offset);
+                $access = $time >= ($completed + $offset);
               }
               break;
             case 'started':
@@ -43,7 +43,7 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
                 $access = FALSE;
               }
               else {
-                $access = $time > ($started + $offset);
+                $access = $time >= ($started + $offset);
               }
               break;
           }

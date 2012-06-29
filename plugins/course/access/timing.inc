@@ -122,7 +122,7 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
   }
 
   function isReleased() {
-    if (time() < strtotime($this->getOption('release'))) {
+    if (time() <= strtotime($this->getOption('release'))) {
       $this->getCourseObject()->setAccessMessage('not-open', 'This activity will be available on ' . $this->getOption('release'));
       return FALSE;
     }
