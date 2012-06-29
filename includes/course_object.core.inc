@@ -60,41 +60,20 @@ class CourseObject extends CourseHandler {
    * Subclasses may override this functionality.
    */
   public function access($op = 'view', $user = NULL) {
+    ctools_include('plugins');
     $access = FALSE;
 
     if (!$user) {
       global $user;
     }
 
+    // Stock access: check for completion of previous object.
     switch ($op) {
       case 'see':
-        // If this is a conditional object, this should return FALSE if it's not
-        // time to show it.
-        return !$this->getOption('hidden');
+        $access = !$this->getOption('hidden');
+        break;
       case 'take':
         if (!$user->uid) {
-          return FALSE;
-        }
-
-        $time = time();
-
-        if ($this->getOption('duration')) {
-          if ($this->getFulfillment()->getOption('date_started')) {
-            $duration_end = $this->getFulfillment()->getOption('date_started') + ($this->getOption('duration'));
-            if ($time > $duration_end) {
-              $duration_end_h = date('Y-m-d H:i:s', $duration_end);
-              $this->setAccessMessage('duration-expired', 'Your enrollment in this activity expired on ' . $duration_end_h);
-              return FALSE;
-            }
-          }
-        }
-
-        if ($time < strtotime($this->getOption('release'))) {
-          $this->setAccessMessage('not-open', 'This activity will be available on ' . $this->getOption('release'));
-          return FALSE;
-        }
-        if ($this->getOption('expiration') && $time > strtotime($this->getOption('expiration'))) {
-          $this->setAccessMessage('closed', 'This activity closed on ' . $this->getOption('expiration'));
           return FALSE;
         }
       case 'view':
@@ -103,7 +82,8 @@ class CourseObject extends CourseHandler {
         $course = clone $this->getCourse();
         $course->setActive($this->getId());
 
-        if ($course->key() == 0 && $course->current()->getId() === $this->getId()) {
+
+        if (reset($course->getObjects())->getId() == $this->getId()) {
           // Check if this is the first object.
           $access = TRUE;
         }
@@ -113,9 +93,29 @@ class CourseObject extends CourseHandler {
           // grant access.
           $access = TRUE;
         }
-
-        return $access;
     }
+
+    // Plugin access.
+
+    foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
+      $class = ctools_plugin_get_class($plugin, 'handler');
+      $accessPluginDefaults = (array) $this->config['plugins']['access'][$key];
+      $accessPlugin = new $class();
+      if ($accessPluginDefaults) {
+        $accessPlugin->setOptions($accessPluginDefaults);
+      }
+      $accessPlugin->setCourseObject($this);
+
+      // Run access check.
+      $ret = $accessPlugin->$op();
+
+      if ($ret === FALSE) {
+        // If previous access was granted, revoke it.
+        $access = $ret;
+      }
+    }
+
+    return $access;
   }
 
   public function isActive() {
@@ -134,15 +134,6 @@ class CourseObject extends CourseHandler {
     $defaults += array(
       'hidden' => 0,
       'instance' => NULL,
-      'duration' => NULL,
-      'release' => NULL,
-      'expiration' => NULL,
-      'release_hidden' => NULL,
-      'expiration_hidden' => NULL,
-      'conditional_type' => NULL,
-      'conditional_time' => NULL,
-      'conditional_hidden' => NULL,
-      'conditional_object' => NULL,
     );
 
     return $defaults;
@@ -153,6 +144,7 @@ class CourseObject extends CourseHandler {
    */
   public function optionsForm(&$form, &$form_state) {
     ctools_include('dependent');
+    ctools_include('plugins');
     parent::optionsForm($form, $form_state);
 
     $config = $this->getOptions();
@@ -176,137 +168,31 @@ class CourseObject extends CourseHandler {
       '#default_value' => $config['hidden'],
     );
 
-    // Timing settings.
-    $form['timing'] = array(
-      '#type' => 'fieldset',
-      '#title' => 'Timing',
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-    );
-
-    if (module_exists('duration_element')) {
-      $duration = duration_create();
-      $duration->set_seconds($config['duration']);
-      $duration->normalize();
-      $form['timing']['duration'] = array(
-        '#title' => t('Duration'),
-        '#description' => 'Length of time in minutes a user can remain in this object before it is closed.',
-        '#type' => 'duration_combo',
-        '#largest_metric' => 'days',
-        '#smallest_metric' => 'minutes',
-        '#default_value' => $duration,
+    // Bring in access plugin configuration.
+    $form['plugins']['#tree'] = TRUE;
+    $form['plugins']['#weight'] = 998;
+    $form['plugins']['access']['#title'] = 'Access plugins';
+    $form['plugins']['access']['#type'] = 'fieldset';
+    foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
+      $form['plugins']['access']['#tree'] = TRUE;
+      $form['plugins']['access'][$key] = array(
+        '#title' => $plugin['title'],
+        '#type' => 'fieldset',
+        '#tree' => TRUE,
+        '#collapsible' => TRUE,
       );
-    }
-    else {
-      $form['timing']['duration'] = array(
-        '#title' => t('Duration'),
-        '#description' => 'Length of time in seconds a user can remain in this object before it is closed.',
-        '#type' => 'textfield',
-        '#size' => 8,
-        '#default_value' => $config['duration'],
-      );
-    }
 
-    $form['timing']['release'] = array(
-      '#title' => t('Release date'),
-      '#description' => t('When this object can be accessed. If this object is required, users will not be able to proceed until after this date.'),
-      '#type' => 'date_popup',
-      '#default_value' => $config['release'],
-    );
-
-    $form['timing']['expiration'] = array(
-      '#title' => t('Expiration date'),
-      '#description' => t('When this object will close. If this object is required, users will not be able to proceed to the next activity after this date.'),
-      '#type' => 'date_popup',
-      '#default_value' => $config['expiration'],
-    );
-
-    $form['timing']['release_hidden'] = array(
-      '#title' => 'Hide until release date',
-      '#type' => 'checkbox',
-      '#default_value' => $config['release_hidden'],
-    );
-
-    $form['timing']['expiration_hidden'] = array(
-      '#title' => 'Hide after expiration date',
-      '#type' => 'checkbox',
-      '#description' => 'Hide the object after the expiration. For example, an optional pre-test that expires.',
-      '#default_value' => $config['expiration_hidden'],
-    );
-
-    // Conditional object settings.
-    $form['conditional'] = array(
-      '#title' => 'Conditionals',
-      '#type' => 'fieldset',
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-    );
-
-    $form['conditional']['conditional_type'] = array(
-      '#title' => t('Event'),
-      '#type' => 'select',
-      '#options' => array(
-        '',
-        'started' => t('User started course object.'),
-        'completed' => t('User completed course object.'),
-      ),
-      '#description' => t('This sets the conditional behavior.'),
-    );
-
-    $options = array('');
-    foreach ($this->getCourse() as $courseObject) {
-      $options[$courseObject->getId()] = $courseObject->getTitle();
-    }
-
-    if (module_exists('duration_element')) {
-      $conditional_time = duration_create();
-      $conditional_time->set_seconds($config['conditional_time']);
-      $conditional_time->normalize();
-      $form['conditional']['conditional_time'] = array(
-        '#title' => t('Time'),
-        '#type' => 'duration_combo',
-        '#description' => t('Length of time in minutes after the event happens when this course object should be accessible.'),
-        '#largest_metric' => 'days',
-        '#smallest_metric' => 'minutes',
-        '#default_value' => $conditional_time,
-      );
-    }
-    else {
-      $form['conditional']['conditional_time'] = array(
-        '#title' => t('Time'),
-        '#type' => 'textfield',
-        '#size' => 8,
-        '#description' => t('Length of time in seconds after the event happens when this course object should be accessible.'),
-        '#default_value' => $config['conditional_time'],
-      );
-    }
-
-    $form['conditional']['conditional_object'] = array(
-      '#title' => t('Course object'),
-      '#type' => 'select',
-      '#options' => $options,
-      '#description' => t('The course object to check for the type and time of conditional display.'),
-    );
-
-    $form['conditional']['conditional_hidden'] = array(
-      '#title' => t('Hide object until ready'),
-      '#type' => 'checkbox',
-      '#description' => t('This will prevent the course object from appearing in the course outline until it is ready.'),
-    );
-
-    $conditional_dependent = array(
-      '#process' => array('ctools_dependent_process'),
-      '#dependency' => array('edit-conditional-type' => array('completed', 'started')),
-    );
-
-    foreach (element_children($form['conditional']) as $key) {
-      if ($key != 'conditional_time') {
-        $form['conditional'][$key]['#default_value'] = $config[$key];
+      // Initialize access class.
+      $class = ctools_plugin_get_class($plugin, 'handler');
+      $courseAccessDefaults = $config['plugins']['access'][$key];
+      $courseAccess = new $class();
+      if ($courseAccessDefaults) {
+        $courseAccess->setOptions($courseAccessDefaults);
       }
+      $courseAccess->setCourseObject($this);
 
-      if ($key != 'conditional_type' && $key != 'conditional_time') {
-        $form['conditional'][$key] += $conditional_dependent;
-      }
+      // Add access plugin form to our form.
+      $form['plugins']['access'][$key] += $courseAccess->optionsForm();
     }
 
     // Submit
@@ -318,9 +204,13 @@ class CourseObject extends CourseHandler {
   }
 
   public function optionsValidate(&$form, &$form_state) {
-    if (module_exists('duration_element')) {
-      $form_state['values']['duration'] = $form_state['values']['duration']->to_single_metric('seconds');
-      $form_state['values']['conditional_time'] = $form_state['values']['conditional_time']->to_single_metric('seconds');
+    // Pass validation to plugins.
+    ctools_include('plugins');
+    foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
+      $values = & $form_state['values']['plugins']['access'][$key];
+      $class = ctools_plugin_get_class($plugin, 'handler');
+      $instance = new $class($values);
+      $instance->optionsValidate($values);
     }
   }
 
@@ -328,10 +218,21 @@ class CourseObject extends CourseHandler {
    * Save object configs to cache.
    */
   public function optionsSubmit(&$form, &$form_state) {
+    ctools_include('plugins');
+
+    $uniqid = $this->getId();
+    $nid = $this->getCourseNid();
+
+    // Object-specific settings
     foreach (array_keys($this->getOptions()) as $key) {
       if (!is_null($form_state['values'][$key])) {
-        $_SESSION['course'][$this->getCourseNid()]['editing'][$form_state['values']['uniqid']][$key] = $form_state['values'][$key];
+        $_SESSION['course'][$nid]['editing'][$uniqid][$key] = $form_state['values'][$key];
       }
+    }
+
+    // Save plugin info.
+    foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
+      $_SESSION['course'][$nid]['editing'][$uniqid]['plugins']['access'][$key] = $form_state['values']['plugins']['access'][$key];
     }
   }
 
@@ -340,8 +241,12 @@ class CourseObject extends CourseHandler {
    */
   public function getOptions() {
     $options = parent::getOptions();
-    $sessionDefaults = array_filter((array) $_SESSION['course'][$options['nid']]['editing'][$options['snid']], create_function('$a', 'return !is_null($a);'));
+    $sessionDefaults = array_filter((array) $_SESSION['course'][$options['nid']]['editing'][$options['snid']], array($this, 'optionFilter'));
     return array_merge($options, (array) $sessionDefaults);
+  }
+
+  private function optionFilter($a) {
+    return !is_null($a);
   }
 
   /**
@@ -522,7 +427,7 @@ class CourseObject extends CourseHandler {
 
   /**
    * Get the Course that contains this CourseObject.
-   * 
+   *
    * @return Course
    */
   function getCourse() {

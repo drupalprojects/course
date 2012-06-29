@@ -201,38 +201,9 @@ class CourseHandler {
 }
 
 /**
- * Support for foreach()ing over a course's objects.
- */
-class CourseIterator implements Iterator {
-
-  private $position = 0;
-
-  function rewind() {
-    $this->position = 0;
-  }
-
-  function current() {
-    return $this->courseObjects[$this->position];
-  }
-
-  function key() {
-    return $this->position;
-  }
-
-  function next() {
-    ++$this->position;
-  }
-
-  function valid() {
-    return isset($this->courseObjects[$this->position]);
-  }
-
-}
-
-/**
  * An object that holds CourseObjects and tracker functions?
  */
-class Course extends CourseIterator {
+class Course extends CourseHandler {
 
   private $node;
   private $user;
@@ -400,4 +371,33 @@ class Course extends CourseIterator {
     return $this->user;
   }
 
+}
+
+/**
+ * Access handler for CourseObjects.
+ *
+ * Subtypes must define take(), see(), and view().
+ */
+abstract class CourseObjectAccess extends CourseHandler {
+
+  private $courseObject;
+
+  function __construct($config = array()) {
+    $handlerType = 'course_access';
+    parent::__construct($config);
+  }
+
+  public function setCourseObject($courseObject) {
+    $this->courseObject = $courseObject;
+  }
+
+  public function getCourseObject() {
+    return $this->courseObject;
+  }
+
+  abstract public function take();
+
+  abstract public function see();
+
+  abstract public function view();
 }
