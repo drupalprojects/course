@@ -208,7 +208,7 @@ class Course extends CourseHandler {
   private $node;
   private $user;
   protected $courseObjects;
-  private $active;
+  private $active = NULL;
   private $next;
   private $prev;
 
@@ -226,9 +226,6 @@ class Course extends CourseHandler {
     else {
       $this->user = user_load($user);
     }
-
-    $this->getObjects();
-    $this->setActive();
   }
 
   /**
@@ -276,6 +273,10 @@ class Course extends CourseHandler {
    * @return CourseObject
    */
   public function getActive() {
+    if (!$this->active) {
+      $this->setActive();
+    }
+
     return $this->active;
   }
 
