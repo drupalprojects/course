@@ -48,7 +48,7 @@ function course_outline_overview_form(&$form_state) {
   $form['nid']['#value'] = $node->nid;
 
   // Grab requirements.
-  $requirements = $node->course_outline['requirements'];
+  $requirements = $node->course['objects'];
   if (is_array($form_state['values']['course_outline']['requirements'])) {
     $requirements = $form_state['values']['course_outline']['requirements'];
   }
@@ -157,67 +157,52 @@ function course_outline_overview_form(&$form_state) {
  */
 function _course_outline_requirement_form($requirement = array(), $uniqid = NULL) {
   $rform['#tree'] = TRUE;
+
   $rform['snid'] = array(
     '#type' => 'value',
     '#default_value' => $requirement['snid'],
   );
+
   $rform['instance'] = array(
     '#type' => 'value',
     '#default_value' => $requirement['instance'],
   );
+
   $rform['requirement_type'] = array(
     '#type' => 'value',
     '#default_value' => $requirement['requirement_type'],
   );
+
   $rform['requirement_component'] = array(
     '#type' => 'value',
     '#default_value' => $requirement['requirement_component'],
   );
+
   $rform['nid'] = array(
     '#type' => 'value',
     '#default_value' => $requirement['nid'],
   );
+
   $rform['title'] = array(
-    '#title' => 'Title',
-    '#type' => 'textfield',
-    '#size' => 16,
-    '#default_value' => check_plain($requirement['title']),
-    '#description' => check_plain($requirement['add']),
+    '#value' => check_plain($requirement['title']),
   );
-  $rform['options']['required'] = array(
-    '#title' => 'Required',
-    '#type' => 'checkbox',
-    '#default_value' => isset($requirement['required']) ? $requirement['required'] : 1,
+
+  $rform['settings'] = array(
+    '#value' => l(t('Settings'), "node/" . $requirement['nid'] . "/course-object/nojs/$uniqid/edit", array('attributes' => array('class' => "ctools-use-modal settings-$uniqid"))),
   );
-  $rform['options']['enabled'] = array(
-    '#title' => 'Enabled',
-    '#type' => 'checkbox',
-    '#default_value' => isset($requirement['enabled']) ? $requirement['enabled'] : 1,
-  );
-  $rform['options']['delete'] = array(
-    '#title' => 'Remove',
-    '#type' => 'checkbox',
-  );
-  if ($requirement['instance']) {
-    $rform['options']['delete_instance'] = array(
-      '#title' => 'Delete instance',
-      '#type' => 'checkbox',
-      '#process' => array('ctools_dependent_process'),
-      '#dependency' => array('edit-course-outline-requirements-' . $uniqid . '-options-delete' => array(1)),
-    );
-  }
-  $rform['operations'] = array(
-    '#type' => 'markup',
-    '#value' => implode(' ', array(
-      l('Edit', "node/" . $requirement['nid'] . "/course-object/nojs/$uniqid/edit", array('attributes' => array('class' => "ctools-use-modal settings-$uniqid"))),
-    )),
-  );
+
   $rform['weight'] = array(
     '#type' => 'weight',
     '#default_value' => $requirement['weight'],
     '#attributes' => array(
       'class' => 'course-object-weight',
     ),
+  );
+
+  $rform['dummy'] = array(
+    '#type' => 'checkbox',
+    '#process' => array('ctools_dependent_process'),
+    '#dependency' => array('dummy' => 1),
   );
 
   return $rform;
@@ -234,7 +219,7 @@ function theme_course_outline_overview_form($form) {
   $requirements = & $form['course_outline']['requirements'];
   drupal_add_tabledrag('course-objects', 'order', 'sibling', 'course-object-weight');
 
-  $headers = array('Title', 'Type', 'Options', 'Operations', 'Weight');
+  $headers = array(t('Title'), t('Type'), t('Operations'), t('Weight'));
 
   $rows = array();
 
@@ -244,8 +229,10 @@ function theme_course_outline_overview_form($form) {
     unset($requirements[$key]['requirement_component']['#title']);
     $rows[$key]['data'][] = drupal_render($requirements[$key]['title']);
     $rows[$key]['data'][] = drupal_render($requirements[$key]['requirement_component']) . drupal_render($requirements[$key]['requirement_component_show']);
-    $rows[$key]['data'][] = drupal_render($requirements[$key]['options']);
-    $rows[$key]['data'][] = drupal_render($requirements[$key]['operations']);
+    // @todo find an elegant way to hide the settings link until a component
+    //   type is selected.
+    //$new = empty($requirements[$key]['snid']['#value']);
+    $rows[$key]['data'][] = $new ? '' : drupal_render($requirements[$key]['settings']);
 
     // Add draggable settings to row.
     $rows[$key]['class'] = 'draggable';
@@ -263,11 +250,7 @@ function theme_course_outline_overview_form($form) {
  * Validation callback.
  */
 function _course_outline_overview_validate_requirements(&$form, &$form_state) {
-  foreach ($form_state['values']['course_outline']['requirements'] as $key => $item) {
-    if ($item['requirement_component'] && !$item['title']) {
-      form_error($form[$key]['title'], t('Title is required.'));
-    }
-  }
+
 }
 
 /**
@@ -276,7 +259,6 @@ function _course_outline_overview_validate_requirements(&$form, &$form_state) {
 function course_outline_overview_form_submit(&$form, &$form_state) {
   $node = node_load($form['nid']['#value']);
   foreach ($form_state['values']['course_outline']['requirements'] as $coid => $record) {
-    $record = array_merge($record, $record['options']);
     $record = (object) $record;
     $record->nid = $node->nid;
     if (!$record->requirement_type) {
@@ -330,7 +312,7 @@ function course_outline_list($node) {
   $course = new Course($node, $user);
 
   // Iterate over objects.
-  foreach ($course as $key => $courseObject) {
+  foreach ($course->getObjects() as $key => $courseObject) {
     $step = array();
 
     if (!$courseObject->access('see')) {
@@ -376,7 +358,7 @@ function course_outline_list($node) {
     $img = theme('image', $step['image']);
 
     if (!$step['link']) {
-      $data = $courseObject->getTitle() .  '<br/><span class="course-outline-status">' . $step['status'] . '</span>';
+      $data = $courseObject->getTitle() . '<br/><span class="course-outline-status">' . $step['status'] . '</span>';
     }
     else {
       $data = l("$img {$courseObject->getTitle()}<br/>", $step['link'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status'] . '</span>';
@@ -398,10 +380,12 @@ function course_outline_list($node) {
     );
   }
 
-  $output .= '<div id="course-toc">';
-  $output .= '<div id="course-toc-trigger" class="trigger"></div>';
-  $output .= theme('item_list', $workflow);
-  $output .= '</div>';
+  if ($workflow) {
+    $output .= '<div id="course-toc">';
+    $output .= '<div id="course-toc-trigger" class="trigger"></div>';
+    $output .= theme('item_list', $workflow);
+    $output .= '</div>';
+  }
   return $output;
 }
 
@@ -446,16 +430,16 @@ function course_outline_show_complete_links($course_node) {
     $requirements_outstanding = course_outline_check_remaining_requirements($course_node, $account);
     $items = array();
     foreach ($requirements_outstanding as $req) {
-      $status_css = $req['complete'] ? 'complete' : 'incomplete';
-      $status_img = $req['complete'] ? 'ok' : ($req['required'] ? 'error' : 'warning');
+      $status_css = $req->complete ? 'complete' : 'incomplete';
+      $status_img = $req->complete ? 'ok' : ($req->required ? 'error' : 'warning');
       $status_optional = ($status_img == 'warning') ? ' (optional)' : '';
-      $grade = $req['graded'] ? ' - Your grade: ' . $req['grade_result'] . '%, Pass grade: ' . $req['passing_grade'] . '%' : '';
+      $grade = $req->graded ? ' - Your grade: ' . $req->grade_result . '%, Pass grade: ' . $req->passing_grade . '%' : '';
       $items[] = array(
         array(
           'data' => theme('image', "misc/watchdog-{$status_img}.png", $status_css),
           'width' => 20,
         ),
-        $req['title'] . $status_optional . $grade,
+        $req->title . $status_optional . $grade,
       );
     }
     $reqs_txt = theme('table', NULL, $items);

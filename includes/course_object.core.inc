@@ -10,9 +10,9 @@
 class CourseObject extends CourseHandler {
 
   // Hold course.
-  private $course = stdClass;
+  private $course = NULL;
   // Hold requirement/object from database and the fulfillment object.
-  private $courseObjectFulfillment = stdClass;
+  private $courseObjectFulfillment = NULL;
 
   /**
    * Construct a course object from a database record.
@@ -25,6 +25,8 @@ class CourseObject extends CourseHandler {
    * @param object $user
    */
   function __construct($config = array(), $account = NULL) {
+    $config = (array) $config;
+
     $this->serializedField = 'data';
     $this->handlerType = 'course_object';
     $this->primaryKey = 'snid';
@@ -37,6 +39,12 @@ class CourseObject extends CourseHandler {
     if (!$account) {
       global $user;
       $account = $user;
+    }
+
+    if ($config['nid']) {
+      // Object is being constructed as part of a course.
+      $courseNode = node_load($config['nid']);
+      $this->course = course_get_course($courseNode);
     }
 
     $this->courseObjectFulfillment = new CourseObjectFulfillment($this, $account);
@@ -132,8 +140,14 @@ class CourseObject extends CourseHandler {
     $defaults = parent::optionsDefinition();
 
     $defaults += array(
+      'uniqid' => NULL,
+      'nid' => NULL,
+      'title' => NULL,
+      'enabled' => 1,
       'hidden' => 0,
-      'instance' => NULL,
+      'required' => 0,
+      'delete' => 0,
+      'delete_instance' => 0,
     );
 
     return $defaults;
@@ -161,12 +175,48 @@ class CourseObject extends CourseHandler {
       '#value' => arg(1),
     );
 
-    $form['hidden'] = array(
-      '#title' => t('Hidden'),
-      '#type' => 'checkbox',
-      '#description' => t('Hide this course object in the course outline. If this object is required, progress through the course will be blocked until this object is complete.'),
-      '#default_value' => $config['hidden'],
+    $form['title'] = array(
+      '#title' => 'Title',
+      '#type' => 'textfield',
+      '#size' => 16,
+      '#default_value' => check_plain($config['title']),
     );
+
+    $form['enabled'] = array(
+      '#title' => 'Enabled',
+      '#type' => 'checkbox',
+      '#default_value' => $config['enabled'],
+    );
+
+    $form['hidden'] = array(
+      '#title' => t('Visible in outline'),
+      '#type' => 'checkbox',
+      //'#description' => t('Hide this course object in the course outline. If this object is required, progress through the course will be blocked until this object is complete.'),
+      '#default_value' => !$config['hidden'],
+    );
+
+    $form['required'] = array(
+      '#title' => t('Completion required'),
+      '#type' => 'checkbox',
+      '#default_value' => $config['required'],
+    );
+
+    // Only allow deletion of existing objects.
+    // @todo do we want to allow `delete` when there is a cached object, but
+    // only allow `delete_instance` when there is a saved snid?
+    if ($config['instance']) {
+      $form['delete'] = array(
+        '#title' => t('Delete'),
+        '#type' => 'checkbox',
+      );
+
+      $form['delete_instance'] = array(
+        '#title' => t('Also delete related object instance(s)'),
+        '#type' => 'checkbox',
+        '#process' => array('ctools_dependent_process'),
+        '#dependency' => array('edit-delete' => array(1)),
+      );
+    }
 
     // Bring in access plugin configuration.
     $form['plugins']['#tree'] = TRUE;
@@ -195,9 +245,9 @@ class CourseObject extends CourseHandler {
       $form['plugins']['access'][$key] += $courseAccess->optionsForm();
     }
 
-    // Submit
-    $form['submit'] = array(
-      '#value' => 'Save',
+    // Update settings
+    $form['update'] = array(
+      '#value' => t('Update'),
       '#weight' => 999,
       '#type' => 'submit',
     );
@@ -222,6 +272,9 @@ class CourseObject extends CourseHandler {
 
     $uniqid = $this->getId();
     $nid = $this->getCourseNid();
+
+    // Flip 'visible' so it behaves like 'hidden'.
+    $form_state['values']['hidden'] = ($form_state['values']['hidden'] != 1);
 
     // Object-specific settings
     foreach (array_keys($this->getOptions()) as $key) {
@@ -260,6 +313,7 @@ class CourseObject extends CourseHandler {
    *   HTML content or a redirect.
    */
   public function takeCourseObject() {
+    $_SESSION['course']['active'] = $this->getCourseNid();
     $_SESSION['course'][$this->getCourseNid()]['taking']['active'] = $this->getId();
 
     // Run access checks.
@@ -415,14 +469,25 @@ class CourseObject extends CourseHandler {
   }
 
   /**
-   * Get the course node ID this object belongs to.
+   * Get the course node ID this CourseObject belongs to.
+   *
+   * @return int
    */
   function getCourseNid() {
     return intval($this->getOption('nid'));
   }
 
+  /**
+   * Set the Course for this CourseObject.
+   *
+   * @param Course $course
+   *
+   * @return Course
+   */
   function setCourse($course) {
     $this->course = $course;
+    $this->setOption('nid', $course->getNode()->nid);
+    return $this;
   }
 
   /**
@@ -470,6 +535,8 @@ class CourseObject extends CourseHandler {
    */
   function setCourseNid($nid) {
     $this->setOption('nid', $nid);
+    $courseNode = node_load($nid);
+    $this->setCourse(course_get_course($courseNode));
   }
 
   /**
@@ -689,6 +756,14 @@ class CourseObjectFulfillment extends CourseHandler {
     db_query($sql, $this->getId());
   }
 
+  /**
+   * Track course after saving fulfillment.
+   */
+  public function save() {
+    parent::save();
+    $this->getCourseObject()->getCourse()->track();
+  }
+
 }
 
 /**
@@ -802,7 +877,7 @@ class CourseObjectNode extends CourseObject {
       $settings = variable_get('content_access_settings', array());
 
       if (!$settings['per_node'][$this->getComponent()]) {
-        $warnings[] = t('%t is set to Private, but the content type %c does not have per-content restriction <strong>and is visible to all users</strong>. Please visit !l to set up content access settings.', array(
+        $warnings[] = t('%t is set to Private, but the content type %c does not have access control lists enabled. Users will not be able to acces this content. Please visit !l to set up content access settings.', array(
           '%t' => $this->getTitle(),
           '%c' => $this->getComponent(),
           '!l' => l('Access control', "admin/content/node-type/{$this->getComponent()}/access"),
@@ -840,6 +915,21 @@ class CourseObjectNode extends CourseObject {
         acl_remove_user($acl_id, $uid);
         node_save($this->node);
       }
+    }
+  }
+
+  /**
+   * On object write, set privacy on this node.
+   */
+  function save() {
+    parent::save();
+    if ($this->checkPrivacySupport() && $this->getOption('private')) {
+      // Remove "view" permissions to everyone on this node.
+      $settings = content_access_get_per_node_settings($this->node);
+      $settings['view'] = array();
+      content_access_save_per_node_settings($this->node, $settings);
+      // Resave node to update access.
+      node_save($this->node);
     }
   }
 
