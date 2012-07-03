@@ -34,6 +34,16 @@ class CourseHandler {
   }
 
   /**
+   * Stub. Get the summary of an object's options.
+   *
+   * @return array
+   *   An associative array of summary keys and values.
+   */
+  public function getOptionsSummary() {
+    return array();
+  }
+
+  /**
    * Get an object's configuration.
    *
    * This can be overridden. For example, values stored in courseobject sessions

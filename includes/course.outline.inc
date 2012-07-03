@@ -88,6 +88,7 @@ function course_outline_overview_form(&$form_state) {
         drupal_set_message(filter_xss($warning), 'warning');
       }
       $rform = _course_outline_requirement_form($requirement, $uniqid);
+
       if (empty($requirement['snid'])) {
         // User hasnt selected an object type yet, let them select.
         $rform['requirement_component'] = array(
@@ -97,6 +98,13 @@ function course_outline_overview_form(&$form_state) {
         );
       }
       else {
+        $summary = '<div id="summary-' . $uniqid . '">';
+        $summary .= filter_xss_admin($courseObject->renderOptionsSummary());
+        $summary .= '</div>';
+        $rform['summary'] = array(
+          '#value' => $summary,
+        );
+
         // Don't allow user to change type of object.
         $rform['requirement_component'] = array(
           '#type' => 'hidden',
@@ -183,8 +191,21 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
     '#default_value' => $requirement['nid'],
   );
 
+  // Do not use prefix/suffix because markup only renders with a value, and we
+  // need the wrapper before the title is saved for ajax population after each
+  // settings modal update.
+  $title = '<div id="title-' . $uniqid . '">';
+  $title .= check_plain($requirement['title']);
+  $title .= '</div>';
   $rform['title'] = array(
-    '#value' => check_plain($requirement['title']),
+    '#value' => $title,
+  );
+
+  $summary = '<div id="summary-' . $uniqid . '">';
+  $summary .= filter_xss_admin($requirement['summary']);
+  $summary .= '</div>';
+  $summary['summary'] = array(
+    '#value' => $summary,
   );
 
   $rform['settings'] = array(
@@ -218,6 +239,7 @@ function course_outline_overview_add($form, $form_state) {
 function theme_course_outline_overview_form($form) {
   $requirements = & $form['course_outline']['requirements'];
   drupal_add_tabledrag('course-objects', 'order', 'sibling', 'course-object-weight');
+  drupal_add_css(drupal_get_path('module', 'course') . '/css/admin.css');
 
   $headers = array(t('Title'), t('Type'), t('Operations'), t('Weight'));
 
@@ -227,7 +249,7 @@ function theme_course_outline_overview_form($form) {
     $requirement = & $requirements[$key];
     unset($requirements[$key]['title']['#title']);
     unset($requirements[$key]['requirement_component']['#title']);
-    $rows[$key]['data'][] = drupal_render($requirements[$key]['title']);
+    $rows[$key]['data'][] = drupal_render($requirements[$key]['title']) . drupal_render($requirements[$key]['summary']);
     $rows[$key]['data'][] = drupal_render($requirements[$key]['requirement_component']) . drupal_render($requirements[$key]['requirement_component_show']);
     // @todo find an elegant way to hide the settings link until a component
     //   type is selected.
@@ -237,6 +259,17 @@ function theme_course_outline_overview_form($form) {
     // Add draggable settings to row.
     $rows[$key]['class'] = 'draggable';
     $rows[$key]['data'][] = drupal_render($requirements[$key]['weight']);
+
+    // Add id to row for per-row ajax handling.
+    $rows[$key]['id'] = "row-{$key}";
+
+    // Deletion handling.
+    $nid = $requirement['nid']['#value'];
+    // @todo should we unify this, so we always use $courseObject->getOptions()
+    // instead of pulling from the session?
+    if ($_SESSION['course'][$nid]['editing'][$key]['delete']) {
+      $rows[$key]['class'] = 'deleted';
+    }
 
     // Mark everything else as printed.
     drupal_render($requirements[$key]);

@@ -206,11 +206,13 @@ class CourseObject extends CourseHandler {
       $form['delete'] = array(
         '#title' => t('Delete'),
         '#type' => 'checkbox',
+        '#default_value' => $config['delete'],
       );
 
       $form['delete_instance'] = array(
         '#title' => t('Also delete related object instance(s)'),
         '#type' => 'checkbox',
+        '#default_value' => $config['delete_instance'],
         '#process' => array('ctools_dependent_process'),
         '#dependency' => array('edit-delete' => array(1)),
       );
@@ -285,6 +287,109 @@ class CourseObject extends CourseHandler {
     foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
       $_SESSION['course'][$nid]['editing'][$uniqid]['plugins']['access'][$key] = $form_state['values']['plugins']['access'][$key];
     }
+
+    // Update the options.
+    $this->setOptions($_SESSION['course'][$nid]['editing'][$uniqid]);
+
+    // Perform ajax operations on the overview form, before overview submission.
+    $commands = array();
+
+    // Set title.
+    $title = '<div id="title-' . $uniqid . '">' . $form_state['values']['title'] . '</div>';
+    $commands[] = ctools_ajax_command_replace("#title-{$uniqid}", $title);
+
+    // Set summary.
+    $html = '<div id="summary-' . $uniqid . '">' . $this->renderOptionsSummary() . '</div>';
+    $commands[] = ctools_ajax_command_replace("#summary-{$uniqid}", $html);
+
+    // Deletion handling.
+    // @todo add `deleted` class to the row instead.
+    if ($form_state['values']['delete']) {
+      $argument = array(
+        'background-color' => '#eee',
+        'color' => '#ccc',
+      );
+      $commands[] = ctools_ajax_command_css("#row-{$uniqid}", $argument);
+    }
+
+    $commands[] = ctools_modal_command_dismiss();
+
+    ctools_ajax_render($commands);
+  }
+
+  /**
+   * Get core options summary.
+   *
+   * @return array
+   *   An associative array of summary keys and values.
+   */
+  public function getOptionsSummary() {
+    $summary = parent::getOptionsSummary();
+
+    // Get options.
+    $options = $this->getOptions();
+
+    // Get form for titles.
+    $form = array();
+    $this->optionsForm($form, $form_state);
+
+    // Add course object core options to summary individually, because there are
+    // options we don't want to display, and others that require special logic.
+    $uniqid = $options['uniqid'];
+
+    // Enabled.
+    if ($options['enabled']) {
+      $summary['enabled'] = $form['enabled']['#title'];
+    }
+    else {
+      $summary['enabled'] = '<span class="warning">' . t('Not enabled') . '</span>';
+    }
+
+    // Hidden.
+    if (!$options['hidden']) {
+      $summary['hidden'] = $form['hidden']['#title'];
+    }
+    else {
+      $summary['hidden'] = '<span class="warning">' . t('Not visible in outline') . '</span>';
+    }
+
+    // Required.
+    if ($options['required']) {
+      $summary['required'] = $form['required']['#title'];
+    }
+    else {
+      $summary['required'] = '<span class="warning">' . t('Completion not required') . '</span>';
+    }
+
+    // Required.
+    if ($options['delete']) {
+      $dest = "node/{$options['nid']}/course-object/nojs/{$uniqid}/restore";
+      $restore = ctools_ajax_text_button(t('Restore'), $dest, t('Restore this object to the course outline.'));
+      $summary['delete'] = '<span class="error">' . t('Will be deleted from outline') . '</span>' . ' ' . $restore;
+    }
+
+    return $summary;
+  }
+
+  /**
+   * Get all course object implementations of getOptionsSummary().
+   */
+  public function renderOptionsSummary() {
+    $summary = $this->getOptionsSummary();
+
+    // Get summaries from plugins, and merge into the summary.
+    foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
+      // @todo how do we get these?
+    }
+
+    // @todo make this a themeable function.
+    //return theme('course_object_summary');
+    $rendered_summary = '';
+    if (!empty($summary)) {
+      $rendered_summary = $html = '<div class="description">' . theme('item_list', $summary) . '</div>';
+    }
+
+    return $rendered_summary;
   }
 
   /**
