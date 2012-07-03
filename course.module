@@ -350,7 +350,7 @@ function course_get_handlers($type = NULL) {
  */
 function course_access_object($node, $courseObject) {
   global $user;
-  $course = new Course($node, $user);
+  $course = course_get_course($node, $user);
   $courseObject->setCourse($course);
   $course->setActive($courseObject->getId());
   return $courseObject->access('take');
@@ -1227,7 +1227,7 @@ function course_enrolment_save($enrolment) {
  *
  * @return CourseObject|FALSE
  */
-function course_get_course_object($requirement_type, $requirement_component = NULL, $instance = NULL, $account = NULL) {
+function course_get_course_object($requirement_type, $requirement_component = NULL, $instance = NULL, $account = NULL, $course = NULL) {
   $available = course_get_handlers('object');
 
   if (!$requirement_type) {
@@ -1257,7 +1257,7 @@ function course_get_course_object($requirement_type, $requirement_component = NU
         return new CourseObject();
       }
       else {
-        return new $ret['class']($row, $requirement_component);
+        return new $ret['class']($row, $requirement_component, $course);
       }
     }
     else {
@@ -1266,7 +1266,7 @@ function course_get_course_object($requirement_type, $requirement_component = NU
   }
 
   if (is_object($requirement_type)) {
-    // This is an already loaded course object.
+    // This is an already loaded (but not saved) course object.
     $outline_entry = $requirement_type;
     $account = $requirement_component;
   }
@@ -1297,7 +1297,7 @@ function course_get_course_object($requirement_type, $requirement_component = NU
     $class = $ret['class'];
   }
 
-  $courseObject = new $class($outline_entry, $account);
+  $courseObject = new $class($outline_entry, $account, $course);
   if ($courseObject) {
     return $courseObject;
   }
@@ -1323,12 +1323,14 @@ function course_get_course($node, $account = NULL) {
   }
   static $courses = array();
 
-  if (!isset($courses[$node->nid])) {
+  if (!isset($courses[$node->nid][$account->uid])) {
     $course = new Course($node, $user);
-    $courses[$node->nid] = $course;
+    // Detect active object.
+    $course->setActive();
+    $courses[$node->nid][$account->uid] = $course;
   }
 
-  return $courses[$node->nid];
+  return $courses[$node->nid][$account->uid];
 }
 
 /**
@@ -1538,7 +1540,7 @@ function course_edit_enrollment_action($object, $context) {
   course_enrolment_save($enrollment);
   course_report_save($course_report);
 
-  $course = new Course($node, $account);
+  $course = course_get_course($node, $account);
   foreach ($course->getObjects() as $key => $courseObject) {
     $snid = $courseObject->getId();
     $fulfillment = $courseObject->getFulfillment();
@@ -1653,7 +1655,7 @@ function course_edit_enrollment_action_form($context) {
     '#suffix' => '</span>',
   );
 
-  $course = new Course($node);
+  $course = course_get_course($node);
 
   foreach ($course->getObjects() as $key => $courseObject) {
     $form['course_objects'][$courseObject->getId()] = array(
@@ -1729,7 +1731,7 @@ function course_init() {
     // Check that Course exists for a special use case where Autoload hasn't yet
     // cached the Course class.
 
-    $course = new Course($courseNode);
+    $course = course_get_course($courseNode);
     if ($course && $course->getActive()) {
       drupal_add_js(
         array(

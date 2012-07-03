@@ -226,6 +226,8 @@ class Course extends CourseHandler {
     else {
       $this->user = user_load($user);
     }
+
+    $this->setActive();
   }
 
   /**

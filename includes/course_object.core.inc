@@ -24,7 +24,7 @@ class CourseObject extends CourseHandler {
    *   An object with requirement_component, requirement_type, and instance
    * @param object $user
    */
-  function __construct($config = array(), $account = NULL) {
+  function __construct($config = array(), $account = NULL, Course $course = NULL) {
     $config = (array) $config;
 
     $this->serializedField = 'data';
@@ -41,10 +41,8 @@ class CourseObject extends CourseHandler {
       $account = $user;
     }
 
-    if ($config['nid']) {
-      // Object is being constructed as part of a course.
-      $courseNode = node_load($config['nid']);
-      $this->course = course_get_course($courseNode);
+    if ($course) {
+      $this->course = $course;
     }
 
     $this->courseObjectFulfillment = new CourseObjectFulfillment($this, $account);

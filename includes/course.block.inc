@@ -51,7 +51,7 @@ function _course_block_navigation_view() {
   global $user;
   $node = course_get_context();
   if ($node) {
-    $course = new Course($node, $user);
+    $course = course_get_course($node, $user);
     $prev = $course->getPrev();
     $next = $course->getNext();
 
