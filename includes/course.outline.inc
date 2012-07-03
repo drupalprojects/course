@@ -98,13 +98,6 @@ function course_outline_overview_form(&$form_state) {
         );
       }
       else {
-        $summary = '<div id="summary-' . $uniqid . '">';
-        $summary .= filter_xss_admin($courseObject->renderOptionsSummary());
-        $summary .= '</div>';
-        $rform['summary'] = array(
-          '#value' => $summary,
-        );
-
         // Don't allow user to change type of object.
         $rform['requirement_component'] = array(
           '#type' => 'hidden',
@@ -146,6 +139,8 @@ function course_outline_overview_form(&$form_state) {
     ),
     '#submit' => array('ahah_helper_submit'),
   );
+
+  //$form['#redirect'] = "node/$node->nid/course-outline";
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -203,9 +198,9 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
   );
 
   $summary = '<div id="summary-' . $uniqid . '">';
-  $summary .= filter_xss_admin($requirement['summary']);
+  $summary .= !empty($requirement['snid']) ? filter_xss_admin($courseObject->renderOptionsSummary()) : '';
   $summary .= '</div>';
-  $summary['summary'] = array(
+  $rform['summary'] = array(
     '#value' => $summary,
   );
 
@@ -292,52 +287,88 @@ function _course_outline_overview_validate_requirements(&$form, &$form_state) {
  */
 function course_outline_overview_form_submit(&$form, &$form_state) {
   $node = node_load($form['nid']['#value']);
-  $object_handlers = course_get_handlers('object');
-  foreach ($form_state['values']['course_outline']['requirements'] as $coid => $record) {
-    $record = (object) $record;
-    $record->nid = $node->nid;
-    if (!$record->requirement_type) {
-      list($record->requirement_type, $record->requirement_component) = explode('-', $record->requirement_component);
-    }
-    $courseObject = course_get_course_object($record);
+
+  // Get form state values for object elements on the course outline overview:
+  // - An associative array of course objects, keyed by ID. The ID for already
+  //   saved objects is {course_outline}.snid, but for AHAH created objects the
+  //   key is a generated unique ID until save.
+  //   - snid: The key loaded from the database. If empty, the object is new.
+  //   - requirement_type: The implementing module name (course_quiz etc).
+  //   - requirement_component: The course object key as defined by
+  //     hook_course_handlers().
+  $objects = $form_state['values']['course_outline']['requirements'];
+
+  // Get object handler definitions for labels.
+  $object_info = course_get_handlers('object');
+
+  foreach ($objects as $object_key => $object) {
+    // Get each course object settings saved form values, which are not on the
+    // outline overview form.
+    $courseObject = course_get_course_object($object);
     $options = $courseObject->getOptions();
-    // Set title if not specified.
-    if (!$options['title'] && isset($record->requirement_component)) {
-      // Set objects with empty titles to the name of the component.
-      $title = $object_handlers[$record->requirement_type][$record->requirement_component]['name'];
+
+    // If title is not specified, set title from component.
+    if (!$courseObject->getTitle() && isset($object['requirement_component'])) {
+      // Get the component name from object info.
+      $title = $object_info[$object['requirement_type']][$object['requirement_component']]['name'];
       $courseObject->setOption('title', $title);
     }
-    if ($record->delete && $record->snid) {
-      if ($record->delete_instance) {
-        // Delete the instance (node, whatever).
-        $courseObject->delete();
-      }
-      course_outline_delete_requirement($record);
-    }
-    elseif (!$record->delete && !empty($record->requirement_component)) {
-      // Set the options, but don't overwrite any that weren't provided.
-      foreach ($record as $rKey => $value) {
-        $courseObject->setOption($rKey, $value);
-      }
 
-      // Hey, now we have an ID. We might have settings for objects that didn't
-      // exist until now. Save them.
-      if ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$coid]) {
-        foreach ($_SESSION['course'][$courseObject->getCourseNid()]['editing'][$coid] as $oKey => $value) {
-          if (!is_null($value)) {
-            $courseObject->setOption($oKey, $value);
+    // We use the requirement_component namespace for two purposes:
+    // - The form element is a select list with keys matching the combined
+    //   pattern: {requirement_type}-{requirement_component}.
+    // - We save only the second part of that combined key to the database.
+    if (!$object['requirement_type']) {
+      // Repurpose the requirement type array element.
+      list($object['requirement_type'], $object['requirement_component']) = explode('-', $object['requirement_component']);
+    }
+
+    // We only save overview objects with a selected component, whether loaded
+    // from the database or AHAH created.
+    if (isset($object['requirement_component'])) {
+      // Delete database loaded objects that are on the chopping block.
+      $is_loaded = $object['snid'];
+      if ($options['delete'] && $is_loaded) {
+        if ($options['delete_instance']) {
+          // Also delete related object instance(s) if specified.
+          $courseObject->delete();
+        }
+        course_outline_delete_requirement($object);
+      }
+      // If not slated for deletion, save the both db loaded and AHAH objects.
+      elseif (!$options['delete']) {
+        // Set the options, but don't overwrite any that weren't provided.
+        foreach ($object as $element => $value) {
+          $courseObject->setOption($element, $value);
+        }
+
+        // Hey, now we have an ID. We might have settings for objects that didn't
+        // exist until now. Save them.
+        // @todo do we still need this?
+        if ($editing_object = $_SESSION['course'][$courseObject->getCourseNid()]['editing'][$object_key]) {
+          foreach ($editing_object as $editing_key => $value) {
+            if (!is_null($value)) {
+              $courseObject->setOption($editing_key, $value);
+            }
           }
         }
-      }
 
-      if (!$courseObject->getInstanceId()) {
-        $courseObject->create();
+        // If there is no instance ID, create one.
+        if (!$courseObject->getInstanceId()) {
+          $courseObject->create();
+        }
+
+        // If we get this far, save the object.
+        $courseObject->save();
       }
-      $courseObject->save();
     }
   }
+  // Discard any session elements that did not pass criteria for saving.
   unset($_SESSION['course'][$node->nid]['editing']);
+
   drupal_set_message('Updated course.');
+
+  // @todo use form #redirect instead of drupal_goto()?
   drupal_goto("node/$node->nid/course-outline");
 }
 
