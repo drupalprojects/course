@@ -164,6 +164,7 @@ function course_outline_overview_form(&$form_state) {
  * To be re-used in listing requirements and creating new ones.
  */
 function _course_outline_requirement_form($requirement = array(), $uniqid = NULL) {
+  $courseObject = course_get_course_object($uniqid);
   $rform['#tree'] = TRUE;
 
   $rform['snid'] = array(
@@ -195,7 +196,7 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
   // need the wrapper before the title is saved for ajax population after each
   // settings modal update.
   $title = '<div id="title-' . $uniqid . '">';
-  $title .= check_plain($requirement['title']);
+  $title .= check_plain($courseObject->getTitle());
   $title .= '</div>';
   $rform['title'] = array(
     '#value' => $title,
@@ -298,6 +299,13 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
       list($record->requirement_type, $record->requirement_component) = explode('-', $record->requirement_component);
     }
     $courseObject = course_get_course_object($record);
+    $options = $courseObject->getOptions();
+    // Set title if not specified.
+    if (!$options['title'] && isset($options['requirement_component'])) {
+      // Set objects with empty titles to the name of the component.
+      $title = drupal_ucfirst(filter_xss_admin($options['requirement_component']));
+      $courseObject->setOption('title', $title);
+    }
     if ($record->delete && $record->snid) {
       if ($record->delete_instance) {
         // Delete the instance (node, whatever).
