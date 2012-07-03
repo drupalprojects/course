@@ -13,6 +13,8 @@ class CourseObject extends CourseHandler {
   private $course = NULL;
   // Hold requirement/object from database and the fulfillment object.
   private $courseObjectFulfillment = NULL;
+  // Hold a user.
+  private $user = NULL;
 
   /**
    * Construct a course object from a database record.
@@ -40,6 +42,7 @@ class CourseObject extends CourseHandler {
       global $user;
       $account = $user;
     }
+    $this->user = $account;
 
     if ($course) {
       $this->course = $course;
@@ -780,8 +783,6 @@ class CourseObject extends CourseHandler {
  */
 class CourseObjectFulfillment extends CourseHandler {
 
-  // Fulfillment array.
-  private $fulfillment = stdClass;
   private $courseObject;
 
   public function getId() {

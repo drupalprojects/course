@@ -366,6 +366,9 @@ function course_access_object($node, $courseObject) {
 
 function course_ajaj_fulfullment_check($node, $courseObject, $js = FALSE) {
   $courseObject->checkFulfillment();
+  if (course_node_is_course($node)) {
+    course_set_context($node);
+  }
   module_load_include('inc', 'course', 'includes/course.block');
   $block = _course_block_navigation_view();
   drupal_json(array(
@@ -1361,12 +1364,11 @@ function course_get_course($node, $account = NULL) {
     global $user;
     $account = $user;
   }
+
   static $courses = array();
 
   if (!isset($courses[$node->nid][$account->uid])) {
-    $course = new Course($node, $user);
-    // Detect active object.
-    $course->setActive();
+    $course = new Course($node, $account);
     $courses[$node->nid][$account->uid] = $course;
   }
 

@@ -229,15 +229,13 @@ class Course extends CourseHandler {
     else {
       $this->node = node_load($node);
     }
-
+    
     if (is_object($user)) {
       $this->user = $user;
     }
     else {
       $this->user = user_load($user);
     }
-
-    $this->setActive();
   }
 
   /**
@@ -298,6 +296,10 @@ class Course extends CourseHandler {
    * @return CourseObject
    */
   public function getNext() {
+    if ($this->active) {
+      $this->setActive();
+    }
+    
     return $this->next;
   }
 
@@ -307,6 +309,10 @@ class Course extends CourseHandler {
    * @return CourseObject
    */
   public function getPrev() {
+    if ($this->active) {
+      $this->setActive();
+    }
+    
     return $this->prev;
   }
 
@@ -367,8 +373,7 @@ class Course extends CourseHandler {
       $result = db_query($sql, $this->node->nid);
 
       while ($row = db_fetch_object($result)) {
-        $courseObject = course_get_course_object($row, NULL, NULL, $this->user);
-        $courseObject->setCourse($this);
+        $courseObject = course_get_course_object($row, NULL, NULL, $this->user, $this);
         $this->courseObjects[] = $courseObject;
       }
     }
