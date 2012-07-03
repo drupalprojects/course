@@ -1172,9 +1172,14 @@ function course_take_course($node) {
     if (function_exists($callback)) {
       $outline = $callback($node, $user);
     }
-    if (!$outline) {
+    else {
       $outline = t('Outline not provided.');
     }
+
+    if (!$outline) {
+      $outline = t('No learning objects are available this time.');
+    }
+
     return $outline;
   }
   else {
