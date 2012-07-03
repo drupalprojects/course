@@ -414,7 +414,7 @@ function course_outline_list($node) {
         $step['image'] = 'misc/menu-collapsed.png';
         if ($course->getActive() === $courseObject) {
           $step['status'] = $courseObject->getStatus();
-          if (!$step['status'] && $courseObject->getCourse()->getActive() === $courseObject) {
+          if (!$step['status'] && $courseObject->getCourse()->getActive()->getId() == $courseObject->getId()) {
             $step['status'] = 'In progress';
             $step['class'] = 'in-progress';
             $step['image'] = 'misc/watchdog-warning.png';
