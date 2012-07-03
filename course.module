@@ -2200,7 +2200,7 @@ function course_determine_context($module = NULL, $object_type = NULL, $instance
         $context = node_load($_SESSION['course']['active']);
       }
     }
-    else {
+    else if ($nids) {
       // We don't have an active session (or, the course in the active session
       // didn't contain this course object). So we just guess the first one.
       $_SESSION['course']['active'] = $nids[0];
