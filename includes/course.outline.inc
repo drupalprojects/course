@@ -292,6 +292,7 @@ function _course_outline_overview_validate_requirements(&$form, &$form_state) {
  */
 function course_outline_overview_form_submit(&$form, &$form_state) {
   $node = node_load($form['nid']['#value']);
+  $object_handlers = course_get_handlers('object');
   foreach ($form_state['values']['course_outline']['requirements'] as $coid => $record) {
     $record = (object) $record;
     $record->nid = $node->nid;
@@ -301,9 +302,9 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
     $courseObject = course_get_course_object($record);
     $options = $courseObject->getOptions();
     // Set title if not specified.
-    if (!$options['title'] && isset($options['requirement_component'])) {
+    if (!$options['title'] && isset($record->requirement_component)) {
       // Set objects with empty titles to the name of the component.
-      $title = drupal_ucfirst(filter_xss_admin($options['requirement_component']));
+      $title = $object_handlers[$record->requirement_type][$record->requirement_component]['name'];
       $courseObject->setOption('title', $title);
     }
     if ($record->delete && $record->snid) {
