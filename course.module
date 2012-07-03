@@ -469,7 +469,6 @@ function course_object_edit_form_validate(&$form, &$form_state) {
     $nid = $form_state['values']['nid'];
     // Get course object from session/database.
     $courseObject = course_object_load($form_state['values']['uniqid']);
-    $courseObject->setCourseNid($nid);
     $courseObject->setId($form_state['values']['uniqid']);
     $courseObject->optionsValidate($form, $form_state);
   }
@@ -480,14 +479,13 @@ function course_object_edit_form_submit(&$form, &$form_state) {
     $nid = $form_state['values']['nid'];
     // Get course object from session/database.
     $courseObject = course_object_load($form_state['values']['uniqid']);
-    $courseObject->setCourseNid($nid);
     $courseObject->setId($form_state['values']['uniqid']);
     $courseObject->optionsSubmit($form, $form_state);
   }
 }
 
 /**
- * Load a course object from session cache or database.
+ * Menu loader for course objects, in the context of a course.
  */
 function course_object_load($snid) {
   global $user;
@@ -496,11 +494,13 @@ function course_object_load($snid) {
     // Temporary course object.
     $courseObject = course_get_course_object($_SESSION['course'][$nid]['editing'][$snid]['requirement_type'], $_SESSION['course'][$nid]['editing'][$snid]['requirement_component']);
     $courseObject->setId($snid);
-    $courseObject->setCourseNid($nid);
   }
   else {
     // Stored course object.
     $courseObject = course_get_course_object($snid, NULL, NULL, $user);
+  }
+  if ($nid) {
+    $courseObject->setCourse($nid);
   }
   return $courseObject;
 }
@@ -1268,6 +1268,11 @@ function course_enrolment_save($enrolment) {
 function course_get_course_object($requirement_type, $requirement_component = NULL, $instance = NULL, $account = NULL, $course = NULL) {
   $available = course_get_handlers('object');
 
+  if (!$account) {
+    global $user;
+    $account = $user;
+  }
+
   if (!$requirement_type) {
     return new CourseObject;
   }
@@ -1295,7 +1300,7 @@ function course_get_course_object($requirement_type, $requirement_component = NU
         return new CourseObject();
       }
       else {
-        return new $ret['class']($row, $requirement_component, $course);
+        return new $ret['class']($row, $account, $course);
       }
     }
     else {
@@ -1306,7 +1311,6 @@ function course_get_course_object($requirement_type, $requirement_component = NU
   if (is_object($requirement_type)) {
     // This is an already loaded (but not saved) course object.
     $outline_entry = $requirement_type;
-    $account = $requirement_component;
   }
   elseif (!is_null($instance)) {
     // Search for context.
@@ -1351,8 +1355,6 @@ function course_get_course_object($requirement_type, $requirement_component = NU
  *   The course node object.
  *
  * @return Course
- *
- * @todo cache?
  */
 function course_get_course($node, $account = NULL) {
   if (!$account) {
@@ -1376,12 +1378,17 @@ function course_get_course($node, $account = NULL) {
  *
  * @param $node
  *   A node object or string that indicates the node type to check.
+ *
+ * @return bool
  */
 function course_node_is_course(&$node) {
   $type = is_object($node) ? $node->type : $node;
   return variable_get("course_use_{$type}", 0);
 }
 
+/**
+ * Implements hook_views_plugins().
+ */
 function course_views_plugins() {
   return array(
     'argument validator' => array(
@@ -1405,7 +1412,7 @@ function course_views_api() {
 }
 
 /**
- * Implements of hook_content_extra_fields().
+ * Implements hook_content_extra_fields().
  */
 function course_content_extra_fields($type) {
   $extras = array();
@@ -1445,6 +1452,8 @@ function course_preprocess_page(&$variables) {
 
 /**
  * Get a list of course types.
+ *
+ * @return array
  */
 function course_get_types() {
   $types = array();
@@ -2092,7 +2101,7 @@ function course_outline_save_requirement(&$outline_entry, $node = NULL) {
 
   if (!$courseObject->getId()) {
     // Only creating new course objects right now. Can't update them yet
-    $courseObject->setCourseNid($node->nid);
+    $courseObject->setCourse($node->nid);
   }
 
   $courseObject->save();

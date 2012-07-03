@@ -583,13 +583,22 @@ class CourseObject extends CourseHandler {
   /**
    * Set the Course for this CourseObject.
    *
-   * @param Course $course
+   * @param Course|int $course
+   *   A Course or node ID.
    *
-   * @return Course
+   * @return CourseObject
    */
-  function setCourse($course) {
-    $this->course = $course;
-    $this->setOption('nid', $course->getNode()->nid);
+  public function setCourse($course) {
+    if (is_numeric($course)) {
+      $this->setOption('nid', $course);
+      $courseNode = node_load($course);
+      $this->course = course_get_course($courseNode);
+    }
+    else {
+      $this->course = $course;
+      $this->setOption('nid', $course->getNode()->nid);
+    }
+
     return $this;
   }
 
@@ -599,11 +608,17 @@ class CourseObject extends CourseHandler {
    * @return Course
    */
   function getCourse() {
+    if (!$this->course) {
+      $this->course = new Course(node_load($this->getCourseNid()), $this->user);
+    }
+
     return $this->course;
   }
 
   /**
    * Get the module that provides this course object.
+   *
+   * @return string
    */
   function getModule() {
     return $this->getOption('requirement_type');
@@ -611,6 +626,8 @@ class CourseObject extends CourseHandler {
 
   /**
    * Get the object component for this course object.
+   *
+   * @return string
    */
   function getComponent() {
     return $this->getOption('requirement_component');
@@ -618,28 +635,22 @@ class CourseObject extends CourseHandler {
 
   /**
    * Set the module that provides this course object.
+   *
+   * @return CourseObject
    */
   function setModule($module) {
     $this->setOption('requirement_type', $module);
+    return $this;
   }
 
   /**
    * Set the object component for this course object.
+   *
+   * @return CourseObject
    */
   function setComponent($component) {
     $this->setOption('requirement_component', $component);
-  }
-
-  /**
-   * Set the course node ID this object belongs to.
-   *
-   * @param int $nid
-   *   The node ID this object should be added to.
-   */
-  function setCourseNid($nid) {
-    $this->setOption('nid', $nid);
-    $courseNode = node_load($nid);
-    $this->setCourse(course_get_course($courseNode));
+    return $this;
   }
 
   /**
@@ -785,7 +796,7 @@ class CourseObjectFulfillment extends CourseHandler {
    * @param CourseObject $courseObject
    * @param Object $user
    */
-  function __construct($courseObject, $user) {
+  function __construct(CourseObject $courseObject, $user) {
     // Set storage.
     $this->handlerType = 'course_object_fulfillment';
     $this->table = 'course_outline_fulfillment';
