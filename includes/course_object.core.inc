@@ -68,12 +68,13 @@ class CourseObject extends CourseHandler {
    *
    * Subclasses may override this functionality.
    */
-  public function access($op = 'view', $user = NULL) {
+  public function access($op = 'view', $account = NULL) {
     ctools_include('plugins');
     $access = FALSE;
 
-    if (!$user) {
+    if (!$account) {
       global $user;
+      $account = $user;
     }
 
     // Stock access: check for completion of previous object.
@@ -82,7 +83,7 @@ class CourseObject extends CourseHandler {
         $access = !$this->getOption('hidden');
         break;
       case 'take':
-        if (!$user->uid) {
+        if (!$account->uid) {
           return FALSE;
         }
       case 'view':
@@ -93,8 +94,10 @@ class CourseObject extends CourseHandler {
 
 
         if (reset($course->getObjects())->getId() == $this->getId()) {
-          // Check if this is the first object.
-          $access = TRUE;
+          // This is the first course object. The learner should be able to
+          // access it. Also, check for enrollment. Since there are no other
+          // checks (as in previous object completions) we do have to check this.
+          $access = course_enrolment_check($this->getCourseNid(), $account->uid);
         }
 
         if ($course->getPrev() && $course->getPrev()->getFulfillment()->isComplete()) {
