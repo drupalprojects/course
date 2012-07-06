@@ -153,6 +153,28 @@ $handler->display->display_options['fields']['date_completed']['empty_zero'] = 0
 $handler->display->display_options['fields']['date_completed']['hide_alter_empty'] = 1;
 $handler->display->display_options['fields']['date_completed']['date_format'] = 'custom';
 $handler->display->display_options['fields']['date_completed']['custom_date_format'] = 'm/d/Y';
+/* Argument: User: Uid */
+$handler->display->display_options['arguments']['uid']['id'] = 'uid';
+$handler->display->display_options['arguments']['uid']['table'] = 'users';
+$handler->display->display_options['arguments']['uid']['field'] = 'uid';
+$handler->display->display_options['arguments']['uid']['relationship'] = 'uid';
+$handler->display->display_options['arguments']['uid']['default_action'] = 'not found';
+$handler->display->display_options['arguments']['uid']['style_plugin'] = 'default_summary';
+$handler->display->display_options['arguments']['uid']['default_argument_type'] = 'fixed';
+$handler->display->display_options['arguments']['uid']['default_argument_skip_url'] = 0;
+$handler->display->display_options['arguments']['uid']['validate_type'] = 'php';
+$handler->display->display_options['arguments']['uid']['validate_options']['code'] = 'global $user;
+if ($user->uid == $argument) {
+  return TRUE;
+}
+
+if (user_access(\'access all course reports\')) {
+  return TRUE;
+}
+
+return FALSE;';
+$handler->display->display_options['arguments']['uid']['break_phrase'] = 0;
+$handler->display->display_options['arguments']['uid']['not'] = 0;
 /* Filter: Course report: Complete */
 $handler->display->display_options['filters']['complete']['id'] = 'complete';
 $handler->display->display_options['filters']['complete']['table'] = 'course_report';
