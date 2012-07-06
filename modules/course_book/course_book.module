@@ -38,9 +38,10 @@ function course_book_course_handlers() {
 /**
  * Implements hook_nodeapi().
  */
-function course_book_nodeapi(&$node, $op, $a3, $a4) {
-  if ($op == 'view' && $a4 && $node->type == 'book') {
+function course_book_init() {
+  if (arg(0) == 'node') {
     global $user;
+    $node = node_load(arg(1));
     $search = $node->book['bid'] ? $node->book['bid'] : $node->nid;
     if ($courseObject = course_get_course_object('course_book', 'book', $search, $user)) {
       $courseObject->getFulfillment()->setComplete()->save();

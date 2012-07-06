@@ -40,8 +40,12 @@ function course_quiz_course_handlers() {
  * Update the fulfillment record.
  */
 function course_quiz_quiz_finished($quiz, $score, $rid) {
-  global $user;
+  $sql = "select uid from {quiz_node_results} where result_id = %d";
+  $uid = db_result(db_query($sql, $rid));
 
-  $courseObject = course_get_course_object('course_quiz', 'quiz', $quiz->nid, $user);
-  $courseObject->grade($user);
+  $account = user_load($uid);
+
+  if ($courseObject = course_get_course_object('course_quiz', 'quiz', $quiz->nid, $account)) {
+    $courseObject->grade($account, $rid);
+  }
 }

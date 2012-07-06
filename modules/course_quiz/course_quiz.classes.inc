@@ -39,15 +39,20 @@ class CourseObjectQuiz extends CourseObjectNode {
    * Marks a user's fulfillment record for this object complete if the user
    * passed the quiz.
    */
-  function grade($user) {
+  function grade($user, $rid) {
     $nid = (int) $this->getInstanceId();
+    $fulfillment = $this->getFulfillment();
+
+    $result_ids = (array) $fulfillment->getOption('quiz_result_ids');
+    $result_ids[] = $rid;
+    $fulfillment->setOption('quiz_result_ids', $result_ids);
 
     $result = reset(quiz_get_score_data(array($nid), $user->uid));
     if ($result && ($result->percent_score >= $this->getOption('passing_grade'))) {
-      $this->getFulfillment()->setGrade($result->percent_score)->setComplete()->save();
+      $fulfillment->setGrade($result->percent_score)->setComplete()->save();
     }
     else {
-      $this->getFulfillment()->setGrade($result->percent_score)->save();
+      $fulfillment->setGrade($result->percent_score)->save();
     }
   }
 
@@ -90,7 +95,7 @@ class CourseObjectQuiz extends CourseObjectNode {
 
     return $warnings;
   }
-  
+
   public function getReports() {
     return array(
       'results' => array(
@@ -108,6 +113,15 @@ class CourseObjectQuiz extends CourseObjectNode {
           'content' => drupal_get_form('quiz_results_manage_results_form', $this->node),
         );
     }
+  }
+
+  /**
+   * Remove all quiz attempts associated with this fulfillment.
+   */
+  public function unenroll() {
+    parent::unenroll();
+    $fulfillment = $this->getFulfillment();
+    quiz_delete_results((array) $fulfillment->getOption('quiz_result_ids'));
   }
 
 }

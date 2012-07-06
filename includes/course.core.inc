@@ -296,7 +296,7 @@ class Course extends CourseHandler {
    * @return CourseObject
    */
   public function getNext() {
-    if ($this->active) {
+    if (!$this->active) {
       $this->setActive();
     }
     
@@ -309,7 +309,7 @@ class Course extends CourseHandler {
    * @return CourseObject
    */
   public function getPrev() {
-    if ($this->active) {
+    if (!$this->active) {
       $this->setActive();
     }
     
@@ -387,6 +387,24 @@ class Course extends CourseHandler {
 
   public function getUser() {
     return $this->user;
+  }
+
+  /**
+   * Un-enroll the user from all course objects and revoke access.
+   *
+   * Course object should clean up
+   * and delete records related to this Course and user.
+   *
+   * NOT a top level class of CourseObject::unEnroll.
+   *
+   * @see CourseObjectNode::revoke()
+   */
+  public function unEnroll() {
+    foreach ($this->getObjects() as $courseObject) {
+      // Remove access.
+      $courseObject->revoke();
+      $courseObject->unenroll();
+    }
   }
 
 }

@@ -302,6 +302,10 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   $object_info = course_get_handlers('object');
 
   foreach ($objects as $object_key => $object) {
+    // Separate the module from the object type if necessary.
+    if (!$object['requirement_type']) {
+      list($object['requirement_type'], $object['requirement_component']) = explode('-', $object['requirement_component']);
+    }
     // Get each course object settings saved form values, which are not on the
     // outline overview form.
     $courseObject = course_get_course_object($object);

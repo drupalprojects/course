@@ -495,7 +495,8 @@ function course_object_load($snid) {
   $nid = arg(0) == 'node' && is_numeric(arg(1)) ? arg(1) : 0;
   if (!is_numeric($snid)) {
     // Temporary course object.
-    $courseObject = course_get_course_object($_SESSION['course'][$nid]['editing'][$snid]['requirement_type'], $_SESSION['course'][$nid]['editing'][$snid]['requirement_component']);
+    $session = & $_SESSION['course'][$nid]['editing'][$snid];
+    $courseObject = course_get_course_object($session['requirement_type'], $session['requirement_component']);
     $courseObject->setId($snid);
   }
   else {
@@ -904,6 +905,8 @@ function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
  */
 function course_unenrol(&$node, &$user) {
   if (course_node_is_course($node)) {
+    $course = course_get_course($node, $user);
+    $course->unenroll();
     $sql = "delete from {course_report} where nid = %d and uid = %d";
     db_query($sql, $node->nid, $user->uid);
     $sql = "DELETE FROM {course_enrolment} where nid = %d and uid = %d";
@@ -1263,13 +1266,22 @@ function course_enrolment_save($enrolment) {
  *   @todo explain this better.
  * @param string $instance
  *   The course object instance ID, from {course_outline}.instance.
- * @param object $account
- *   The user object.
+ * @param stdClass $account
+ *   The user object. This will instantiate a fulfillment record on the returned
+ *   CourseObject.
+ * @param Course $course
+ *   The Course to pass to the CourseObject instantiation.
  *
  * @return CourseObject|FALSE
  */
 function course_get_course_object($requirement_type, $requirement_component = NULL, $instance = NULL, $account = NULL, $course = NULL) {
   $available = course_get_handlers('object');
+  $fulfillment = FALSE;
+
+  if ($account) {
+    // Account was passed. We are preparing for fulfillment.
+    $fulfillment = TRUE;
+  }
 
   if (!$account) {
     global $user;
@@ -1277,32 +1289,37 @@ function course_get_course_object($requirement_type, $requirement_component = NU
   }
 
   if (!$requirement_type) {
-    return new CourseObject;
+    // Nothing was passed.
+    return FALSE;
   }
 
   if (is_array($requirement_type)) {
+    // Cast array passed to an object.
     $requirement_type = (object) $requirement_type;
   }
 
-  if (is_object($requirement_type) && $requirement_type->snid > 0) {
-    $requirement_type = $requirement_type->snid;
-  }
-
-  if (is_array($requirement_type) && $requirement_type['snid'] > 0) {
-    $requirement_type = $requirement_type['snid'];
+  if (is_object($requirement_type) && $requirement_type->snid) {
+    // Passed options with the course object ID set.
+    $snid = $requirement_type->snid;
   }
 
   if (is_numeric($requirement_type)) {
-    // Passed a course object ID. Load it from the database and return an object.
+    $snid = $requirement_type;
+  }
+
+  if ($snid) {
+    // Have the course object ID. We can just load it by ID and return the
+    // CourseObject.
     $sql = 'select * from {course_outline} where snid = %d';
-    $result = db_query($sql, $requirement_type);
+    $result = db_query($sql, $snid);
     if ($row = db_fetch_object($result)) {
       $ret = $available[$row->requirement_type][$row->requirement_component];
       if (!class_exists($ret['class'])) {
         drupal_set_message(t("Could not find class for %m-%c!", array('%m' => $row->requirement_type, '%c' => $row->requirement_component)), 'error');
-        return new CourseObject();
+        return FALSE;
       }
       else {
+        $course = new Course(node_load($row->nid), $account);
         return new $ret['class']($row, $account, $course);
       }
     }
@@ -1310,28 +1327,54 @@ function course_get_course_object($requirement_type, $requirement_component = NU
       return FALSE;
     }
   }
-
-  if (is_object($requirement_type)) {
+  elseif (is_object($requirement_type)) {
     // This is an already loaded (but not saved) course object.
     $outline_entry = $requirement_type;
   }
   elseif (!is_null($instance)) {
+    // Get the course context.
+    if (!$course) {
+      if ($courseNode = course_determine_context($requirement_type, $requirement_component, $instance, TRUE, FALSE)) {
+        $course = new Course($courseNode, $account);
+      }
+    }
+
     // Search for context.
     $sql = "select * from {course_outline}
       where requirement_type = '%s'
       and requirement_component = '%s'
       and instance = '%s'";
     $result = db_query($sql, $requirement_type, $requirement_component, $instance);
-    if ($row = db_fetch_object($result)) {
-      $outline_entry = $row;
+    while ($row = db_fetch_object($result)) {
+      $outline_entries[$row->nid] = $row;
+    }
+
+    if ($outline_entries) {
+      if (in_array($courseNode->nid, array_keys($outline_entries))) {
+        // The active course is in the courses this object is in. Construct from
+        // snid.
+        return course_get_course_object($outline_entries[$courseNode->nid]->snid, NULL, NULL, $account);
+      }
+      else {
+        // Sessioned course wasn't a parent of this course object. Just guesss!
+        return $outline_entry = reset($outline_entries);
+      }
     }
   }
 
   if (!$outline_entry) {
-    $outline_entry = new stdClass;
-    $outline_entry->requirement_type = $requirement_type;
-    $outline_entry->requirement_component = $requirement_component;
-    $outline_entry->instance = $instance;
+    if ($fulfillment) {
+      // Doing fulfillment, we need a persistent CourseObject.
+      return FALSE;
+    }
+    else {
+      // Couldn't find context, and not checking for fulfillment. We can safely
+      // construct a new CourseObject.
+      $outline_entry = new stdClass;
+      $outline_entry->requirement_type = $requirement_type;
+      $outline_entry->requirement_component = $requirement_component;
+      $outline_entry->instance = $instance;
+    }
   }
 
   $class = 'CourseObject';
@@ -2078,39 +2121,6 @@ function course_theme() {
 }
 
 /**
- * Save a course object.
- *
- * Saves information about a course object and creates the course object.
- *
- * @param object $outline_entry
- *   Information about the course object.
- * @param object $node
- *   The course node to add this object to.
- * @return mixed
- *   A class that is an extension of CourseObject, NULL if nothing to do, FALSE
- *   if failure.
- */
-function course_outline_save_requirement(&$outline_entry, $node = NULL) {
-  $pair = explode('-', $outline_entry->requirement_component);
-
-  if (count($pair) == 2) {
-    $outline_entry->requirement_type = $pair[0];
-    $outline_entry->requirement_component = $pair[1];
-  }
-
-  // Load a course object so we can work with it.
-  $courseObject = course_get_course_object($outline_entry);
-
-  if (!$courseObject->getId()) {
-    // Only creating new course objects right now. Can't update them yet
-    $courseObject->setCourse($node->nid);
-  }
-
-  $courseObject->save();
-  return $courseObject;
-}
-
-/**
  * Delete a course requirement.
  *
  * @param array $mixed
@@ -2164,6 +2174,8 @@ function course_set_context($node = NULL, $clear = FALSE) {
  * @param string $instance
  *   A key used internally by the implementing course object provider module,
  *   to identify an instance of *something* used by this course object type.
+ * @param bool $no_set
+ *   Do not set the context (active course), just return it.
  * @param bool $flush
  *   Flush the static cache. By default, course_determine_context will stop
  *   processing once a course is found, and continue to return it.
@@ -2177,10 +2189,10 @@ function course_set_context($node = NULL, $clear = FALSE) {
  *   - Change 'requirement_type' to 'module' (implementing module name)
  *   - Change 'requirement_component' to 'object_type' (object type key)
  */
-function course_determine_context($module = NULL, $object_type = NULL, $instance = NULL, $flush = FALSE) {
-  static $context = NULL;
+function course_determine_context($module = NULL, $object_type = NULL, $instance = NULL, $no_set = FALSE, $flush = FALSE) {
+  static $cache = NULL;
 
-  if (!$context || $flush) {
+  if (!$context || $flush || $no_set) {
     // Determine the course node based on passed query parameters.
     $sql = "select nid from {course_outline}
       where instance = '%s'
@@ -2199,16 +2211,30 @@ function course_determine_context($module = NULL, $object_type = NULL, $instance
         // belongs to.
         $context = node_load($_SESSION['course']['active']);
       }
+      else {
+        // No active course, or no match. We have to guess since we're accessing
+        // this course material outside of the course.
+        $context = node_load($nids[0]);
+      }
     }
-    else if ($nids) {
+    elseif ($nids) {
       // We don't have an active session (or, the course in the active session
       // didn't contain this course object). So we just guess the first one.
-      $_SESSION['course']['active'] = $nids[0];
       $context = node_load($nids[0]);
+    }
+
+    if ($no_set) {
+      // Callee just wants context.
+      return $context;
+    }
+    else {
+      // Set the active course and static cache it.
+      $_SESSION['course']['active'] = $context->nid;
+      $cache = $context;
     }
   }
 
-  return $context;
+  return $cache;
 }
 
 /**

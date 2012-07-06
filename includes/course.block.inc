@@ -52,6 +52,8 @@ function _course_block_navigation_view() {
   $node = course_get_context();
   if ($node) {
     $course = course_get_course($node, $user);
+    // Initialize the active CourseObject.
+    $course->setActive();
     $prev = $course->getPrev();
     $next = $course->getNext();
 

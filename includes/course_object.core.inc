@@ -370,8 +370,14 @@ class CourseObject extends CourseHandler {
     // Required.
     if ($options['delete']) {
       $dest = "node/{$options['nid']}/course-object/nojs/{$uniqid}/restore";
-      $restore = ctools_ajax_text_button(t('Restore'), $dest, t('Restore this object to the course outline.'));
-      $summary['delete'] = '<span class="error">' . t('Will be deleted from outline') . '</span>' . ' ' . $restore;
+      $text = t('Object will be removed from outline');
+      $restore_text = t('Restore this object to the course outline.');
+      if ($options['delete_instance']) {
+        $text = t('Object will be removed from outline, and related instance(s) will be deleted');
+        $restore_text = t('Restore this object and related instance(s) to the course outline.');
+      }
+      $restore = ctools_ajax_text_button(t('Restore'), $dest, $restore_text);
+      $summary['delete'] = '<span class="error">' . $text . '</span>' . ' ' . $restore;
     }
 
     return $summary;
@@ -1049,6 +1055,15 @@ class CourseObjectNode extends CourseObject {
       // Resave node to update access.
       node_save($this->node);
     }
+  }
+
+  /**
+   * Remove any records associated with this course object for the user.
+   *
+   * For example, deleting quiz results when a user is removed from the course.
+   */
+  function unEnroll() {
+
   }
 
 }
