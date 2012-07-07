@@ -314,9 +314,9 @@ function course_course_handlers() {
  *   - A single handler type definition, if the $type parameter is passed.
  *   - Or an associative array of all course handler definitions keyed by type.
  */
-function course_get_handlers($type = NULL) {
+function course_get_handlers($type = NULL, $flush = FALSE) {
   static $all = array();
-  if (!$all) {
+  if (!$all || $flush) {
     // Allow modules to define handlers that extend Course functionality.
     // Do not use module_invoke_all() here because we need to know which module
     // is providing the 'object' handler type. This is to avoid namespace

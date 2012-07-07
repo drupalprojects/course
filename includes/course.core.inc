@@ -205,6 +205,7 @@ class CourseHandler {
 
     $keys = $this->getId() ? array($this->primaryKey) : array();
     drupal_write_record($this->table, $options, $keys);
+    $this->setOption($this->primaryKey, $options[$this->primaryKey]);
     return $this;
   }
 
@@ -229,7 +230,7 @@ class Course extends CourseHandler {
     else {
       $this->node = node_load($node);
     }
-    
+
     if (is_object($user)) {
       $this->user = $user;
     }
@@ -299,7 +300,7 @@ class Course extends CourseHandler {
     if (!$this->active) {
       $this->setActive();
     }
-    
+
     return $this->next;
   }
 
@@ -312,7 +313,7 @@ class Course extends CourseHandler {
     if (!$this->active) {
       $this->setActive();
     }
-    
+
     return $this->prev;
   }
 
