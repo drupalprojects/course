@@ -1,0 +1,58 @@
+<?php
+
+/**
+ * Master class for Course tests.
+ */
+class CourseTestCase extends DrupalWebTestCase {
+
+  public function setUp() {
+    // We need at least 1 course object to test with, so enable course_content.
+    parent::setUp('autoload', 'ahah_helper', 'ctools', 'uuid', 'course', 'course_content');
+
+    $this->admin_user = $this->drupalCreateUser(array('administer nodes', 'edit courses'));
+    $this->student_user = $this->drupalCreateUser(array('access content'));
+    $this->drupalLogin($this->admin_user);
+
+    $this->course_content_type = $this->drupalCreateContentType()->type;
+    variable_set('course_content_use_' . $this->course_content_type, 1);
+
+    // Flush handlers (because we created this one on the fly).
+    course_get_handlers(NULL, TRUE);
+  }
+
+  /**
+   * Create a course node using a random content type.
+   *
+   * @return stdClass
+   */
+  function createCourseNode() {
+    $course_node_type = $this->drupalCreateContentType()->type;
+
+    variable_set('course_use_' . $course_node_type, 1);
+
+    // Create course.
+    $node = $this->drupalCreateNode(array(
+      'type' => $course_node_type,
+      ));
+
+    return $node;
+  }
+
+  /**
+   * Create a new persistent course object on a Course.
+   *
+   * @param stdClass $courseNode
+   * @return Course
+   */
+  function createCourseObject($courseNode) {
+    $courseObject = course_get_course_object('course_content', $this->course_content_type);
+    $courseObject->setCourse($courseNode->nid);
+    $courseObject->save();
+
+
+    // Make sure the object saved.
+    $this->assertTrue($courseObject->getId() > 0, 'Course object received ID.');
+    return $courseObject;
+  }
+
+}

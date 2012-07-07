@@ -1,0 +1,49 @@
+<?php
+
+/**
+ * Test class for dealing with adding and removing elements from the course
+ * outline.
+ */
+class CourseOutlineUiTestCase extends CourseTestCase {
+
+  public static function getInfo() {
+    // Note that getInfo() strings are not translated with t().
+    return array(
+      'name' => 'Course outline',
+      'description' => 'Ensure that the Course outline functions properly.',
+      'group' => 'Course',
+    );
+  }
+
+
+  /**
+   * Create a course object through the interface.
+   *
+   * @param type $courseNode
+   */
+  function createCourseObjectUi($courseNode) {
+    // Need to find the temporary new object. @todo refactor course module so
+    // we don't have to create uniqids? Not sure.
+    $this->drupalGet("node/{$courseNode->nid}/course-outline");
+    $body = $this->drupalGetContent();
+    preg_match('#course_outline\[requirements\]\[(.*)\]#U', $body, $match);
+    $uniqid = $match[1];
+
+    // Add a new course content object.
+    $edit = array();
+    $edit["course_outline[requirements][$uniqid][requirement_component]"] = 'course_content-' . $this->course_content_type;
+    $this->drupalPost(NULL, $edit, t('Save'));
+
+    $this->assertText(t('Updated course.'));
+  }
+
+  /**
+   * Test CRUD through the UI.
+   */
+  function testCourseOutlineCrud() {
+    $courseNode = $this->createCourseNode();
+    $this->createCourseObjectUi($courseNode);
+  }
+
+}
+
