@@ -1,5 +1,7 @@
 <?php
 
+require_once(drupal_get_path('module', 'course') . '/tests/CourseTestCase.test');
+
 /**
  * Tests for course object access.
  */

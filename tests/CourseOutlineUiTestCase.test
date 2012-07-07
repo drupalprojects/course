@@ -1,5 +1,7 @@
 <?php
 
+require_once(drupal_get_path('module', 'course') . '/tests/CourseTestCase.test');
+
 /**
  * Test class for dealing with adding and removing elements from the course
  * outline.
@@ -14,7 +16,6 @@ class CourseOutlineUiTestCase extends CourseTestCase {
       'group' => 'Course',
     );
   }
-
 
   /**
    * Create a course object through the interface.

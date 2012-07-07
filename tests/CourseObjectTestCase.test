@@ -1,10 +1,13 @@
 <?php
 
+require_once(drupal_get_path('module', 'course') . '/tests/CourseTestCase.test');
+
 /**
  * Description of CourseObjectTestCase
  */
 class CourseObjectTestCase extends CourseTestCase {
-    public static function getInfo() {
+
+  public static function getInfo() {
     // Note that getInfo() strings are not translated with t().
     return array(
       'name' => 'Course objects',
@@ -29,4 +32,5 @@ class CourseObjectTestCase extends CourseTestCase {
     $courseObject = course_get_course_object($id);
     $this->assertFalse($courseObject, 'Check that deleted object no longer exists.');
   }
+
 }
