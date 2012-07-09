@@ -20,7 +20,7 @@ class CourseOutlineUiTestCase extends CourseTestCase {
   /**
    * Create a course object through the interface.
    *
-   * @param type $courseNode
+   * @param stdClass $courseNode
    */
   function createCourseObjectUi($courseNode) {
     // Need to find the temporary new object. @todo refactor course module so
