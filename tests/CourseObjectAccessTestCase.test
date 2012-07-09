@@ -22,29 +22,42 @@ class CourseObjectAccessTestCase extends CourseTestCase {
   function testCourseObjectLinearWorkflow() {
     // Create a course with 4 objects.
     $courseNode = $this->createCourseNode();
-    $o1 = $this->createCourseObject($courseNode);
-    $o1->setOption('weight', 1)->save();
-    $o2 = $this->createCourseObject($courseNode);
-    $o2->setOption('weight', 2)->save();
-    $o3 = $this->createCourseObject($courseNode);
-    $o3->setOption('weight', 3)->save();
-    $o4 = $this->createCourseObject($courseNode);
-    $o4->setOption('weight', 4)->save();
+    for ($i = 1; $i <= 4; $i++) {
+      $temp = $this->createCourseObject($courseNode);
+      $temp->setOption('weight', $i)->save();
+    }
+
+    $course = course_get_course($courseNode);
+
+    $co = $course->getObjects();
 
     // Use the student user.
     $user = $this->student_user;
 
     // Student should not be able to access the first object.
-    $this->assertFalse($o1->access('take', $user), 'Check that object 1 is not accessible.');
+    $this->assertFalse($co[0]->access('take', $user), 'Check that object 1 is not accessible.');
 
     // (until they are enrolled)
     course_enrol($courseNode, $user);
 
     // User should be able to access first object, but no others.
-    $this->assertTrue($o1->access('take', $user), 'Check that object 1 is accessible after enrollment.');
-    $this->assertFalse($o2->access('take', $user), 'Check that object 2 is not accessible.');
-    $this->assertFalse($o3->access('take', $user), 'Check that object 3 is not accessible.');
-    $this->assertFalse($o4->access('take', $user), 'Check that object 4 is not accessible.');
+    $this->assertTrue($co[0]->access('take', $user), 'Check that object 1 is accessible after enrollment.');
+    $this->assertFalse($co[1]->access('take', $user), 'Check that object 2 is not accessible.');
+    $this->assertFalse($co[2]->access('take', $user), 'Check that object 3 is not accessible.');
+    $this->assertFalse($co[3]->access('take', $user), 'Check that object 4 is not accessible.');
+
+    // Set 1st object to complete.
+    $co[0]->getFulfillment()->setComplete(1)->save();
+    $this->assertTrue($co[1]->access('take', $user), 'Check that object 2 is accessible after object 1 is complete.');
+    $this->assertFalse($co[2]->access('take', $user), 'Check that object 3 is not accessible after object 1 is complete.');
+    $this->assertFalse($co[3]->access('take', $user), 'Check that object 4 is not accessible after object 1 is complete.');
+
+    // Complete the rest of the course objects.
+    $co[1]->getFulfillment()->setComplete(1)->save();
+    $co[2]->getFulfillment()->setComplete(1)->save();
+    $co[3]->getFulfillment()->setComplete(1)->save();
+
+    $this->assertTrue($course->getOption('complete'), 'Check that course is complete.');
   }
 
   /**
@@ -59,11 +72,16 @@ class CourseObjectAccessTestCase extends CourseTestCase {
 
     $o1 = $this->createCourseObject($courseNode);
 
+    // By default, should be visible.
     $this->assertTrue($o1->access('see', $user));
 
+    // Make object hidden.
     $o1->setOption('hidden', 1)->save();
-
     $this->assertFalse($o1->access('see', $user));
+
+    // Make object not hidden.
+    $o1->setOption('hidden', 0)->save();
+    $this->assertTrue($o1->access('see', $user));
   }
 
 }

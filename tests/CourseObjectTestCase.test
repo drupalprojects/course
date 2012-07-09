@@ -16,6 +16,9 @@ class CourseObjectTestCase extends CourseTestCase {
     );
   }
 
+  /**
+   * Test basic save/load of CourseObjects.
+   */
   function testCourseObjectBasicCrud() {
     $courseNode = $this->createCourseNode();
 
@@ -31,6 +34,35 @@ class CourseObjectTestCase extends CourseTestCase {
     course_outline_delete_requirement($courseObject->getOptions());
     $courseObject = course_get_course_object($id);
     $this->assertFalse($courseObject, 'Check that deleted object no longer exists.');
+  }
+
+  /**
+   * Test CourseObject configurations.
+   */
+  function testCourseObjectConfigurations() {
+    $courseNode = $this->createCourseNode();
+    $co1 = $this->createCourseObject($courseNode);
+
+    $co1->setOption('test_option', 'FIND_ME');
+    $co1->save();
+    $id = $co1->getId();
+
+    $co2 = course_get_course_object($id);
+    $this->assertEqual($co2->getOption('test_option'), 'FIND_ME', 'Check that options save and load successfully.');
+  }
+
+  /**
+   * Test the construction of CourseObjects.
+   */
+  function testCourseObjectConstruction() {
+    $courseNode = $this->createCourseNode();
+    $this->createCourseObject($courseNode);
+
+    $course = course_get_course($courseNode);
+    $courseObject = reset($course->getObjects());
+    $getCourse = $courseObject->getCourse();
+
+    $this->assertEqual(spl_object_hash($course), spl_object_hash($getCourse), 'Check that Courses inside of CourseObjects inside of Course are the same.');
   }
 
 }
