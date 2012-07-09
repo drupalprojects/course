@@ -73,14 +73,14 @@ class CourseHandler {
   /**
    * Set an option for this handler.
    *
-   * @param $option string
+   * @param string $option
    *   An option key.
-   * @param $value mixed
+   * @param mixed $value
    *   The option value.
    *
    * @return CourseHandler
    */
-  public function setOption($option, $value) {
+  public final function setOption($option, $value) {
     $this->config[$option] = $value;
     return $this;
   }
@@ -90,12 +90,12 @@ class CourseHandler {
    *
    * Deserialize the serialized column if necessary.
    *
-   * @param $options array
+   * @param array $options
    *   An array of options.
    *
    * @return CourseHandler
    */
-  protected final function setOptions($options) {
+  public final function setOptions($options) {
     $config = (array) $options;
     // Make sure the serialized field is not already extracted.
     if (is_string($config[$this->serializedField])) {
@@ -107,6 +107,14 @@ class CourseHandler {
     }
     $this->config = $config;
     return $this;
+  }
+
+  /**
+   *
+   * @param array $options
+   */
+  public final function addOptions(array $options) {
+    $this->config = array_merge($this->config, $options);
   }
 
   /**
@@ -439,7 +447,7 @@ abstract class CourseObjectAccess extends CourseHandler {
   private $courseObject;
 
   function __construct($config = array()) {
-    $handlerType = 'course_access';
+    $this->handlerType = 'course_access';
     parent::__construct($config);
   }
 
