@@ -114,7 +114,24 @@ class CourseHandler {
    * @param array $options
    */
   public final function addOptions(array $options) {
-    $this->config = array_merge($this->config, $options);
+    $this->config = $this->optionsMerge($this->config, $options);
+  }
+
+  /**
+   * Merge arrays with replace, not append.
+   *
+   * @see http://www.php.net/manual/en/function.array-merge-recursive.php#102379
+   */
+  private function optionsMerge($Arr1, $Arr2) {
+    foreach ($Arr2 as $key => $Value) {
+      if (array_key_exists($key, $Arr1) && is_array($Value))
+        $Arr1[$key] = $this->optionsMerge($Arr1[$key], $Arr2[$key]);
+
+      else
+        $Arr1[$key] = $Value;
+    }
+
+    return $Arr1;
   }
 
   /**
@@ -376,7 +393,7 @@ class Course extends CourseHandler {
 
     if ($required_complete >= $required) {
       // Course requirements have been met.
-      $this->setOption('section',  'complete');
+      $this->setOption('section', 'complete');
       $this->setOption('section_name', 'Complete');
       $this->setOption('complete', 1);
     }
@@ -392,8 +409,8 @@ class Course extends CourseHandler {
    * @return array
    *   An array of course objects.
    */
-  public function getObjects() {
-    if (!$this->courseObjects) {
+  public function getObjects($flush = FALSE) {
+    if (!$this->courseObjects || $flush) {
       $this->courseObjects = array();
       $sql = 'SELECT * FROM {course_outline} co
         WHERE nid = %d
