@@ -852,11 +852,16 @@ function course_take_course_button_html(&$node) {
  * @param integer $status
  *   The enrolment status. {course_enrolment}.status.
  */
-function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
+function course_enrol($node, $account = NULL, $from = NULL, $code = NULL, $status = 1) {
+  if (!$account) {
+    global $user;
+    $account = $user;
+  }
+
   if (course_node_is_course($node)) {
     $enrol = array(
       'nid' => $node->nid,
-      'uid' => $user->uid,
+      'uid' => $account->uid,
       'enrollmenttype' => $from,
       'status' => $status,
       'code' => $code,
@@ -869,8 +874,8 @@ function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
 
     $enrol = (object) $enrol;
 
-    $watchdog_variables = array('!uid' => $user->uid, '!nid' => $node->nid);
-    if (!course_enrolment_check($node, $user)) {
+    $watchdog_variables = array('!uid' => $account->uid, '!nid' => $node->nid);
+    if (!course_enrolment_check($node, $account)) {
       // User is not enrolled yet.
       watchdog('course_enrol', 'Enrolling user !uid into !nid', $watchdog_variables);
       course_enrolment_save($enrol);
@@ -883,7 +888,7 @@ function course_enrol(&$node, &$user, $from = NULL, $code = NULL, $status = 1) {
     }
     // @todo figure $op out.
     // Notify modules about a course enrollment.
-    module_invoke_all('course_enrol', $node, $user, $from, $code, $status);
+    module_invoke_all('course_enrol', $node, $account, $from, $code, $status);
   }
   else {
     return FALSE;
@@ -1423,7 +1428,7 @@ function course_get_course($node, $account = NULL) {
 /**
  * Check if node is a Course.
  *
- * @param $node
+ * @param stdClass $node
  *   A node object or string that indicates the node type to check.
  *
  * @return bool

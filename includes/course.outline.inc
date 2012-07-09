@@ -469,7 +469,7 @@ function course_outline_list($node) {
 /**
  * Render a landing page for course completion.
  *
- * @param $course_node A course node.
+ * @param stdClass $course_node A course node.
  *
  * @return string HTML for the landing page.
  *

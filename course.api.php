@@ -232,15 +232,16 @@ function hook_can_take_course($node, $user) {
 /**
  * Allow modules to extend course module's implementation of hook_nodeapi().
  *
- * @param $node
+ * @param stdClass $node
  *   The fully loaded node object.
  *
- * @param $op
+ * @param string $op
  *   Accepts $op values from hook_nodeapi(). Applicable values are:
  *   - insert|update: Notify modules about the recently saved course.
  *   - load: Attach additional module provided info to $node->course.
  *
  * @see course_nodeapi()
+ * @todo kill this.
  */
 function hook_course_nodeapi_extra($node, $op) {
   // @todo add example.
@@ -332,11 +333,11 @@ function hook_course_can_enrol($node, $user) {
 /**
  * Allow modules to alter course reports before saving.
  *
- * @param object $entry
+ * @param stdClass $entry
  *   By reference. The object parameter from course_report_save().
- * @param $account object
+ * @param stdClass $account
  *   The fully loaded report user.
- * @param $old
+ * @param stdClass $old
  *   The currently saved version of the user's report for a course.
  *
  * @see course_report_save()
@@ -348,12 +349,12 @@ function hook_course_report_alter(&$entry, $account, $old) {
 /**
  * Notify modules that a course report has been saved.
  *
- * @param object $entry
+ * @param stdClass $entry
  *   By reference. The object parameter from course_report_save(), now including
  *   the 'crid': course report record ID from drupal_write_record().
- * @param $account object
+ * @param stdClass $account
  *   The fully loaded report user.
- * @param $old
+ * @param stdClass $old
  *   The former saved version of the user's report for a course.
  *
  * @see course_report_save()

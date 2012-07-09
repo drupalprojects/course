@@ -352,11 +352,11 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
 /**
  * Helper function to build node credit type settings summary.
  *
- * @param $type
+ * @param string $type
  *   The credit type identifier.
- * @param $form
+ * @param array $form
  *   The node form.
- * @param $node
+ * @param stdClass $node
  *   The node object as represented in $form['#node'], but with special
  *   modifications during preview.
  */
@@ -1244,9 +1244,9 @@ function course_credit_types_form_submit($form, $form_state) {
  *
  * Checks all the mappings and returns all credit type *instances* that the user can claim.
  *
- * @param $node
+ * @param stdClass $node
  *   A course node object.
- * @param $user
+ * @param stdClass $user
  *   A user object.
  *
  * @return array

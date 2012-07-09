@@ -98,8 +98,10 @@ function course_signup_tab_title($node) {
 /**
  * Do a quick registration.
  *
- * @param $node Course node object.
- * @param $user User to register.
+ * @param stdClass $node
+ *   Course node object.
+ * @param stdClass $user
+ *   User to register.
  */
 function course_signup_quick_register($node, $account = NULL, $notify = TRUE) {
   if (!$account) {
