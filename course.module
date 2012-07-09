@@ -1319,7 +1319,9 @@ function course_get_course_object($requirement_type, $requirement_component = NU
         return FALSE;
       }
       else {
-        $course = new Course(node_load($row->nid), $account);
+        if (!$course) {
+          $course = new Course(node_load($row->nid), $account);
+        }
         return new $ret['class']($row, $account, $course);
       }
     }
@@ -1353,7 +1355,7 @@ function course_get_course_object($requirement_type, $requirement_component = NU
       if (in_array($courseNode->nid, array_keys($outline_entries))) {
         // The active course is in the courses this object is in. Construct from
         // snid.
-        return course_get_course_object($outline_entries[$courseNode->nid]->snid, NULL, NULL, $account);
+        return course_get_course_object($outline_entries[$courseNode->nid]->snid, NULL, NULL, $account, $course);
       }
       else {
         // Sessioned course wasn't a parent of this course object. Just guesss!
