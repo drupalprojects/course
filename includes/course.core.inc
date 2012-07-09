@@ -33,6 +33,11 @@ class CourseHandler {
     }
   }
 
+  // Handlers must have an ID.
+  function getId() {
+    return $this->getOption($this->primaryKey);
+  }
+
   /**
    * Stub. Get the summary of an object's options.
    *
@@ -205,7 +210,7 @@ class CourseHandler {
 
     $keys = $this->getId() ? array($this->primaryKey) : array();
     drupal_write_record($this->table, $options, $keys);
-    $this->setOption($this->primaryKey, $options[$this->primaryKey]);
+    $this->setOptions($options);
     return $this;
   }
 
@@ -224,6 +229,11 @@ class Course extends CourseHandler {
   private $prev;
 
   public function __construct($node, $user = NULL) {
+    $this->primaryKey = 'crid';
+    $this->handlerType = 'course';
+    $this->serializedField = 'data';
+    $this->table = 'course_report';
+
     if (is_object($node)) {
       $this->node = $node;
     }
@@ -236,6 +246,18 @@ class Course extends CourseHandler {
     }
     else {
       $this->user = user_load($user);
+    }
+
+    $sql = "select * from {course_report} where nid = %d and uid = %d";
+    $result = db_query($sql, $this->node->nid, $this->user->uid);
+    if ($config = db_fetch_array($result)) {
+      parent::__construct($config);
+    }
+    else {
+      parent::__construct(array(
+        'nid' => $this->node->nid,
+        'uid' => $this->user->uid,
+      ));
     }
   }
 
@@ -321,42 +343,39 @@ class Course extends CourseHandler {
    * Track the course (scan requirements, update the progress, completion etc)
    */
   public function track() {
-    $sql = "select * from {course_outline} cr
-    left join {course_outline_fulfillment} rf on (rf.uid = %d and rf.snid = cr.snid)
-    where nid = %d and enabled
-    order by weight asc";
-    $result = db_query($sql, $this->user->uid, $this->node->nid, $this->user->uid);
-    if (!$course_report = course_report_load($this->node, $this->user)) {
-      $course_report = new stdClass;
-    }
-    while ($row = db_fetch_object($result)) {
+    $prev = NULL;
+    foreach ($this->getObjects() as $courseObject) {
+      if (!$courseObject->getOption('enabled')) {
+        continue;
+      }
+
       if (!$prev) {
-        $course_report->section_name = $row->title;
+        $this->setOption('section_name', $courseObject->getTitle());
       }
 
       // Count required objects.
-      $required += $row->required;
+      $required += $courseObject->getOption('required');
 
       // Count completed required objects.
-      $required_complete += ($row->required && $row->complete);
+      $required_complete += ($courseObject->getOption('required') && $courseObject->getOption('complete'));
 
-      if (!$row->complete && $prev->complete) {
-        $course_report->section_name = $row->title;
+      if (!$courseObject->getFulfillment()->isComplete() && $prev && $prev->getFulfillment()->isComplete()) {
+        $this->setOption('section_name', $courseObject->getTitle());
       }
 
-      $prev = clone $row;
+      $prev = clone $courseObject;
     }
 
     if ($required_complete >= $required) {
       // Course requirements have been met.
-      $course_report->section = 'complete';
-      $course_report->section_name = 'Complete';
-      $course_report->complete = TRUE;
+      $this->setOption('section',  'complete');
+      $this->setOption('section_name', 'Complete');
+      $this->setOption('complete', 1);
     }
 
-    $course_report->nid = $this->node->nid;
-    $course_report->uid = $this->user->uid;
-    course_report_save($course_report);
+    $this->setOption('nid', $this->node->nid);
+    $this->setOption('uid', $this->user->uid);
+    $this->save();
   }
 
   /**

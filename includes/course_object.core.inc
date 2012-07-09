@@ -548,15 +548,6 @@ class CourseObject extends CourseHandler {
   }
 
   /**
-   * Get the course object ID of this course object.
-   *
-   * @return int
-   */
-  public function getId() {
-    return $this->getOption('snid');
-  }
-
-  /**
    * Get this course object's fulfillment object.
    *
    * @return CourseObjectFulfillment
@@ -794,10 +785,6 @@ class CourseObjectFulfillment extends CourseHandler {
 
   private $courseObject;
 
-  public function getId() {
-    return $this->getOption('sfid');
-  }
-
   /**
    * Construct the fulfillment object.
    *
@@ -897,9 +884,9 @@ class CourseObjectNode extends CourseObject {
 
   protected $node;
 
-  public function __construct($requirement, $user = NULL) {
+  public function __construct($requirement, $user = NULL, $course = NULL) {
     // Pass configuration to parent.
-    parent::__construct($requirement, $user);
+    parent::__construct($requirement, $user, $course);
     $this->node = node_load($this->getInstanceId());
   }
 
