@@ -57,8 +57,6 @@ function course_schema() {
     'fields' => array(
       'crid' => array(
         'type' => 'serial',
-        'not null' => TRUE,
-        'unsigned' => TRUE,
         'description' => 'Course report record ID.',
       ),
       'nid' => array(
@@ -118,6 +116,7 @@ function course_schema() {
         'description' => 'Flag to mark this course as complete.',
       ),
       'data' => array(
+        'serialize' => TRUE,
         'type' => 'text',
         'description' => "Serialized snapshot data.",
         'size' => 'medium',
