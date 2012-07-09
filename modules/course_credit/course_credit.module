@@ -477,28 +477,6 @@ function course_credit_get_credit_type_instance($nid, $type) {
 }
 
 /**
- * Implements hook_course_nodeapi_extra().
- *
- * Load credit type instances for this course.
- */
-function course_credit_course_nodeapi_extra($node, $op) {
-  if ($op == 'load') {
-    $sql = "select cc.*, cct.title, cct.type, cct.description from {course_credit} cc
-      left join {course_credit_type} cct using (type)
-      where nid = %d";
-    $result = db_query($sql, $node->nid);
-    $credits = array();
-    while ($row = db_fetch_object($result)) {
-      $credits[$row->ctid] = $row;
-    }
-
-    return array(
-      'credit' => $credits,
-    );
-  }
-}
-
-/**
  * Implements hook_nodeapi().
  */
 function course_credit_nodeapi(&$node, $op, $a3, $a4) {
@@ -564,6 +542,8 @@ function course_credit_nodeapi(&$node, $op, $a3, $a4) {
     while ($row = db_fetch_object($result)) {
       $course_credit_awarded[$row->type] = $row;
     }
+
+    $node->course['course_credit'] = $credits;
 
     return array(
       'course_credit_awarded' => $course_credit_awarded,

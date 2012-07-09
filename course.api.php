@@ -151,27 +151,6 @@ function hook_course_outline_incomplete_links(&$links, $course_node, $account) {
 }
 
 /**
- * Invoke modules for creation of an external course.
- *
- * This hook allows external learning applications to add a unique identifier to
- * the drupal course object on save and update.
- *
- * @param object $node
- *   The course node.
- *
- * @return string
- *   An enternal learning application course identifier.
- *
- * @see course_nodeapi()
- *
- * @todo do we need this, since we have hook_course_nodeapi_extra()?
- */
-function hook_course_create_external($node) {
-  // Example from course_moodle module, returning a numeric Moodle course id.
-  return course_moodle_api_course_post($node);
-}
-
-/**
  * Allow modules to restrict menu access to the take course tab.
  *
  * @param object $node
@@ -227,24 +206,6 @@ function hook_course_has_settings($node, $user) {
 function hook_can_take_course($node, $user) {
   // @see course_can_take_course() and hook_can_take_course() for examples of
   // how to use this hook.
-}
-
-/**
- * Allow modules to extend course module's implementation of hook_nodeapi().
- *
- * @param stdClass $node
- *   The fully loaded node object.
- *
- * @param string $op
- *   Accepts $op values from hook_nodeapi(). Applicable values are:
- *   - insert|update: Notify modules about the recently saved course.
- *   - load: Attach additional module provided info to $node->course.
- *
- * @see course_nodeapi()
- * @todo kill this.
- */
-function hook_course_nodeapi_extra($node, $op) {
-  // @todo add example.
 }
 
 /**

@@ -767,10 +767,6 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         $existing = db_result(db_query('select 1 from {course_node} where nid = %d', $node->nid));
         $update = $existing ? array('nid') : array();
         drupal_write_record('course_node', $record, $update);
-
-        // Let other course modules know about the recently created course.
-        $node->course['cid'] = $record['cid'];
-        module_invoke_all('course_nodeapi_extra', $node, $op);
         break;
       case 'load':
         if ($course = db_fetch_array(db_query('select * from {course_node} where nid = %d', $node->nid))) {
