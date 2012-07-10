@@ -665,8 +665,12 @@ function course_settings_menu_access($node) {
  *     take this course.
  *   - message: String. If success is FALSE, a message to display to the user.
  */
-function course_take_course_access($node) {
-  global $user;
+function course_take_course_access($node, $account = NULL, $flush = FALSE) {
+  if (!$account) {
+    global $user;
+    $account = $user;
+  }
+
   static $courses = array();
 
   // Don't let anonymous users see /takecourse. Also keeps from being indexed.
@@ -675,10 +679,10 @@ function course_take_course_access($node) {
     drupal_goto('user/login', drupal_get_destination());
   }
 
-  if (!isset($courses[$node->nid])) {
+  if (!isset($courses[$node->nid]) || $flush) {
     $courses[$node->nid]['success'] = TRUE;
     // Allow modules to determine if this course should be restricted.
-    $hooks = module_invoke_all('can_take_course', $node, $user);
+    $hooks = module_invoke_all('can_take_course', $node, $account);
     foreach ($hooks as $key => $hook) {
       if (!$hook) {
         // Ok. Old style blocker. But look for messages.
@@ -1246,14 +1250,15 @@ function course_enrolment_save($enrolment) {
       drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
     }
     else {
+      if (!$enrolment->created) {
+        $enrolment->created = time();
+      }
       drupal_write_record('course_enrolment', $enrolment);
     }
   }
   else {
     return FALSE;
   }
-
-  return $enrolment;
 }
 
 /**
