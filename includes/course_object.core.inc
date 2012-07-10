@@ -571,7 +571,7 @@ class CourseObject extends CourseHandler {
    * @param mixed $id The external ID of this course object.
    */
   function setInstanceId($id) {
-    $this->setOption('instance', $id);
+    return $this->setOption('instance', $id);
   }
 
   /**
@@ -642,8 +642,7 @@ class CourseObject extends CourseHandler {
    * @return CourseObject
    */
   function setModule($module) {
-    $this->setOption('requirement_type', $module);
-    return $this;
+    return $this->setOption('requirement_type', $module);
   }
 
   /**
@@ -652,8 +651,7 @@ class CourseObject extends CourseHandler {
    * @return CourseObject
    */
   function setComponent($component) {
-    $this->setOption('requirement_component', $component);
-    return $this;
+    return $this->setOption('requirement_component', $component);
   }
 
   /**
@@ -663,7 +661,7 @@ class CourseObject extends CourseHandler {
    *   ID of the course object.
    */
   function setId($snid) {
-    $this->setOption('snid', $snid);
+    return $this->setOption('snid', $snid);
   }
 
   /**
@@ -831,8 +829,7 @@ class CourseObjectFulfillment extends CourseHandler {
       $this->setOption('date_completed', time());
     }
 
-    $this->setOption('complete', $complete);
-    return $this;
+    return $this->setOption('complete', $complete);
   }
 
   /**
@@ -841,8 +838,7 @@ class CourseObjectFulfillment extends CourseHandler {
    * @param float $grade
    */
   function setGrade($grade) {
-    $this->setOption('grade', $grade);
-    return $this;
+    return $this->setOption('grade', $grade);
   }
 
   /**
