@@ -31,12 +31,12 @@ class CourseObjectTestCase extends CourseTestCase {
     $id = $courseObject->getId();
 
     // Load by coid
-    $courseObject = course_get_course_object($id);
+    $courseObject = course_get_course_object_by_id($id);
     $this->assertTrue($courseObject->getId() == $id, 'Loaded course object by ID.');
 
     // Delete
     course_outline_delete_requirement($courseObject->getOptions());
-    $courseObject = course_get_course_object($id);
+    $courseObject = course_get_course_object_by_id($id);
     $this->assertFalse($courseObject, 'Check that deleted object no longer exists.');
   }
 
@@ -51,7 +51,7 @@ class CourseObjectTestCase extends CourseTestCase {
     $co1->save();
     $id = $co1->getId();
 
-    $co2 = course_get_course_object($id);
+    $co2 = course_get_course_object_by_id($id);
     $this->assertEqual($co2->getOption('test_option'), 'FIND_ME', 'Check that options save and load successfully.');
   }
 

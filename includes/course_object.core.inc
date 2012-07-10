@@ -7,7 +7,7 @@
  *
  * Also holds a fulfillment record if a user is given.
  */
-class CourseObject extends CourseHandler {
+abstract class CourseObject extends CourseHandler {
 
   // Hold course.
   private $course = NULL;

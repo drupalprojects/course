@@ -501,7 +501,7 @@ function course_object_load($coid) {
   }
   else {
     // Stored course object.
-    $courseObject = course_get_course_object($coid, NULL, NULL, $user);
+    $courseObject = course_get_course_object_by_id($coid, $user);
   }
   if ($nid) {
     $courseObject->setCourse($nid);
@@ -1262,14 +1262,54 @@ function course_enrolment_save($enrolment) {
 }
 
 /**
+ * Get a course object by its identifier.
+ *
+ * @param int $coid
+ *   The numeric ID of the course object.
+ * @param stdClass $account
+ *   If specified the CourseObject will be loaded with this user (for access and
+ *   fulfillment tracking).
+ *
+ * @return CourseObject|FALSE
+ *   A loaded CourseObject or FALSE if no object found.
+ */
+function course_get_course_object_by_id($coid, $account = NULL) {
+  if (!$account) {
+    global $user;
+    $account = $user;
+  }
+
+  $available = course_get_handlers('object');
+
+  $sql = 'select * from {course_outline} where coid = %d';
+  $result = db_query($sql, $coid);
+  if ($row = db_fetch_object($result)) {
+    $ret = $available[$row->module][$row->object_type];
+    if (!class_exists($ret['class'])) {
+      drupal_set_message(t("Could not find class for %m-%c!", array('%m' => $row->module, '%c' => $row->object_type)), 'error');
+      return FALSE;
+    }
+    else {
+      if (!$course) {
+        $course = new Course(node_load($row->nid), $account);
+      }
+      return new $ret['class']($row, $account, $course);
+    }
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/**
  * CourseObject factory. Get a loaded course object from database or build one
  * from arguments.
  *
  * @param mixed $module
- *   @todo explain this better. Could be the implementing module name, an array,
- *   or an object.
- * @param mixed $object_type
- *   @todo explain this better.
+ *   The module name of this course object, or an array resembling a row in the
+ *   {course_outline} table.
+ * @param string $object_type
+ *   The object type belonging to the module.
  * @param string $instance
  *   The course object instance ID, from {course_outline}.instance.
  * @param stdClass $account
@@ -1282,8 +1322,8 @@ function course_enrolment_save($enrolment) {
  */
 function course_get_course_object($module, $object_type = NULL, $instance = NULL, $account = NULL, $course = NULL) {
   $available = course_get_handlers('object');
-  $fulfillment = FALSE;
 
+  $fulfillment = FALSE;
   if ($account) {
     // Account was passed. We are preparing for fulfillment.
     $fulfillment = TRUE;
@@ -1292,11 +1332,6 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
   if (!$account) {
     global $user;
     $account = $user;
-  }
-
-  if (!$module) {
-    // Nothing was passed.
-    return FALSE;
   }
 
   if (is_array($module)) {
@@ -1311,29 +1346,6 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
 
   if (is_numeric($module)) {
     $coid = $module;
-  }
-
-  if ($coid) {
-    // Have the course object ID. We can just load it by ID and return the
-    // CourseObject.
-    $sql = 'select * from {course_outline} where coid = %d';
-    $result = db_query($sql, $coid);
-    if ($row = db_fetch_object($result)) {
-      $ret = $available[$row->module][$row->object_type];
-      if (!class_exists($ret['class'])) {
-        drupal_set_message(t("Could not find class for %m-%c!", array('%m' => $row->module, '%c' => $row->object_type)), 'error');
-        return FALSE;
-      }
-      else {
-        if (!$course) {
-          $course = new Course(node_load($row->nid), $account);
-        }
-        return new $ret['class']($row, $account, $course);
-      }
-    }
-    else {
-      return FALSE;
-    }
   }
   elseif (is_object($module)) {
     // This is an already loaded (but not saved) course object.
@@ -1358,15 +1370,13 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
     }
 
     if ($outline_entries) {
-      if (in_array($courseNode->nid, array_keys($outline_entries))) {
-        // The active course is in the courses this object is in. Construct from
-        // coid.
-        return course_get_course_object($outline_entries[$courseNode->nid]->coid, NULL, NULL, $account, $course);
-      }
-      else {
-        // Sessioned course wasn't a parent of this course object. Just guesss!
-        return $outline_entry = reset($outline_entries);
-      }
+      // Found some course objects.
+      //
+      // Either the active course is in the courses this instance is in, or, the
+      // active course wasn't a parent of any course object found, so use the
+      // first object found.
+      $coid = $outline_entries[$courseNode->nid] ? $outline_entries[$courseNode->nid]->coid : reset($outline_entries)->coid;
+      return course_get_course_object_by_id($coid, $account);
     }
   }
 
@@ -1385,12 +1395,13 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
     }
   }
 
-  $class = 'CourseObject';
-
   $ret = $available[$outline_entry->module][$outline_entry->object_type];
 
   if ($ret['class']) {
     $class = $ret['class'];
+  }
+  else {
+    return FALSE;
   }
 
   $courseObject = new $class($outline_entry, $account, $course);

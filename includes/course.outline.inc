@@ -83,11 +83,19 @@ function course_outline_overview_form(&$form_state) {
   if (count($requirements)) {
     foreach ($requirements as $uniqid => $requirement) {
       $requirement = (array) $requirement;
-      $courseObject = course_get_course_object($requirement['coid']);
-      foreach ($courseObject->getWarnings() as $warning) {
-        drupal_set_message(filter_xss($warning), 'warning');
+      if (is_numeric($requirement['coid'])) {
+        $courseObject = course_get_course_object($requirement);
       }
-      $rform = _course_outline_requirement_form($requirement, $uniqid);
+      else {
+        $sess = & $_SESSION['course'][$node->nid]['editing'][$uniqid];
+        $courseObject = course_get_course_object($sess['module'], $sess['object_type']);
+      }
+      if ($courseObject) {
+        foreach ($courseObject->getWarnings() as $warning) {
+          drupal_set_message(filter_xss($warning), 'warning');
+        }
+      }
+      $rform = _course_outline_requirement_form($requirement, $uniqid, $courseObject);
 
       if (empty($requirement['coid'])) {
         // User hasnt selected an object type yet, let them select.
@@ -158,8 +166,7 @@ function course_outline_overview_form(&$form_state) {
  *
  * To be re-used in listing requirements and creating new ones.
  */
-function _course_outline_requirement_form($requirement = array(), $uniqid = NULL) {
-  $courseObject = course_get_course_object($uniqid);
+function _course_outline_requirement_form($requirement = array(), $uniqid = NULL, $courseObject = NULL) {
   $rform['#tree'] = TRUE;
 
   $rform['coid'] = array(
@@ -187,19 +194,23 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
     '#default_value' => $requirement['nid'],
   );
 
-  // Do not use prefix/suffix because markup only renders with a value, and we
-  // need the wrapper before the title is saved for ajax population after each
-  // settings modal update.
-  $title = '<div id="title-' . $uniqid . '">';
-  $title .= check_plain($courseObject->getTitle());
-  $title .= '</div>';
-  $rform['title'] = array(
-    '#value' => $title,
-  );
+  if ($courseObject) {
+    // Do not use prefix/suffix because markup only renders with a value, and we
+    // need the wrapper before the title is saved for ajax population after each
+    // settings modal update.
+    $title = '<div id="title-' . $uniqid . '">';
+    $title .= check_plain($courseObject->getTitle());
+    $title .= '</div>';
+    $rform['title'] = array(
+      '#value' => $title,
+    );
 
-  $summary = '<div id="summary-' . $uniqid . '">';
-  $summary .= !empty($requirement['coid']) ? filter_xss_admin($courseObject->renderOptionsSummary()) : '';
-  $summary .= '</div>';
+    $summary = '<div id="summary-' . $uniqid . '">';
+    if (!empty($requirement['coid'])) {
+      $summary .= filter_xss_admin($courseObject->renderOptionsSummary());
+    }
+    $summary .= '</div>';
+  }
   $rform['summary'] = array(
     '#value' => $summary,
   );
@@ -302,10 +313,19 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   $object_info = course_get_handlers('object');
 
   foreach ($objects as $object_key => $object) {
-    // Separate the module from the object type if necessary.
+    // We use the object_type namespace for two purposes:
+    // - The form element is a select list with keys matching the combined
+    //   pattern: {module}-{object_type}.
+    // - We save only the second part of that combined key to the database.
     if (!$object['module']) {
+      // Repurpose the requirement type array element.
       list($object['module'], $object['object_type']) = explode('-', $object['object_type']);
     }
+
+    if (!$object['object_type']) {
+      continue;
+    }
+
     // Get each course object settings saved form values, which are not on the
     // outline overview form.
     $courseObject = course_get_course_object($object);
@@ -316,15 +336,6 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
       // Get the component name from object info.
       $title = $object_info[$object['module']][$object['object_type']]['name'];
       $courseObject->setOption('title', $title);
-    }
-
-    // We use the object_type namespace for two purposes:
-    // - The form element is a select list with keys matching the combined
-    //   pattern: {module}-{object_type}.
-    // - We save only the second part of that combined key to the database.
-    if (!$object['module']) {
-      // Repurpose the requirement type array element.
-      list($object['module'], $object['object_type']) = explode('-', $object['object_type']);
     }
 
     // We only save overview objects with a selected component, whether loaded
