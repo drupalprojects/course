@@ -32,7 +32,7 @@ class CourseOutlineUiTestCase extends CourseTestCase {
 
     // Add a new course content object.
     $edit = array();
-    $edit["course_outline[requirements][$uniqid][requirement_component]"] = 'course_content-' . $this->course_content_type;
+    $edit["course_outline[requirements][$uniqid][requirement_component]"] = 'course_test-course_test_object';
     $this->drupalPost(NULL, $edit, t('Save'));
 
     $this->assertText(t('Updated course.'));

@@ -24,6 +24,10 @@ class CourseObjectTestCase extends CourseTestCase {
 
     // Create the course object
     $courseObject = $this->createCourseObject($courseNode);
+
+    // Make sure the object saved.
+    $this->assertTrue($courseObject->getId() > 0, 'Course object received ID.');
+
     $id = $courseObject->getId();
 
     // Load by snid
