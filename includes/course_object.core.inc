@@ -23,7 +23,7 @@ class CourseObject extends CourseHandler {
    * already known.
    *
    * @param object $requirement
-   *   An object with requirement_component, requirement_type, and instance
+   *   An object with object_type, module, and instance
    * @param object $user
    */
   function __construct($config = array(), $account = NULL, Course $course = NULL) {
@@ -31,7 +31,7 @@ class CourseObject extends CourseHandler {
 
     $this->serializedField = 'data';
     $this->handlerType = 'course_object';
-    $this->primaryKey = 'snid';
+    $this->primaryKey = 'coid';
     $this->table = 'course_outline';
 
 
@@ -207,7 +207,7 @@ class CourseObject extends CourseHandler {
 
     // Only allow deletion of existing objects.
     // @todo do we want to allow `delete` when there is a cached object, but
-    // only allow `delete_instance` when there is a saved snid?
+    // only allow `delete_instance` when there is a saved coid?
     if ($config['instance']) {
       $form['delete'] = array(
         '#title' => t('Delete'),
@@ -409,7 +409,7 @@ class CourseObject extends CourseHandler {
    */
   public function getOptions() {
     $options = parent::getOptions();
-    $sessionDefaults = array_filter((array) $_SESSION['course'][$options['nid']]['editing'][$options['snid']], array($this, 'optionFilter'));
+    $sessionDefaults = array_filter((array) $_SESSION['course'][$options['nid']]['editing'][$options['coid']], array($this, 'optionFilter'));
     return array_merge($options, (array) $sessionDefaults);
   }
 
@@ -624,7 +624,7 @@ class CourseObject extends CourseHandler {
    * @return string
    */
   function getModule() {
-    return $this->getOption('requirement_type');
+    return $this->getOption('module');
   }
 
   /**
@@ -633,7 +633,7 @@ class CourseObject extends CourseHandler {
    * @return string
    */
   function getComponent() {
-    return $this->getOption('requirement_component');
+    return $this->getOption('object_type');
   }
 
   /**
@@ -642,7 +642,7 @@ class CourseObject extends CourseHandler {
    * @return CourseObject
    */
   function setModule($module) {
-    return $this->setOption('requirement_type', $module);
+    return $this->setOption('module', $module);
   }
 
   /**
@@ -651,17 +651,17 @@ class CourseObject extends CourseHandler {
    * @return CourseObject
    */
   function setComponent($component) {
-    return $this->setOption('requirement_component', $component);
+    return $this->setOption('object_type', $component);
   }
 
   /**
    * Set the internal course object ID.
    *
-   * @param int $snid
+   * @param int $coid
    *   ID of the course object.
    */
-  function setId($snid) {
-    return $this->setOption('snid', $snid);
+  function setId($coid) {
+    return $this->setOption('coid', $coid);
   }
 
   /**
@@ -706,11 +706,11 @@ class CourseObject extends CourseHandler {
 
   protected function getDatabaseFields() {
     return array(
-      'snid',
+      'coid',
       'nid',
-      'requirement_type',
+      'module',
       'title',
-      'requirement_component',
+      'object_type',
       'enabled',
       'instance',
       'required',
@@ -795,17 +795,17 @@ class CourseObjectFulfillment extends CourseHandler {
     // Set storage.
     $this->handlerType = 'course_object_fulfillment';
     $this->table = 'course_outline_fulfillment';
-    $this->primaryKey = 'sfid';
+    $this->primaryKey = 'cofid';
     $this->serializedField = 'info';
 
     $this->courseObject = $courseObject;
-    $sql = "select * from {course_outline_fulfillment} where snid = %d and uid = %d";
+    $sql = "select * from {course_outline_fulfillment} where coid = %d and uid = %d";
     $fulfillment = db_fetch_array(db_query($sql, $this->courseObject->getId(), $user->uid));
 
     $this->setOptions($fulfillment);
 
     // Set requirement ID.
-    $this->setOption('snid', $this->courseObject->getId());
+    $this->setOption('coid', $this->courseObject->getId());
     $this->setOption('uid', $user->uid);
   }
 
@@ -859,7 +859,7 @@ class CourseObjectFulfillment extends CourseHandler {
   }
 
   public function delete() {
-    $sql = "delete from {course_outline_fulfillment} where sfid = %d";
+    $sql = "delete from {course_outline_fulfillment} where cofid = %d";
     db_query($sql, $this->getId());
   }
 

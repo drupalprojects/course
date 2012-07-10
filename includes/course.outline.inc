@@ -83,33 +83,33 @@ function course_outline_overview_form(&$form_state) {
   if (count($requirements)) {
     foreach ($requirements as $uniqid => $requirement) {
       $requirement = (array) $requirement;
-      $courseObject = course_get_course_object($requirement['snid']);
+      $courseObject = course_get_course_object($requirement['coid']);
       foreach ($courseObject->getWarnings() as $warning) {
         drupal_set_message(filter_xss($warning), 'warning');
       }
       $rform = _course_outline_requirement_form($requirement, $uniqid);
 
-      if (empty($requirement['snid'])) {
+      if (empty($requirement['coid'])) {
         // User hasnt selected an object type yet, let them select.
-        $rform['requirement_component'] = array(
+        $rform['object_type'] = array(
           '#type' => 'select',
           '#options' => $options,
-          '#default_value' => $requirement['requirement_component'],
+          '#default_value' => $requirement['object_type'],
         );
       }
       else {
         // Don't allow user to change type of object.
-        $rform['requirement_component'] = array(
+        $rform['object_type'] = array(
           '#type' => 'hidden',
-          '#value' => $requirement['requirement_component'],
+          '#value' => $requirement['object_type'],
         );
-        $rform['requirement_component_show'] = array(
+        $rform['object_type_show'] = array(
           '#type' => 'markup',
-          '#value' => $course_objects[$requirement['requirement_type']][$requirement['requirement_component']]['name'] . '<br/><small><i>'
-          . ucwords(str_replace('_', ' ', $requirement['requirement_type'])) . '</i></small>',
+          '#value' => $course_objects[$requirement['module']][$requirement['object_type']]['name'] . '<br/><small><i>'
+          . ucwords(str_replace('_', ' ', $requirement['module'])) . '</i></small>',
         );
       }
-      ctools_ajax_associate_url_to_element($form, $rform['requirement_component'], "course-object/nojs/store/$uniqid");
+      ctools_ajax_associate_url_to_element($form, $rform['object_type'], "course-object/nojs/store/$uniqid");
       $cform['requirements'][$uniqid] = $rform;
     }
   }
@@ -119,12 +119,12 @@ function course_outline_overview_form(&$form_state) {
     $obj_uniqid = uniqid();
     $new['nid'] = $node->nid;
     $new = _course_outline_requirement_form($new, $obj_uniqid);
-    $new['requirement_component'] = array(
+    $new['object_type'] = array(
       '#title' => 'Component',
       '#type' => 'select',
       '#options' => $options,
     );
-    ctools_ajax_associate_url_to_element($form, $new['requirement_component'], "course-object/nojs/store/$obj_uniqid");
+    ctools_ajax_associate_url_to_element($form, $new['object_type'], "course-object/nojs/store/$obj_uniqid");
     $cform['requirements'][$obj_uniqid] = & $new;
   }
 
@@ -162,9 +162,9 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
   $courseObject = course_get_course_object($uniqid);
   $rform['#tree'] = TRUE;
 
-  $rform['snid'] = array(
+  $rform['coid'] = array(
     '#type' => 'value',
-    '#default_value' => $requirement['snid'],
+    '#default_value' => $requirement['coid'],
   );
 
   $rform['instance'] = array(
@@ -172,14 +172,14 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
     '#default_value' => $requirement['instance'],
   );
 
-  $rform['requirement_type'] = array(
+  $rform['module'] = array(
     '#type' => 'value',
-    '#default_value' => $requirement['requirement_type'],
+    '#default_value' => $requirement['module'],
   );
 
-  $rform['requirement_component'] = array(
+  $rform['object_type'] = array(
     '#type' => 'value',
-    '#default_value' => $requirement['requirement_component'],
+    '#default_value' => $requirement['object_type'],
   );
 
   $rform['nid'] = array(
@@ -198,7 +198,7 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
   );
 
   $summary = '<div id="summary-' . $uniqid . '">';
-  $summary .= !empty($requirement['snid']) ? filter_xss_admin($courseObject->renderOptionsSummary()) : '';
+  $summary .= !empty($requirement['coid']) ? filter_xss_admin($courseObject->renderOptionsSummary()) : '';
   $summary .= '</div>';
   $rform['summary'] = array(
     '#value' => $summary,
@@ -244,12 +244,12 @@ function theme_course_outline_overview_form($form) {
   foreach (element_children($requirements) as $key) {
     $requirement = & $requirements[$key];
     unset($requirements[$key]['title']['#title']);
-    unset($requirements[$key]['requirement_component']['#title']);
+    unset($requirements[$key]['object_type']['#title']);
     $rows[$key]['data'][] = drupal_render($requirements[$key]['title']) . drupal_render($requirements[$key]['summary']);
-    $rows[$key]['data'][] = drupal_render($requirements[$key]['requirement_component']) . drupal_render($requirements[$key]['requirement_component_show']);
+    $rows[$key]['data'][] = drupal_render($requirements[$key]['object_type']) . drupal_render($requirements[$key]['object_type_show']);
     // @todo find an elegant way to hide the settings link until a component
     //   type is selected.
-    //$new = empty($requirements[$key]['snid']['#value']);
+    //$new = empty($requirements[$key]['coid']['#value']);
     $rows[$key]['data'][] = $new ? '' : drupal_render($requirements[$key]['settings']);
 
     // Add draggable settings to row.
@@ -290,11 +290,11 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
 
   // Get form state values for object elements on the course outline overview:
   // - An associative array of course objects, keyed by ID. The ID for already
-  //   saved objects is {course_outline}.snid, but for AHAH created objects the
+  //   saved objects is {course_outline}.coid, but for AHAH created objects the
   //   key is a generated unique ID until save.
-  //   - snid: The key loaded from the database. If empty, the object is new.
-  //   - requirement_type: The implementing module name (course_quiz etc).
-  //   - requirement_component: The course object key as defined by
+  //   - coid: The key loaded from the database. If empty, the object is new.
+  //   - module: The implementing module name (course_quiz etc).
+  //   - object_type: The course object key as defined by
   //     hook_course_handlers().
   $objects = $form_state['values']['course_outline']['requirements'];
 
@@ -303,8 +303,8 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
 
   foreach ($objects as $object_key => $object) {
     // Separate the module from the object type if necessary.
-    if (!$object['requirement_type']) {
-      list($object['requirement_type'], $object['requirement_component']) = explode('-', $object['requirement_component']);
+    if (!$object['module']) {
+      list($object['module'], $object['object_type']) = explode('-', $object['object_type']);
     }
     // Get each course object settings saved form values, which are not on the
     // outline overview form.
@@ -312,26 +312,26 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
     $options = $courseObject->getOptions();
 
     // If title is not specified, set title from component.
-    if (!$courseObject->getTitle() && isset($object['requirement_component'])) {
+    if (!$courseObject->getTitle() && isset($object['object_type'])) {
       // Get the component name from object info.
-      $title = $object_info[$object['requirement_type']][$object['requirement_component']]['name'];
+      $title = $object_info[$object['module']][$object['object_type']]['name'];
       $courseObject->setOption('title', $title);
     }
 
-    // We use the requirement_component namespace for two purposes:
+    // We use the object_type namespace for two purposes:
     // - The form element is a select list with keys matching the combined
-    //   pattern: {requirement_type}-{requirement_component}.
+    //   pattern: {module}-{object_type}.
     // - We save only the second part of that combined key to the database.
-    if (!$object['requirement_type']) {
+    if (!$object['module']) {
       // Repurpose the requirement type array element.
-      list($object['requirement_type'], $object['requirement_component']) = explode('-', $object['requirement_component']);
+      list($object['module'], $object['object_type']) = explode('-', $object['object_type']);
     }
 
     // We only save overview objects with a selected component, whether loaded
     // from the database or AHAH created.
-    if (isset($object['requirement_component'])) {
+    if (isset($object['object_type'])) {
       // Delete database loaded objects that are on the chopping block.
-      $is_loaded = $object['snid'];
+      $is_loaded = $object['coid'];
       if ($options['delete'] && $is_loaded) {
         if ($options['delete_instance']) {
           // Also delete related object instance(s) if specified.
@@ -545,13 +545,13 @@ function course_outline_check_remaining_requirements($course_node, $account) {
   $requirements_outstanding = array();
 
   $sql = "select crf.*, cr.* from {course_outline} cr
-  left join {course_outline_fulfillment} crf on (cr.snid = crf.snid and uid = %d)
+  left join {course_outline_fulfillment} crf on (cr.coid = crf.coid and uid = %d)
   where nid = %d and enabled
   order by weight asc";
 
   $results = db_query($sql, $account->uid, $course_node->nid);
   while ($row = db_fetch_object($results)) {
-    $requirements_outstanding[$row->snid] = $row;
+    $requirements_outstanding[$row->coid] = $row;
   }
 
   return $requirements_outstanding;
@@ -561,7 +561,7 @@ function course_outline_check_remaining_requirements($course_node, $account) {
  * Delete a fulfillment.
  */
 function course_outline_delete_fulfillment($mixed) {
-  $sql = "delete from {course_outline_fulfillment} where snid = %d and uid = %d";
-  db_query($sql, $mixed->snid, $mixed->uid);
+  $sql = "delete from {course_outline_fulfillment} where coid = %d and uid = %d";
+  db_query($sql, $mixed->coid, $mixed->uid);
   return db_affected_rows() > 0;
 }

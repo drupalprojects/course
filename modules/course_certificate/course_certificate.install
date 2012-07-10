@@ -16,13 +16,13 @@ function course_certificate_update_6101() {
   if (db_column_exists('course_node', 'certificate')) {
     // Find courses that had certificate checked, but no course object.
     $sql = "select * from {course_node} cn
-      inner join {course_outline} co on (cn.nid = co.nid and co.requirement_type = 'course_certificate')
-      where cn.certificate and co.snid is null";
+      inner join {course_outline} co on (cn.nid = co.nid and co.module = 'course_certificate')
+      where cn.certificate and co.coid is null";
     $result = db_query($sql);
     while ($row = db_fetch_object($result)) {
       $object = array(
-        'requirement_type' => 'course_certificate',
-        'requirement_component' => 'certificate',
+        'module' => 'course_certificate',
+        'object_type' => 'certificate',
         'nid' => $row->nid,
         'enabled' => 1,
         'required' => 0,

@@ -57,6 +57,8 @@ function course_schema() {
     'fields' => array(
       'crid' => array(
         'type' => 'serial',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
         'description' => 'Course report record ID.',
       ),
       'nid' => array(
@@ -262,7 +264,7 @@ function course_schema() {
   $schema['course_outline'] = array(
     'description' => "Stores users' course reports",
     'fields' => array(
-      'snid' => array(
+      'coid' => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
@@ -275,7 +277,7 @@ function course_schema() {
         'default' => 0,
         'description' => 'nid.',
       ),
-      'requirement_type' => array(
+      'module' => array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -289,7 +291,7 @@ function course_schema() {
         'default' => '',
         'description' => "The item title",
       ),
-      'requirement_component' => array(
+      'object_type' => array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
@@ -363,7 +365,7 @@ function course_schema() {
         'serialize' => TRUE,
       ),
     ),
-    'primary key' => array('snid'),
+    'primary key' => array('coid'),
     'indexes' => array(
       'nid' => array('nid'),
     ),
@@ -375,13 +377,13 @@ function course_schema() {
   $schema['course_outline_fulfillment'] = array(
     'description' => "Stores users' course reports",
     'fields' => array(
-      'sfid' => array(
+      'cofid' => array(
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
         'description' => 'Unique identifier for the course requirement fufillment record.',
       ),
-      'snid' => array(
+      'coid' => array(
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
@@ -436,13 +438,13 @@ function course_schema() {
         'description' => 'The Universally Unique Identifier.',
       ),
     ),
-    'primary key' => array('sfid'),
+    'primary key' => array('cofid'),
     'unique keys' => array(
-      'snid_uid' => array('snid', 'uid'),
+      'coid_uid' => array('coid', 'uid'),
       'uuid' => array('uuid'),
     ),
     'indexes' => array(
-      'snid' => array('snid'),
+      'coid' => array('coid'),
     ),
   );
 
@@ -752,5 +754,67 @@ function course_update_6134() {
   db_add_unique_key($ret, 'course_outline_fulfillment', 'uuid', array('uuid'));
 
 
+  return $ret;
+}
+
+/**
+ * Naming conventions update.
+ */
+function course_update_6135() {
+  $ret = array();
+
+  // Change primary keys to int (so we can drop the primary key).
+  db_change_field($ret, 'course_outline', 'snid', 'snid', array('type' => 'int'));
+  db_change_field($ret, 'course_outline_fulfillment', 'sfid', 'sfid', array('type' => 'int'));
+
+  // Drop old PK.
+  db_drop_primary_key($ret, 'course_outline');
+  db_drop_primary_key($ret, 'course_outline_fulfillment');
+
+  // Drop affected indexes.
+  db_drop_unique_key($ret, 'course_outline_fulfillment', 'snid_uid');
+  db_drop_index($ret, 'course_outline_fulfillment', 'snid');
+
+
+  // Rename columns, add back PK.
+  db_change_field($ret, 'course_outline', 'snid', 'coid', array(
+    'type' => 'serial',
+    'not null' => TRUE,
+    'unsigned' => TRUE,
+    ), array('primary key' => array('coid')));
+  db_change_field($ret, 'course_outline_fulfillment', 'sfid', 'cofid', array(
+    'type' => 'serial',
+    'not null' => TRUE,
+    'unsigned' => TRUE,
+    ), array('primary key' => array('cofid')));
+  db_change_field($ret, 'course_outline_fulfillment', 'snid', 'coid', array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'unsigned' => TRUE,
+    'default' => 0));
+
+  // Change requirement_type/requirement_component fields.
+  db_change_field($ret, 'course_outline', 'requirement_type', 'module', array(
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => ''));
+  db_change_field($ret, 'course_outline', 'requirement_component', 'object_type', array(
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => ''));
+
+  // Add keys back.
+  db_add_unique_key($ret, 'course_outline_fulfillment', 'coid_uid', array('coid', 'uid'));
+  db_add_index($ret, 'course_outline_fulfillment', 'coid', array('coid'));
+
+  // Update crid to match schema.
+  db_change_field($ret, 'course_report', 'crid', 'crid', array(
+    'type' => 'serial',
+    'not null' => TRUE,
+    'unsigned' => TRUE,
+  ));
+  
   return $ret;
 }

@@ -9,7 +9,7 @@
  * Page handler for course object reports.
  */
 function course_object_reports_page($node) {
-  $snid = arg(4);
+  $coid = arg(4);
   $report_key = arg(5);
   $report_subkey = arg(6);
 
@@ -29,8 +29,8 @@ function course_object_reports_page($node) {
     }
   }
 
-  if ($snid) {
-    $courseObject = course_get_course_object($snid);
+  if ($coid) {
+    $courseObject = course_get_course_object($coid);
     $report = $courseObject->getReport($report_key, $report_subkey);
     if ($report) {
       if ($report['url']) {

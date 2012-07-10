@@ -30,7 +30,7 @@ class CourseObjectTestCase extends CourseTestCase {
 
     $id = $courseObject->getId();
 
-    // Load by snid
+    // Load by coid
     $courseObject = course_get_course_object($id);
     $this->assertTrue($courseObject->getId() == $id, 'Loaded course object by ID.');
 
