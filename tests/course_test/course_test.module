@@ -27,10 +27,3 @@ function course_test_course_handlers() {
     ),
   );
 }
-
-/**
- * Implements hook_install().
- */
-function course_test_install() {
-  variable_set('course_use_course_test', 1);
-}
