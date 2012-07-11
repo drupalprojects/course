@@ -4,3 +4,4 @@ package = Course objects
 core = 6.x
 dependencies[] = book
 dependencies[] = course
+files[] = course_book.classes.inc

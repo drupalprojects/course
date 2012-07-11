@@ -49,4 +49,9 @@ class CourseObjectUbercart extends CourseObjectNode {
       $this->setOption('instance', $this->getCourseNid());
     }
   }
+
+  function getNodeTypes() {
+    return uc_product_types();
+  }
+
 }

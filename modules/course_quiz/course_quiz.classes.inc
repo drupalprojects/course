@@ -124,4 +124,8 @@ class CourseObjectQuiz extends CourseObjectNode {
     quiz_delete_results((array) $fulfillment->getOption('quiz_result_ids'));
   }
 
+  function getNodeTypes() {
+    return array('quiz');
+  }
+
 }

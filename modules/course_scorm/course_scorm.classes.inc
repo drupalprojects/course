@@ -1,6 +1,7 @@
 <?php
 
 class CourseObjectScorm extends CourseObjectNode {
+
   public function create() {
     global $user;
     if ($this->getInstanceId()) {
@@ -17,5 +18,11 @@ class CourseObjectScorm extends CourseObjectNode {
   }
 
   public function delete($course) {
+
   }
+
+  function getNodeTypes() {
+    return array();
+  }
+
 }
