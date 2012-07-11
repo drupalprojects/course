@@ -30,6 +30,12 @@ function course_menu() {
     'weight' => -10,
   );
 
+  $items['course/autocomplete/node/%'] = array(
+    'page callback' => 'course_object_autocomplete_node',
+    'access arguments' => array('access content'),
+    'page arguments' => array(3, 4),
+  );
+
   // Course settings handler forms. This gives organization and consistency to
   // form placement for each module that defines settings handlers through
   // hook_course_handlers().
@@ -2315,4 +2321,24 @@ function course_user_type_get_options() {
   }
 
   return array_merge($options, $additional);
+}
+
+/**
+ * Helper function for autocompletion of node titles.
+ */
+function course_object_autocomplete_node($types, $string) {
+  $values = explode(',', $types);
+  $placeholders = db_placeholders($values, 'varchar');
+  $values[] = $string;
+  $values[] = $string;
+  $result = db_query_range(db_rewrite_sql("SELECT n.nid, n.title, u.name FROM {node} n
+    INNER JOIN {users} u ON u.uid = n.uid
+    WHERE n.type IN ($placeholders) AND (title LIKE '%%%s%%' OR n.nid = %d)"), $values, 0, 10);
+
+  $matches = array();
+  while ($node = db_fetch_object($result)) {
+    $matches[$node->title . " [nid: $node->nid]"] = '<span class="autocomplete_title">' . check_plain($node->title) . '</span>';
+  }
+
+  drupal_json($matches);
 }
