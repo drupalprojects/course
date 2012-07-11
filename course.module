@@ -502,16 +502,20 @@ function course_object_load($coid) {
   if (!is_numeric($coid)) {
     // Temporary course object.
     $session = & $_SESSION['course'][$nid]['editing'][$coid];
-    $courseObject = course_get_course_object($session['module'], $session['object_type']);
-    $courseObject->setId($coid);
+    if ($courseObject = course_get_course_object($session['module'], $session['object_type'])) {
+      $courseObject->setId($coid);
+    }
   }
   else {
     // Stored course object.
     $courseObject = course_get_course_object_by_id($coid, $user);
   }
-  if ($nid) {
+
+  if ($courseObject && $nid) {
+    // If we're loading this from a menu loader, set the course.
     $courseObject->setCourse($nid);
   }
+  
   return $courseObject;
 }
 

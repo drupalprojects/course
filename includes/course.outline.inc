@@ -84,12 +84,13 @@ function course_outline_overview_form(&$form_state) {
     foreach ($requirements as $uniqid => $requirement) {
       $requirement = (array) $requirement;
       if (is_numeric($requirement['coid'])) {
-        $courseObject = course_get_course_object($requirement);
+        $courseObject = course_get_course_object_by_id($requirement['coid']);
       }
       else {
         $sess = & $_SESSION['course'][$node->nid]['editing'][$uniqid];
         $courseObject = course_get_course_object($sess['module'], $sess['object_type']);
       }
+
       if ($courseObject) {
         foreach ($courseObject->getWarnings() as $warning) {
           drupal_set_message(filter_xss($warning), 'warning');
@@ -206,9 +207,7 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
     );
 
     $summary = '<div id="summary-' . $uniqid . '">';
-    if (!empty($requirement['coid'])) {
-      $summary .= filter_xss_admin($courseObject->renderOptionsSummary());
-    }
+    $summary .= filter_xss_admin($courseObject->renderOptionsSummary());
     $summary .= '</div>';
   }
   $rform['summary'] = array(
@@ -221,6 +220,7 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
 
   $rform['weight'] = array(
     '#type' => 'weight',
+    '#delta' => 50,
     '#default_value' => $requirement['weight'],
     '#attributes' => array(
       'class' => 'course-object-weight',
@@ -313,6 +313,10 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   $object_info = course_get_handlers('object');
 
   foreach ($objects as $object_key => $object) {
+    // Renumber object based on the order they were submitted in (when JS is
+    // disabled)
+    $object['weight'] = ++$i;
+    
     // We use the object_type namespace for two purposes:
     // - The form element is a select list with keys matching the combined
     //   pattern: {module}-{object_type}.
