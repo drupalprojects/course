@@ -298,29 +298,28 @@ abstract class CourseObject extends CourseHandler {
     $this->setOptions($_SESSION['course'][$nid]['editing'][$uniqid]);
 
     // Perform ajax operations on the overview form, before overview submission.
-    $commands = array();
+    if ($form_state['ajax']) {
+      $commands = array();
 
-    // Set title.
-    $title = '<div id="title-' . $uniqid . '">' . $form_state['values']['title'] . '</div>';
-    $commands[] = ctools_ajax_command_replace("#title-{$uniqid}", $title);
+      // Set title.
+      $title = '<div id="title-' . $uniqid . '">' . $form_state['values']['title'] . '</div>';
+      $commands[] = ctools_ajax_command_replace("#title-{$uniqid}", $title);
 
-    // Set summary.
-    $html = '<div id="summary-' . $uniqid . '">' . $this->renderOptionsSummary() . '</div>';
-    $commands[] = ctools_ajax_command_replace("#summary-{$uniqid}", $html);
+      // Set summary.
+      $html = '<div id="summary-' . $uniqid . '">' . $this->renderOptionsSummary() . '</div>';
+      $commands[] = ctools_ajax_command_replace("#summary-{$uniqid}", $html);
 
-    // Deletion handling.
-    // @todo add `deleted` class to the row instead.
-    if ($form_state['values']['delete']) {
-      $argument = array(
-        'background-color' => '#eee',
-        'color' => '#ccc',
-      );
-      $commands[] = ctools_ajax_command_css("#row-{$uniqid}", $argument);
+      // Deletion handling.
+      if ($form_state['values']['delete']) {
+        // Add `deleted` class to the row. An admin stylesheet is loaded from
+        // theme_course_outline_overview_form().
+        $commands[] = ctools_ajax_command_attr("#row-{$uniqid}", 'class', 'deleted');
+      }
+
+      $commands[] = ctools_modal_command_dismiss();
+
+      ctools_ajax_render($commands);
     }
-
-    $commands[] = ctools_modal_command_dismiss();
-
-    ctools_ajax_render($commands);
   }
 
   /**
