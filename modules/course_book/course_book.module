@@ -24,7 +24,7 @@ function course_book_course_handlers() {
       'book' => array(
         'name' => t('Book'),
         'description' => t('A book course object.'),
-        'class' => 'CourseObjectNode',
+        'class' => 'CourseObjectBook',
       ),
     ),
     'context' => array(
