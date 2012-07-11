@@ -60,4 +60,8 @@ class CourseObjectWebform extends CourseObjectNode {
     }
   }
 
+  function getNodeTypes() {
+    return array('webform');
+  }
+
 }

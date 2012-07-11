@@ -48,8 +48,9 @@ function course_webform_webform_submission_insert($node, $submission) {
   global $user;
 
   // Find the course object associated with this webform.
-  $courseObject = course_get_course_object('course_webform', 'webform', arg(1), $user);
-  $courseObject->getFulfillment()->setComplete()->save();
+  if ($courseObject = course_get_course_object('course_webform', 'webform', arg(1), $user)) {
+    $courseObject->getFulfillment()->setComplete()->save();
+  }
 }
 
 function course_webform_settings() {
