@@ -875,7 +875,7 @@ class CourseObjectFulfillment extends CourseHandler {
 /**
  * A course object that uses a node as a base.
  */
-class CourseObjectNode extends CourseObject {
+abstract class CourseObjectNode extends CourseObject {
 
   protected $node;
 
@@ -888,6 +888,17 @@ class CourseObjectNode extends CourseObject {
   public function checkPrivacySupport() {
     return module_exists('content_access') && module_exists('acl');
   }
+
+  /**
+   * Return a list of valid node types.
+   *
+   * @return array
+   *   An array keyed by machine name of a node type.
+   *   return array(
+   *     'my_event' => 'My event content type',
+   *   );
+   */
+  public abstract function getNodeTypes();
 
   /**
    * Simple node course object behavior is to just redirect to the node.
@@ -935,9 +946,13 @@ class CourseObjectNode extends CourseObject {
 
     $config = $this->getOptions();
 
+    if (!$this->getInstanceId()) {
+      // @todo create form with node type selection
+    }
+
     $form['instance'] = array(
       '#title' => 'Existing node',
-      '#autocomplete_path' => 'ctools/autocomplete/node',
+      '#autocomplete_path' => 'course/autocomplete/node/' . implode(',', $this->getNodeTypes()),
       '#type' => 'textfield',
     );
 
