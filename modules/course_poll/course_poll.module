@@ -50,8 +50,9 @@ function course_poll_fulfill(&$form, &$form_state) {
   $nid = $form['#node']->nid;
 
   // Find the course object associated with this poll.
-  $courseObject = course_get_course_object('course_poll', 'poll', $nid, $user);
-  $courseObject->getFulfillment()->setComplete()->save();
+  if ($courseObject = course_get_course_object('course_poll', 'poll', $nid, $user)) {
+    $courseObject->getFulfillment()->setComplete()->save();
+  }
 }
 
 /**

@@ -25,8 +25,7 @@ class CourseObjectSignup extends CourseObjectNode {
     parent::optionsForm($form, $form_state);
 
     $form['instance']['#title'] = t('Signup to check');
-    $form['instance']['#description'] .= '</br>' . t('Check a different signup-enabled product for attendance. Defaults to this course.');
-    $form['instance']['#autocomplete_path'] = 'course-signup/autocomplete';
+    $form['instance']['#description'] .= '</br>' . t('Check a different signup-enabled node for attendance. Defaults to this course.');
   }
 
   /**
@@ -58,6 +57,10 @@ class CourseObjectSignup extends CourseObjectNode {
           'content' => signup_node_admin_page($this->node),
         );
     }
+  }
+
+  function getNodeTypes() {
+    return signup_content_types();
   }
 
 }
