@@ -55,7 +55,7 @@ function course_menu() {
 
         // Manually set which package the handler belongs in. If one is not
         // defined, assume the handler is it's own package.
-        $handler_info['package'] = $handler_info['package'] ? $handler_info['package'] : $handler_key;
+        $handler_info['package'] = isset($handler_info['package']) ? $handler_info['package'] : $handler_key;
 
         // Build the array of handlers. Add this handler with a combined key,
         // so module defined settings handlers can avoid namespace conflicts.
@@ -66,7 +66,7 @@ function course_menu() {
         // get package info below when we need it. If there are duplicate
         // handler/package keys, use the first one for grouping the others.
         $package_key = $handler_info['package'] ? $handler_info['package'] : $handler_key;
-        if (!$packages[$package_key]) {
+        if (!isset($packages[$package_key])) {
           $packages[$package_key] = $module_handler_key;
         }
       }
@@ -89,9 +89,9 @@ function course_menu() {
     // or as one of the other MENU_LOCAL_TASK tabs). If this is the deafult
     // page content, the router path and title will be taken from the
     // handler which defined the package.
-    $item_router = !$default_set[$package_key] ? $package_router : $handler_router;
-    $item_title = !$default_set[$package_key] ? $package_info['name'] : $handler_info['name'];
-    $item_type = !$default_set[$package_key] ? MENU_NORMAL_ITEM : MENU_LOCAL_TASK;
+    $item_router = !isset($default_set[$package_key]) ? $package_router : $handler_router;
+    $item_title = !isset($default_set[$package_key]) ? $package_info['name'] : $handler_info['name'];
+    $item_type = !isset($default_set[$package_key]) ? MENU_NORMAL_ITEM : MENU_LOCAL_TASK;
     $items[$item_router] = array(
       'title' => $item_title,
       'description' => $handler_info['description'],
@@ -106,7 +106,7 @@ function course_menu() {
       // Define the item 'file' key.
       $items[$item_router]['file'] = $handler_info['file'];
       // Define the item 'file path' key.
-      if ($handler_info['file path']) {
+      if (isset($handler_info['file path'])) {
         // Use the path if provided. If not provided, we need to specify the
         // handler provider module path, otherwise hook_menu() assumes
         // 'file path' is the path to it's implementing module (Course).
@@ -115,7 +115,7 @@ function course_menu() {
     }
 
     // Check if a default tab has already been set for this module.
-    if (!$default_set[$package_key]) {
+    if (!isset($default_set[$package_key])) {
       // Add the default tab with the handler router item and name. We do
       // this here so the first handler settings form always displays as the
       // default page content at the module router item path.
