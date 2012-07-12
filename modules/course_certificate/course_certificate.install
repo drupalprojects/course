@@ -13,7 +13,7 @@ function course_certificate_update_6101() {
   drupal_get_schema(NULL, TRUE);
   drupal_load('module', 'uuid');
 
-  if (db_column_exists('course_node', 'certificate')) {
+  if (db_table_exists('course_node') && db_column_exists('course_node', 'certificate')) {
     // Find courses that had certificate checked, but no course object.
     $sql = "select * from {course_node} cn
       inner join {course_outline} co on (cn.nid = co.nid and co.module = 'course_certificate')
