@@ -1283,7 +1283,7 @@ function course_enrolment_save($enrolment) {
  * @return CourseObject|FALSE
  *   A loaded CourseObject or FALSE if no object found.
  */
-function course_get_course_object_by_id($coid, $account = NULL) {
+function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) {
   if (!$account) {
     global $user;
     $account = $user;
@@ -1352,7 +1352,7 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
   if (is_object($module) && $module->coid) {
     // Passed options with the course object ID set.
     $coid = $module->coid;
-    return course_get_course_object_by_id($coid);
+    return course_get_course_object_by_id($coid, $account, $course);
   }
 
   if (is_numeric($module)) {
