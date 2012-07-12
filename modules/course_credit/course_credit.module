@@ -408,7 +408,7 @@ function course_credit_type_fieldset_summary($type, $form, $node) {
               }
               $summary[] = t('Expires on @type@plus', array(
                 '@type' => $type_name = $form_elements[$element]['#options'][$node_values->$element],
-                '@plus' => $offset ? t(' plus @offset days', array('@offset' => $offset)) : NULL,
+                '@plus' => $offset ? ' ' . t('plus @offset days', array('@offset' => $offset)) : NULL,
                 ));
             }
           }
@@ -702,7 +702,7 @@ function course_credit_settings_form() {
 
   foreach (node_get_types() as $type => $info) {
     $form['creditable_types']["course_credit_creditable_$type"] = array(
-      '#title' => $info->name,
+      '#title' => check_plain($info->name),
       '#type' => 'checkbox',
       '#default_value' => variable_get("course_credit_creditable_$type", 0),
     );
@@ -1072,7 +1072,7 @@ function course_credit_type_map_form(&$form_state, $type) {
           $options = optionwidgets_options($field, FALSE);
           if (!empty($options)) {
             $form['map']['content_profile'][$field_key] = array(
-              '#title' => $field['widget']['label'],
+              '#title' => check_plain($field['widget']['label']),
               '#type' => 'select',
               '#multiple' => TRUE,
               '#options' => $options,
@@ -1663,7 +1663,7 @@ function course_credit_type_add_form_submit(&$form, &$form_state) {
   $credit_type->type = $credit_type->type;
 
   drupal_write_record('course_credit_type', $credit_type);
-  drupal_set_message('New credit type added.');
+  drupal_set_message(t('New credit type added.'));
 }
 
 /**
@@ -1681,7 +1681,7 @@ function course_credit_type_delete_form(&$form_state, $type) {
  */
 function course_credit_type_delete_form_submit(&$form, &$form_state) {
   db_query("delete from {course_credit_type} where type = '%s'", $form_state['values']['type']);
-  drupal_set_message('Credit type deleted.');
+  drupal_set_message(t('Credit type deleted.'));
 }
 
 /**

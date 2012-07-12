@@ -114,8 +114,8 @@ function course_outline_overview_form(&$form_state) {
         );
         $rform['object_type_show'] = array(
           '#type' => 'markup',
-          '#value' => $course_objects[$requirement['module']][$requirement['object_type']]['name'] . '<br/><small><i>'
-          . ucwords(str_replace('_', ' ', $requirement['module'])) . '</i></small>',
+          '#value' => filter_xss_admin($course_objects[$requirement['module']][$requirement['object_type']]['name'] . '<br/><small><i>'
+          . ucwords(str_replace('_', ' ', $requirement['module'])) . '</i></small>'),
         );
       }
       ctools_ajax_associate_url_to_element($form, $rform['object_type'], "course-object/nojs/store/$uniqid");
@@ -203,19 +203,22 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
     $title .= check_plain($courseObject->getTitle());
     $title .= '</div>';
     $rform['title'] = array(
-      '#value' => $title,
+      '#type' => 'markup',
+      '#value' => filter_xss_admin($title),
     );
 
     $summary = '<div id="summary-' . $uniqid . '">';
-    $summary .= filter_xss_admin($courseObject->renderOptionsSummary());
+    $summary .= $courseObject->renderOptionsSummary();
     $summary .= '</div>';
   }
   $rform['summary'] = array(
-    '#value' => $summary,
+    '#type' => 'markup',
+    '#value' => filter_xss_admin($summary),
   );
 
   $rform['settings'] = array(
-    '#value' => l(t('Settings'), "node/" . $requirement['nid'] . "/course-object/nojs/$uniqid/edit", array('attributes' => array('class' => "ctools-use-modal settings-$uniqid"))),
+    '#type' => 'markup',
+    '#value' => filter_xss_admin(l(t('Settings'), "node/" . $requirement['nid'] . "/course-object/nojs/$uniqid/edit", array('attributes' => array('class' => "ctools-use-modal settings-$uniqid")))),
   );
 
   $rform['weight'] = array(
@@ -469,7 +472,7 @@ function course_outline_list($node) {
       $data = $courseObject->getTitle() . '<br/><span class="course-outline-status">' . $step['status'] . '</span>';
     }
     else {
-      $data = l("$img {$courseObject->getTitle()}<br/>", $step['link'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status'] . '</span>';
+      $data = $img . ' ' . l("{$courseObject->getTitle()}<br/>", $step['link'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status'] . '</span>';
     }
     $workflow[] = array(
       'data' => $data,
@@ -483,7 +486,7 @@ function course_outline_list($node) {
 
   if ($prev_req && $prev_req->getFulfillment()->isComplete()) {
     $workflow[] = array(
-      'data' => l("$img Complete", "node/$node->nid/course-complete", array('html' => TRUE)),
+      'data' => $img . ' ' . l(t('Complete'), "node/$node->nid/course-complete", array('html' => TRUE)),
       'id' => 'complete',
     );
   }

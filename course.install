@@ -555,8 +555,12 @@ function course_update_6126() {
 
   if ($delete) {
     $values = implode(',', $delete);
-    $sql = "delete from {course_outline_fulfillment} where sfid in ($values)";
-    $ret[] = update_sql($sql);
+    $placeholders = db_placeholders($values);
+    $sql = "delete from {course_outline_fulfillment} where sfid in ($placeholders)";
+    $ret[] = array(
+      'success' => db_query($sql, $values),
+      'query' => $sql,
+    );
   }
 
   db_add_unique_key($ret, 'course_outline_fulfillment', 'snid_uid', array('snid', 'uid'));
