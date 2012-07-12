@@ -347,7 +347,9 @@ function course_get_handlers($type = NULL, $flush = FALSE) {
     // the hook invocation and function calls above.
     $filtered = array();
     foreach ($all as $module => $handlers) {
-      $filtered[$module] = $handlers[$type];
+      if (isset($handlers[$type])) {
+        $filtered[$module] = $handlers[$type];
+      }
     }
     // Return the keyed array of implementations, each filtered to include only
     // the specified handler type definition.
