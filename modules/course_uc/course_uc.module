@@ -67,7 +67,7 @@ function course_uc_nodeapi($node, $op, $a3, $a4) {
         }
 
         // If we are here, the course did not have a payment object.
-        $newObject = new CourseObjectUbercart();
+        $newObject = course_get_course_object('course_uc', 'payment');
         $newObject->setCourse($course);
         $newObject->setCourse($node->nid);
         $newObject->setModule('course_uc');

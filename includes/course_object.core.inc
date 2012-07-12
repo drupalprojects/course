@@ -936,6 +936,9 @@ abstract class CourseObjectNode extends CourseObject {
 
     $defaults['private'] = 0;
 
+    $options = array_intersect_key(node_get_types('names'), $this->getNodeTypes());
+    $defaults['node_type'] = key($options);
+
     return $defaults;
   }
 
@@ -947,7 +950,17 @@ abstract class CourseObjectNode extends CourseObject {
     $config = $this->getOptions();
 
     if (!$this->getInstanceId()) {
-      // @todo create form with node type selection
+      $types = drupal_map_assoc($this->getNodeTypes());
+      $options = array_intersect_key(node_get_types('names'), $types);
+      if (count($options) > 1) {
+        $options[''] = '- select -';
+      }
+      $form['node_type'] = array(
+        '#title' => 'Create node',
+        '#type' => 'select',
+        '#options' => $options,
+        '#description' => 'Selecting a node type will automatically create this node and link it to this course object.',
+      );
     }
 
     $form['instance'] = array(
