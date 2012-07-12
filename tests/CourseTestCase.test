@@ -6,7 +6,8 @@
 class CourseTestCase extends DrupalWebTestCase {
 
   public function setUp() {
-    parent::setUp('autoload', 'ahah_helper', 'ctools', 'uuid', 'course', 'course_test');
+    $deps = $this->getModules();
+    call_user_func_array(array('parent', 'setUp'), $deps);
 
     $this->admin_user = $this->drupalCreateUser(array('administer nodes', 'edit courses'));
     $this->student_user = $this->drupalCreateUser(array('access content'));
@@ -30,6 +31,10 @@ class CourseTestCase extends DrupalWebTestCase {
       ));
 
     return $node;
+  }
+
+  function getModules() {
+    return array('autoload', 'ahah_helper', 'ctools', 'uuid', 'course', 'course_test');
   }
 
   /**

@@ -50,14 +50,20 @@ class CourseContextTestCase extends CourseTestCase {
     $co2->setInstanceId(1234)->save();
 
     // Now we have 2 course objects with the same instance but in different courses.
-    // Simulate us taking one of the objects.
+    // Simulate us taking one of the objects, and switch back and forth between courses.
     $co1->takeCourseObject();
     $foundCourseNode1 = course_determine_context('course_test', 'course_test_object', 1234);
-    $this->assertEqual($courseNode1->nid, $foundCourseNode1->nid, 'Found the right course context.');
+    $this->assertEqual($courseNode1->nid, $foundCourseNode1->nid, 'Found the right course context, pass 1.');
 
+    // Taking with context set.
     $co2->takeCourseObject();
     $foundCourseNode2 = course_determine_context('course_test', 'course_test_object', 1234);
-    $this->assertEqual($courseNode2->nid, $foundCourseNode2->nid, 'Found the right course context.');
+    $this->assertEqual($courseNode2->nid, $foundCourseNode2->nid, 'Found the right course context, pass 2.');
+
+    // Back to original context.
+    $co1->takeCourseObject();
+    $foundCourseNode1 = course_determine_context('course_test', 'course_test_object', 1234);
+    $this->assertEqual($courseNode1->nid, $foundCourseNode1->nid, 'Found the right course context, pass 3.');
   }
 
 }
