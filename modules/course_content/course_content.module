@@ -27,7 +27,7 @@ function course_content_course_handlers() {
     if (variable_get("course_content_use_$type", 0)) {
       $handlers['object'][$type] = array(
         'name' => $info->name,
-        'class' => 'CourseObjectNode',
+        'class' => 'CourseObjectContent',
         'description' => t('A node to be used in a course workflow.'),
       );
     }
