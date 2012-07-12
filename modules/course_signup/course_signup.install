@@ -13,13 +13,15 @@ function course_signup_install() {
 
   drupal_get_schema(NULL, TRUE);
 
-  // Ensure a signup exists for each full course enrollment.
-  $sql = "select ce.* from {course_enrolment} ce
+  if (db_table_exists('course_enrolment')) {
+    // Ensure a signup exists for each full course enrollment.
+    $sql = "select ce.* from {course_enrolment} ce
     left join {signup_log} sl on (ce.nid = sl.nid and ce.uid = sl.uid)
     where sid is null and ce.status";
-  $result = db_query($sql);
-  while ($row = db_fetch_object($result)) {
-    $row->signup_time = $row->timestamp;
-    drupal_write_record('signup_log', $row);
+    $result = db_query($sql);
+    while ($row = db_fetch_object($result)) {
+      $row->signup_time = $row->timestamp;
+      drupal_write_record('signup_log', $row);
+    }
   }
 }
