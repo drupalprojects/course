@@ -1,6 +1,8 @@
 <?php
 
 require_once(drupal_get_path('module', 'course') . '/tests/CourseTestCase.test');
+// Fix for #824232 and testbot.
+module_load_include('inc', 'signup', 'includes/scheduler');
 
 /**
  * Test class for dealing with adding and removing elements from the course
