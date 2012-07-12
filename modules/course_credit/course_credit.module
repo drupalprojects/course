@@ -196,10 +196,8 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
       // Create a new fieldset for every credit instance.
       $form['course_credit'][$type->type] = array(
         '#type' => 'fieldset',
-        // We strip tags (and sanitize) rather than using @ or % placeholders
-        // because the credit title may include HTML.
-        // @see credit type settings summary at the bottom of this type foreach.
-        '#title' => t('!type', array('!type' => strip_tags(filter_xss($type->title)))),
+        // The credit title may include HTML.
+        '#title' => filter_xss_admin($type->title),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
         '#description' => filter_xss($type->description),

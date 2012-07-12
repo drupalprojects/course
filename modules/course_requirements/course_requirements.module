@@ -58,7 +58,7 @@ function course_requirements_can_take_course($node, $user) {
     $result = db_query($sql, $nids);
     while ($report = db_fetch_object($result)) {
       if (!$report->complete) {
-        $block = true;
+        $block = TRUE;
       }
       $rows[] = array(l($report->title, "node/{$report->nid}"), $report->section_name);
     }
@@ -84,7 +84,8 @@ function course_requirements_course_can_enrol($node, $user) {
     if ($result[0]) {
       $result[0]['header'] = 'You must complete the following courses before enrolling in this course.';
       return $result;
-    } elseif ($node->cr_parent) {
+    }
+    elseif ($node->cr_parent) {
       $parent = node_load($node->cr_parent);
       return course_requirements_course_can_enrol($parent, $user);
     }
