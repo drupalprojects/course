@@ -294,6 +294,21 @@ function _course_outline_overview_validate_requirements(&$form, &$form_state) {
 }
 
 /**
+ * Comparator function for course outline weights.
+ */
+function course_outline_overview_form_cmp_function($a, $b) {
+  if ($a['weight'] > $b['weight']) {
+    return 1;
+  }
+  if ($a['weight'] < $b['weight']) {
+    return -1;
+  }
+  else {
+    return 0;
+  }
+}
+
+/**
  * Submit handler.
  */
 function course_outline_overview_form_submit(&$form, &$form_state) {
@@ -308,6 +323,7 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   //   - object_type: The course object key as defined by
   //     hook_course_handlers().
   $objects = $form_state['values']['course_outline']['requirements'];
+  //uksort($objects, 'course_outline_overview_form_cmp_function');
 
   // Get object handler definitions for labels.
   $object_info = course_get_handlers('object');
@@ -315,8 +331,8 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   foreach ($objects as $object_key => $object) {
     // Renumber object based on the order they were submitted in (when JS is
     // disabled)
-    $object['weight'] = ++$i;
-    
+    //$object['weight'] = ++$i;
+
     // We use the object_type namespace for two purposes:
     // - The form element is a select list with keys matching the combined
     //   pattern: {module}-{object_type}.
@@ -473,8 +489,8 @@ function course_outline_list($node) {
   }
 
   if ($workflow) {
-    $output .= '<div id="course-toc">';
-    $output .= '<div id="course-toc-trigger" class="trigger"></div>';
+    $output .= '<div class="course-outline">';
+    $output .= '<span class="trigger"></span>';
     $output .= theme('item_list', $workflow);
     $output .= '</div>';
   }
