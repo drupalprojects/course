@@ -420,6 +420,8 @@ function course_outline_list($node) {
   $course = course_get_course($node, $user);
 
   // Iterate over objects.
+  $workflow = array();
+  $prev_req = NULL;
   foreach ($course->getObjects() as $key => $courseObject) {
     $step = array();
 
@@ -488,6 +490,7 @@ function course_outline_list($node) {
     );
   }
 
+  $output = '';
   if ($workflow) {
     $output .= '<div class="course-outline">';
     $output .= '<span class="trigger"></span>';
