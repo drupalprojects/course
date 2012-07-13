@@ -98,7 +98,7 @@ class CourseHandler {
   public final function setOptions($options) {
     $config = (array) $options;
     // Make sure the serialized field is not already extracted.
-    if (is_string($config[$this->serializedField])) {
+    if (isset($config[$this->serializedField]) && is_string($config[$this->serializedField])) {
       $data = unserialize($config[$this->serializedField]);
       if (is_array($data)) {
         // Merge serialized data onto options. Schema fields take precedence.
