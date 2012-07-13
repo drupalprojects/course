@@ -501,23 +501,14 @@ function course_object_edit_form_submit(&$form, &$form_state) {
 function course_object_load($coid) {
   global $user;
   $nid = arg(0) == 'node' && is_numeric(arg(1)) ? arg(1) : 0;
-  if (!is_numeric($coid)) {
-    // Temporary course object.
-    $session = & $_SESSION['course'][$nid]['editing'][$coid];
-    if ($courseObject = course_get_course_object($session['module'], $session['object_type'])) {
-      $courseObject->setId($coid);
-    }
-  }
-  else {
-    // Stored course object.
-    $courseObject = course_get_course_object_by_id($coid, $user);
-  }
+  // Stored course object.
+  $courseObject = course_get_course_object_by_id($coid, $user);
 
   if ($courseObject && $nid) {
     // If we're loading this from a menu loader, set the course.
     $courseObject->setCourse($nid);
   }
-  
+
   return $courseObject;
 }
 
@@ -1274,6 +1265,32 @@ function course_enrolment_save($enrolment) {
 }
 
 /**
+ * Get a course object by its unique identifier (sessioned course object).
+ *
+ * @param string $uniqid
+ *   Unique identifier.
+ * @param stdClass $account
+ *   Account to instantiate this course object.
+ * @param Course $course
+ *   Course to instantiate this course object.
+ *
+ * @return CourseObject|FALSE
+ */
+function _course_get_course_object_by_uniqid($uniqid, $account, $course) {
+  foreach ($_SESSION['course'] as $session) {
+    if (is_array($session['editing'])) {
+      foreach ($session['editing'] as $coid => $object) {
+        if ($coid == $uniqid) {
+          return course_get_course_object($object, NULL, NULL, $account, $course);
+        }
+      }
+    }
+  }
+
+  return FALSE;
+}
+
+/**
  * Get a course object by its identifier.
  *
  * @param int $coid
@@ -1292,6 +1309,10 @@ function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) 
   }
 
   $available = course_get_handlers('object');
+
+  if (!is_numeric($coid)) {
+    return _course_get_course_object_by_uniqid($coid, $account, $course);
+  }
 
   $sql = 'select * from {course_outline} where coid = %d';
   $result = db_query($sql, $coid);

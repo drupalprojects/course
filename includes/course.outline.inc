@@ -83,13 +83,7 @@ function course_outline_overview_form(&$form_state) {
   if (count($requirements)) {
     foreach ($requirements as $uniqid => $requirement) {
       $requirement = (array) $requirement;
-      if (is_numeric($requirement['coid'])) {
-        $courseObject = course_get_course_object_by_id($requirement['coid']);
-      }
-      else {
-        $sess = & $_SESSION['course'][$node->nid]['editing'][$uniqid];
-        $courseObject = course_get_course_object($sess['module'], $sess['object_type']);
-      }
+      $courseObject = course_get_course_object_by_id($uniqid);
 
       if ($courseObject) {
         foreach ($courseObject->getWarnings() as $warning) {
@@ -115,7 +109,7 @@ function course_outline_overview_form(&$form_state) {
         $rform['object_type_show'] = array(
           '#type' => 'markup',
           '#value' => filter_xss_admin($course_objects[$requirement['module']][$requirement['object_type']]['name'] . '<br/><small><i>'
-          . ucwords(str_replace('_', ' ', $requirement['module'])) . '</i></small>'),
+            . ucwords(str_replace('_', ' ', $requirement['module'])) . '</i></small>'),
         );
       }
       ctools_ajax_associate_url_to_element($form, $rform['object_type'], "course-object/nojs/store/$uniqid");
@@ -195,22 +189,25 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
     '#default_value' => $requirement['nid'],
   );
 
+  // Do not use prefix/suffix because markup only renders with a value, and we
+  // need the wrapper before the title is saved for ajax population after each
+  // settings modal update.
+  $title = '<div id="title-' . $uniqid . '">';
   if ($courseObject) {
-    // Do not use prefix/suffix because markup only renders with a value, and we
-    // need the wrapper before the title is saved for ajax population after each
-    // settings modal update.
-    $title = '<div id="title-' . $uniqid . '">';
     $title .= check_plain($courseObject->getTitle());
-    $title .= '</div>';
-    $rform['title'] = array(
-      '#type' => 'markup',
-      '#value' => filter_xss_admin($title),
-    );
-
-    $summary = '<div id="summary-' . $uniqid . '">';
-    $summary .= $courseObject->renderOptionsSummary();
-    $summary .= '</div>';
   }
+  $title .= '</div>';
+  $rform['title'] = array(
+    '#type' => 'markup',
+    '#value' => filter_xss_admin($title),
+  );
+
+  $summary = '<div id="summary-' . $uniqid . '">';
+  if ($courseObject) {
+    $summary .= $courseObject->renderOptionsSummary();
+  }
+  $summary .= '</div>';
+
   $rform['summary'] = array(
     '#type' => 'markup',
     '#value' => filter_xss_admin($summary),
