@@ -219,7 +219,7 @@ class CourseHandler {
 
   public function save() {
     $options = $this->getOptions();
-    if (!$options['uuid']) {
+    if (!isset($options['uuid'])) {
       $options['uuid'] = uuid_uuid();
     }
 
@@ -306,6 +306,7 @@ class Course extends CourseHandler {
       $id = $_SESSION['course'][$this->node->nid]['taking']['active'];
     }
 
+    $old = NULL;
     foreach ($this->getObjects() as $courseObject) {
       if ($id == $courseObject->getId()) {
         // Active - save old, store next.

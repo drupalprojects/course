@@ -24,6 +24,7 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
     $type = $this->getOption('conditional_type');
     $offset = $this->getOption('conditional_time');
     $time = time();
+    $access = TRUE;
     if ($type) {
       foreach ($this->getCourseObject()->getCourse()->getObjects() as $courseObject) {
         if ($courseObject->getId() == $this->getOption('conditional_object')) {

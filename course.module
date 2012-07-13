@@ -538,7 +538,7 @@ function course_object_take($courseObject) {
 function course_menu_alter(&$items) {
   $default = variable_get('course_reports_default_report', 'node/%/course-reports/overview');
 
-  if ($default) {
+  if ($default && isset($items[$default])) {
     $parent = $items[$default];
     $items[$default]['type'] = MENU_DEFAULT_LOCAL_TASK;
     $items[$default]['weight'] = -999;
@@ -790,6 +790,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           WHERE nid = %d
           ORDER BY weight ASC";
         $result = db_query($sql, $node->nid);
+        $rarray = array();
         while ($requirement = db_fetch_object($result)) {
           foreach ($requirement as $key => $value) {
             $rarray[$requirement->coid]->$key = $value;
@@ -1854,8 +1855,8 @@ function course_init() {
           $callback = $handler['callback'];
 
           // Calculate and include the file for each callback, if specified.
-          if ($handler['file']) {
-            $file_path = $handler['file path'] ? $handler['file path'] : drupal_get_path('module', $module);
+          if (isset($handler['file'])) {
+            $file_path = isset($handler['file path']) ? $handler['file path'] : drupal_get_path('module', $module);
             $include_file = $file_path . '/' . $handler['file'];
             include_once($include_file);
           }

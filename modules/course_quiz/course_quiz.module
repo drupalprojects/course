@@ -6,7 +6,7 @@
 function course_quiz_context() {
   $node = node_load(arg(1));
 
-  if (isset($node)) {
+  if (isset($node->nid) && $node->type == 'quiz') {
     return array(
       'object_type' => 'quiz',
       'instance' => $node->nid,
