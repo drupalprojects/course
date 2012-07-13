@@ -1,0 +1,47 @@
+<?php
+
+require_once(drupal_get_path('module', 'course') . '/tests/CourseTestCase.test');
+
+/**
+ * Tests for conditional event-based access to course objects.
+ */
+class CourseObjectQuizTestCase extends CourseTestCase {
+
+  public static function getInfo() {
+    // Note that getInfo() strings are not translated with t().
+    return array(
+      'name' => 'Course object quiz',
+      'description' => 'Ensure that quiz Course object support functions properly.',
+      'group' => 'Course',
+    );
+  }
+
+  function getModules() {
+    $modules = parent::getModules();
+    $modules[] = 'quiz';
+    $modules[] = 'truefalse';
+    $modules[] = 'course_quiz';
+    return $modules;
+  }
+
+  function testQuizCourseObject() {
+    return;
+    // Create a course with 1 quiz.
+    $courseNode = $this->createCourseNode();
+    $co1 = course_get_course_object('course_quiz', 'quiz');
+    $co1->setCourse($courseNode->nid);
+    $co1->save();
+    $this->assertTrue($co1->getInstanceId() > 0, 'Quiz node created on course object save.');
+
+    $quizNode = node_load($co1->getInstanceId());
+    $this->assertTrue($quizNode->type == 'quiz', 'Quiz node is a quiz.');
+
+    $this->drupalGet('node/' . $quizNode->nid . '/questions');
+    $this->click('True/false question');
+    $this->drupalPost(NULL, array(
+      'title' => 'Test question',
+      'body' => 'Test question',
+      'correct_answer' => 1,
+    ));
+  }
+}
