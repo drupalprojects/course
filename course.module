@@ -1410,7 +1410,7 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
       // Either the active course is in the courses this instance is in, or, the
       // active course wasn't a parent of any course object found, so use the
       // first object found.
-      $coid = $outline_entries[$courseNode->nid] ? $outline_entries[$courseNode->nid]->coid : reset($outline_entries)->coid;
+      $coid = ($courseNode && $outline_entries[$courseNode->nid]) ? $outline_entries[$courseNode->nid]->coid : reset($outline_entries)->coid;
       return course_get_course_object_by_id($coid, $account);
     }
   }
