@@ -622,7 +622,7 @@ abstract class CourseObject extends CourseHandler {
     if (!$this->course) {
       $nid = $this->getCourseNid();
       if ($nid) {
-        $this->course = new Course($nid, $this->user);
+        $this->course = new Course(node_load($nid), $this->user);
       }
     }
 

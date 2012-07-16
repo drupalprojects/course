@@ -403,7 +403,6 @@ function course_store_temp_object($node, $js, $uniqid) {
     $_SESSION['course'][$nid]['editing'][$uniqid]['module'] = $changed[0];
     $_SESSION['course'][$nid]['editing'][$uniqid]['object_type'] = $changed[1];
     $courseObject = course_get_course_object_by_id($uniqid);
-    $courseObject->setCourse($node->nid);
     ctools_include('ajax');
 
     $commands = array();
@@ -1336,11 +1335,16 @@ function course_enrolment_save($enrolment) {
  * @return CourseObject|FALSE
  */
 function _course_get_course_object_by_uniqid($uniqid, $account = NULL, $course = NULL) {
-  foreach ($_SESSION['course'] as $session) {
+  foreach ($_SESSION['course'] as $nid => $session) {
     if (is_array($session['editing'])) {
       foreach ($session['editing'] as $coid => $object) {
         if ($coid == $uniqid) {
-          return course_get_course_object($object, NULL, NULL, $account, $course);
+          $courseObject = course_get_course_object($object, NULL, NULL, $account, $course);
+          if (!$course) {
+            $course = course_get_course(node_load($nid));
+            $courseObject->setCourse($course);
+            return $courseObject;
+          }
         }
       }
     }
