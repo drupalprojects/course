@@ -636,7 +636,7 @@ function course_block($op = 'list', $delta = 0) {
 function course_takecourse_title($node) {
   global $user;
   $report = course_report_load($node, $user);
-  return ($user->uid > 1 && $report->complete) ? t('Review course') : t('Take course');
+  return ($user->uid > 1 && isset($report->complete) && $report->complete) ? t('Review course') : t('Take course');
 }
 
 /**
@@ -783,7 +783,7 @@ function course_settings_access($node) {
 function course_can_take_course($node, $user) {
   $sql = "select * from {course_enrolment} where nid = %d and uid = %d";
   if ($row = db_fetch_object(db_query($sql, $node->nid, $user->uid))) {
-    if ($node->course['duration'] > 0 && time() > $row->enrol_end) {
+    if ($row->enrol_end > 0 && time() > $row->enrol_end) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, your enrollment has expired for this course.',
@@ -791,8 +791,8 @@ function course_can_take_course($node, $user) {
     }
   }
 
-  if ($node->course['close']) {
-    if ($node->course['type'] == 'enduring' && time() > strtotime($node->course['close'])) {
+  if (isset($node->course['close']) && $node->course['close']) {
+    if (time() > strtotime($node->course['close'])) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, this course is expired.',
@@ -1435,7 +1435,7 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
     $module = (object) $module;
   }
 
-  if (is_object($module) && $module->coid) {
+  if (is_object($module) && isset($module->coid)) {
     // Passed options with the course object ID set.
     $coid = $module->coid;
     return course_get_course_object_by_id($coid, $account, $course);

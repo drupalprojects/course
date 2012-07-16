@@ -44,6 +44,7 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $form_state['values']['name'] = 'course_test';
     $form_state['values']['description'] = 'course_test';
     $form_state['values']['pcid'] = 'course_test';
+    $form['pcid']['#type'] = 'textfield';
     uc_product_class_form_submit($form, $form_state);
 
     // Create a product node.
