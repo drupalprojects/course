@@ -37,6 +37,7 @@ class CourseObjectSignupTestCase extends CourseTestCase {
     // Create a signup node.
     $courseNode = $this->createCourseNode();
     $courseNode->signup_enabled = 1;
+    $courseNode->signup_user_reg = 0;
     node_save($courseNode);
 
     // Sign the user up

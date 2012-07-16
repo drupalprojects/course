@@ -57,7 +57,7 @@ function course_uc_nodeapi($node, $op, $a3, $a4) {
       break;
     case 'insert':
     case 'update':
-      if (course_node_is_course($node) && $node->sell_price > 0) {
+      if (course_node_is_course($node) && isset($node->sell_price) && $node->sell_price > 0) {
         // Course has a sell price.
         $course = course_get_course($node);
         foreach ($course->getObjects() as $courseObject) {
@@ -81,6 +81,7 @@ function course_uc_nodeapi($node, $op, $a3, $a4) {
       }
   }
 
+  // @todo this has to go somewhere
   if ($form_id == 'course_admin_settings') {
     $form['course_uc_restrict_qty'] = array(
       '#title' => 'Restrict course products to 1 per customer.',
@@ -91,6 +92,9 @@ function course_uc_nodeapi($node, $op, $a3, $a4) {
   }
 }
 
+/**
+ * Implements hook_init().
+ */
 function course_uc_init() {
   if (arg(1) == 'checkout') {
     global $conf;

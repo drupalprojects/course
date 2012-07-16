@@ -67,7 +67,12 @@ class CourseHandler {
    */
   public final function getOption($key) {
     $config = $this->getOptions();
-    return $config[$key];
+    if (isset($config[$key])) {
+      return $config[$key];
+    }
+    else {
+      return NULL;
+    }
   }
 
   /**
@@ -307,6 +312,7 @@ class Course extends CourseHandler {
     }
 
     $old = NULL;
+    $storeNext = FALSE;
     foreach ($this->getObjects() as $courseObject) {
       if ($id == $courseObject->getId()) {
         // Active - save old, store next.
@@ -369,6 +375,8 @@ class Course extends CourseHandler {
    * Track the course (scan required objects, update progress, completion, etc).
    */
   public function track() {
+    $required = 0;
+    $required_complete = 0;
     $prev = NULL;
     foreach ($this->getObjects() as $courseObject) {
       if (!$courseObject->getOption('enabled')) {

@@ -257,6 +257,7 @@ function course_signup_action_info() {
   $actions['course_signup_add_enrollment_action'] = array(
     'type' => 'user',
     'description' => t('Enroll/signup user in current course'),
+    'configurable' => FALSE,
   );
 
   return $actions;

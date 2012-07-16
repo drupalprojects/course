@@ -39,7 +39,12 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     module_load_include('inc', 'uc_product', 'uc_product.admin');
 
     // Mark our course_test content type as a product.
+    $form = array();
+    $form_state = array();
+    $form_state['values']['name'] = 'course_test';
+    $form_state['values']['description'] = 'course_test';
     $form_state['values']['pcid'] = 'course_test';
+    $form['pcid']['#type'] = 'textfield';
     uc_product_class_form_submit($form, $form_state);
 
     // Create a product node.
@@ -52,7 +57,7 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $result = course_enrol_access($courseNode);
     $this->assertFalse($result['success'], 'User prevented from taking paid course.');
 
-    $order = uc_order_new($user);
+    $order = uc_order_new($user->uid);
     uc_order_product_save($order->order_id, $courseNode);
     uc_order_update_status($order->order_id, 'pending');
     uc_order_update_status($order->order_id, 'completed');

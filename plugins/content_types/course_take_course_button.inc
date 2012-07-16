@@ -9,6 +9,7 @@ $plugin = array(
   'description' => t('The take course button rendered html, if the user can take the course.'),
   'required context' => new ctools_context_required(t('Node'), 'node'),
   'category' => t('Node'),
+  'icon' => '',
 );
 
 /**

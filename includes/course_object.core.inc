@@ -415,7 +415,7 @@ abstract class CourseObject extends CourseHandler {
   public function getOptions() {
     $options = parent::getOptions();
     $sessionDefaults = array();
-    if (isset($options['nid']) && $_SESSION['course'][$options['nid']]['editing'][$options['coid']]) {
+    if (isset($options['nid']) && isset($options['coid']) && isset($_SESSION['course'][$options['nid']]['editing'][$options['coid']])) {
       $sessionDefaults += array_filter((array) $_SESSION['course'][$options['nid']]['editing'][$options['coid']], array($this, 'optionFilter'));
     }
     return array_merge($options, (array) $sessionDefaults);
@@ -622,7 +622,7 @@ abstract class CourseObject extends CourseHandler {
     if (!$this->course) {
       $nid = $this->getCourseNid();
       if ($nid) {
-        $this->course = new Course($nid, $this->user);
+        $this->course = new Course(node_load($nid), $this->user);
       }
     }
 

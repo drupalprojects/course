@@ -131,8 +131,9 @@ function course_outline_overview_form(&$form_state) {
   }
 
   // Add a blank row.
-  if ($form_state['values']['op'] != 'Save') {
+  if (!isset($form_state['values']['op']) || $form_state['values']['op'] != 'Save') {
     $obj_uniqid = uniqid('course_object_');
+    $new = array();
     $new['nid'] = $node->nid;
     $new = _course_outline_object_form($new, $obj_uniqid);
     $new['object_type'] = array(
@@ -177,30 +178,12 @@ function course_outline_overview_form(&$form_state) {
 function _course_outline_object_form($object = array(), $uniqid = NULL, $courseObject = NULL) {
   $rform['#tree'] = TRUE;
 
-  $rform['coid'] = array(
-    '#type' => 'value',
-    '#default_value' => $object['coid'],
-  );
-
-  $rform['instance'] = array(
-    '#type' => 'value',
-    '#default_value' => $object['instance'],
-  );
-
-  $rform['module'] = array(
-    '#type' => 'value',
-    '#default_value' => $object['module'],
-  );
-
-  $rform['object_type'] = array(
-    '#type' => 'value',
-    '#default_value' => $object['object_type'],
-  );
-
-  $rform['nid'] = array(
-    '#type' => 'value',
-    '#default_value' => $object['nid'],
-  );
+  foreach (array('coid', 'instance', 'module', 'object_type', 'nid') as $key) {
+    $rform[$key] = array(
+      '#type' => 'value',
+      '#default_value' => isset($object[$key]) ? $object['key'] : NULL,
+    );
+  }
 
   // Do not use prefix/suffix because markup only renders with a value, and we
   // need the wrapper before the title is saved for ajax population after each
