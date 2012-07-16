@@ -119,7 +119,7 @@ function course_outline_overview_form(&$form_state) {
 
   // Add a blank row.
   if ($form_state['values']['op'] != 'Save') {
-    $obj_uniqid = uniqid();
+    $obj_uniqid = uniqid('course_object_');
     $new['nid'] = $node->nid;
     $new = _course_outline_requirement_form($new, $obj_uniqid);
     $new['object_type'] = array(
