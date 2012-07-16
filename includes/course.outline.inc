@@ -131,7 +131,7 @@ function course_outline_overview_form(&$form_state) {
   }
 
   // Add a blank row.
-  if (isset($form_state['values']['op']) && $form_state['values']['op'] != 'Save') {
+  if (!isset($form_state['values']['op']) || $form_state['values']['op'] != 'Save') {
     $obj_uniqid = uniqid('course_object_');
     $new = array();
     $new['nid'] = $node->nid;
