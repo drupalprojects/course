@@ -112,6 +112,15 @@ function course_outline_overview_form(&$form_state) {
             . ucwords(str_replace('_', ' ', $requirement['module'])) . '</i></small>'),
         );
       }
+
+      if ($requirement['object_type']) {
+        // Settings link for saved objects.
+        $text = t('Settings');
+        $path = "node/{$requirement['nid']}/course-object/nojs/{$uniqid}/options";
+        $l_options = array('attributes' => array('class' => 'ctools-use-modal'));
+        $rform['options']['#value'] = l($text, $path, $l_options);
+      }
+
       ctools_ajax_associate_url_to_element($form, $rform['object_type'], "course-object/nojs/store/$uniqid");
       $cform['requirements'][$uniqid] = $rform;
     }
@@ -192,30 +201,35 @@ function _course_outline_requirement_form($requirement = array(), $uniqid = NULL
   // Do not use prefix/suffix because markup only renders with a value, and we
   // need the wrapper before the title is saved for ajax population after each
   // settings modal update.
-  $title = '<div id="title-' . $uniqid . '">';
   if ($courseObject) {
-    $title .= check_plain($courseObject->getTitle());
+    $title = $courseObject->getTitle();
   }
-  $title .= '</div>';
   $rform['title'] = array(
+    '#prefix' => '<div id="title-' . $uniqid . '">',
+    '#suffix' => '</div>',
     '#type' => 'markup',
-    '#value' => filter_xss_admin($title),
+    '#value' => check_plain($title ? $title : ' '),
   );
 
-  $summary = '<div id="summary-' . $uniqid . '">';
   if ($courseObject) {
-    $summary .= $courseObject->renderOptionsSummary();
+    $summary = $courseObject->renderOptionsSummary();
   }
-  $summary .= '</div>';
 
   $rform['summary'] = array(
+    '#prefix' => '<div id="summary-' . $uniqid . '">',
+    '#suffix' => '</div>',
     '#type' => 'markup',
-    '#value' => filter_xss_admin($summary),
+    '#value' => filter_xss_admin($summary ? $summary : ' '),
   );
 
-  $rform['settings'] = array(
+  // Placeholder for the settings link, it gets added after this function runs
+  // in course_outline_overview_form(). #value needs a space for the prefix and
+  // suffix to render.
+  $rform['options'] = array(
     '#type' => 'markup',
-    '#value' => filter_xss_admin(l(t('Settings'), "node/" . $requirement['nid'] . "/course-object/nojs/$uniqid/edit", array('attributes' => array('class' => "ctools-use-modal settings-$uniqid")))),
+    '#prefix' => '<div id="' . "options-{$uniqid}" . '">',
+    '#value' => ' ',
+    '#suffix' => '</div>',
   );
 
   $rform['weight'] = array(
@@ -261,7 +275,7 @@ function theme_course_outline_overview_form($form) {
     // @todo find an elegant way to hide the settings link until a component
     //   type is selected.
     //$new = empty($requirements[$key]['coid']['#value']);
-    $rows[$key]['data'][] = $new ? '' : drupal_render($requirements[$key]['settings']);
+    $rows[$key]['data'][] = $new ? '' : drupal_render($requirements[$key]['options']);
 
     // Add draggable settings to row.
     $rows[$key]['class'] = 'draggable';
@@ -324,7 +338,6 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   //     hook_course_handlers().
   $objects = $form_state['values']['course_outline']['requirements'];
   //uksort($objects, 'course_outline_overview_form_cmp_function');
-
   // Get object handler definitions for labels.
   $object_info = course_get_handlers('object');
 
@@ -332,7 +345,6 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
     // Renumber object based on the order they were submitted in (when JS is
     // disabled)
     //$object['weight'] = ++$i;
-
     // We use the object_type namespace for two purposes:
     // - The form element is a select list with keys matching the combined
     //   pattern: {module}-{object_type}.
@@ -350,13 +362,6 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
     // outline overview form.
     $courseObject = course_get_course_object($object);
     $options = $courseObject->getOptions();
-
-    // If title is not specified, set title from component.
-    if (!$courseObject->getTitle() && isset($object['object_type'])) {
-      // Get the component name from object info.
-      $title = $object_info[$object['module']][$object['object_type']]['name'];
-      $courseObject->setOption('title', $title);
-    }
 
     // We only save overview objects with a selected component, whether loaded
     // from the database or AHAH created.

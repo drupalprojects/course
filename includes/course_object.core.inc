@@ -696,6 +696,15 @@ abstract class CourseObject extends CourseHandler {
   }
 
   function getTitle() {
+    $object_info = course_get_handlers('object');
+    
+    // If title is not specified, set title from component.
+    if (!$this->getOption('title')) {
+      // Get the component name from object info.
+      $title = $object_info[$this->getOption('module')][$this->getOption('object_type')]['name'];
+      $this->setOption('title', $title);
+    }
+
     return $this->getOption('title');
   }
 
