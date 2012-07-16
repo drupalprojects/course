@@ -821,7 +821,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         break;
       case 'insert':
         if (!isset($node->course)) {
-          $node->course = new stdClass;
+          $node->course = array();
         }
       case 'update':
         $record = $node->course;
