@@ -415,7 +415,7 @@ abstract class CourseObject extends CourseHandler {
   public function getOptions() {
     $options = parent::getOptions();
     $sessionDefaults = array();
-    if (isset($options['nid']) && $_SESSION['course'][$options['nid']]['editing'][$options['coid']]) {
+    if (isset($options['nid']) && isset($_SESSION['course'][$options['nid']]['editing'][$options['coid']])) {
       $sessionDefaults += array_filter((array) $_SESSION['course'][$options['nid']]['editing'][$options['coid']], array($this, 'optionFilter'));
     }
     return array_merge($options, (array) $sessionDefaults);

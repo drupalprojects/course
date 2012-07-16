@@ -52,7 +52,7 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $result = course_enrol_access($courseNode);
     $this->assertFalse($result['success'], 'User prevented from taking paid course.');
 
-    $order = uc_order_new($user);
+    $order = uc_order_new($user->uid);
     uc_order_product_save($order->order_id, $courseNode);
     uc_order_update_status($order->order_id, 'pending');
     uc_order_update_status($order->order_id, 'completed');

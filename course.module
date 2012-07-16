@@ -791,7 +791,7 @@ function course_can_take_course($node, $user) {
     }
   }
 
-  if ($node->course['closed']) {
+  if ($node->course['close']) {
     if ($node->course['type'] == 'enduring' && time() > strtotime($node->course['close'])) {
       return array(array(
           'success' => FALSE,
@@ -928,7 +928,7 @@ function course_enrol($node, $account = NULL, $from = NULL, $code = NULL, $statu
       'code' => $code,
     );
 
-    if ($node->course['duration'] > 0) {
+    if (isset($node->course['duration']) && $node->course['duration'] > 0) {
       // Set enrolment end to now + the duration of the course.
       $enrol['enrol_end'] = time() + $node->course['duration'] * 86400;
     }
@@ -2324,8 +2324,9 @@ function course_set_context($node = NULL, $clear = FALSE) {
  */
 function course_determine_context($module = NULL, $object_type = NULL, $instance = NULL, $no_set = FALSE, $flush = FALSE) {
   static $cache = NULL;
+  $context = NULL;
 
-  if (!$context || $flush || $no_set) {
+  if ($flush || $no_set) {
     // Determine the course node based on passed query parameters.
     $sql = "select nid from {course_outline}
       where instance = '%s'
