@@ -499,6 +499,7 @@ function course_outline_list($node) {
   if ($workflow) {
     $output .= '<div class="course-outline">';
     $output .= '<span class="trigger"></span>';
+    $output .= '<h4 class="course-title">' . $node->title . '</h4>';
     $output .= theme('item_list', $workflow);
     $output .= '</div>';
   }

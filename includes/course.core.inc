@@ -67,7 +67,12 @@ class CourseHandler {
    */
   public final function getOption($key) {
     $config = $this->getOptions();
-    return $config[$key];
+    if (isset($config[$key])) {
+      return $config[$key];
+    }
+    else {
+      return NULL;
+    }
   }
 
   /**
