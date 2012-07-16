@@ -2326,7 +2326,7 @@ function course_determine_context($module = NULL, $object_type = NULL, $instance
   static $cache = NULL;
   $context = NULL;
 
-  if (!$cache || $flush || $no_set) {
+  if (!$context || $flush || $no_set) {
     // Determine the course node based on passed query parameters.
     $sql = "select nid from {course_outline}
       where instance = '%s'
