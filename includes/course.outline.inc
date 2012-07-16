@@ -181,7 +181,7 @@ function _course_outline_object_form($object = array(), $uniqid = NULL, $courseO
   foreach (array('coid', 'instance', 'module', 'object_type', 'nid') as $key) {
     $rform[$key] = array(
       '#type' => 'value',
-      '#default_value' => isset($object[$key]) ? $object['key'] : NULL,
+      '#default_value' => isset($object[$key]) ? $object[$key] : NULL,
     );
   }
 
@@ -351,7 +351,7 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
 
     // Get each course object settings saved form values, which are not on the
     // outline overview form.
-    $courseObject = course_get_course_object($object);
+    $courseObject = course_get_course_object_by_id($object_key);
     $options = $courseObject->getOptions();
 
     // We only save overview objects with a selected component, whether loaded
