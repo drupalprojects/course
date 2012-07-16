@@ -269,7 +269,7 @@ function course_schema() {
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => 'Unique identifier for the course requirement record.',
+        'description' => 'Unique identifier for the course object record.',
       ),
       'nid' => array(
         'type' => 'int',
@@ -382,14 +382,14 @@ function course_schema() {
         'type' => 'serial',
         'not null' => TRUE,
         'unsigned' => TRUE,
-        'description' => 'Unique identifier for the course requirement fufillment record.',
+        'description' => 'Unique identifier for the course object fufillment record.',
       ),
       'coid' => array(
         'type' => 'int',
         'not null' => TRUE,
         'unsigned' => TRUE,
         'default' => 0,
-        'description' => 'identifier for the course requirement.',
+        'description' => 'Identifier for the course object.',
       ),
       'uid' => array(
         'type' => 'int',
@@ -417,14 +417,14 @@ function course_schema() {
         'not null' => FALSE,
         'unsigned' => TRUE,
         'default' => NULL,
-        'description' => 'Date requirement was started.',
+        'description' => 'Date object was started.',
       ),
       'date_completed' => array(
         'type' => 'int',
         'not null' => FALSE,
         'unsigned' => TRUE,
         'default' => NULL,
-        'description' => 'Date requirement was completed.',
+        'description' => 'Date object was completed.',
       ),
       'info' => array(
         'type' => 'text',
@@ -507,7 +507,7 @@ function course_update_6124() {
     'not null' => FALSE,
     'unsigned' => TRUE,
     'default' => NULL,
-    'description' => 'Date requirement was started.',
+    'description' => 'Date object was started.',
   ));
 
   db_add_field($ret, 'course_outline', 'duration', array(
@@ -820,6 +820,6 @@ function course_update_6135() {
     'not null' => TRUE,
     'unsigned' => TRUE,
   ));
-  
+
   return $ret;
 }

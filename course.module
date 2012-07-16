@@ -848,15 +848,15 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           WHERE nid = %d
           ORDER BY weight ASC";
         $result = db_query($sql, $node->nid);
-        $rarray = array();
-        while ($requirement = db_fetch_object($result)) {
-          foreach ($requirement as $key => $value) {
-            $rarray[$requirement->coid]->$key = $value;
+        $objects = array();
+        while ($object = db_fetch_object($result)) {
+          foreach ($object as $key => $value) {
+            $objects[$object->coid]->$key = $value;
           }
         }
 
 
-        $node->course['objects'] = $rarray;
+        $node->course['objects'] = $objects;
         break;
       case 'delete':
         // Clean up course specific settings and enrollments when a course is
@@ -1795,6 +1795,11 @@ function course_edit_enrollment_action_form($context) {
     '#value' => format_plural($num_users, 'Use this form to edit course enrollment and completion data for 1 user', 'Use this form to edit course enrollment and completion data for @count users'),
   );
 
+  // Check if this action is being performed on a single user, and set the
+  // account accordingly.
+  $account = NULL;
+  $enrol = NULL;
+  $course_report = NULL;
   if ($num_users == 1) {
     // Only one user, so let's prefill values.
     $selection = reset($context['selection']);
@@ -1806,11 +1811,25 @@ function course_edit_enrollment_action_form($context) {
       $uid = $selection->uid;
     }
     $account = user_load($uid);
-    // @todo use Course
-    $fulfillments = course_outline_check_remaining_requirements($node, $account);
 
     $enrol = course_enrolment_load($node->nid, $account->uid);
     $course_report = course_report_load($node, $account);
+  }
+
+  // Get course objects, with or without a single user account information.
+  $course = course_get_course($node, $account);
+  $objects = $course->getObjects();
+
+  // Build a list of a single user's fulfillments.
+  $fulfillments = NULL;
+  if ($account) {
+    $fulfillments = array();
+    foreach ($objects as $courseObject) {
+      // Find required course objects the user has not yet completed.
+      //if ($courseObject->getOption('required') && !$courseObject->getOption('complete')) {
+        $fulfillments[$courseObject->getId()] = $courseObject->getFulfillment();
+      //}
+    }
   }
 
   $form['status'] = array(
@@ -1865,9 +1884,7 @@ function course_edit_enrollment_action_form($context) {
     '#suffix' => '</span>',
   );
 
-  $course = course_get_course($node);
-
-  foreach ($course->getObjects() as $key => $courseObject) {
+  foreach ($objects as $courseObject) {
     $form['course_objects'][$courseObject->getId()] = array(
       '#type' => 'select',
       '#title' => check_plain($courseObject->getTitle()),
@@ -1877,7 +1894,7 @@ function course_edit_enrollment_action_form($context) {
         -1 => t('Incomplete'),
         0 => t('Failed'),
       ),
-      '#default_value' => $fulfillments[$courseObject->getId()]->complete,
+      '#default_value' => $fulfillments[$courseObject->getId()]->isComplete,
     );
   }
 
@@ -2239,12 +2256,12 @@ function course_theme() {
 }
 
 /**
- * Delete a course requirement.
+ * Delete a course object.
  *
  * @param array $mixed
- *   An array representing a course requirement (containing 'coid').
+ *   An array representing a course object (containing 'coid').
  */
-function course_outline_delete_requirement($mixed) {
+function course_outline_delete_object($mixed) {
   if (is_object($mixed)) {
     $mixed = (array) $mixed;
   }

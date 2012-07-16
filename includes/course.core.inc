@@ -366,7 +366,7 @@ class Course extends CourseHandler {
   }
 
   /**
-   * Track the course (scan requirements, update the progress, completion etc)
+   * Track the course (scan required objects, update progress, completion, etc).
    */
   public function track() {
     $prev = NULL;

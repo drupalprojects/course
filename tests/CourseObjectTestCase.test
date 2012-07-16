@@ -35,7 +35,7 @@ class CourseObjectTestCase extends CourseTestCase {
     $this->assertTrue($courseObject->getId() == $id, 'Loaded course object by ID.');
 
     // Delete
-    course_outline_delete_requirement($courseObject->getOptions());
+    course_outline_delete_object($courseObject->getOptions());
     $courseObject = course_get_course_object_by_id($id);
     $this->assertFalse($courseObject, 'Check that deleted object no longer exists.');
   }

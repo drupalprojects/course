@@ -245,7 +245,7 @@ function course_uc_enrol_user_in_ordered_courses($order) {
     }
 
     if ($courseNode = course_determine_context('course_uc', 'payment', $node->nid)) {
-      // This product is also a course requirement, other than the first one.
+      // This product is also a course object, other than the first one.
       // Satisfy it!
       $course = course_get_course($courseNode, $user);
       foreach ($course->getObjects() as $idx => $courseObject) {

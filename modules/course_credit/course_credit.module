@@ -982,9 +982,8 @@ function course_credit_can_apply_access($course_node) {
   // allowed for admin to bypass this, but it confuses people who have the
   // permissions and are testing a course.
   if (!$has_completed_course && arg(2) == 'course-credit-app') {
-    // If certificate requirements exist and they do not have a completion
-    // record, we redirect them to a nice view of all the remaining
-    // requirements.
+    // If incomplete required objects exist and they do not have a fulfillment
+    // record, redirect the user to a view of all remaining required objects.
     drupal_goto("node/{$course_node->nid}/course-complete");
   }
   return TRUE;

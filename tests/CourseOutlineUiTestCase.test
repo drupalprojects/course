@@ -27,12 +27,12 @@ class CourseOutlineUiTestCase extends CourseTestCase {
     // we don't have to create uniqids? Not sure.
     $this->drupalGet("node/{$courseNode->nid}/course-outline");
     $body = $this->drupalGetContent();
-    preg_match('#course_outline\[requirements\]\[(.*)\]#U', $body, $match);
+    preg_match('#course_outline\[objects\]\[(.*)\]#U', $body, $match);
     $uniqid = $match[1];
 
     // Add a new course content object.
     $edit = array();
-    $edit["course_outline[requirements][$uniqid][object_type]"] = 'course_test-course_test_object';
+    $edit["course_outline[objects][$uniqid][object_type]"] = 'course_test-course_test_object';
     $this->drupalPost(NULL, $edit, t('Save'));
 
     $this->assertText(t('Updated course.'));

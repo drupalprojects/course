@@ -133,7 +133,7 @@ function hook_course_outline_completion_links(&$links, $course_node, $account) {
 }
 
 /**
- * Allow modules to alter remaining requirement links on the course completion
+ * Allow modules to alter remaining incomplete links on the course completion
  * landing page.
  *
  * @param array $links

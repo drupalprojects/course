@@ -9,8 +9,7 @@ Features
 * Allows any content-type to be used as an e-learning course, containing any
   number of graded or ungraded course objects.
 * Course object API to define learning objects to be added to a workflow
-    * Built in support for Drupal nodes to be part of a course requirement
-      workflow
+    * Built in support for Drupal nodes to be part of a course object workflow.
     * Built in support for several course objects (see Getting started)
     * Extensible to allow other content/assessments or non-Drupal (external)
       objects to be delivered and tracked
@@ -37,10 +36,10 @@ Getting started
     * course_content - Use any content type as a course object
     * course_object_manual - Arbitrary steps which must be marked complete by an
       administrator before a learner may proceed past them
-    * course_poll - Poll requirement
+    * course_poll - Poll object
     * course_quiz - Graded Quiz object
     * 6.x - course_scorm - Exposes cck_scorm fields as Course objects
-    * course_webform - Webform submission requirement
+    * course_webform - Webform submission object
 2. Set up the "Course outline" block at admin/build/blocks
 3. Go to Create content -> Course
 4. Add new course objects, "Quiz" will be available

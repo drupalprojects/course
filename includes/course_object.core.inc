@@ -11,7 +11,7 @@ abstract class CourseObject extends CourseHandler {
 
   // Hold course.
   private $course = NULL;
-  // Hold requirement/object from database and the fulfillment object.
+  // Hold course object from database and the fulfillment object.
   private $courseObjectFulfillment = NULL;
   // Hold a user.
   private $user = NULL;
@@ -22,9 +22,12 @@ abstract class CourseObject extends CourseHandler {
    * Use course_get_course_object to load an object when parameters are not
    * already known.
    *
-   * @param object $requirement
+   * @param array $config
    *   An object with object_type, module, and instance
-   * @param object $user
+   * @param object $account
+   *   (optional) A user account object.
+   * @param Course $course
+   *   (optional) An instantiated Course object.
    */
   function __construct($config = array(), $account = NULL, Course $course = NULL) {
     $config = (array) $config;
@@ -700,7 +703,7 @@ abstract class CourseObject extends CourseHandler {
 
   function getTitle() {
     $object_info = course_get_handlers('object');
-    
+
     // If title is not specified, set title from component.
     if (!$this->getOption('title')) {
       // Get the component name from object info.
@@ -821,7 +824,7 @@ class CourseObjectFulfillment extends CourseHandler {
 
     $this->setOptions($fulfillment);
 
-    // Set requirement ID.
+    // Set course object ID.
     $this->setOption('coid', $this->courseObject->getId());
     $this->setOption('uid', $user->uid);
   }
@@ -897,9 +900,9 @@ abstract class CourseObjectNode extends CourseObject {
 
   protected $node;
 
-  public function __construct($requirement, $user = NULL, $course = NULL) {
+  public function __construct($object, $user = NULL, $course = NULL) {
     // Pass configuration to parent.
-    parent::__construct($requirement, $user, $course);
+    parent::__construct($object, $user, $course);
     $this->node = node_load($this->getInstanceId());
   }
 
