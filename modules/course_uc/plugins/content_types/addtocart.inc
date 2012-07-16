@@ -10,6 +10,7 @@ $plugin = array(
   'description' => t('Include add to cart form as a pane'),
   'required context' => new ctools_context_required(t('Node'), 'node'),
   'category' => t('Node'),
+  'icon' => '',
 );
 
 /**

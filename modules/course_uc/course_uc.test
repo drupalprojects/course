@@ -39,6 +39,10 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     module_load_include('inc', 'uc_product', 'uc_product.admin');
 
     // Mark our course_test content type as a product.
+    $form = array();
+    $form_state = array();
+    $form_state['values']['name'] = 'course_test';
+    $form_state['values']['description'] = 'course_test';
     $form_state['values']['pcid'] = 'course_test';
     uc_product_class_form_submit($form, $form_state);
 
