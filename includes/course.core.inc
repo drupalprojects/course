@@ -302,7 +302,7 @@ class Course extends CourseHandler {
    *   A numeric course object ID.
    */
   public function setActive($id = NULL) {
-    if (!$id) {
+    if (!$id && isset($_SESSION['course'][$this->node->nid]['taking']['active'])) {
       $id = $_SESSION['course'][$this->node->nid]['taking']['active'];
     }
 
