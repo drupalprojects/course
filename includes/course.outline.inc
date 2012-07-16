@@ -41,7 +41,7 @@ function course_outline_overview_form(&$form_state) {
   // Shortcut.
   $cform = &$form['course_outline'];
 
-  if ($form_state['values']['nid']) {
+  if (isset($form_state['values']['nid'])) {
     $node = node_load($form_state['values']['nid']);
   }
   else {
@@ -279,7 +279,7 @@ function theme_course_outline_overview_form($form) {
     $nid = $object['nid']['#value'];
     // @todo should we unify this, so we always use $courseObject->getOptions()
     // instead of pulling from the session?
-    if ($_SESSION['course'][$nid]['editing'][$key]['delete']) {
+    if (isset($_SESSION['course'][$nid]['editing'][$key]['delete'])) {
       $rows[$key]['class'] = 'deleted';
     }
 
