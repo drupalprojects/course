@@ -60,7 +60,6 @@ function course_signup_menu() {
 function course_signup_menu_alter(&$items) {
   $items['node/%node/signups']['title callback'] = 'course_signup_tab_title';
   $items['node/%node/signups']['title arguments'] = array(1);
-  $items['node/%node/signups']['weight'] = $items['node/%course/course-reports']['weight'];
   // Hide normal signup add form, ours is better!
   $items['node/%node/signups/add']['access callback'] = FALSE;
 }
