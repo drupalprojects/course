@@ -24,9 +24,9 @@ class CourseAccessTestCase extends CourseTestCase {
     course_enrol($courseNode, $user);
 
     // Expire the duration.
-    $enrol = course_enrolment_load($courseNode, $user);
-    $enrol->enrol_end = 1;
-    course_enrolment_save($enrol);
+    $enroll = course_enrolment_load($courseNode, $user);
+    $enroll->enrol_end = 1;
+    course_enrolment_save($enroll);
     $result = course_take_course_access($courseNode, $user, TRUE);
     $this->assertFalse($result['success'], 'User cannot access course with expired enrollment.');
   }

@@ -920,7 +920,7 @@ function course_enrol($node, $account = NULL, $from = NULL, $code = NULL, $statu
   }
 
   if (course_node_is_course($node)) {
-    $enrol = array(
+    $enroll = array(
       'nid' => $node->nid,
       'uid' => $account->uid,
       'enrollmenttype' => $from,
@@ -930,26 +930,27 @@ function course_enrol($node, $account = NULL, $from = NULL, $code = NULL, $statu
 
     if (isset($node->course['duration']) && $node->course['duration'] > 0) {
       // Set enrolment end to now + the duration of the course.
-      $enrol['enrol_end'] = time() + $node->course['duration'] * 86400;
+      $enroll['enrol_end'] = time() + $node->course['duration'] * 86400;
     }
 
-    $enrol = (object) $enrol;
+    $enroll = (object) $enroll;
 
     $watchdog_variables = array('!uid' => $account->uid, '!nid' => $node->nid);
     if (!course_enrolment_check($node, $account)) {
       // User is not enrolled yet.
       watchdog('course_enrol', 'Enrolling user !uid into !nid', $watchdog_variables);
-      course_enrolment_save($enrol);
+      course_enrolment_save($enroll);
       $op = 'insert';
     }
     else {
       watchdog('course_enrol', 'Re-enrolling user !uid into !nid', $watchdog_variables);
-      // return drupal_write_record('course_enrolment', $enrol, array('nid', 'uid'));
+      // return drupal_write_record('course_enrolment', $enroll, array('nid', 'uid'));
       $op = 'update';
     }
     // @todo figure $op out.
     // Notify modules about a course enrollment.
     module_invoke_all('course_enrol', $node, $account, $from, $code, $status);
+    return $enroll;
   }
   else {
     return FALSE;
@@ -1802,7 +1803,7 @@ function course_edit_enrollment_action_form($context) {
   // Check if this action is being performed on a single user, and set the
   // account accordingly.
   $account = NULL;
-  $enrol = NULL;
+  $enroll = NULL;
   $course_report = NULL;
   if ($num_users == 1) {
     // Only one user, so let's prefill values.
@@ -1816,7 +1817,7 @@ function course_edit_enrollment_action_form($context) {
     }
     $account = user_load($uid);
 
-    $enrol = course_enrolment_load($node->nid, $account->uid);
+    $enroll = course_enrolment_load($node->nid, $account->uid);
     $course_report = course_report_load($node, $account);
   }
 
@@ -1844,7 +1845,7 @@ function course_edit_enrollment_action_form($context) {
       1 => 'Active',
       0 => 'Inactive',
     ),
-    '#default_value' => $enrol->status,
+    '#default_value' => $enroll->status,
     '#description' => t('Setting an enrollment to "inactive" will prevent a user from accessing the course.'),
   );
 
@@ -1853,7 +1854,7 @@ function course_edit_enrollment_action_form($context) {
     '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
     '#date_format' => 'm/d/Y H:i',
     '#description' => t('The date when the user will not be able to access the course.'),
-    '#default_value' => date('Y-m-d H:i:s', $enrol->enrol_end),
+    '#default_value' => date('Y-m-d H:i:s', $enroll->enrol_end),
   );
 
 

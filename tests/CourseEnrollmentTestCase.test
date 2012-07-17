@@ -30,15 +30,15 @@ class CourseEnrollmentTestCase extends CourseTestCase {
     $this->assertTrue($result['success'], 'Check that the user can take the course.');
 
     course_enrol($courseNode, $user);
-    $enrol = course_enrolment_load($courseNode, $user);
-    $this->assertTrue($enrol->eid > 0, 'Enrollment was created.');
-    $this->assertTrue($enrol->created > 0, 'Enrollment has a creation timestamp.');
-    $this->assertFalse($enrol->timestamp > 0, 'Check that user has not started course.');
+    $enroll = course_enrolment_load($courseNode, $user);
+    $this->assertTrue($enroll->eid > 0, 'Enrollment was created.');
+    $this->assertTrue($enroll->created > 0, 'Enrollment has a creation timestamp.');
+    $this->assertFalse($enroll->timestamp > 0, 'Check that user has not started course.');
 
     // Take the course
     course_take_course($courseNode);
-    $enrol = course_enrolment_load($courseNode, $user);
-    $this->assertTrue($enrol->timestamp > 0, 'Check for start of course timestamp.');
+    $enroll = course_enrolment_load($courseNode, $user);
+    $this->assertTrue($enroll->timestamp > 0, 'Check for start of course timestamp.');
   }
 
   /**
@@ -50,11 +50,11 @@ class CourseEnrollmentTestCase extends CourseTestCase {
 
     $courseNode->course['duration'] = 30;
     node_save($courseNode);
-    $enrol = course_enrolment_load($courseNode, $user);
-    $this->assertFalse($enrol, 'Check that enrollment does not exist.');
+    $enroll = course_enrolment_load($courseNode, $user);
+    $this->assertFalse($enroll, 'Check that enrollment does not exist.');
     course_take_course($courseNode);
-    $enrol = course_enrolment_load($courseNode, $user);
-    $this->assertTrue($enrol->enrol_end > time(), 'Duration end got set with course start.');
+    $enroll = course_enrolment_load($courseNode, $user);
+    $this->assertTrue($enroll->enrol_end > time(), 'Duration end got set with course start.');
   }
 
 }
