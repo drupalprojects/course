@@ -53,7 +53,7 @@ function course_outline_overview_form(&$form_state) {
 
   // Grab objects.
   $objects = $node->course['objects'];
-  if (is_array($form_state['values']['course_outline']['objects'])) {
+  if (!empty($form_state['values']['course_outline']['objects'])) {
     $objects = $form_state['values']['course_outline']['objects'];
   }
 
@@ -191,6 +191,9 @@ function _course_outline_object_form($object = array(), $uniqid = NULL, $courseO
   if ($courseObject) {
     $title = $courseObject->getTitle();
   }
+  else {
+    $title = '';
+  }
   $rform['title'] = array(
     '#prefix' => '<div id="title-' . $uniqid . '">',
     '#suffix' => '</div>',
@@ -200,6 +203,9 @@ function _course_outline_object_form($object = array(), $uniqid = NULL, $courseO
 
   if ($courseObject) {
     $summary = $courseObject->renderOptionsSummary();
+  }
+  else {
+    $summary = '';
   }
 
   $rform['summary'] = array(
@@ -222,7 +228,7 @@ function _course_outline_object_form($object = array(), $uniqid = NULL, $courseO
   $rform['weight'] = array(
     '#type' => 'weight',
     '#delta' => 50,
-    '#default_value' => $object['weight'],
+    '#default_value' => isset($object['weight']) ? $object['weight'] : NULL,
     '#attributes' => array(
       'class' => 'course-object-weight',
     ),
@@ -266,7 +272,7 @@ function theme_course_outline_overview_form($form) {
     unset($objects[$key]['object_type']['#title']);
     $rows[$key]['data'][] = drupal_render($objects[$key]['title']) . drupal_render($objects[$key]['summary']);
     $rows[$key]['data'][] = drupal_render($objects[$key]['object_type']) . drupal_render($objects[$key]['object_type_show']);
-    $rows[$key]['data'][] = $new ? '' : drupal_render($objects[$key]['options']);
+    $rows[$key]['data'][] = drupal_render($objects[$key]['options']);
 
     // Add draggable settings to row.
     $rows[$key]['class'] = 'draggable';

@@ -246,10 +246,9 @@ abstract class CourseObject extends CourseHandler {
 
       // Initialize access class.
       $class = ctools_plugin_get_class($plugin, 'handler');
-      $courseAccessDefaults = $config['plugins']['access'][$key];
       $courseAccess = new $class();
-      if ($courseAccessDefaults) {
-        $courseAccess->setOptions($courseAccessDefaults);
+      if (!empty($config['plugins']['access'][$key])) {
+        $courseAccess->setOptions($config['plugins']['access'][$key]);
       }
       $courseAccess->setCourseObject($this);
 

@@ -533,7 +533,6 @@ function course_object_options_form_validate(&$form, &$form_state) {
   }
 }
 
-
 /**
  * Form submission handler for course_object_options_form().
  *
@@ -1336,15 +1335,17 @@ function course_enrolment_save($enrolment) {
  * @return CourseObject|FALSE
  */
 function _course_get_course_object_by_uniqid($uniqid, $account = NULL, $course = NULL) {
-  foreach ($_SESSION['course'] as $nid => $session) {
-    if (is_array($session['editing'])) {
-      foreach ($session['editing'] as $coid => $object) {
-        if ($coid == $uniqid) {
-          $courseObject = course_get_course_object($object, NULL, NULL, $account, $course);
-          if (!$course) {
-            $course = course_get_course(node_load($nid));
-            $courseObject->setCourse($course);
-            return $courseObject;
+  if (!empty($_SESSION['course'])) {
+    foreach ($_SESSION['course'] as $nid => $session) {
+      if (!empty($session['editing'])) {
+        foreach ($session['editing'] as $coid => $object) {
+          if ($coid == $uniqid) {
+            $courseObject = course_get_course_object($object, NULL, NULL, $account, $course);
+            if (!$course) {
+              $course = course_get_course(node_load($nid));
+              $courseObject->setCourse($course);
+              return $courseObject;
+            }
           }
         }
       }
@@ -1832,7 +1833,7 @@ function course_edit_enrollment_action_form($context) {
     foreach ($objects as $courseObject) {
       // Find required course objects the user has not yet completed.
       //if ($courseObject->getOption('required') && !$courseObject->getOption('complete')) {
-        $fulfillments[$courseObject->getId()] = $courseObject->getFulfillment();
+      $fulfillments[$courseObject->getId()] = $courseObject->getFulfillment();
       //}
     }
   }
