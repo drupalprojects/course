@@ -80,16 +80,22 @@ function course_uc_nodeapi($node, $op, $a3, $a4) {
         $newObject->save();
       }
   }
+}
 
-  // @todo this has to go somewhere
-  if ($form_id == 'course_admin_settings') {
-    $form['course_uc_restrict_qty'] = array(
-      '#title' => 'Restrict course products to 1 per customer.',
-      '#description' > 'Course will restrict users from adding the product to cart if they have already purchased the course or already have the course in their cart.',
-      '#type' => 'checkbox',
-      '#default_value' => variable_get('course_uc_restrict_qty', 1),
-    );
-  }
+/**
+ * Ubercart course settings form.
+ */
+function course_uc_settings_form() {
+  $form = array();
+
+  $form['course_uc_restrict_qty'] = array(
+    '#title' => 'Restrict course products to 1 per customer.',
+    '#description' > 'Course will restrict users from adding the product to cart if they have already purchased the course or already have the course in their cart.',
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('course_uc_restrict_qty', 1),
+  );
+
+  return $form;
 }
 
 /**
@@ -352,6 +358,13 @@ function course_uc_course_handlers() {
       'payment' => array(
         'name' => 'Payment',
         'class' => 'CourseObjectUbercart',
+      ),
+    ),
+    'settings' => array(
+      'ubercart' => array(
+        'name' => t('Ubercart'),
+        'description' => t('Ubercart course settings.'),
+        'callback' => 'course_uc_settings_form',
       ),
     ),
   );
