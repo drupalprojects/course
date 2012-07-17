@@ -35,10 +35,10 @@ class CourseObjectSignupTestCase extends CourseTestCase {
   function testSignupEnrollment() {
     global $user;
     // Create a signup node.
-    $courseNode = $this->createCourseNode();
-    $courseNode->signup_enabled = 1;
-    $courseNode->signup_user_reg = 0;
-    node_save($courseNode);
+    $courseNode = $this->createCourseNode(array(
+      'signup_user_reg' => 0,
+      'signup_enabled' => 1,
+    ));
 
     // Sign the user up
     $form = array(
@@ -54,6 +54,6 @@ class CourseObjectSignupTestCase extends CourseTestCase {
     // Cancel the signup and check the enrollment.
     signup_cancel_signup($sid);
     $enroll = course_enrolment_load($courseNode->nid, $user->uid);
-    $this->assertFalse($enroll->eid > 0, 'Cancelled enrollment after cancelling signup.');
+    $this->assertFalse($enroll, 'Cancelled enrollment after cancelling signup.');
   }
 }

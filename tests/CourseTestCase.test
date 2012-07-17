@@ -25,10 +25,10 @@ class CourseTestCase extends DrupalWebTestCase {
    *
    * @return stdClass
    */
-  function createCourseNode() {
+  function createCourseNode(array $extra = array()) {
     $node = $this->drupalCreateNode(array(
       'type' => 'course_test',
-      ));
+      ) + $extra);
 
     return $node;
   }
