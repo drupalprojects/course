@@ -16,6 +16,11 @@
 function course_outline_overview_form(&$form_state) {
   $form = array();
 
+  // Get around ahah_helper PHP notices.
+  // @see http://drupal.org/node/1371792
+  $form['#action'] = '';
+  $form['#id'] = '';
+
   // Register the form with ahah_helper so we can use it. Also updates
   // $form_state['storage'] to ensure it contains the latest values that have
   // been entered, even when the form item has temporarily been removed from
@@ -381,17 +386,6 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
         // Set the options, but don't overwrite any that weren't provided.
         foreach ($object as $element => $value) {
           $courseObject->setOption($element, $value);
-        }
-
-        // Hey, now we have an ID. We might have settings for objects that didn't
-        // exist until now. Save them.
-        // @todo do we still need this?
-        if ($editing_object = $_SESSION['course'][$courseObject->getCourseNid()]['editing'][$object_key]) {
-          foreach ($editing_object as $editing_key => $value) {
-            if (!is_null($value)) {
-              $courseObject->setOption($editing_key, $value);
-            }
-          }
         }
 
         // If there is no instance ID, create one.
