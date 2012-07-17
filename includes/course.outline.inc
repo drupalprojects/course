@@ -351,7 +351,11 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
 
     // Get each course object settings saved form values, which are not on the
     // outline overview form.
-    $courseObject = course_get_course_object_by_id($object_key);
+    if (!$courseObject = course_get_course_object_by_id($object_key)) {
+      // For non-JS, no settings have been saved. We have to construct a new
+      // course object.
+      $courseObject = course_get_course_object($object);
+    }
     $options = $courseObject->getOptions();
 
     // We only save overview objects with a selected component, whether loaded

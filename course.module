@@ -1435,7 +1435,7 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
     $module = (object) $module;
   }
 
-  if (is_object($module) && isset($module->coid)) {
+  if (is_object($module) && !empty($module->coid)) {
     // Passed options with the course object ID set.
     $coid = $module->coid;
     return course_get_course_object_by_id($coid, $account, $course);
