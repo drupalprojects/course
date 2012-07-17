@@ -1267,7 +1267,7 @@ function course_take_course($node) {
     }
 
     // Display the configured outline handler output.
-    $key = $node->course['outline'] ? $node->course['outline'] : 'course';
+    $key = isset($node->course['outline']) ? $node->course['outline'] : 'course';
     $handlers = course_get_handlers('outline');
     foreach ($handlers as $module => $outline_handlers) {
       if ($outline_handlers) {
