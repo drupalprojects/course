@@ -388,11 +388,6 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
           $courseObject->setOption($element, $value);
         }
 
-        // If there is no instance ID, create one.
-        if (!$courseObject->getInstanceId()) {
-          $courseObject->create();
-        }
-
         // If we get this far, save the object.
         $courseObject->save();
       }

@@ -790,6 +790,18 @@ abstract class CourseObject extends CourseHandler {
     return array();
   }
 
+  /**
+   * Let objects create their instances before saving the course object.
+   */
+  public function save() {
+    // If there is no instance ID, create one.
+    if (!$this->getInstanceId()) {
+      $this->create();
+    }
+
+    return parent::save();
+  }
+
 }
 
 /**
