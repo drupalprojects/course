@@ -7,9 +7,10 @@ class CourseObjectCertificate extends CourseObject {
   }
 
   public function optionsDefinition() {
-    return array(
-      'certificate_node' => 1,
-    );
+    $options = parent::optionsDefinition();
+    $options['required'] = 0;
+    $options['certificate_node'] = 1;
+    return $options;
   }
 
   public function optionsForm(&$form, &$form_state) {
@@ -21,6 +22,7 @@ class CourseObjectCertificate extends CourseObject {
       '#type' => 'checkbox',
       '#default_value' => $options['certificate_node'],
       '#description' => 'This will direct the user to node/' . $this->getCourseNid() . '/certificate',
+      '#disabled' => TRUE,
     );
   }
 

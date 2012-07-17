@@ -83,7 +83,7 @@ abstract class CourseObject extends CourseHandler {
     // Stock access: check for completion of previous object.
     switch ($op) {
       case 'see':
-        $access = !$this->getOption('hidden');
+        $access = !$this->getOption('hidden') && $this->getOption('enabled');
         break;
       case 'take':
         if (!$account->uid) {
@@ -155,7 +155,7 @@ abstract class CourseObject extends CourseHandler {
       'title' => NULL,
       'enabled' => 1,
       'hidden' => 0,
-      'required' => 0,
+      'required' => 1,
       'delete' => 0,
       'delete_instance' => 0,
     );

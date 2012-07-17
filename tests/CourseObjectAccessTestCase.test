@@ -84,4 +84,28 @@ class CourseObjectAccessTestCase extends CourseTestCase {
     $this->assertTrue($o1->access('see', $user));
   }
 
+  /**
+   * Test hidden course objects do not show up in the course outline.
+   */
+  function testDisabledCourseObjects() {
+    // Create a course.
+    $courseNode = $this->createCourseNode();
+
+    // Use the student user.
+    $user = $this->student_user;
+
+    $o1 = $this->createCourseObject($courseNode);
+
+    // By default, should be visible.
+    $this->assertTrue($o1->access('see', $user));
+
+    // Make object enabled.
+    $o1->setOption('enabled', 1)->save();
+    $this->assertTrue($o1->access('see', $user));
+
+    // Make object disabled.
+    $o1->setOption('enabled', 0)->save();
+    $this->assertFalse($o1->access('see', $user));
+  }
+
 }

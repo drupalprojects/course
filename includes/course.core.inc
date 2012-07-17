@@ -391,7 +391,7 @@ class Course extends CourseHandler {
       $required += $courseObject->getOption('required');
 
       // Count completed required objects.
-      $required_complete += ($courseObject->getOption('required') && $courseObject->getOption('complete'));
+      $required_complete += ($courseObject->getOption('required') && $courseObject->getFulfillment()->isComplete());
 
       if (!$courseObject->getFulfillment()->isComplete() && $prev && $prev->getFulfillment()->isComplete()) {
         $this->setOption('section_name', $courseObject->getTitle());
