@@ -3,7 +3,6 @@
 class CourseObjectScorm extends CourseObjectNode {
 
   public function create() {
-    global $user;
     if ($this->getInstanceId()) {
       $scorm_node = node_load($this->getInstanceId());
     }
@@ -12,13 +11,9 @@ class CourseObjectScorm extends CourseObjectNode {
     }
     $scorm_node->type = $this->getComponent();
     $scorm_node->title = $this->getTitle();
-    $scorm_node->uid = $user->uid;
+    $scorm_node->uid = $this->user->uid;
     node_save($scorm_node);
-    $this->setInstanceId($scorm_node->nid);
-  }
-
-  public function delete($course) {
-
+    $this->setNode($scorm_node);
   }
 
   function getNodeTypes() {

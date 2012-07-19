@@ -6,7 +6,6 @@ class CourseObjectQuiz extends CourseObjectNode {
    * Create the quiz node and set it as this object's instance.
    */
   function create() {
-    global $user;
     if ($this->getInstanceId()) {
       $quiz = node_load($this->getInstanceId());
     }
@@ -16,7 +15,7 @@ class CourseObjectQuiz extends CourseObjectNode {
     $quiz->auto_created = TRUE;
     $quiz->type = 'quiz';
     $quiz->title = $this->getTitle();
-    $quiz->uid = $user->uid;
+    $quiz->uid = $this->user->uid;
     $quiz->quiz_always = TRUE;
     $quiz->quiz_open = $quiz->quiz_close = array(
       'month' => date('m'),
@@ -25,7 +24,7 @@ class CourseObjectQuiz extends CourseObjectNode {
     );
     $quiz = (object) array_merge(_quiz_get_node_defaults(), (array) $quiz);
     node_save($quiz);
-    $this->setInstanceId($quiz->nid);
+    $this->setNode($quiz);
   }
 
   /**

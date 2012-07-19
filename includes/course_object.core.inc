@@ -14,7 +14,7 @@ abstract class CourseObject extends CourseHandler {
   // Hold course object from database and the fulfillment object.
   private $courseObjectFulfillment = NULL;
   // Hold a user.
-  private $user = NULL;
+  protected $user = NULL;
 
   /**
    * Construct a course object from a database record.
@@ -675,6 +675,13 @@ abstract class CourseObject extends CourseHandler {
   }
 
   /**
+   * Set the user fulfilling/creating this course object.
+   */
+  function setUser($user) {
+    $this->user = $user;
+  }
+
+  /**
    * Creates a course object.
    *
    * For example, this would create the new node and return the node ID if this
@@ -948,12 +955,23 @@ abstract class CourseObjectNode extends CourseObject {
   }
 
   public function create() {
-    $content = new stdClass;
-    $content->type = $this->getComponent();
-    $content->title = $this->getTitle();
-    $content->uid = $this->node->uid;
-    node_save($content);
-    $this->setInstanceId($content->nid);
+    $node = new stdClass;
+    $node->type = $this->getComponent();
+    $node->title = $this->getTitle();
+    $node->uid = $this->user->uid;
+    node_save($node);
+    $this->setNode($node);
+  }
+
+  /**
+   * Set the node and instance ID (node ID) of this CourseObjectNode.
+   * 
+   * @param mixed $node
+   *   A node or node ID.
+   */
+  public function setNode($node) {
+    $this->node = $node;
+    $this->setInstanceId($this->node->nid);
   }
 
   /**
@@ -1059,7 +1077,7 @@ abstract class CourseObjectNode extends CourseObject {
   function grant() {
     if ($this->checkPrivacySupport()) {
       if ($this->getOption('private')) {
-        $uid = $this->getCourse()->getUser()->uid;
+        $uid = $this->user->uid;
         module_load_include('inc', 'content_access', 'content_access.admin');
         $acl_id = content_access_get_acl_id($this->node, 'view');
         acl_add_user($acl_id, $uid);
@@ -1075,7 +1093,7 @@ abstract class CourseObjectNode extends CourseObject {
   function revoke() {
     if ($this->checkPrivacySupport()) {
       if ($this->getOption('private')) {
-        $uid = $this->getCourse()->getUser()->uid;
+        $uid = $this->user->uid;
         module_load_include('inc', 'content_access', 'content_access.admin');
         $acl_id = content_access_get_acl_id($this->node, 'view');
         acl_remove_user($acl_id, $uid);
@@ -1090,10 +1108,16 @@ abstract class CourseObjectNode extends CourseObject {
   function save() {
     parent::save();
     if ($this->checkPrivacySupport() && $this->getOption('private')) {
+      // Ensure that per-node access is enabled.
+      $global_settings = content_access_get_settings();
+      $global_settings['per_node'][$this->node->type] = 1;
+      content_access_set_settings($global_settings);
+      
       // Remove "view" permissions to everyone on this node.
       $settings = content_access_get_per_node_settings($this->node);
       $settings['view'] = array();
       content_access_save_per_node_settings($this->node, $settings);
+      
       // Resave node to update access.
       node_save($this->node);
     }
