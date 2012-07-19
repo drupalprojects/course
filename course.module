@@ -2163,18 +2163,23 @@ function course_report_save($entry) {
   // Load user so we can serialize it.
   $account = user_load($entry->uid);
 
-  $entry->updated = time();
-
   $sql = "select * from {course_report} where nid = %d and uid = %d";
   $result = db_query($sql, $entry->nid, $entry->uid);
   $old = db_fetch_object($result);
 
-  // Allow modules to alter course reports.
-  drupal_alter('course_report', $entry, $account, $old);
+  $entry->updated = time();
 
   if ($entry->complete && empty($entry->date_completed)) {
     $entry->date_completed = time();
   }
+
+  if ($old && $old->complete && !$entry->complete) {
+    // Do not un-complete existing completed records.
+    $entry->complete = 1;
+  }
+
+  // Allow modules to alter course reports before it goes in.
+  drupal_alter('course_report', $entry, $account, $old);
 
   // Hello CE credit!
   if ($old) {
