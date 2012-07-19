@@ -6,7 +6,7 @@
 function course_content_context() {
   $node = node_load(arg(1));
 
-  if (isset($node)) {
+  if (isset($node->nid)) {
     return array(
       'object_type' => $node->type,
       'instance' => $node->nid
