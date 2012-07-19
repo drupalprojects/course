@@ -1,3 +1,5 @@
 name = Course test module
 core = 6.x
 files[] = course_test.classes.inc
+dependencies[] = acl
+dependencies[] = content_access

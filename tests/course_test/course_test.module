@@ -10,6 +10,11 @@ function course_test_node_info() {
       'module' => 'course_test',
       'description' => 'Course test content type',
     ),
+    'course_test_content' => array(
+      'name' => 'Course test content',
+      'module' => 'course_test',
+      'description' => 'Course object test content type',
+    ),
   );
 }
 
