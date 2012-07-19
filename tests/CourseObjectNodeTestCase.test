@@ -51,6 +51,10 @@ class CourseObjectNodeTestCase extends CourseTestCase {
     $co1->grant();
     $this->drupalGet("node/" . $co1->getInstanceId());
     $this->assertResponse(200, 'Check that node is accessible when user enters course object.');
+
+    $co1->revoke();
+    $this->drupalGet("node/" . $co1->getInstanceId());
+    $this->assertResponse(403, 'Check that node is protected outside the course, after revoke.');
   }
 
 }
