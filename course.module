@@ -814,7 +814,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       case 'view':
         // Render take course button.
         $show = variable_get('course_take_course_button_show', array());
-        if (($teaser && $show['teaser']) || ($page && $show['page'])) {
+        if (($teaser && !empty($show['teaser'])) || ($page && !empty($show['page']))) {
           $node->content['course']['#value'] = course_render_button($node);
         }
         break;
@@ -935,7 +935,7 @@ function course_enrol($node, $account = NULL, $from = NULL, $code = NULL, $statu
     $enroll = (object) $enroll;
 
     $watchdog_variables = array('!uid' => $account->uid, '!nid' => $node->nid);
-    if (!course_enrolment_check($node, $account)) {
+    if (!course_enrolment_check($node->nid, $account->uid)) {
       // User is not enrolled yet.
       watchdog('course_enrol', 'Enrolling user !uid into !nid', $watchdog_variables);
       course_enrolment_save($enroll);
@@ -994,27 +994,18 @@ function course_unenrol(&$node, &$user) {
 /**
  * Check if the user has enrolled in a course.
  *
- * @param mixed $node The course node.
- * @param mixed $user The user to check.
+ * @param mixed $nid
+ *   A course node ID.
+ * @param mixed $uid
+ *   A user ID.
  *
- * @return bool TRUE if the user is enrolled, FALSE otherwise.
+ * @return bool
+ *   TRUE if the user is enrolled, FALSE otherwise.
  */
 function course_enrolment_check($nid, $uid) {
-  if (is_object($nid)) {
-    $nid = $nid->nid;
-  }
-  if (is_object($uid)) {
-    $uid = $uid->uid;
-  }
-
-  if ($nid > 0 && $uid > 0) {
-    $sql_check = "SELECT 1 FROM {course_enrolment} WHERE nid = %d AND uid = %d AND status = %d";
-    $query = db_query($sql_check, $nid, $uid, 1);
-    return db_result($query) > 0;
-  }
-  else {
-    return FALSE;
-  }
+  $sql_check = "SELECT 1 FROM {course_enrolment} WHERE nid = %d AND uid = %d AND status = %d";
+  $query = db_query($sql_check, $nid, $uid, 1);
+  return db_result($query) > 0;
 }
 
 /**

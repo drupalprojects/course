@@ -6,7 +6,7 @@
 function course_poll_context() {
   $node = node_load(arg(1));
 
-  if (isset($node)) {
+  if (isset($node->nid) && $node->type == 'poll') {
     return array(
       'object_type' => 'poll',
       'instance' => $node->nid,

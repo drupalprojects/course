@@ -74,24 +74,26 @@ function course_signup_tab_title($node) {
 /**
  * Do a quick registration.
  *
- * @param stdClass $node
- *   Course node object.
- * @param stdClass $user
- *   User to register.
+ * @param int $nid
+ *   A course node ID.
+ * @param stdClass $account
+ *   A user ID.
+ * @param bool $notify
+ *   Notify the user of this signup. This is passed to signup_sign_up_user().
  */
-function course_signup_quick_register($node, $account = NULL, $notify = TRUE) {
-  if (!$account) {
+function course_signup_quick_register($nid, $uid = NULL, $notify = TRUE) {
+  if (!$uid) {
     global $user;
-    $account = $user;
+    $uid = $user->uid;
   }
 
-  if (!$signup = db_fetch_object(db_query('select * from {signup_log} where nid = %d and uid = %d', $node->nid, $account->uid))) {
+  if (!$signup = db_fetch_object(db_query('select * from {signup_log} where nid = %d and uid = %d', $nid, $uid))) {
     // Save a new signup.
     if ($node->signup_status && $notify) {
       // Signup is open so we can use signup's function.
       signup_sign_up_user(array(
-        'nid' => $node->nid,
-        'uid' => $account->uid,
+        'nid' => $nid,
+        'uid' => $uid,
         ), $notify);
     }
     else {
@@ -99,8 +101,8 @@ function course_signup_quick_register($node, $account = NULL, $notify = TRUE) {
       // signup_sign_up_user() because this would result in a
       // drupal_access_denied() call.
       $signup = new stdClass();
-      $signup->uid = $account->uid;
-      $signup->nid = $node->nid;
+      $signup->uid = $uid;
+      $signup->nid = $nid;
       $signup->signup_time = time();
       $signup->attended = 0;
       $signup->form_data = array();
@@ -268,7 +270,7 @@ function course_signup_action_info() {
 function course_signup_add_enrollment_action($object, $context) {
   $node = node_load(arg(1));
   $user = user_load($object->uid);
-  course_signup_quick_register($node, $user);
+  course_signup_quick_register($node->nid, $user->uid);
 }
 
 /**
@@ -306,7 +308,7 @@ function course_signup_add_to_cart($nid, $qty, $data) {
  */
 function course_signup_course_enrol($node, $user, $from, $code, $status) {
   if ($from != 'course_signup' && $status) {
-    course_signup_quick_register($node, $user);
+    course_signup_quick_register($node->nid, $user->uid);
   }
 }
 

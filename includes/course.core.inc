@@ -115,11 +115,17 @@ class CourseHandler {
   }
 
   /**
+   * Merge an array of options onto the existing options.
    *
    * @param array $options
+   *
+   * @return CourseHandler
+   *   Some type of CourseHandler (probably CourseObject or
+   *   CourseObjectFulfillment)
    */
   public final function addOptions(array $options) {
     $this->config = $this->optionsMerge($this->config, $options);
+    return $this;
   }
 
   /**

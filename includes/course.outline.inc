@@ -351,7 +351,7 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
     // - The form element is a select list with keys matching the combined
     //   pattern: {module}-{object_type}.
     // - We save only the second part of that combined key to the database.
-    if (!$object['module']) {
+    if (!$object['module'] && $object['object_type']) {
       // Repurpose the object type array element.
       list($object['module'], $object['object_type']) = explode('-', $object['object_type']);
     }
