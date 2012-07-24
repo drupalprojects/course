@@ -419,6 +419,9 @@ function course_outline_list($node) {
   $prev_req = NULL;
   foreach ($course->getObjects() as $key => $courseObject) {
     $step = array();
+    $step['style'] = 'not-started';
+    $step['id'] = 'course-object-' . $courseObject->getId();
+    $step['image'] = '';
 
     if (!$courseObject->access('see')) {
       if ($status = $courseObject->getStatus()) {

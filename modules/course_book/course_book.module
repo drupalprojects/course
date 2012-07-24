@@ -5,13 +5,15 @@
  */
 function course_book_context() {
   $node = node_load(arg(1));
-  $bid = $node->book['bid'] ? $node->book['bid'] : $node->nid;
+  if ($node) {
+    $bid = !empty($node->book['bid']) ? $node->book['bid'] : $node->nid;
 
-  if ($bid) {
-    return array(
-      'object_type' => 'book',
-      'instance' => $bid,
-    );
+    if ($bid) {
+      return array(
+        'object_type' => 'book',
+        'instance' => $bid,
+      );
+    }
   }
 }
 
@@ -42,14 +44,16 @@ function course_book_init() {
   if (arg(0) == 'node') {
     global $user;
     $node = node_load(arg(1));
-    if ($node->type == 'book') {
-      $search = $node->book['bid'] ? $node->book['bid'] : $node->nid;
+    if ($node && $node->type == 'book') {
+      $search = !empty($node->book['bid']) ? $node->book['bid'] : $node->nid;
       if ($courseObject = course_get_course_object('course_book', 'book', $search, $user)) {
         $options = array();
         // Mark this node as fulfillment in course_book's fulfillment tracking.
-        $options['book_fulfillment'][$node->book['mlid']] = TRUE;
-        $courseObject->getFulfillment()->addOptions($options)->save();
-        $courseObject->grade();
+        if (!empty($node->book['mlid'])) {
+          $options['book_fulfillment'][$node->book['mlid']] = TRUE;
+          $courseObject->getFulfillment()->addOptions($options)->save();
+          $courseObject->grade();
+        }
       }
     }
   }

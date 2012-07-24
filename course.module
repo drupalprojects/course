@@ -619,7 +619,7 @@ function course_block($op = 'list', $delta = 0) {
       module_load_include('inc', 'course', 'includes/course.block');
       $function = "_course_block_{$delta}_{$op}";
       if (function_exists($function)) {
-        return $function($edit);
+        return $function();
       }
       break;
   }
@@ -2359,7 +2359,7 @@ function course_determine_context($module = NULL, $object_type = NULL, $instance
       // Callee just wants context.
       return $context;
     }
-    else {
+    else if ($context) {
       // Set the active course and static cache it.
       $_SESSION['course']['active'] = $context->nid;
       $cache = $context;
