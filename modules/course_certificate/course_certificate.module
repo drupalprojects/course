@@ -6,12 +6,16 @@
  * Add a download certificate link.
  */
 function course_certificate_course_outline_completion_links_alter(&$links, $node, $account) {
-  if ($node->course['certificate'] == 1) {
-    $links['certificate'] = array(
-      'Download certificate',
-      "node/$node->nid/certificate",
-      'Download a PDF of your certificate.',
-    );
+  $course = course_get_course($node);
+  foreach ($course->getObjects() as $courseObject) {
+    if ($courseObject->getComponent() == 'certificate') {
+      $links['certificate'] = array(
+        'Download certificate',
+        "node/$node->nid/certificate",
+        'Download a PDF of your certificate.',
+      );
+      break;
+    }
   }
 }
 
@@ -29,6 +33,7 @@ function course_certificate_access_certificate($node, $user) {
 
 function course_certificate_token_list($type = 'all') {
   if ($type == 'certificate') {
+    $tokens = array();
     $tokens['certificate']["certificate-date_completed"] = t('Date of course completion');
     $tokens['certificate']['certificate-number'] = 'Generated certificate number';
     return $tokens;
@@ -37,6 +42,7 @@ function course_certificate_token_list($type = 'all') {
 
 function course_certificate_token_values($type, $object = NULL, $options = array()) {
   if ($type == 'certificate') {
+    $values = array();
     $sql = 'select * from {course_report} where nid = %d and uid = %d';
     if ($report = db_fetch_object(db_query($sql, $object['node']->nid, $object['user']->uid))) {
       $values['certificate-date_completed'] = date(variable_get('course_report_certificate_time_format', 'F jS, Y'), $report->date_completed);
