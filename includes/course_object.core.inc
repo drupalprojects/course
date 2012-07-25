@@ -434,7 +434,7 @@ abstract class CourseObject extends CourseHandler {
    * @return mixed
    *   HTML content or a redirect.
    */
-  public function takeCourseObject() {
+  public final function takeCourseObject() {
     $_SESSION['course']['active'] = $this->getCourseNid();
     $_SESSION['course'][$this->getCourseNid()]['taking']['active'] = $this->getId();
 
@@ -452,6 +452,11 @@ abstract class CourseObject extends CourseHandler {
       // User can't access this object, revoke access.
       $this->revoke();
       return FALSE;
+    }
+
+    if (!$this->getOption('required')) {
+      // Object is not required, instantly complete it on access.
+      $this->getFulfillment()->setComplete(1);
     }
 
     // Save fulfillment record.
@@ -809,6 +814,15 @@ abstract class CourseObject extends CourseHandler {
     return parent::save();
   }
 
+  /**
+   * Remove any records associated with this course object for the user.
+   *
+   * For example, deleting quiz results when a user is removed from the course.
+   */
+  function unEnroll() {
+
+  }
+
 }
 
 /**
@@ -1121,15 +1135,6 @@ abstract class CourseObjectNode extends CourseObject {
       // Resave node to update access.
       node_save($this->node);
     }
-  }
-
-  /**
-   * Remove any records associated with this course object for the user.
-   *
-   * For example, deleting quiz results when a user is removed from the course.
-   */
-  function unEnroll() {
-
   }
 
 }

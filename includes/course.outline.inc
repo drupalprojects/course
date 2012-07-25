@@ -465,7 +465,7 @@ function course_outline_list($node) {
 
     $img = theme('image', $step['image']);
 
-    if (!$step['link']) {
+    if (empty($step['link'])) {
       $data = $courseObject->getTitle() . '<br/><span class="course-outline-status">' . $step['status'] . '</span>';
     }
     else {
