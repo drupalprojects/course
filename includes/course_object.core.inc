@@ -211,16 +211,15 @@ abstract class CourseObject extends CourseHandler {
       '#default_value' => $config['required'],
     );
 
-    // Only allow deletion of existing objects.
-    // @todo do we want to allow `delete` when there is a cached object, but
-    // only allow `delete_instance` when there is a saved coid?
-    if ($config['instance']) {
-      $form['delete'] = array(
-        '#title' => t('Delete'),
-        '#type' => 'checkbox',
-        '#default_value' => $config['delete'],
-      );
 
+    $form['delete'] = array(
+      '#title' => t('Delete'),
+      '#type' => 'checkbox',
+      '#default_value' => $config['delete'],
+    );
+
+    // Only allow deletion of existing instances.
+    if ($config['instance']) {
       $form['delete_instance'] = array(
         '#title' => t('Also delete related object instance(s)'),
         '#type' => 'checkbox',
@@ -1126,12 +1125,12 @@ abstract class CourseObjectNode extends CourseObject {
       $global_settings = content_access_get_settings();
       $global_settings['per_node'][$this->node->type] = 1;
       content_access_set_settings($global_settings);
-      
+
       // Remove "view" permissions to everyone on this node.
       $settings = content_access_get_per_node_settings($this->node);
       $settings['view'] = array();
       content_access_save_per_node_settings($this->node, $settings);
-      
+
       // Resave node to update access.
       node_save($this->node);
     }
