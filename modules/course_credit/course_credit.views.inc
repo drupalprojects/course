@@ -117,7 +117,7 @@ function course_credit_views_data() {
           'handler' => "views_handler_argument",
         ),
       );
-      if ($field['scale']) {
+      if (isset($field['scale'])) {
         $data[$table][$key]['field']['float'] = TRUE;
       }
     }
