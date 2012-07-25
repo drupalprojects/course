@@ -1078,50 +1078,56 @@ function course_form_alter(&$form, &$form_state, $form_id) {
       '#title' => t('Available outline displays'),
       '#type' => 'select',
       '#options' => $outlines,
-      '#default_value' => $node->course['outline'],
     );
 
+    // This is a fake field. It stores the aggregate credit from course_credit.
+    // @todo...something
     $form['course']['credits'] = array(
       '#title' => t('Credit hours'),
       '#type' => 'textfield',
       '#size' => 4,
-      '#default_value' => $node->course['credits'],
       '#access' => FALSE,
     );
-    $form['course']['open'] = array(
-      '#title' => t('Release date'),
-      '#type' => 'date_popup',
-      '#default_value' => $node->course['open'],
-      '#access' => FALSE,
-    );
-    $form['course']['close'] = array(
-      '#title' => t('Expiration date'),
-      '#type' => 'date_popup',
-      '#default_value' => $node->course['close'],
-      '#access' => FALSE,
-    );
+
+    if (module_exists('date')) {
+      $form['course']['open'] = array(
+        '#title' => t('Release date'),
+        '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
+        '#access' => FALSE,
+      );
+
+      $form['course']['close'] = array(
+        '#title' => t('Expiration date'),
+        '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
+        '#access' => FALSE,
+      );
+    }
+
     $form['course']['duration'] = array(
       '#title' => t('Duration'),
       '#type' => 'textfield',
-      '#default_value' => $node->course['duration'],
       '#size' => 4,
       '#description' => t('Length in days a user can remain in the course. Enter 0 for unlimited.'),
     );
+
     $form['course']['cid'] = array(
       '#title' => t('External learning application course ID'),
       '#description' => t('If using an external learning application, the ID of the external course.'),
       '#type' => 'textfield',
-      '#default_value' => $node->course['cid'] !== NULL ? $node->course['cid'] : NULL,
       '#size' => 4,
       '#access' => FALSE,
     );
+
     $form['course']['external_id'] = array(
       '#title' => t('External course ID'),
       '#description' => t('Course ID used to relate to an outside system.'),
       '#type' => 'textfield',
       '#size' => 16,
-      '#default_value' => $node->course['external_id'],
     );
+
+    foreach (element_children($form['course']) as $key) {
+      $form['course'][$key]['#default_value'] = isset($node->course[$key]) ? $node->course[$key] : NULL;
+    }
   }
 }
 
@@ -1579,10 +1585,7 @@ function course_content_extra_fields($type) {
     $extras['course'] = array(
       'label' => t('Course settings'),
       'description' => t('Course settings and button.'),
-    );
-    $extras['course_outline'] = array(
-      'label' => t('Course objects'),
-      'description' => t('Course objects form.'),
+      'weight' => 0,
     );
   }
 
@@ -2003,7 +2006,7 @@ function course_course_credit_check_completion($course_node) {
   if (variable_get('course_user_types_enabled', 0) && count(course_user_type_get_options())) {
     // Check for active credit types. No user checking at this point.
     // @todo break out into function to get active credit types on a course.
-    foreach ($course_node->course['credit'] as $ctid => $type) {
+    foreach ($course_node->course_credit as $ctid => $type) {
       if ($type->active) {
         $active = TRUE;
       }

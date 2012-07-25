@@ -411,6 +411,9 @@ class Course extends CourseHandler {
       $this->setOption('section', 'complete');
       $this->setOption('section_name', 'Complete');
       $this->setOption('complete', 1);
+      if (!$this->getOption('date_completed')) {
+        $this->setOption('date_completed', time());
+      }
     }
 
     $this->setOption('nid', $this->node->nid);

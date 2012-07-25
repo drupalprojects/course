@@ -12,6 +12,13 @@ function course_object_reports_page($node) {
   $coid = arg(4);
   $report_key = arg(5);
   $report_subkey = arg(6);
+  // Report navigation.
+  $nav = '';
+  // Report header.
+  $header = '';
+  // Report content.
+  $content = '';
+
 
   $course = course_get_course($node);
   foreach ($course->getObjects() as $courseObject) {

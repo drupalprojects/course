@@ -513,6 +513,7 @@ function course_outline_show_complete_links($course_node) {
   global $user;
   $account = $user;
   $report = course_report_load($course_node, $account);
+  $txt_out = '';
   if ($report->complete) {
     $txt_out .= '<p>' . t('Thank you for participating in this activity.') . '</p>';
     $links = array(

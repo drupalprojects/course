@@ -26,7 +26,7 @@ function course_views_data() {
       }
       $data[$table][$key] = array(
         'title' => ucwords($key),
-        'help' => $field['description'],
+        'help' => isset($field['description']) ? $field['description'] : $key,
         'field' => array(
           'handler' => "views_handler_field$type",
           'click sortable' => TRUE,
@@ -41,7 +41,7 @@ function course_views_data() {
           'handler' => "views_handler_argument",
         ),
       );
-      if ($field['scale']) {
+      if (isset($field['scale'])) {
         $data[$table][$key]['field']['float'] = TRUE;
       }
     }

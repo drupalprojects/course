@@ -187,7 +187,7 @@ function course_signup_form_alter(&$form, &$form_state, $form_id) {
 
   if (strpos($form_id, '_node_form')) {
     if (course_node_is_course($form['#node'])) {
-      if ($form['signup']) {
+      if (isset($form['signup'])) {
         $form['signup']['signup_enabled']['#disabled'] = TRUE;
         $form['signup']['signup_enabled']['#default_value'] = 1;
         $form['signup']['signup_enabled']['#description'] = 'Signups are always enabled for courses when course_signup is enabled.';

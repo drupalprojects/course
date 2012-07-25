@@ -37,10 +37,16 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
   }
 }
 
+/**
+ * Implements hook_nodeapi().
+ *
+ * Add a course object to the course when a sell price is added. Remove fields
+ * we don't need for selling courses.
+ */
 function course_uc_nodeapi($node, $op, $a3, $a4) {
   switch ($op) {
     case 'view':
-      if (course_node_is_course($node) && !($node->sell_price > 0)) {
+      if (course_node_is_course($node) && isset($node->sell_price)) {
         $hides = array(
           'sell_price',
           'display_price',
