@@ -271,6 +271,8 @@ function course_signup_course_enrol($node, $user, $from, $code, $status) {
  * Implements hook_course_can_enrol().
  */
 function course_signup_course_can_enrol($node, $user) {
+  $hooks = array();
+  
   // We depend on Signup Restrict by Role for enrollment access per role.
   if (module_exists('signup_restrict_by_role')) {
     $check = signup_restrict_by_role_access_signup($node, $user);

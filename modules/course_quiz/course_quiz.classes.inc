@@ -6,12 +6,7 @@ class CourseObjectQuiz extends CourseObjectNode {
    * Create the quiz node and set it as this object's instance.
    */
   function create() {
-    if ($this->getInstanceId()) {
-      $quiz = node_load($this->getInstanceId());
-    }
-    else {
-      $quiz = new stdClass;
-    }
+    $quiz = new stdClass;
     $quiz->auto_created = TRUE;
     $quiz->type = 'quiz';
     $quiz->title = $this->getTitle();

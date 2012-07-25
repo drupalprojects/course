@@ -5,6 +5,20 @@ class CourseObjectBook extends CourseObjectNode {
     return array('book');
   }
 
+
+  /**
+   * Make the book.
+   */
+  public function create() {
+    $node = new stdClass;
+    $node->type = $this->getComponent();
+    $node->title = $this->getTitle();
+    $node->uid = $this->user->uid;
+    $node->book['bid'] = 'new';
+    node_save($node);
+    $this->setNode($node);
+  }
+
   function optionsDefinition() {
     $defaults = parent::optionsDefinition();
     $defaults['book_tracking'] = 'all';
@@ -23,7 +37,6 @@ class CourseObjectBook extends CourseObjectNode {
       ),
       '#default_value' => $config['book_tracking'],
     );
-    return $form;
   }
 
   /**
