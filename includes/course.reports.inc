@@ -37,7 +37,7 @@ function course_object_reports_page($node) {
   }
 
   if ($coid) {
-    $courseObject = course_get_course_object($coid);
+    $courseObject = course_get_course_object_by_id($coid);
     $report = $courseObject->getReport($report_key, $report_subkey);
     if ($report) {
       if ($report['url']) {
