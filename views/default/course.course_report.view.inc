@@ -57,12 +57,12 @@ $handler->display->display_options['empty']['area']['empty'] = FALSE;
 $handler->display->display_options['empty']['area']['content'] = 'Sorry, there is no course data to report on.';
 $handler->display->display_options['empty']['area']['format'] = '1';
 $handler->display->display_options['empty']['area']['tokenize'] = 0;
-/* Relationship: Course report: Course Node */
+/* Relationship: Course report: Course node */
 $handler->display->display_options['relationships']['nid']['id'] = 'nid';
 $handler->display->display_options['relationships']['nid']['table'] = 'course_report';
 $handler->display->display_options['relationships']['nid']['field'] = 'nid';
 $handler->display->display_options['relationships']['nid']['required'] = 1;
-/* Relationship: Course report: Course report user */
+/* Relationship: Course report: Course user */
 $handler->display->display_options['relationships']['uid']['id'] = 'uid';
 $handler->display->display_options['relationships']['uid']['table'] = 'course_report';
 $handler->display->display_options['relationships']['uid']['field'] = 'uid';
@@ -256,9 +256,9 @@ $handler->display->display_options['arguments']['nid']['default_argument_skip_ur
 $handler->display->display_options['arguments']['nid']['break_phrase'] = 1;
 $handler->display->display_options['arguments']['nid']['not'] = 0;
 $handler->display->display_options['path'] = 'node/%/course-reports/overview';
-$handler->display->display_options['menu']['type'] = 'tab';
+$handler->display->display_options['menu']['type'] = 'default tab';
 $handler->display->display_options['menu']['title'] = 'Overview';
-$handler->display->display_options['menu']['weight'] = '0';
+$handler->display->display_options['menu']['weight'] = '-1';
 $handler->display->display_options['tab_options']['type'] = 'tab';
 $handler->display->display_options['tab_options']['title'] = 'Course reports';
 $handler->display->display_options['tab_options']['weight'] = '0';

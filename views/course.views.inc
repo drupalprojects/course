@@ -47,6 +47,12 @@ function course_views_data() {
     }
   }
 
+  $data['course_enrolment']['table']['base'] = array(
+    'field' => 'eid',
+    'title' => t('Course enrollment'),
+    'help' => t('Course enrollments.'),
+  );
+
   $data['course_enrolment']['table']['group'] = t('Course enrolments');
 
   $data['course_enrolment']['table']['join'] = array(
@@ -90,6 +96,7 @@ function course_views_data() {
       'handler' => 'views_handler_argument_numeric',
     ),
     'relationship' => array(
+      'title' => 'Course node',
       'base' => 'node',
       'field' => 'nid',
       'handler' => 'views_handler_relationship',
@@ -107,6 +114,7 @@ function course_views_data() {
       'handler' => 'views_handler_argument_user',
     ),
     'relationship' => array(
+      'title' => 'User',
       'base' => 'users',
       'field' => 'uid',
       'handler' => 'views_handler_relationship',

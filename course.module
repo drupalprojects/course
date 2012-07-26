@@ -1016,14 +1016,24 @@ function course_enrolment_check($nid, $uid) {
 /**
  * Load an enrollment from a node ID and user ID.
  *
- * @param mixed $nid
- * @param mixed $uid
- * @return object or NULL
+ * @param int $nid
+ *   Enrollment ID, or node ID.
+ * @param int $uid
+ *   User ID.
+ * 
+ * @return mixed
+ *   Enrollment object or FALSE
  */
-function course_enrolment_load($nid, $uid) {
+function course_enrolment_load($nid, $uid = NULL) {
   if (is_object($nid)) {
     $nid = $nid->nid;
   }
+
+  if (!$uid) {
+    $sql = "SELECT * FROM {course_enrolment} WHERE eid = %d";
+    return db_fetch_object(db_query($sql, $nid));
+  }
+
   if (is_object($uid)) {
     $uid = $uid->uid;
   }
@@ -1683,7 +1693,7 @@ function course_action_info() {
   );
 
   $actions['course_edit_enrollment_action'] = array(
-    'type' => 'signup',
+    'type' => 'course_enrolment',
     'description' => t('Edit enrollment'),
     'configurable' => TRUE,
   );
@@ -1796,6 +1806,11 @@ function course_edit_enrollment_action_form($context) {
   $form = array();
 
   $node = node_load(arg(1));
+  
+  if (!$node) {
+    return array();
+  }
+
   $num_users = count($context['selection']);
 
   $form['header'] = array(
@@ -1810,16 +1825,9 @@ function course_edit_enrollment_action_form($context) {
   if ($num_users == 1) {
     // Only one user, so let's prefill values.
     $selection = reset($context['selection']);
-    // Toggle for VBO being added to a signup view.
-    if ($selection->sid) {
-      $uid = $selection->users_signup_log_uid;
-    }
-    else {
-      $uid = $selection->uid;
-    }
-    $account = user_load($uid);
 
-    $enroll = course_enrolment_load($node->nid, $account->uid);
+    $enroll = course_enrolment_load($selection->eid);
+    $account = user_load($enroll->uid);
     $course_report = course_report_load($node, $account);
   }
 
@@ -1856,7 +1864,7 @@ function course_edit_enrollment_action_form($context) {
     '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
     '#date_format' => 'm/d/Y H:i',
     '#description' => t('The date when the user will not be able to access the course.'),
-    '#default_value' => date('Y-m-d H:i:s', $enroll->enrol_end),
+    '#default_value' => $enroll->enrol_end ? date('Y-m-d H:i:s', $enroll->enrol_end) : '',
   );
 
 
@@ -1901,7 +1909,7 @@ function course_edit_enrollment_action_form($context) {
         -1 => t('Incomplete'),
         0 => t('Failed'),
       ),
-      '#default_value' => $fulfillments[$courseObject->getId()]->isComplete,
+      '#default_value' => $fulfillments[$courseObject->getId()]->isComplete(),
     );
   }
 
@@ -2222,7 +2230,13 @@ function course_views_bulk_operations_object_info() {
       'base_table' => 'course_report',
       'load' => 'course_report_load',
       'title' => 'name',
-    )
+    ),
+    'course_enrolment' => array(
+      'type' => 'course_enrolment',
+      'base_table' => 'course_enrolment',
+      'load' => 'course_enrolment_load',
+      'title' => 'eid',
+    ),
   );
 }
 

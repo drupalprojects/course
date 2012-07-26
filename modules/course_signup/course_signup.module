@@ -15,23 +15,6 @@ function course_signup_admin() {
     '#description' => "Turning this on will allow registered users to immediately begin free courses without going through any kind of course registration or checkout when Ubercart Signup is used.",
   );
 
-  $views = views_get_all_views();
-  foreach ($views as $view) {
-    foreach (array_keys($view->display) as $display_id) {
-      if ($display_id != 'default' || 1) {
-        $key = $view->name . ':' . $display_id;
-        $view_options[$key] = theme('signup_settings_view_label', $view, $display_id);
-      }
-    }
-  }
-
-  $form['signup_admin_list_view_course_override'] = array(
-    '#title' => 'Use this view on courses instead of the view selected in signup as the admin view.',
-    '#type' => 'select',
-    '#options' => $view_options,
-    '#default_value' => variable_get('signup_admin_list_view_course_override', 'course_signup_user_vbo_admin:default'),
-  );
-
   return system_settings_form($form);
 }
 
@@ -50,25 +33,6 @@ function course_signup_menu() {
   );
 
   return $items;
-}
-
-/**
- * Implements hook_menu_alter().
- *
- * Change the title of the Signups tab.
- */
-function course_signup_menu_alter(&$items) {
-  $items['node/%node/signups']['title callback'] = 'course_signup_tab_title';
-  $items['node/%node/signups']['title arguments'] = array(1);
-  // Hide normal signup add form, ours is better!
-  $items['node/%node/signups/add']['access callback'] = FALSE;
-}
-
-/**
- * Callback for title.
- */
-function course_signup_tab_title($node) {
-  return course_node_is_course($node) ? 'Enrollments' : t('Signups');
 }
 
 /**
@@ -188,7 +152,7 @@ function course_signup_init() {
   if (course_node_is_course($node)) {
     global $conf;
     // Switch courses to our view with enrollments and bulk operations.
-    $conf['signup_admin_list_view'] = variable_get('signup_admin_list_view_course_override', 'course_signup_user_vbo_admin');
+    //$conf['signup_admin_list_view'] = variable_get('signup_admin_list_view_course_override', 'course_signup_user_vbo_admin');
     $conf['signup_ignore_default_fields'] = 1;
     $conf['signup_fieldset_collapsed'] = 0;
     $conf['uc_signup_add_cart_text'] = 'Register';
