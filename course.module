@@ -502,8 +502,10 @@ function course_object_options($node, $js, $courseObject) {
 }
 
 /**
- * Form constructor for course object options form.
+ * Form API builder for course object options.
  *
+ * @param array $form_state
+ *   Form state.
  * @param courseObject $courseObject
  *   An initialized courseObject object.
  *
@@ -511,6 +513,9 @@ function course_object_options($node, $js, $courseObject) {
  * @see course_object_options_form_submit()
  * @see course_object_options()
  * @ingroup forms
+ *
+ * @return array
+ *   The FAPI array.
  */
 function course_object_options_form(&$form_state, $courseObject) {
   $form = array();
@@ -1512,8 +1517,10 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
 /**
  * Get a loaded Course.
  *
- * @param object $node
+ * @param stdClass $node
  *   The course node object.
+ * @param stdClass $account
+ *   The user with which to instantiate course objects and fulfillment.
  *
  * @return Course
  */
@@ -2062,12 +2069,11 @@ function course_user_type_form_submit(&$form, $form_state) {
  * of self-enrollment (e.g., course_uc, course_signup) then act accordingly by
  * blocking that ability.
  *
- * @staticvar array $courses
- *   Cache of hook results.
  * @param object $node
  *   A node.
  * @param object $user
  *   A user.
+ * 
  * @return array
  *   An array with values 'success', to indicate whether or not the user
  *   has permission to self-enroll in this course, and 'message', a
