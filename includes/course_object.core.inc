@@ -80,8 +80,6 @@ abstract class CourseObject extends CourseHandler {
       $account = $user;
     }
 
-    $enrolled = course_enrolment_check($this->getCourseNid(), $account->uid);
-
     // Stock access: check for completion of previous object.
     switch ($op) {
       case 'see':
@@ -102,13 +100,13 @@ abstract class CourseObject extends CourseHandler {
           // This is the first course object. The learner should be able to
           // access it. Also, check for enrollment. Since there are no other
           // checks (as in previous object completions) we do have to check this.
-          return $enrolled;
+          $access = course_enrolment_check($this->getCourseNid(), $account->uid);
         }
 
         if ($course->getPrev() && $course->getPrev()->getFulfillment()->isComplete()) {
           // If last object was complete, and we are on the current object,
           // grant access.
-          $access = $enrolled && TRUE;
+          $access = TRUE;
         }
     }
 

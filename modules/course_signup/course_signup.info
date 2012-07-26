@@ -4,5 +4,4 @@ package = Course
 core = 6.x
 dependencies[] = course
 dependencies[] = signup
-dependencies[] = views_bulk_operations
 files[] = course_signup.classes.inc

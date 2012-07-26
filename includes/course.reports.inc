@@ -40,10 +40,10 @@ function course_object_reports_page($node) {
     $courseObject = course_get_course_object_by_id($coid);
     $report = $courseObject->getReport($report_key, $report_subkey);
     if ($report) {
-      if ($report['url']) {
+      if (isset($report['url'])) {
         $content = course_iframe($report['url']);
       }
-      if ($report['content']) {
+      if (isset($report['content'])) {
         $content = $report['content'];
       }
       $header = '<h3>' . $courseObject->getTitle() . ': ' . $report['title'] . '</h3>';

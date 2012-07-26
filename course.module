@@ -590,20 +590,15 @@ function course_object_take($courseObject) {
 /**
  * Implements hook_menu_alter().
  *
- * Look at a variable to determine the default course report. Did this to avoid
- * any one module having to define itself as a default local task.
+ * Add a default reports tab if views isn't enabled.
  */
 function course_menu_alter(&$items) {
-  $default = variable_get('course_reports_default_report', 'node/%/course-reports/overview');
-
-  if ($default && isset($items[$default])) {
-    $parent = $items[$default];
-    $items[$default]['type'] = MENU_DEFAULT_LOCAL_TASK;
-    $items[$default]['weight'] = -999;
-    $parent['type'] = MENU_LOCAL_TASK;
-    $parent['title'] = 'Course reports';
-    $parent['access arguments'] = array('access course reports');
-    $items['node/%course/course-reports'] = $parent;
+  if (!module_exists('views')) {
+    $default = $items['node/%course/course-reports/objects'];
+    $items['node/%course/course-reports'] = $default;
+    $items['node/%course/course-reports']['title'] = 'Course reports';
+    $items['node/%course/course-reports']['type'] = MENU_LOCAL_TASK;
+    $items['node/%course/course-reports/objects']['type'] = MENU_DEFAULT_LOCAL_TASK;
   }
 }
 
