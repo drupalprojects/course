@@ -3,3 +3,4 @@ description = Set requirements on courses before a learner may take them.
 package = Course
 core = 6.x
 dependencies[] = course
+dependencies[] = nodereference

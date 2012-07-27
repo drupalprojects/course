@@ -97,22 +97,23 @@ function course_requirements_course_can_enrol($node, $user) {
  */
 function course_requirements_course_outline_completion_links_alter(&$links, $node, $user) {
   $field_name = variable_get('course_requirements_cck_field', 'field_course_requirements');
-  $field = content_fields($field_name);
-  $db_info = content_database_info($field);
-  $sql = "select * from {{$db_info['table']}} t
+  if ($field = content_fields($field_name)) {
+    $db_info = content_database_info($field);
+    $sql = "select * from {{$db_info['table']}} t
   left join {node} n using (nid)
   where {$field_name}_nid = %d";
-  $result = db_query($sql, $node->nid);
-  while ($row = db_fetch_object($result)) {
-    $courses[] = l($row->title, "node/$row->nid");
-  }
+    $result = db_query($sql, $node->nid);
+    while ($row = db_fetch_object($result)) {
+      $courses[] = l($row->title, "node/$row->nid");
+    }
 
-  if ($courses) {
+    if ($courses) {
 
-    $links['course_requirements'] = array(
-      ' ',
-      ' ',
-      t('This course is a dependency of !courses', array('!courses' => implode(',', $courses))),
-    );
+      $links['course_requirements'] = array(
+        ' ',
+        ' ',
+        t('This course is a dependency of !courses', array('!courses' => implode(',', $courses))),
+      );
+    }
   }
 }
