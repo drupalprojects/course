@@ -792,7 +792,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         $existing = db_result(db_query('select 1 from {course_node} where nid = %d', $node->nid));
         $update = $existing ? array('nid') : array();
         drupal_write_record('course_node', $record, $update);
-        
+
         // Support cloning.
         if (isset($node->clone_from_original_nid) && $original = node_load($node->clone_from_original_nid)) {
           $node->course['objects'] = $original->course['objects'];
@@ -864,7 +864,7 @@ function course_save_objects(array $objects, Course $course = NULL) {
         // Replace the nid key, to properly associate the current course node
         // with this course object.
         $object->nid = $course->getNode()->nid;
-        
+
         // Clean out serialized data field.
         $unset_data_keys = array('uniqid', 'uuid');
         if (isset($object->data) && $data = unserialize($object->data)) {
@@ -882,7 +882,7 @@ function course_save_objects(array $objects, Course $course = NULL) {
     if ($prepareObject = course_get_course_object($object, NULL, NULL, NULL, $course)) {
       $available_options = $prepareObject->getOptions();
       $options = array();
-      foreach($object as $key => $value) {
+      foreach ($object as $key => $value) {
         // Check if this key is a valid option.
         if (isset($available_options[$key])) {
           $options[$key] = $value;
@@ -1849,7 +1849,7 @@ function course_edit_enrollment_action_form($context) {
   $form = array();
 
   $node = node_load(arg(1));
-  
+
   if (!$node) {
     return array();
   }
@@ -2425,7 +2425,7 @@ function course_determine_context($module = NULL, $object_type = NULL, $instance
       // Callee just wants context.
       return $context;
     }
-    else if ($context) {
+    elseif ($context) {
       // Set the active course and static cache it.
       $_SESSION['course']['active'] = $context->nid;
       $cache = $context;

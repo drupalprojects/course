@@ -375,10 +375,7 @@ abstract class CourseObject extends CourseHandler {
     if (!empty($instance)) {
       $text = t('Edit instance');
       $path = ltrim($this->getEditUrl(), '/');
-      $options = array(
-        'query' => drupal_get_destination(),
-      );
-      $summary['instance'] = l($text, $path, $options);
+      $summary['instance'] = l($text, $path, array('query' => drupal_get_destination()));
     }
 
     // Required.

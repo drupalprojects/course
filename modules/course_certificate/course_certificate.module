@@ -7,16 +7,25 @@
  */
 function course_certificate_course_outline_completion_links_alter(&$links, $node, $account) {
   $course = course_get_course($node);
+  if (course_certificate_course_has_certificate($course)) {
+    $links['certificate'] = array(
+      'Download certificate',
+      "node/$node->nid/certificate",
+      'Download a PDF of your certificate.',
+    );
+  }
+}
+
+/**
+ * Check if there is a Certificate on this Course.
+ */
+function course_certificate_course_has_certificate($course) {
   foreach ($course->getObjects() as $courseObject) {
     if ($courseObject->getComponent() == 'certificate') {
-      $links['certificate'] = array(
-        'Download certificate',
-        "node/$node->nid/certificate",
-        'Download a PDF of your certificate.',
-      );
-      break;
+      return TRUE;
     }
   }
+  return FALSE;
 }
 
 /**
@@ -26,8 +35,10 @@ function course_certificate_course_outline_completion_links_alter(&$links, $node
  */
 function course_certificate_access_certificate($node, $user) {
   if (course_node_is_course($node)) {
+    $course = course_get_course($node);
+    $has_certificate = course_certificate_course_has_certificate($course);
     $sql = "select 1 from {course_report} where nid = %d and uid = %d and complete = %d";
-    return (bool) db_result(db_query($sql, $node->nid, $user->uid, 1));
+    return $has_certificate && (bool) db_result(db_query($sql, $node->nid, $user->uid, 1));
   }
 }
 
