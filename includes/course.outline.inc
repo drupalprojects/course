@@ -483,7 +483,7 @@ function course_outline_list($node) {
     );
 
     // Allow other modules to modify this list item.
-    drupal_alter('course_outline_list_item', $item, $courseObject, COURSE_BOOK_OUTLINE_ACTIVE_TREE);
+    $courseObject->overrideOutlineListItem($item);
 
     // Add this item to the list.
     $workflow[] = $item;

@@ -22,6 +22,7 @@ class CourseObjectBook extends CourseObjectNode {
   function optionsDefinition() {
     $defaults = parent::optionsDefinition();
     $defaults['book_tracking'] = 'all';
+    $defaults['outline_list_item_type'] = 'active_tree';
     return $defaults;
   }
 
@@ -37,6 +38,21 @@ class CourseObjectBook extends CourseObjectNode {
       ),
       '#default_value' => $config['book_tracking'],
     );
+    
+    // Add a book-specific configuration for course outline list item type, only
+    // if the standard course list outline handler is selected.
+    if ($this->getCourse()->getNode()->course['outline'] == 'course_outline_list') {
+      $form['outline_list_item_type'] = array(
+        '#title' => t('Course outline list item type'),
+        '#type' => 'select',
+        '#options' => array(
+          'all_pages' => t('All book pages as an expanded, nested list'),
+          'active_tree' => t('Only the active book menu tree items, with a count indicator'),
+          'count' => t('A count indicator only'),
+        ),
+        '#default_value' => $config['outline_list_item_type'],
+      );
+    }
   }
 
   /**
@@ -56,7 +72,7 @@ class CourseObjectBook extends CourseObjectNode {
   }
 
   /**
-   * Override navigation links.
+   * Overrides navigation links.
    */
   public function overrideNavigation() {
     $links = parent::overrideNavigation();
@@ -72,6 +88,18 @@ class CourseObjectBook extends CourseObjectNode {
     }
 
     return $links;
+  }
+
+  /**
+   * Overrides a course outline list item.
+   */
+  public function overrideOutlineListItem(&$item) {
+    // Check that course list outline handler is selected.
+    if ($this->getCourse()->getNode()->course['outline'] == 'course') {
+      $type = $this->getOption('outline_list_item_type');
+      // Override the list item by reference.
+      course_book_override_outline_list_item($item, $this, $type);
+    }
   }
 
 }

@@ -1,24 +1,6 @@
 <?php
 
 /**
- * Displays a nested item list of book pages, with all items fully expanded.
- */
-define('COURSE_BOOK_OUTLINE_ALL_PAGES', 1);
-
-/**
- * Displays the active menu tree, mirroring the core book outline on book pages.
- * 
- * Additionally, the number of pages are appended to the course outline item
- * title, to indicate there are pages when not a page within the active tree.
- */
-define('COURSE_BOOK_OUTLINE_ACTIVE_TREE', 2);
-
-/**
- * Displays only the book title, with the number of pages in the book.
- */
-define('COURSE_BOOK_OUTLINE_COUNT', 3);
-
-/**
  * Course context handler callback.
  */
 function course_book_context() {
@@ -78,14 +60,29 @@ function course_book_init() {
 }
 
 /**
- * Implements hook_course_outline_list_item_alter().
+ * Overrides a course outline list item.
+ *
+ * @param array $item
+ *   A course outline list item. The structure mirrors an array element from
+ *   the $items param from theme_item_list().
+ * @param CourseObject $courseObject
+ *   The instantiated course object that has an outline item to be overridden.
+ * @param string $type
+ *   The type of override to perform. Can be:
+ *   - all_pages: Displays a nested item list of book pages, with all items
+ *     fully expanded.
+ *   - active_tree: Displays the active menu tree, mirroring the core book
+ *     outline on book pages. Additionally, the number of pages are appended to
+ *     the course outline item title, to indicate there are pages when not a
+ *     page within the active tree.
+ *   - count: Displays the book title, with the number of pages in the book.
  */
-function course_book_course_outline_list_item_alter($item, CourseObject $courseObject, $type) {
+function course_book_override_outline_list_item(&$item, CourseObject $courseObject, $type) {
   if ($courseObject->getModule() == 'course_book' && $courseObject->getComponent() == 'book') {
     if ($bid = $courseObject->getInstanceId()) {
       // Alter the book outline item differently, depending on configured type.
       switch ($type) {
-        case COURSE_BOOK_OUTLINE_ALL_PAGES:
+        case 'all_pages':
           // If users do not have access to take the book course object, display
           // only titles instaed of links.
           $links = $courseObject->access('take');
@@ -99,7 +96,7 @@ function course_book_course_outline_list_item_alter($item, CourseObject $courseO
           }
           break;
 
-        case COURSE_BOOK_OUTLINE_ACTIVE_TREE:
+        case 'active_tree':
           // @see book_block().
           $book_node = node_load($bid);
           $tree = menu_tree_page_data($book_node->book['menu_name'], $book_node->book);
@@ -118,7 +115,7 @@ function course_book_course_outline_list_item_alter($item, CourseObject $courseO
           // because when not a page within the active tree, no children items
           // display, so without this there is no indicator they are there.
 
-        case COURSE_BOOK_OUTLINE_COUNT:
+        case 'count':
           $count = course_book_count($bid);
           // @kludge replace outline object title with an appended version.
           $subject = $item['data'];
@@ -171,7 +168,7 @@ function course_book_count_recurse($tree, $exclude, $count = 0) {
 }
 
 /**
- * Gets a list of book items, suitable for theme_item_list().
+ * Gets a nested list of book items.
  *
  * @param int $bid
  *   A book ID.
@@ -184,6 +181,7 @@ function course_book_count_recurse($tree, $exclude, $count = 0) {
  *   Any link deeper than this value will be excluded (along with its children).
  *
  * @return array
+ *   A nested array of book items, suitable for theme_item_list().
  */
 function course_book_items($bid, $links = TRUE, $exclude = array(), $depth_limit = MENU_MAX_DEPTH) {
   $tree = menu_tree_all_data(book_menu_name($bid));

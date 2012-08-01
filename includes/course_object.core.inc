@@ -76,6 +76,15 @@ abstract class CourseObject extends CourseHandler {
   }
 
   /**
+   * Overrides a course outline list item.
+   *
+   * @param array $item
+   *   A course outline list item. The structure mirrors an array element from
+   *   the $items param from theme_item_list().
+   */
+  public function overrideOutlineListItem(&$item) {}
+
+  /**
    * Access functionality for course objects.
    *
    * Possible values for $op are 'see', 'view', 'take'.
