@@ -834,6 +834,9 @@ abstract class CourseObject extends CourseHandler {
    * Let objects create their instances before saving the course object.
    */
   public function save() {
+    // If there is no title, set it.
+    $this->getTitle();
+    
     // If there is no instance ID, create one.
     if (!$this->getInstanceId()) {
       $this->create();

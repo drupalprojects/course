@@ -67,8 +67,16 @@ function course_outline_overview_form(&$form_state) {
 
     // Populate temporary course object, save it in the session.
     $new = array();
+    $new['weight'] = 0;
+
+    // Get highest weight and add to it.
+    foreach ($form_state['values']['course_outline']['objects'] as $key => $object) {
+      if ($object['weight'] >= $new['weight']) {
+        $new['weight'] = $object['weight'] + 1;
+      }
+    }
+    
     $new['nid'] = $node->nid;
-    $new['weight'] = 49;
     list($new['module'], $new['object_type']) = explode('-', $form_state['values']['more']['object_type']);
     $_SESSION['course'][$node->nid]['editing'][$obj_uniqid] = $new;
   }
@@ -244,7 +252,7 @@ function _course_outline_object_form($courseObject = NULL) {
   $rform['weight'] = array(
     '#type' => 'weight',
     '#delta' => 50,
-    '#default_value' => isset($object['weight']) ? $object['weight'] : 49,
+    '#default_value' => $courseObject->getOption('weight'),
     '#attributes' => array(
       'class' => 'course-object-weight',
     ),
@@ -351,7 +359,11 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   //   - object_type: The course object key as defined by
   //     hook_course_handlers().
   $objects = $form_state['values']['course_outline']['objects'];
+  
+  // Sort by weight so we can renumber.
+  uasort($objects, '_course_outline_overview_form_cmp_function');
 
+  $i = -50;
   foreach ($objects as $object_key => $object) {
     // Get each course object settings saved form values, which are not on the
     // outline overview form.
@@ -362,8 +374,8 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
     }
     $options = $courseObject->getOptions();
 
-    // Set the weight from the form state.
-    $courseObject->setOption('weight', $form_state['values']['course_outline']['objects'][$courseObject->getId()]['weight']);
+    // Renumber weights to the way draggable table would do it in case of no JS.
+    $courseObject->setOption('weight', $i++);
 
     // We only save overview objects with a selected component, whether loaded
     // from the database or AHAH created.
@@ -379,11 +391,6 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
       }
       // If not slated for deletion, save the both db loaded and AHAH objects.
       elseif (!$options['delete']) {
-        // Set the options, but don't overwrite any that weren't provided.
-        foreach ($object as $element => $value) {
-          $courseObject->setOption($element, $value);
-        }
-
         // If we get this far, save the object.
         $courseObject->save();
       }

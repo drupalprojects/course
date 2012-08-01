@@ -1392,7 +1392,7 @@ function course_enrolment_save($enrolment) {
 function _course_get_course_object_by_uniqid($uniqid, $account = NULL, $course = NULL) {
   if (!empty($_SESSION['course'])) {
     foreach ($_SESSION['course'] as $nid => $session) {
-      if (!empty($session['editing'])) {
+      if (is_array($session['editing'])) {
         foreach ($session['editing'] as $coid => $object) {
           if ($coid == $uniqid) {
             $courseObject = course_get_course_object($object, NULL, NULL, $account, $course);
