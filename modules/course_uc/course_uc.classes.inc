@@ -2,6 +2,13 @@
 
 class CourseObjectUbercart extends CourseObjectNode {
 
+  /**
+   * Specify that this object needs a navigation listener.
+   */
+  public function hasPolling() {
+    return TRUE;
+  }
+
   function getTakeType() {
     return 'content';
   }

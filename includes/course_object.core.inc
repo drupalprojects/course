@@ -55,6 +55,27 @@ abstract class CourseObject extends CourseHandler {
   }
 
   /**
+   * Override navigation links.
+   *
+   * @return array
+   *   An array of navigation links. Keyed values will override matching items
+   *   in Course::getNavigation().
+   */
+  public function overrideNavigation() {
+    return array();
+  }
+
+  /**
+   * Specify whether fulfillment uses asynchronous polling.
+   *
+   * @return bool
+   *   Whether this object uses polling. Defaults to FALSE.
+   */
+  public function hasPolling() {
+    return FALSE;
+  }
+
+  /**
    * Access functionality for course objects.
    *
    * Possible values for $op are 'see', 'view', 'take'.
@@ -733,12 +754,12 @@ abstract class CourseObject extends CourseHandler {
   }
 
   /**
-   * Give the course object a chance to check for fulfillment and set completion
+   * Give the course object a chance do asynchronous polling and set completion
    * on demand.
    *
    * Useful for external objects.
    */
-  function checkFulfillment() {
+  function poll() {
 
   }
 

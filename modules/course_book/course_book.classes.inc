@@ -54,4 +54,24 @@ class CourseObjectBook extends CourseObjectNode {
       $this->getFulfillment()->setComplete(1)->save();
     }
   }
+
+  /**
+   * Override navigation links.
+   */
+  public function overrideNavigation() {
+    $links = parent::overrideNavigation();
+
+    $node = node_load(arg(1));
+    if ($node && $book_link = $node->book) {
+      if ($prev = book_prev($book_link)) {
+        $links['prev'] = l('Previous', $prev['href']);
+      }
+      if ($next = book_next($book_link)) {
+        $links['next'] = l('Next', $next['href']);
+      }
+    }
+
+    return $links;
+  }
+
 }

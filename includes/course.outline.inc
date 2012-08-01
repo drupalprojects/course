@@ -468,11 +468,18 @@ function course_outline_list($node) {
     else {
       $data = $img . ' ' . l("{$courseObject->getTitle()}<br/>", $step['link'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status'] . '</span>';
     }
-    $workflow[] = array(
+    
+    $item = array(
       'data' => $data,
       'id' => $step['id'],
       'class' => $step['style'],
     );
+
+    // Allow other modules to modify this list item.
+    drupal_alter('course_outline_list_item', $item, $courseObject, COURSE_BOOK_OUTLINE_ACTIVE_TREE);
+
+    // Add this item to the list.
+    $workflow[] = $item;
 
     // We have to clone it, otherwise $courseObject becomes the next object.
     $prev_req = clone $courseObject;

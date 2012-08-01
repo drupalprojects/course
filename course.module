@@ -366,7 +366,7 @@ function course_access_object($node, $courseObject) {
 }
 
 function course_ajaj_fulfullment_check($node, $courseObject, $js = FALSE) {
-  $courseObject->checkFulfillment();
+  $courseObject->poll();
   if (course_node_is_course($node)) {
     course_set_context($node);
   }
@@ -2017,12 +2017,14 @@ function course_init() {
     // cached the Course class.
 
     $course = course_get_course($courseNode);
-    if ($course && $course->getActive()) {
-      drupal_add_js(
-        array(
-        'courseAjaxNavPath' => url('node/' . $courseNode->nid . '/course-object/' . $course->getActive()->getId() . '/ajax/nav'),
-        ), 'setting'
-      );
+    if ($course && $active = $course->getActive()) {
+      if ($active->hasPolling()) {
+        drupal_add_js(
+          array(
+          'courseAjaxNavPath' => url('node/' . $courseNode->nid . '/course-object/' . $course->getActive()->getId() . '/ajax/nav'),
+          ), 'setting'
+        );
+      }
     }
   }
 }

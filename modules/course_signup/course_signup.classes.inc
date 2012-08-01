@@ -2,6 +2,13 @@
 
 class CourseObjectSignup extends CourseObjectNode {
 
+  /**
+   * Specify that this object needs a navigation listener.
+   */
+  public function hasPolling() {
+    return TRUE;
+  }
+
   public function create() {
     if (!$this->getOption('instance')) {
       $this->setOption('instance', $this->getCourseNid());

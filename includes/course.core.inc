@@ -378,6 +378,38 @@ class Course extends CourseHandler {
   }
 
   /**
+   * Generate navigation links.
+   */
+  public function getNavigation() {
+    // Initialize the active Course.
+    $this->setActive();
+    
+    $prev = $this->getPrev();
+    $next = $this->getNext();
+
+    $links = array();
+
+    if ($prev) {
+      $links['prev'] = l('Previous', $prev->getUrl(), array('html' => TRUE));
+    }
+
+    $links['back'] = l('Back to course', $this->getUrl());
+
+    if ($next && $next->access('take')) {
+      $links['next'] = l('Next', $next->getUrl(), array('html' => TRUE));
+    }
+
+    // Ask course objects if they want to override the navigation.
+    if ($active = $this->getActive()) {
+      foreach ($active->overrideNavigation() as $key => $link) {
+        $links[$key] = $link;
+      }
+    }
+
+    return $links;
+  }
+
+  /**
    * Track the course (scan required objects, update progress, completion, etc).
    */
   public function track() {

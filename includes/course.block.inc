@@ -52,28 +52,17 @@ function _course_block_navigation_view() {
   $node = course_get_context();
   if ($node) {
     $course = course_get_course($node, $user);
-    // Initialize the active Course.
-    $course->setActive();
-    $prev = $course->getPrev();
-    $next = $course->getNext();
+    $links = $course->getNavigation();
 
-    $links = array();
+    // Strip array keys so theme_item_list() works properly.
+    $items = array_values($links);
 
-    if ($prev) {
-      $links[] = l('Previous', $prev->getUrl(), array('html' => TRUE));
-    }
-
-    $links[] = l('Back to course', $course->getUrl());
-
-    if ($next && $next->access('take')) {
-      $links[] = l('Next', $next->getUrl(), array('html' => TRUE));
-    }
-
+    // @todo docuemnt me.
     drupal_add_js(drupal_get_path('module', 'course') . '/js/nav.js', 'module', 'header', FALSE, FALSE, FALSE);
 
     return array(
       'subject' => '',
-      'content' => theme('item_list', $links, NULL, 'ul', array('id' => 'course-nav')),
+      'content' => theme('item_list', $items, NULL, 'ul', array('id' => 'course-nav')),
     );
   }
 }
