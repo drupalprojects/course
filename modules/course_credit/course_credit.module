@@ -622,7 +622,7 @@ function course_credit_award_save($record = array()) {
     $record['expiration'] = $expiration;
   }
 
-  if (!$existing->date && !isset($record['date'])) {
+  if (!isset($existing->date) && !isset($record['date'])) {
     // New or no date or date not provided - timestamp the claim.
     $record['date'] = time();
   }

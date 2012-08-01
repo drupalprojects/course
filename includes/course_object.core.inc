@@ -382,7 +382,7 @@ abstract class CourseObject extends CourseHandler {
     }
 
     // Required.
-    if ($options['delete']) {
+    if (!empty($options['delete'])) {
       $dest = "node/{$options['nid']}/course-object/nojs/{$uniqid}/restore";
       $text = t('Object will be removed from outline');
       $restore_text = t('Restore this object to the course outline.');
