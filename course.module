@@ -830,6 +830,16 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         $existing = db_result(db_query('select 1 from {course_node} where nid = %d', $node->nid));
         $update = $existing ? array('nid') : array();
         drupal_write_record('course_node', $record, $update);
+        
+        // Support cloning.
+        if (isset($node->clone_from_original_nid) && $original = node_load($node->clone_from_original_nid)) {
+          $node->course['objects'] = $original->course['objects'];
+        }
+
+        // Save the course objects - necessary for programmatic course creation.
+        $objects = is_array($node->course['objects']) ? $node->course['objects'] : array();
+        $course = course_get_course($node);
+        course_save_objects($objects, $course);
         break;
       case 'load':
         if ($course = db_fetch_array(db_query('select * from {course_node} where nid = %d', $node->nid))) {
@@ -862,6 +872,65 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         db_query("DELETE FROM {course_node} where nid = %d", $node->nid);
         db_query("DELETE FROM {course_enrolment} where nid = %d", $node->nid);
         break;
+    }
+  }
+}
+
+/**
+ * Saves course objects.
+ *
+ * @param array $objects
+ *   An array of course object definitions.
+ * @param Course $course
+ *   (optional) An instantiated Course, from course_get_course().
+ */
+function course_save_objects(array $objects, Course $course = NULL) {
+  foreach ($objects as $object) {
+    // Check if this course object already exists in the database.
+    if (isset($object->coid)) {
+      // Check if this object does not belong to the current node.
+      if ($object->nid != $node->nid) {
+        // We are importing or cloning. Ensure the necessary keys are empty,
+        // in order to prepare a new object using this object's definitions.
+        $unset = array('coid', 'nid', 'instance', 'uuid');
+        foreach ($unset as $key) {
+          if (isset($object->{$key})) {
+            unset($object->{$key});
+          }
+        }
+
+        // Replace the nid key, to properly associate the current course node
+        // with this course object.
+        $object->nid = $course->getNode()->nid;
+        
+        // Clean out serialized data field.
+        $unset_data_keys = array('uniqid', 'uuid');
+        if (isset($object->data) && $data = unserialize($object->data)) {
+          foreach ($unset_data_keys as $key) {
+            if (isset($data[$key])) {
+              unset($data[$key]);
+            }
+          }
+          $object->data = serialize($data);
+        }
+      }
+    }
+
+    // Set options for this object.
+    if ($prepareObject = course_get_course_object($object, NULL, NULL, NULL, $course)) {
+      $available_options = $prepareObject->getOptions();
+      $options = array();
+      foreach($object as $key => $value) {
+        // Check if this key is a valid option.
+        if (isset($available_options[$key])) {
+          $options[$key] = $value;
+        }
+      }
+      // Set the options.
+      $prepareObject->setOptions($options);
+
+      // Save the object, creating new instances, if applicable.
+      $prepareObject->save();
     }
   }
 }
@@ -1138,7 +1207,24 @@ function course_form_alter(&$form, &$form_state, $form_id) {
     foreach (element_children($form['course']) as $key) {
       $form['course'][$key]['#default_value'] = isset($node->course[$key]) ? $node->course[$key] : NULL;
     }
+
+    // After creating a new course, redirect the user to the course outline
+    // overview form.
+    if (empty($node->nid)) {
+      $form['buttons']['submit']['#submit'][] = 'course_form_submit';
+    }
   }
+}
+
+/**
+ * Submit handler for the course node form.
+ *
+ * Redirect the user to the outline overview form on new node inserts. Note that
+ * this fires after the hook_submit() function above.
+ */
+function course_form_submit($form, &$form_state) {
+  drupal_set_message(t('Add new items to your course outline using the form below.'));
+  $form_state['redirect'] = 'node/' . $form_state['nid'] . '/course-outline';
 }
 
 /**
