@@ -77,6 +77,7 @@ function course_outline_overview_form(&$form_state) {
     }
     
     $new['nid'] = $node->nid;
+    $new['coid'] = $obj_uniqid;
     list($new['module'], $new['object_type']) = explode('-', $form_state['values']['more']['object_type']);
     $_SESSION['course'][$node->nid]['editing'][$obj_uniqid] = $new;
   }
@@ -265,13 +266,6 @@ function _course_outline_object_form($courseObject = NULL) {
   );
 
   return $rform;
-}
-
-/**
- * Non-ahah version for when the node is available.
- */
-function course_outline_overview_add($form, $form_state) {
-  // Non-ahah version.
 }
 
 /**

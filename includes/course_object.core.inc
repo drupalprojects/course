@@ -851,6 +851,12 @@ abstract class CourseObject extends CourseHandler {
       $this->create();
     }
 
+    // Set the ID to NULL because this is a temporary course object being
+    // created for the first time.
+    if (strpos($this->getId(), 'course_object_') !== FALSE) {
+      $this->setId(NULL);
+    }
+
     return parent::save();
   }
 
