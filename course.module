@@ -229,13 +229,6 @@ function course_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  // Course object settings link
-  $items['node/%course/course-object/%ctools_js/store/%'] = array(
-    'page callback' => 'course_store_temp_object',
-    'page arguments' => array(1, 3, 5),
-    'access callback' => TRUE,
-    'type' => MENU_CALLBACK,
-  );
   // AHAH handler.
   $items['node/%course/course-outline/%ctools_js/more/%'] = array(
     'page callback' => 'course_outline_overview_js_more',
@@ -386,52 +379,18 @@ function course_ajaj_fulfullment_check($node, $courseObject, $js = FALSE) {
 }
 
 /**
- * When a user selects a new object_type, update it in the database so
- * our modals etc use the right course object.
+ * Start an editing session for this course. Populate the session from
+ * persistent storage.
  *
- * @param stdClass $node
- *   A course node object loaded from course_load().
- * @param boolean $js
- *   Detects if ajax is enabled, loaded from ctools_js_load().
- * @param uniqid $uniqid
- *   A uniqid for the temporary course object.
+ * @param Course $course
+ *   A Course.
  */
-function course_store_temp_object($node, $js, $uniqid) {
-  if ($js) {
-    $nid = $node->nid;
-    $changed = explode('-', $_POST['ctools_changed']);
-    $_SESSION['course'][$nid]['editing'][$uniqid]['module'] = $changed[0];
-    $_SESSION['course'][$nid]['editing'][$uniqid]['object_type'] = $changed[1];
-    $courseObject = course_get_course_object_by_id($uniqid);
-    ctools_include('ajax');
-
-    $commands = array();
-
-    $commands[] = ctools_ajax_command_html("#options-{$uniqid}", '');
-    $commands[] = ctools_ajax_command_html("#summary-{$uniqid}", '');
-    $commands[] = ctools_ajax_command_html("#title-{$uniqid}", '');
-    if (!empty($changed[0])) {
-      // Add settings link.
-      $text = t('Settings');
-      $path = "node/{$node->nid}/course-object/nojs/{$uniqid}/options";
-      $options = array('attributes' => array('class' => 'ctools-use-modal'));
-      $html = l($text, $path, $options);
-      $commands[] = ctools_ajax_command_append("#options-{$uniqid}", $html);
-
-      $optionsSummary = '<div class="description">' . theme_item_list($courseObject->getOptionsSummary()) . '</div>';
-
-
-      // Add options summary.
-      $commands[] = ctools_ajax_command_append("#summary-" . $uniqid, $optionsSummary);
-
-      // Add title.
-      $commands[] = ctools_ajax_command_append("#title-" . $uniqid, $courseObject->getTitle());
+function course_editing_start($course) {
+  if (empty($_SESSION['course'][$course->getNode()->nid]['editing'])) {
+    // Start editing cache from what we have in DB.
+    foreach ($course->getObjects() as $courseObject) {
+      $_SESSION['course'][$course->getNode()->nid]['editing'][$courseObject->getId()] = $courseObject->getOptions();
     }
-
-    ctools_ajax_render($commands);
-  }
-  else {
-    exit;
   }
 }
 
@@ -548,6 +507,9 @@ function course_object_options_form_submit(&$form, &$form_state) {
     $nid = $form_state['values']['nid'];
     // Get course object from session/database.
     $courseObject = course_object_load($form_state['values']['uniqid']);
+    $course = $courseObject->getCourse();
+    // Start editing session.
+    course_editing_start($course);
     $courseObject->setId($form_state['values']['uniqid']);
     $courseObject->optionsSubmit($form, $form_state);
   }

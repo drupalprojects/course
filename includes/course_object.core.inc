@@ -219,7 +219,7 @@ abstract class CourseObject extends CourseHandler {
     );
 
     // Only allow deletion of existing instances.
-    if ($config['instance']) {
+    if (!empty($config['instance'])) {
       $form['delete_instance'] = array(
         '#title' => t('Also delete related object instance(s)'),
         '#type' => 'checkbox',
@@ -1041,6 +1041,7 @@ abstract class CourseObjectNode extends CourseObject {
       '#title' => 'Existing node',
       '#autocomplete_path' => 'course/autocomplete/node/' . implode(',', $this->getNodeTypes()),
       '#type' => 'textfield',
+      '#description' => t('Use an existing node instead of creating a new one.'),
     );
 
     $form['private'] = array(

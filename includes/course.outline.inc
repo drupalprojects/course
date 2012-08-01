@@ -53,45 +53,54 @@ function course_outline_overview_form(&$form_state) {
     $node = node_load(arg(1));
   }
 
+  $course = course_get_course($node);
+
+  // Check if "Add another" was clicked.
+  if (isset($form_state['values']['op']) && $form_state['values']['op'] == 'Add another' && !empty($form_state['values']['more']['object_type'])) {
+    // Ensure that we cached the course.
+    course_editing_start($course);
+
+    // Create a new course object in the session, and let the rest of the form
+    // builder handle it.
+    $obj_uniqid = uniqid('course_object_');
+    $_SESSION['course'][$node->nid]['editing'][$obj_uniqid] = array();
+
+    // Populate temporary course object, save it in the session.
+    $new = array();
+    $new['nid'] = $node->nid;
+    $new['weight'] = 49;
+    list($new['module'], $new['object_type']) = explode('-', $form_state['values']['more']['object_type']);
+    $_SESSION['course'][$node->nid]['editing'][$obj_uniqid] = $new;
+  }
+
   $form['nid']['#type'] = 'hidden';
   $form['nid']['#value'] = $node->nid;
 
-  // Grab objects.
-  $objects = $node->course['objects'];
-  if (!empty($form_state['values']['course_outline']['objects'])) {
-    $objects = $form_state['values']['course_outline']['objects'];
+  // Grab initial list of objects from DB or session.
+  if (!empty($_SESSION['course'][$node->nid]['editing'])) {
+    $objects = $_SESSION['course'][$node->nid]['editing'];
   }
+  else {
+    $objects = $node->course['objects'];
+  }
+
+  // Sort list of objects we pulled from session or DB by weight for proper
+  // display.
+  uasort($objects, '_course_outline_overview_form_cmp_function');
 
   $cform['#title'] = 'Course objects';
   $form['#theme'] = 'course_outline_overview_form';
 
-  // These are the available objects.
-  $handlers = course_get_handlers('object');
-  $options = array(
-    '' => '- select new -',
-  );
-  foreach ($handlers as $module => $object_definitions) {
-    if ($object_definitions) {
-      if (count($object_definitions) == 1) {
-        $pair = each($object_definitions);
-        $key = $pair[0];
-        $object_info = $pair[1];
-        $options[$module . '-' . $key] = $object_info['name'];
-      }
-      else {
-        foreach ($object_definitions as $key => $object_info) {
-          $module_string = ucwords(str_replace('_', ' ', $module));
-          $options[$module . '-' . $key] = $module_string . ': ' . $object_info['name'];
-        }
-      }
-    }
+  if (!empty($_SESSION['course'][$node->nid]['editing'])) {
+    drupal_set_message('Changes to this course have not yet been saved.', 'warning');
   }
 
+  $handlers = course_get_handlers('object');
+  
   // Wrapper for just the objects.
   $cform['objects']['#tree'] = TRUE;
   if (count($objects)) {
-    foreach ($objects as $uniqid => $object) {
-      $object = (array) $object;
+    foreach (array_keys($objects) as $uniqid) {
       $courseObject = course_get_course_object_by_id($uniqid);
 
       if ($courseObject) {
@@ -99,58 +108,52 @@ function course_outline_overview_form(&$form_state) {
           drupal_set_message(filter_xss($warning), 'warning');
         }
       }
-      $rform = _course_outline_object_form($object, $uniqid, $courseObject);
+      $rform = _course_outline_object_form($courseObject);
 
-      if (empty($object['coid'])) {
-        // User hasnt selected an object type yet, let them select.
-        $rform['object_type'] = array(
-          '#type' => 'select',
-          '#options' => $options,
-          '#default_value' => $object['object_type'],
-        );
-      }
-      else {
-        // Don't allow user to change type of object.
-        $rform['object_type'] = array(
-          '#type' => 'hidden',
-          '#value' => $object['object_type'],
-        );
-        $rform['object_type_show'] = array(
-          '#type' => 'markup',
-          '#value' => filter_xss_admin($handlers[$object['module']][$object['object_type']]['name'] . '<br/><small><i>'
-            . ucwords(str_replace('_', ' ', $object['module'])) . '</i></small>'),
-        );
-      }
-
-      if ($object['object_type']) {
-        // Settings link for saved objects.
-        $text = t('Settings');
-        $path = "node/{$object['nid']}/course-object/nojs/{$uniqid}/options";
-        $l_options = array('attributes' => array('class' => 'ctools-use-modal'));
-        $rform['options']['#value'] = l($text, $path, $l_options);
-      }
+      // Don't allow user to change type of object.
+      $rform['object_type'] = array(
+        '#type' => 'hidden',
+        '#value' => $courseObject->getOption('object_type'),
+      );
+      $rform['object_type_show'] = array(
+        '#type' => 'markup',
+        '#value' => filter_xss_admin($handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')]['name'] . '<br/><small><i>'
+          . ucwords(str_replace('_', ' ', $courseObject->getOption('module'))) . '</i></small>'),
+      );
 
       ctools_ajax_associate_url_to_element($form, $rform['object_type'], "course-object/nojs/store/$uniqid");
       $cform['objects'][$uniqid] = $rform;
     }
   }
 
-  // Add a blank row.
-  if (!isset($form_state['values']['op']) || $form_state['values']['op'] != 'Save') {
-    $obj_uniqid = uniqid('course_object_');
-    $new = array();
-    $new['nid'] = $node->nid;
-    $new = _course_outline_object_form($new, $obj_uniqid);
-    $new['object_type'] = array(
-      '#title' => 'Component',
-      '#type' => 'select',
-      '#options' => $options,
-    );
-    ctools_ajax_associate_url_to_element($form, $new['object_type'], "course-object/nojs/store/$obj_uniqid");
-    $cform['objects'][$obj_uniqid] = & $new;
+  // Add another button and select box for new objects.
+  $object_types = array(
+    '' => '- select object -',
+  );
+  foreach ($handlers as $module => $object_definitions) {
+    if ($object_definitions) {
+      if (count($object_definitions) == 1) {
+        $pair = each($object_definitions);
+        $key = $pair[0];
+        $object_info = $pair[1];
+        $object_types[$module . '-' . $key] = $object_info['name'];
+      }
+      else {
+        foreach ($object_definitions as $key => $object_info) {
+          $module_string = ucwords(str_replace('_', ' ', $module));
+          $object_types[$module . '-' . $key] = $module_string . ': ' . $object_info['name'];
+        }
+      }
+    }
   }
+  
+  $form['more'] = array(
+    '#type' => 'markup',
+    '#prefix' => '<div class="container-inline">',
+    '#suffix' => '</div>',
+  );
 
-  $form['course_object_more'] = array(
+  $form['more']['add_another'] = array(
     '#type' => 'submit',
     '#value' => 'Add another',
     '#ahah' => array(
@@ -161,14 +164,25 @@ function course_outline_overview_form(&$form_state) {
     ),
     '#submit' => array('ahah_helper_submit'),
   );
+  $form['more']['object_type'] = array(
+    '#type' => 'select',
+    '#options' => $object_types,
+  );
 
-  //$form['#redirect'] = "node/$node->nid/course-outline";
-
+  // Submit and reset buttons.
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => 'Save',
     '#submit' => array('course_outline_overview_form_submit'),
   );
+
+  if (!empty($_SESSION['course'][$node->nid]['editing'])) {
+    $form['reset'] = array(
+      '#type' => 'submit',
+      '#value' => 'Reset',
+      '#submit' => array('course_outline_overview_form_reset'),
+    );
+  }
 
   $cform['objects']['#element_validate'] = array('_course_outline_overview_validate_objects');
   //return for form on tab
@@ -176,29 +190,32 @@ function course_outline_overview_form(&$form_state) {
 }
 
 /**
+ * Submit handler for resetting a Course back to stored defaults.
+ */
+function course_outline_overview_form_reset(&$form, &$form_state) {
+  unset($_SESSION['course'][$form['nid']['#value']]['editing']);
+}
+
+/**
  * Form constructor for a course object.
  *
  * To be re-used in listing and creating new course objects.
  */
-function _course_outline_object_form($object = array(), $uniqid = NULL, $courseObject = NULL) {
+function _course_outline_object_form($courseObject = NULL) {
   $rform['#tree'] = TRUE;
+  $uniqid = $courseObject->getId();
 
   foreach (array('coid', 'instance', 'module', 'object_type', 'nid') as $key) {
     $rform[$key] = array(
       '#type' => 'value',
-      '#default_value' => isset($object[$key]) ? $object[$key] : NULL,
+      '#default_value' => $courseObject->getOption($key),
     );
   }
 
   // Do not use prefix/suffix because markup only renders with a value, and we
   // need the wrapper before the title is saved for ajax population after each
   // settings modal update.
-  if ($courseObject) {
-    $title = $courseObject->getTitle();
-  }
-  else {
-    $title = '';
-  }
+  $title = $courseObject->getTitle();
   $rform['title'] = array(
     '#prefix' => '<div id="title-' . $uniqid . '">',
     '#suffix' => '</div>',
@@ -206,12 +223,7 @@ function _course_outline_object_form($object = array(), $uniqid = NULL, $courseO
     '#value' => check_plain($title ? $title : ' '),
   );
 
-  if ($courseObject) {
-    $summary = $courseObject->renderOptionsSummary();
-  }
-  else {
-    $summary = '';
-  }
+  $summary = $courseObject->renderOptionsSummary();
 
   $rform['summary'] = array(
     '#prefix' => '<div id="summary-' . $uniqid . '">',
@@ -223,17 +235,16 @@ function _course_outline_object_form($object = array(), $uniqid = NULL, $courseO
   // Placeholder for the settings link, it gets added after this function runs
   // in course_outline_overview_form(). #value needs a space for the prefix and
   // suffix to render.
-  $rform['options'] = array(
-    '#type' => 'markup',
-    '#prefix' => '<div id="' . "options-{$uniqid}" . '">',
-    '#value' => ' ',
-    '#suffix' => '</div>',
-  );
+  // Settings link for saved objects.
+  $text = t('Settings');
+  $path = "node/{$courseObject->getCourseNid()}/course-object/nojs/{$uniqid}/options";
+  $l_options = array('attributes' => array('class' => 'ctools-use-modal'));
+  $rform['options']['#value'] = l($text, $path, $l_options);
 
   $rform['weight'] = array(
     '#type' => 'weight',
     '#delta' => 50,
-    '#default_value' => isset($object['weight']) ? $object['weight'] : NULL,
+    '#default_value' => isset($object['weight']) ? $object['weight'] : 49,
     '#attributes' => array(
       'class' => 'course-object-weight',
     ),
@@ -290,7 +301,7 @@ function theme_course_outline_overview_form($form) {
     $nid = $object['nid']['#value'];
     // @todo should we unify this, so we always use $courseObject->getOptions()
     // instead of pulling from the session?
-    if (isset($_SESSION['course'][$nid]['editing'][$key]['delete'])) {
+    if (!empty($_SESSION['course'][$nid]['editing'][$key]['delete'])) {
       $rows[$key]['class'] = 'deleted';
     }
 
@@ -312,15 +323,16 @@ function _course_outline_overview_validate_objects(&$form, &$form_state) {
 /**
  * Comparator function for course outline weights.
  */
-function course_outline_overview_form_cmp_function($a, $b) {
-  if ($a['weight'] > $b['weight']) {
-    return 1;
-  }
-  if ($a['weight'] < $b['weight']) {
-    return -1;
+function _course_outline_overview_form_cmp_function($a, $b) {
+  if (is_object($a)) {
+    if (isset($a->weight) && isset($b->weight)) {
+      return $a->weight - $b->weight;
+    }
   }
   else {
-    return 0;
+    if (isset($a['weight']) && isset($b['weight'])) {
+      return $a['weight'] - $b['weight'];
+    }
   }
 }
 
@@ -339,27 +351,8 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   //   - object_type: The course object key as defined by
   //     hook_course_handlers().
   $objects = $form_state['values']['course_outline']['objects'];
-  //uksort($objects, 'course_outline_overview_form_cmp_function');
-  // Get object handler definitions for labels.
-  $object_info = course_get_handlers('object');
 
   foreach ($objects as $object_key => $object) {
-    // Renumber object based on the order they were submitted in (when JS is
-    // disabled)
-    //$object['weight'] = ++$i;
-    // We use the object_type namespace for two purposes:
-    // - The form element is a select list with keys matching the combined
-    //   pattern: {module}-{object_type}.
-    // - We save only the second part of that combined key to the database.
-    if (!$object['module'] && $object['object_type']) {
-      // Repurpose the object type array element.
-      list($object['module'], $object['object_type']) = explode('-', $object['object_type']);
-    }
-
-    if (!$object['object_type']) {
-      continue;
-    }
-
     // Get each course object settings saved form values, which are not on the
     // outline overview form.
     if (!$courseObject = course_get_course_object_by_id($object_key)) {
@@ -368,6 +361,9 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
       $courseObject = course_get_course_object($object);
     }
     $options = $courseObject->getOptions();
+
+    // Set the weight from the form state.
+    $courseObject->setOption('weight', $form_state['values']['course_outline']['objects'][$courseObject->getId()]['weight']);
 
     // We only save overview objects with a selected component, whether loaded
     // from the database or AHAH created.
@@ -393,7 +389,8 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
       }
     }
   }
-  // Discard any session elements that did not pass criteria for saving.
+
+  // Clear the editing session.
   unset($_SESSION['course'][$node->nid]['editing']);
 
   drupal_set_message('Updated course.');
