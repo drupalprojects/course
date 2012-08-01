@@ -801,9 +801,10 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         }
 
         // Save the course objects - necessary for programmatic course creation.
-        $objects = is_array($node->course['objects']) ? $node->course['objects'] : array();
-        $course = course_get_course($node);
-        course_save_objects($objects, $course);
+        if (isset($node->course['objects'])) {
+          $course = course_get_course($node);
+          course_save_objects($node->course['objects'], $course);
+        }
         break;
       case 'load':
         if ($course = db_fetch_array(db_query('select * from {course_node} where nid = %d', $node->nid))) {
