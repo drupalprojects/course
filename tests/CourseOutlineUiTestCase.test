@@ -23,19 +23,12 @@ class CourseOutlineUiTestCase extends CourseTestCase {
    * @param stdClass $courseNode
    */
   function createCourseObjectUi($courseNode) {
-    // Need to find the temporary new object. @todo refactor course module so
-    // we don't have to create uniqids? Not sure.
-    $this->drupalGet("node/{$courseNode->nid}/course-outline");
-    $body = $this->drupalGetContent();
-    preg_match('#course_outline\[objects\]\[(.*)\]#U', $body, $match);
-    $uniqid = $match[1];
-
     // Add a new course content object.
     $edit = array();
-    $edit["course_outline[objects][$uniqid][object_type]"] = 'course_test-course_test_object';
-    $this->drupalPost(NULL, $edit, t('Save'));
+    $edit["more[object_type]"] = 'course_test-course_test_object';
+    $this->drupalPost(NULL, $edit, t('Add another'));
 
-    $this->assertText(t('Updated course.'));
+    $this->assertText(t('Test course object'));
   }
 
   /**
@@ -43,6 +36,7 @@ class CourseOutlineUiTestCase extends CourseTestCase {
    */
   function testCourseOutlineCrud() {
     $courseNode = $this->createCourseNode();
+    $this->drupalGet("node/{$courseNode->nid}/course-outline");
     $this->createCourseObjectUi($courseNode);
   }
 

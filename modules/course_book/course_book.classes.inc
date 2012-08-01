@@ -1,10 +1,10 @@
 <?php
 
 class CourseObjectBook extends CourseObjectNode {
+
   function getNodeTypes() {
     return array('book');
   }
-
 
   /**
    * Make the book.
@@ -38,7 +38,7 @@ class CourseObjectBook extends CourseObjectNode {
       ),
       '#default_value' => $config['book_tracking'],
     );
-    
+
     // Add a book-specific configuration for course outline list item type, only
     // if the standard course list outline handler is selected.
     if ($this->getCourse()->getNode()->course['outline'] == 'course_outline_list') {
@@ -78,7 +78,8 @@ class CourseObjectBook extends CourseObjectNode {
     $links = parent::overrideNavigation();
 
     $node = node_load(arg(1));
-    if ($node && $book_link = $node->book) {
+    if (isset($node->book)) {
+      $book_link = $node->book;
       if ($prev = book_prev($book_link)) {
         $links['prev'] = l('Previous', $prev['href']);
       }
