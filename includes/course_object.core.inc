@@ -370,6 +370,17 @@ abstract class CourseObject extends CourseHandler {
       $summary['required'] = '<span class="warning">' . t('Completion not required') . '</span>';
     }
 
+    // Instance edit link.
+    $instance = $this->getInstanceId();
+    if (!empty($instance)) {
+      $text = t('Edit instance');
+      $path = ltrim($this->getEditUrl(), '/');
+      $options = array(
+        'query' => drupal_get_destination(),
+      );
+      $summary['instance'] = l($text, $path, $options);
+    }
+
     // Required.
     if ($options['delete']) {
       $dest = "node/{$options['nid']}/course-object/nojs/{$uniqid}/restore";
