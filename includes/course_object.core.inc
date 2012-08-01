@@ -291,6 +291,8 @@ abstract class CourseObject extends CourseHandler {
       '#weight' => 999,
       '#type' => 'submit',
     );
+
+    $form['#redirect'] = 'node/' . $this->getCourseNid() . '/course-outline';
   }
 
   public function optionsValidate(&$form, &$form_state) {

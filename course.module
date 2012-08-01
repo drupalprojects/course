@@ -402,11 +402,13 @@ function course_object_restore($node, $js, CourseObject $courseObject) {
   $course = course_get_course($node);
   $courseObject->setCourse($course);
   $uniqid = $courseObject->getId();
+  $nid = $node->nid;
+
+  // Set the session value.
+  $_SESSION['course'][$nid]['editing'][$uniqid]['delete'] = 0;
+  $_SESSION['course'][$nid]['editing'][$uniqid]['delete_instance'] = 0;
+
   if ($js) {
-    $nid = $node->nid;
-    // Set the session value.
-    $_SESSION['course'][$nid]['editing'][$uniqid]['delete'] = 0;
-    $_SESSION['course'][$nid]['editing'][$uniqid]['delete_instance'] = 0;
     ctools_include('ajax');
 
     // Perform ajax operations on the overview form, after restore.
@@ -420,7 +422,7 @@ function course_object_restore($node, $js, CourseObject $courseObject) {
     ctools_ajax_render($commands);
   }
   else {
-    exit;
+    drupal_goto("node/$nid/course-outline");
   }
 }
 
