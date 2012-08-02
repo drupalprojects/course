@@ -70,9 +70,11 @@ function course_outline_overview_form(&$form_state) {
     $new['weight'] = 0;
 
     // Get highest weight and add to it.
-    foreach ($form_state['values']['course_outline']['objects'] as $key => $object) {
-      if ($object['weight'] >= $new['weight']) {
-        $new['weight'] = $object['weight'] + 1;
+    if (is_array($form_state['values']['course_outline']['objects'])) {
+      foreach ($form_state['values']['course_outline']['objects'] as $key => $object) {
+        if ($object['weight'] >= $new['weight']) {
+          $new['weight'] = $object['weight'] + 1;
+        }
       }
     }
     
@@ -420,6 +422,7 @@ function course_outline_list($node) {
     $step['style'] = 'not-started';
     $step['id'] = 'course-object-' . $courseObject->getId();
     $step['image'] = '';
+    $step['status'] = '';
 
     if (!$courseObject->access('see')) {
       if ($status = $courseObject->getStatus()) {

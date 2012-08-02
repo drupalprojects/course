@@ -133,6 +133,37 @@ abstract class CourseObject extends CourseHandler {
           $access = course_enrolment_check($this->getCourseNid(), $account->uid);
         }
 
+        if ($course->getPrev() && !$course->getPrev()->isRequired()) {
+          // Previous step was not required.
+          $access = TRUE;
+
+          // But we need to see if at least one required step was completed (or the start of the course).
+          $objects = array_reverse($course->getObjects());
+          $check = FALSE;
+          foreach ($objects as $object) {
+            if ($check) {
+              if ($object->isRequired()) {
+                // Object is required.
+                if (!$object->getFulfillment()->isComplete()) {
+                  // Found a required object that was not complete.
+                  $access = FALSE;
+                  break;
+                }
+                else {
+                  // The last required object was completed.
+                  $access = TRUE;
+                  break;
+                }
+              }
+            }
+            if ($object->getId() == $this->getId()) {
+              // We found the object we are trying to check access on.
+              // Now we want to go backwards.
+              $check = 1;
+            }
+          }
+        }
+
         if ($course->getPrev() && $course->getPrev()->getFulfillment()->isComplete()) {
           // If last object was complete, and we are on the current object,
           // grant access.
@@ -493,11 +524,6 @@ abstract class CourseObject extends CourseHandler {
       return FALSE;
     }
 
-    if (!$this->getOption('required')) {
-      // Object is not required, instantly complete it on access.
-      $this->getFulfillment()->setComplete(1);
-    }
-
     // Save fulfillment record.
     $this->getFulfillment()->save();
 
@@ -847,7 +873,7 @@ abstract class CourseObject extends CourseHandler {
   public function save() {
     // If there is no title, set it.
     $this->getTitle();
-    
+
     // If there is no instance ID, create one.
     if (!$this->getInstanceId()) {
       $this->create();
