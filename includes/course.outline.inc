@@ -70,7 +70,7 @@ function course_outline_overview_form(&$form_state) {
     $new['weight'] = 0;
 
     // Get highest weight and add to it.
-    if (is_array($form_state['values']['course_outline']['objects'])) {
+    if (isset($form_state['values']['course_outline']['objects'])) {
       foreach ($form_state['values']['course_outline']['objects'] as $key => $object) {
         if ($object['weight'] >= $new['weight']) {
           $new['weight'] = $object['weight'] + 1;
