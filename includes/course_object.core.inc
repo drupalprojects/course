@@ -1012,7 +1012,7 @@ abstract class CourseObjectNode extends CourseObject {
     $this->node = node_load($this->getInstanceId());
   }
 
-  public function checkPrivacySupport() {
+  public function hasNodePrivacySupport() {
     return module_exists('content_access') && module_exists('acl');
   }
 
@@ -1110,10 +1110,10 @@ abstract class CourseObjectNode extends CourseObject {
 
     $form['private'] = array(
       '#title' => t('Private'),
-      '#description' => $this->checkPrivacySupport() ? t('This content will not be available to users who are not enrolled in this course.') : t('You must enable content_access and acl in order to restrict course content to users who are enrolled in this course.'),
+      '#description' => $this->hasNodePrivacySupport() ? t('This content will not be available to users who are not enrolled in this course.') : t('You must enable content_access and acl in order to restrict course content to users who are enrolled in this course.'),
       '#type' => 'checkbox',
       '#default_value' => $config['private'],
-      '#disabled' => !($this->checkPrivacySupport()),
+      '#disabled' => !($this->hasNodePrivacySupport()),
     );
 
     $nid = $this->getInstanceId();
@@ -1164,7 +1164,7 @@ abstract class CourseObjectNode extends CourseObject {
    * Grant access to course content before going to it.
    */
   function grant() {
-    if ($this->checkPrivacySupport()) {
+    if ($this->hasNodePrivacySupport()) {
       if ($this->getOption('private')) {
         $uid = $this->user->uid;
         module_load_include('inc', 'content_access', 'content_access.admin');
@@ -1180,7 +1180,7 @@ abstract class CourseObjectNode extends CourseObject {
    * Duration expired (or something) - CourseObject is telling us so.
    */
   function revoke() {
-    if ($this->checkPrivacySupport()) {
+    if ($this->hasNodePrivacySupport()) {
       if ($this->getOption('private')) {
         $uid = $this->user->uid;
         module_load_include('inc', 'content_access', 'content_access.admin');
@@ -1196,7 +1196,7 @@ abstract class CourseObjectNode extends CourseObject {
    */
   function save() {
     parent::save();
-    if ($this->checkPrivacySupport() && $this->getOption('private')) {
+    if ($this->hasNodePrivacySupport() && $this->getOption('private')) {
       // Ensure that per-node access is enabled.
       $global_settings = content_access_get_settings();
       $global_settings['per_node'][$this->node->type] = 1;
