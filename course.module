@@ -2547,3 +2547,42 @@ function course_node_export_node_alter($node, $original_node, $op) {
     }
   }
 }
+
+/**
+ * Implements hook_cron().
+ * 
+ * Revoke access to inaccessible objects.
+ */
+function course_cron() {
+  $handlers = course_get_handlers('object');
+
+  foreach ($handlers as $module => $object) {
+    foreach ($object as $key => $info) {
+      if (is_subclass_of($info['class'], 'CourseObjectNode')) {
+        // This module provides an object of type CourseObjectNode.
+        $modules[] = $module;
+      }
+    }
+  }
+
+  if ($modules) {
+    // Get a list of fulfillments for CourseObjectNodes.
+    $placeholders = db_placeholders($modules, 'varchar');
+    $sql = "SELECT * FROM {course_outline}
+    INNER JOIN {course_outline_fulfillment} USING (coid)
+    WHERE module in ($placeholders)";
+    $result = db_query($sql, $modules);
+    while ($row = db_fetch_object($result)) {
+      $extra = unserialize($row->data);
+      if ($extra['private']) {
+        // This fulfillment used private content.
+        $user = user_load($row->uid);
+        $courseObject = course_get_course_object_by_id($row->coid, $user);
+        if (!$courseObject->access('take')) {
+          // User has no access to take this course object. Revoke access.
+          $courseObject->revoke();
+        }
+      }
+    }
+  }
+}
