@@ -88,7 +88,7 @@ function _course_enrollment_resource() {
         'callback' => '_course_enrollment_delete',
         'args' => array(
           array(
-            'name' => 'nid',
+            'name' => 'eid',
             'optional' => FALSE,
             'type' => 'int',
             'source' => array('path' => 0),
