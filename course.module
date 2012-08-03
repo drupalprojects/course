@@ -1582,7 +1582,7 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
  *
  * @return Course
  */
-function course_get_course($node, $account = NULL) {
+function course_get_course($node, $account = NULL, $flush = FALSE) {
   if (!$node) {
     return FALSE;
   }
@@ -1594,7 +1594,7 @@ function course_get_course($node, $account = NULL) {
 
   static $courses = array();
 
-  if (!isset($courses[$node->nid]) && !isset($courses[$node->nid][$account->uid])) {
+  if ($flush || !isset($courses[$node->nid]) || !isset($courses[$node->nid][$account->uid])) {
     $course = new Course($node, $account);
     $courses[$node->nid][$account->uid] = $course;
   }
@@ -2555,7 +2555,8 @@ function course_node_export_node_alter($node, $original_node, $op) {
  */
 function course_cron() {
   $handlers = course_get_handlers('object');
-
+  $modules = array();
+  
   foreach ($handlers as $module => $object) {
     foreach ($object as $key => $info) {
       if (is_subclass_of($info['class'], 'CourseObjectNode')) {
