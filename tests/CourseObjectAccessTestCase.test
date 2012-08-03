@@ -61,6 +61,40 @@ class CourseObjectAccessTestCase extends CourseTestCase {
   }
 
   /**
+   * Test an outline with required and optional objects.
+   */
+  function testCourseObjectOptionalWorkflow() {
+    global $user;
+
+    // Create a course with 4 objects.
+    $courseNode = $this->createCourseNode();
+    for ($i = 1; $i <= 4; $i++) {
+      $temp = $this->createCourseObject($courseNode);
+      $temp->setOption('weight', $i)->save();
+    }
+
+    $course = course_get_course($courseNode);
+    $co = $course->getObjects();
+
+    course_enrol($courseNode, $user);
+
+    // Set all optional except the second object.
+    $co[0]->setOption('required', 0);
+    $co[1]->setOption('required', 1);
+    $co[2]->setOption('required', 0);
+    $co[3]->setOption('required', 0);
+
+    $this->assertFalse($co[2]->access('take') || $co[3]->access('take'), 'User is blocked by second required object to get to fourth optional object.');
+
+    $this->assertTrue($co[0]->access('take'), 'User has access to first optional object.');
+    $this->assertTrue($co[1]->access('take'), 'User has access to second required object.');
+
+    // Complete the only required object.
+    $co[1]->getFulfillment()->setComplete(1);
+    $this->assertTrue($co[2]->access('take') && $co[3]->access('take'), 'User granted access to remaining optional objects.');
+  }
+
+  /**
    * Test hidden course objects do not show up in the course outline.
    */
   function testHiddenCourseObjects() {
