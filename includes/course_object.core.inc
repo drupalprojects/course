@@ -82,7 +82,9 @@ abstract class CourseObject extends CourseHandler {
    *   A course outline list item. The structure mirrors an array element from
    *   the $items param from theme_item_list().
    */
-  public function overrideOutlineListItem(&$item) {}
+  public function overrideOutlineListItem(&$item) {
+
+  }
 
   /**
    * Access functionality for course objects.
@@ -874,6 +876,12 @@ abstract class CourseObject extends CourseHandler {
     // If there is no title, set it.
     $this->getTitle();
 
+    if ($ice = $this->getOption('freeze')) {
+      // Found frozen data.
+      $this->setInstanceId($this->thaw($ice));
+      $this->setOption('freeze', NULL);
+    }
+
     // If there is no instance ID, create one.
     if (!$this->getInstanceId()) {
       $this->create();
@@ -894,6 +902,14 @@ abstract class CourseObject extends CourseHandler {
    * For example, deleting quiz results when a user is removed from the course.
    */
   function unEnroll() {
+
+  }
+
+  function freeze() {
+    
+  }
+
+  function thaw() {
 
   }
 
@@ -1210,6 +1226,33 @@ abstract class CourseObjectNode extends CourseObject {
       // Resave node to update access.
       node_save($this->node);
     }
+  }
+
+  /**
+   * Freeze data to persist over cloning/exporting.
+   * @return array
+   *   An array of data to be frozen.
+   */
+  function freeze() {
+    return array(
+      'node' => $this->node,
+    );
+  }
+
+  /**
+   * Thaw data frozen from an earlier export/clone.
+   *
+   * @param array $data
+   *   Unfrozen data.
+   * 
+   * @return int
+   *   The new instance ID.
+   */
+  function thaw($data) {
+    $this->node = $data['node'];
+    unset($this->node->nid);
+    node_save($this->node);
+    return $this->node->nid;
   }
 
 }

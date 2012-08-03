@@ -30,10 +30,10 @@ function course_settings_overview() {
   $rows = array();
   foreach ($handlers as $handler_key => $handler_info) {
     // Generate a list of each handler category.
-    $package_key = $handler_info['package'] ? $handler_info['package'] : $handler_key;
+    $package_key = isset($handler_info['package']) ? $handler_info['package'] : $handler_key;
     $package_info = $handlers[$package_key] ? $handlers[$package_key] : $handler_info;
 
-    if (!$package_set[$package_key]) {
+    if (!isset($package_set[$package_key])) {
       $rows[] = array(
         $package_info['name'],
         $package_info['description'],
