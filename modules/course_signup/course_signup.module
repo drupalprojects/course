@@ -181,32 +181,6 @@ function course_signup_form_uc_signup_attendees_form_alter(&$form, &$form_state)
 }
 
 /**
- * Implements hook_action_info().
- *
- * Define the VBO action for signing a user up for a Course.
- */
-function course_signup_action_info() {
-  $actions = array();
-
-  $actions['course_signup_add_enrollment_action'] = array(
-    'type' => 'user',
-    'description' => t('Enroll/signup user in current course'),
-    'configurable' => FALSE,
-  );
-
-  return $actions;
-}
-
-/**
- * Signup a user from a VBO.
- */
-function course_signup_add_enrollment_action($object, $context) {
-  $node = node_load(arg(1));
-  $user = user_load($object->uid);
-  course_signup_quick_register($node->nid, $user->uid);
-}
-
-/**
  * Implements hook_add_to_cart().
  *
  * Skip the uc_signup screens for course signups.

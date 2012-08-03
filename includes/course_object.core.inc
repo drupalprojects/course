@@ -869,6 +869,14 @@ abstract class CourseObject extends CourseHandler {
     return array();
   }
 
+  function freeze() {
+    
+  }
+
+  function thaw() {
+
+  }
+
   /**
    * Let objects create their instances before saving the course object.
    */
@@ -902,14 +910,6 @@ abstract class CourseObject extends CourseHandler {
    * For example, deleting quiz results when a user is removed from the course.
    */
   function unEnroll() {
-
-  }
-
-  function freeze() {
-    
-  }
-
-  function thaw() {
 
   }
 
@@ -1234,9 +1234,9 @@ abstract class CourseObjectNode extends CourseObject {
    *   An array of data to be frozen.
    */
   function freeze() {
-    return array(
-      'node' => $this->node,
-    );
+    $ice = new stdClass;
+    $ice->node = $this->node;
+    return $ice;
   }
 
   /**
@@ -1248,8 +1248,8 @@ abstract class CourseObjectNode extends CourseObject {
    * @return int
    *   The new instance ID.
    */
-  function thaw($data) {
-    $this->node = $data['node'];
+  function thaw($ice) {
+    $this->node = $ice->node;
     unset($this->node->nid);
     node_save($this->node);
     return $this->node->nid;

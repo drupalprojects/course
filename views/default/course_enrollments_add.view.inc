@@ -212,7 +212,6 @@ $handler->display->display_options['defaults']['style_plugin'] = FALSE;
 $handler->display->display_options['style_plugin'] = 'bulk';
 $handler->display->display_options['style_options']['columns'] = array(
   'name' => 'name',
-  'realname' => 'realname',
   'mail' => 'mail',
 );
 $handler->display->display_options['style_options']['default'] = '-1';
@@ -220,10 +219,6 @@ $handler->display->display_options['style_options']['info'] = array(
   'name' => array(
     'sortable' => 0,
     'default_sort_order' => 'asc',
-    'align' => '',
-    'separator' => '',
-  ),
-  'realname' => array(
     'align' => '',
     'separator' => '',
   ),
@@ -264,12 +259,12 @@ $handler->display->display_options['style_options']['operations'] = array(
     'label' => '',
   ),
   'course_add_enrollment_action' => array(
-    'selected' => 0,
+    'selected' => 1,
     'skip_confirmation' => 0,
     'label' => '',
   ),
   'course_signup_add_enrollment_action' => array(
-    'selected' => 1,
+    'selected' => 0,
     'skip_confirmation' => 0,
     'label' => '',
   ),
@@ -279,6 +274,11 @@ $handler->display->display_options['style_options']['operations'] = array(
     'label' => '',
   ),
   'views_bulk_operations_script_action' => array(
+    'selected' => 0,
+    'skip_confirmation' => 0,
+    'label' => '',
+  ),
+  'views_bulk_operations_profile_action' => array(
     'selected' => 0,
     'skip_confirmation' => 0,
     'label' => '',
@@ -294,11 +294,6 @@ $handler->display->display_options['style_options']['operations'] = array(
     'label' => '',
   ),
   'system_goto_action' => array(
-    'selected' => 0,
-    'skip_confirmation' => 0,
-    'label' => '',
-  ),
-  'course_remove_enrollment_action' => array(
     'selected' => 0,
     'skip_confirmation' => 0,
     'label' => '',

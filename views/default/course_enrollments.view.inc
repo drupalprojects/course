@@ -79,6 +79,11 @@ $handler->display->display_options['style_options']['operations'] = array(
     'skip_confirmation' => 0,
     'label' => '',
   ),
+  'course_remove_enrollment_action' => array(
+    'selected' => 1,
+    'skip_confirmation' => 0,
+    'label' => 'Remove enrollment',
+  ),
   'system_send_email_action' => array(
     'selected' => 0,
     'skip_confirmation' => 0,

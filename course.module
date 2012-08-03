@@ -1747,7 +1747,7 @@ function course_action_info() {
   );
 
   $actions['course_remove_enrollment_action'] = array(
-    'type' => 'user',
+    'type' => 'course_enrolment',
     'description' => t('Remove a user from current course'),
     'configurable' => FALSE,
   );
@@ -1768,8 +1768,9 @@ function course_add_enrollment_action($user, $context) {
 /**
  * Action to unenrol a user.
  */
-function course_remove_enrollment_action(&$user, $context) {
+function course_remove_enrollment_action(&$enrollment, $context) {
   $node = node_load(arg(1));
+  $user = user_load($enrollment->uid);
   course_unenrol($node, $user);
 }
 
