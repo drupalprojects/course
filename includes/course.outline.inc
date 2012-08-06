@@ -546,7 +546,7 @@ function course_outline_show_complete_links($course_node) {
     }
   }
   else {
-    $course = course_get_course($node, $account);
+    $course = course_get_course($course_node, $account);
     $objects = $course->getObjects();
     $requirements_outstanding = array();
     foreach ($objects as $courseObject) {

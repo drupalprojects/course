@@ -56,7 +56,7 @@ class CourseObjectAccessTestCase extends CourseTestCase {
     $co[2]->getFulfillment()->setComplete(1)->save();
     $co[3]->getFulfillment()->setComplete(1)->save();
 
-    $this->assertTrue($course->getOption('complete'), 'Check that course is complete.');
+    $this->assertTrue($course->getTracker()->getOption('complete'), 'Check that course is complete.');
   }
 
   /**

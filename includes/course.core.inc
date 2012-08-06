@@ -253,22 +253,126 @@ class CourseHandler {
 }
 
 /**
+ * Holds a user's total progress through a course and functionality to check
+ * for completion of required objects.
+ */
+class CourseReport extends CourseHandler {
+
+  private $course;
+
+  /**
+   * @param Course $course
+   */
+  public function __construct($course) {
+    $this->primaryKey = 'crid';
+    $this->handlerType = 'course_report';
+    $this->serializedField = 'data';
+    $this->table = 'course_report';
+
+    $this->course = $course;
+
+    $sql = "select * from {course_report} where nid = %d and uid = %d";
+    $result = db_query($sql, $this->course->getNode()->nid, $this->course->getUser()->uid);
+    if ($config = db_fetch_array($result)) {
+      parent::__construct($config);
+    }
+    else {
+      parent::__construct(array(
+        'nid' => $this->course->getNode()->nid,
+        'uid' => $this->course->getUser()->uid,
+      ));
+    }
+  }
+
+  /**
+   * Get the course of this tracker.
+   *
+   * @return Course
+   */
+  public function getCourse() {
+    return $this->course;
+  }
+  
+  /**
+   * Track the course (scan required objects, update progress, completion, etc).
+   */
+  public function track() {
+    $required = 0;
+    $required_complete = 0;
+    $prev = NULL;
+    foreach ($this->course->getObjects() as $courseObject) {
+      if (!$courseObject->getOption('enabled')) {
+        continue;
+      }
+
+      if (!$prev) {
+        $this->setOption('section_name', $courseObject->getTitle());
+      }
+
+      // Count required objects.
+      $required += $courseObject->getOption('required');
+
+      // Count completed required objects.
+      $required_complete += ($courseObject->getOption('required') && $courseObject->getFulfillment()->isComplete());
+
+      if (!$courseObject->getFulfillment()->isComplete() && $prev && $prev->getFulfillment()->isComplete()) {
+        $this->setOption('section_name', $courseObject->getTitle());
+      }
+
+      $prev = clone $courseObject;
+    }
+
+    if ($required_complete >= $required) {
+      // Course requirements have been met.
+      $this->setOption('section', 'complete');
+      $this->setOption('section_name', 'Complete');
+      $this->setOption('complete', 1);
+      if (!$this->getOption('date_completed')) {
+        $this->setOption('date_completed', time());
+      }
+    }
+
+    $this->setOption('nid', $this->course->getNode()->nid);
+    $this->setOption('uid', $this->course->getUser()->uid);
+    $this->save();
+  }
+
+}
+
+/**
  * An object that holds CourseObjects and tracker functions?
  */
 class Course extends CourseHandler {
 
+  // Node of course.
   private $node;
+
+  // User in course.
   private $user;
-  protected $courseObjects;
+
+  // Ordered list of course objects.
+  private $courseObjects;
+
+  // Course report tracker
+  private $tracker;
+
+  // The active course object.
   private $active = NULL;
+
+  // The next course object.
   private $next;
+
+  // The previous course object.
   private $prev;
 
+  /**
+   * @param stdClass $node
+   * @param stdClass $user
+   */
   public function __construct($node, $user = NULL) {
-    $this->primaryKey = 'crid';
+    $this->primaryKey = 'nid';
     $this->handlerType = 'course';
-    $this->serializedField = 'data';
-    $this->table = 'course_report';
+    $this->table = 'course_node';
 
     if (is_object($node)) {
       $this->node = $node;
@@ -284,8 +388,8 @@ class Course extends CourseHandler {
       $this->user = user_load($user);
     }
 
-    $sql = "select * from {course_report} where nid = %d and uid = %d";
-    $result = db_query($sql, $this->node->nid, $this->user->uid);
+    $sql = "select * from {course_node} where nid = %d";
+    $result = db_query($sql, $this->node->nid);
     if ($config = db_fetch_array($result)) {
       parent::__construct($config);
     }
@@ -295,6 +399,17 @@ class Course extends CourseHandler {
         'uid' => $this->user->uid,
       ));
     }
+
+    $this->tracker = new CourseReport($this);
+  }
+
+  /**
+   * Get the course tracker for this course/user.
+   *
+   * @return CourseReport
+   */
+  public function getTracker() {
+    return $this->tracker;
   }
 
   /**
@@ -383,7 +498,7 @@ class Course extends CourseHandler {
   public function getNavigation() {
     // Initialize the active Course.
     $this->setActive();
-    
+
     $prev = $this->getPrev();
     $next = $this->getNext();
 
@@ -413,44 +528,7 @@ class Course extends CourseHandler {
    * Track the course (scan required objects, update progress, completion, etc).
    */
   public function track() {
-    $required = 0;
-    $required_complete = 0;
-    $prev = NULL;
-    foreach ($this->getObjects() as $courseObject) {
-      if (!$courseObject->getOption('enabled')) {
-        continue;
-      }
-
-      if (!$prev) {
-        $this->setOption('section_name', $courseObject->getTitle());
-      }
-
-      // Count required objects.
-      $required += $courseObject->getOption('required');
-
-      // Count completed required objects.
-      $required_complete += ($courseObject->getOption('required') && $courseObject->getFulfillment()->isComplete());
-
-      if (!$courseObject->getFulfillment()->isComplete() && $prev && $prev->getFulfillment()->isComplete()) {
-        $this->setOption('section_name', $courseObject->getTitle());
-      }
-
-      $prev = clone $courseObject;
-    }
-
-    if ($required_complete >= $required) {
-      // Course requirements have been met.
-      $this->setOption('section', 'complete');
-      $this->setOption('section_name', 'Complete');
-      $this->setOption('complete', 1);
-      if (!$this->getOption('date_completed')) {
-        $this->setOption('date_completed', time());
-      }
-    }
-
-    $this->setOption('nid', $this->node->nid);
-    $this->setOption('uid', $this->user->uid);
-    $this->save();
+    $this->tracker->track();
   }
 
   /**
