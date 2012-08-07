@@ -32,7 +32,7 @@ class CourseObjectSignup extends CourseObjectNode {
     parent::optionsForm($form, $form_state);
 
     $form['instance']['#title'] = t('Signup to check');
-    $form['instance']['#description'] .= '</br>' . t('Use an existing signup-enabled node for checking attendance. Defaults to this course.');
+    $form['instance']['#description'] .= ' ' . t('Node must be signup-enabled. Defaults to this course.');
   }
 
   /**
@@ -56,12 +56,14 @@ class CourseObjectSignup extends CourseObjectNode {
   }
 
   public function getReport($key) {
-    module_load_include('inc', 'signup', 'includes/node_admin');
+    module_load_include('inc', 'signup', 'includes/node_output');
     switch ($key) {
       case 'attendance':
         return array(
           'title' => t('Attendance'),
-          'content' => signup_node_admin_page($this->node),
+          'content' => t('These are the users who have enrolled in this course object.<br/>You may administer attendance on the !signups tab.', array(
+            '!signups' => l('Signups', "node/{$this->node->nid}/signups"),
+          )) . signup_user_list_output($this->node),
         );
     }
   }

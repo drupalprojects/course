@@ -290,6 +290,12 @@ abstract class CourseObject extends CourseHandler {
         '#process' => array('ctools_dependent_process'),
         '#dependency' => array('edit-delete' => array(1)),
       );
+
+      // Check for multiple instances.
+      $sql = "select count(coid) from {course_outline} where module = '%s' and object_type = '%s' and instance = '%s'";
+      if (db_result(db_query($sql, $config['module'], $config['object_type'], $config['instance'])) > 1) {
+        $form['delete_instance']['#description'] = t('<span class="error"><strong>WARNING</strong></span>: multiple course objects link to this instance. Deleting the instance might break the other course objects that use it.');
+      }
     }
 
     // Bring in access plugin configuration.
