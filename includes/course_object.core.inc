@@ -986,7 +986,7 @@ class CourseObjectFulfillment extends CourseHandler {
    * @param float $grade
    */
   function setGrade($grade) {
-    return $this->setOption('grade', $grade);
+    return $this->setOption('grade_result', $grade);
   }
 
   /**
