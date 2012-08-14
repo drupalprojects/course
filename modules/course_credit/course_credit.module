@@ -149,14 +149,14 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
     if (module_exists('ctools')) {
       ctools_include('dependent');
     }
-    
+
     // Get credit types.
     $types = course_credit_get_credit_types();
 
     if (empty($types)) {
       $fieldset_desc = t('Please !configure before adding credit to an activity.', array(
         '!configure' => l('configure credit types', 'admin/settings/course/credit'),
-      ));
+        ));
     }
     else {
       $fieldset_desc = t('Set the credit settings for this course.');
@@ -188,7 +188,7 @@ function course_credit_form_alter(&$form, &$form_state, $form_id) {
       // database, so we don't re-process it.
       $default_values = array();
       $expiration_date = isset($node->course_credit[$type->type]) ? $node->course_credit[$type->type]->expiration_date : NULL;
-      $expiration_offset = isset($node->course_credit[$type->type]) ? $node->course_credit[$type->type]->expiration_offset: NULL;
+      $expiration_offset = isset($node->course_credit[$type->type]) ? $node->course_credit[$type->type]->expiration_offset : NULL;
       if (isset($node->preview)) {
         // On preview, output the form_state values without processing.
         $default_values['expiration_date'] = $expiration_date ? $expiration_date : '';
@@ -682,15 +682,15 @@ function course_credit_settings_form() {
 
   $form['course_credit_skip_no_claim'] = array(
     '#type' => 'checkbox',
-    '#title' => t("Skip credit claiming screen when no credit claiming needed"),
-    '#description' => t("When a user is only eligible for credit that does not have credit claiming enabled, checking this box will bypass the screen where they must agree to the credit being awarded."),
+    '#title' => t('Automatically claim non-variable credit'),
+    '#description' => t('When a user is only eligible for non-variable credit, credit will be claimed automatically.'),
     '#default_value' => variable_get('course_credit_skip_no_claim', ''),
   );
 
   $form['course_credit_fallback_type'] = array(
     '#type' => 'select',
     '#title' => t('Fallback credit type'),
-    '#description' => t("Credit type to fall back to if the user's profile does not match them with a credit type"),
+    '#description' => t('Credit to award when a user is not eligible for any others.'),
     '#options' => $fallback_options,
     '#default_value' => variable_get('course_credit_fallback_type', ''),
   );
@@ -698,7 +698,7 @@ function course_credit_settings_form() {
   $form['creditable_types'] = array(
     '#type' => 'fieldset',
     '#title' => 'Extra creditable types',
-    '#description' => 'By default, courses are creditable. For some edge cases, crediting other content types may be useful.',
+    '#description' => t('By default, Courses are always creditable.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
@@ -959,7 +959,6 @@ function course_credit_app_form_validate($form, &$form_state) {
           form_set_error('credits_claimed', t('Credits claimed must be in increments of ' . $credits_claimed_params[$key]['increment'] . '.'));
         }
       }
-
     }
   }
 
@@ -1025,29 +1024,6 @@ function course_credit_type_map_form(&$form_state, $type) {
 
   $form['map']['#tree'] = TRUE;
 
-  // Map against a certificate fieldgroup.
-  if (variable_get('certificate_field_grouping', 0)) {
-    $form['map']['certificate'] = array(
-      '#type' => 'fieldset',
-      '#title' => 'Certificate',
-      '#tree' => TRUE,
-      '#description' => "If the user is eligible for any of the selected certificates, they will also be eligible for this credit type.",
-    );
-
-    $fieldgroups = variable_get('certificate_field_groups', array());
-    $options = array();
-    foreach (array_keys($fieldgroups) as $key) {
-      $options[$key] = $key;
-    }
-    $form['map']['certificate']['fieldgroups'] = array(
-      '#title' => 'Certificate group',
-      '#options' => $options,
-      '#type' => 'select',
-      '#multiple' => TRUE,
-      '#default_value' => $stored['certificate']['fieldgroups'],
-    );
-  }
-
   // Map against a CCK content_profile field.
   if (module_exists('content_profile') && module_exists('optionwidgets')) {
     $types = content_types();
@@ -1057,7 +1033,7 @@ function course_credit_type_map_form(&$form_state, $type) {
       }
     }
     $info = _content_type_info();
-    $form['map']['profile'] = array(
+    $form['map']['content_profile'] = array(
       '#type' => 'fieldset',
       '#title' => 'Profile data',
       '#tree' => TRUE,
@@ -1084,21 +1060,23 @@ function course_credit_type_map_form(&$form_state, $type) {
     }
   }
 
-  // Map against a course user type.
-  if (variable_get('course_user_types_enabled', 0)) {
-    $form['map']['course'] = array(
-      '#type' => 'fieldset',
-      '#title' => 'Course',
-      '#tree' => TRUE,
-    );
-    $form['map']['course']['user_type'] = array(
-      '#title' => 'User type',
-      '#description' => 'Match against per-course user type.',
-      '#options' => course_user_type_get_options(),
-      '#type' => 'select',
-      '#multiple' => TRUE,
-      '#default_value' => $stored['course']['user_type'],
-    );
+  if (module_exists('course')) {
+    // Map against a course user type.
+    if (variable_get('course_user_types_enabled', 0)) {
+      $form['map']['course'] = array(
+        '#type' => 'fieldset',
+        '#title' => 'Course',
+        '#tree' => TRUE,
+      );
+      $form['map']['course']['user_type'] = array(
+        '#title' => 'User type',
+        '#description' => 'Match against per-course user type.',
+        '#options' => course_user_type_get_options(),
+        '#type' => 'select',
+        '#multiple' => TRUE,
+        '#default_value' => isset($stored['course']['user_type']) ? $stored['course']['user_type'] : NULL,
+      );
+    }
   }
 
   $form['#redirect'] = 'admin/settings/course/credit/course_credit_types';
@@ -1111,11 +1089,19 @@ function course_credit_type_map_form(&$form_state, $type) {
   return $form;
 }
 
+/**
+ * Save mappings.
+ */
 function course_credit_type_map_form_submit(&$form, &$form_state) {
-  variable_set('course_credit_type_map_' . $form_state['values']['type'], $form_state['values']['map']);
-  drupal_set_message(t('Credit type %type mappings saved.', array('%type' => $form_state['values']['type'])));
+  if (isset($form_state['values']['map'])) {
+    variable_set('course_credit_type_map_' . $form_state['values']['type'], $form_state['values']['map']);
+    drupal_set_message(t('Credit type %type mappings saved.', array('%type' => $form_state['values']['type'])));
+  }
 }
 
+/**
+ * List and edit credit types.
+ */
 function course_credit_types_form() {
   $form = array();
 
@@ -1180,7 +1166,7 @@ function course_credit_types_form() {
 function theme_course_credit_types_form($form) {
   $out = '';
   // Help text.
-  $out .= '<div class="description">' . t('These are the default settings that will be used when creating a course.') . '</div>';
+  $out .= '<div class="description">' . t('These are the default settings that will be used when creating a creditable activity.') . '</div>';
   // Add new type link.
   // @todo in Drupal 7 replace with contextual links.
   $out .= '<div class="links">' . l(t('+ Add type'), 'admin/settings/course/credit/add-type') . '</div>';
@@ -1231,6 +1217,7 @@ function course_credit_types_form_submit($form, $form_state) {
  */
 function course_credit_user_credit_types($node, $user) {
   $valid_credit_instances = array();
+  $fallback_instance = NULL;
 
   $fallback_credit_type = variable_get('course_credit_fallback_type', null);
 
@@ -1440,7 +1427,7 @@ function course_credit_token_values($type, $object = NULL) {
  */
 function course_credit_views_api() {
   return array(
-    'api' => 2,
+    'api' => 3,
   );
 }
 
@@ -1566,6 +1553,11 @@ function phptemplate_menu_local_task($link, $active = FALSE) {
   return theme_menu_local_task($link, $active);
 }
 
+/**
+ * Check that a node is creditable.
+ *
+ * @return bool
+ */
 function course_credit_node_is_creditable(&$node) {
   if (course_node_is_course($node)) {
     return TRUE;
@@ -1613,7 +1605,7 @@ function course_credit_get_credit_types() {
 }
 
 /**
- * @todo validate machine name
+ * Add new credit type.
  */
 function course_credit_type_add_form() {
   $form = array();
@@ -1645,6 +1637,9 @@ function course_credit_type_add_form() {
   return $form;
 }
 
+/**
+ * Validate machine name.
+ */
 function course_credit_type_add_form_validate($form, &$form_state) {
   $type = $form_state['values']['type'];
   if (!preg_match('/^[a-z0-9_]+$/', $type)) {
