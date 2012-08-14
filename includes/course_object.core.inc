@@ -128,7 +128,8 @@ abstract class CourseObject extends CourseHandler {
         $course->setActive($this->getId());
 
 
-        if ($course->getObjects() && (reset($course->getObjects())->getId() == $this->getId())) {
+        $courseObjects = $course->getObjects();
+        if ($courseObjects && $courseObjects[0]->getId() == $this->getId()) {
           // This is the first course object. The learner should be able to
           // access it. Also, check for enrollment. Since there are no other
           // checks (as in previous object completions) we do have to check this.
