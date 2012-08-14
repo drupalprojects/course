@@ -37,6 +37,7 @@ class CourseObjectQuizTestCase extends CourseTestCase {
     $courseNode = $this->createCourseNode();
     $co1 = course_get_course_object('course_quiz', 'quiz');
     $co1->setCourse($courseNode->nid);
+    $co1->setOption('passing_grade', 100);
     $co1->save();
     $this->assertTrue($co1->getInstanceId() > 0, 'Quiz node created on course object save.');
 
@@ -50,15 +51,25 @@ class CourseObjectQuizTestCase extends CourseTestCase {
       'correct_answer' => 1,
     ), 'Save');
 
-    // Take the quiz.
+    // Fail the quiz.
     $this->drupalGet("node/{$quizNode->nid}/take");
-    $this->assertFalse($co1->getFulfillment()->isComplete(), 'Check that quiz is not completed yet.');
+    $this->assertFalse($co1->getFulfillment()->isComplete(), 'Check that quiz fulfillment is not complete after fail.');
+    $this->drupalPost(NULL, array(
+      'tries' => 0,
+    ), 'Finish');
 
     // Reload because something happened in the DB.
+    $co1 = course_get_course_object_by_id($co1->getId(), $this->quiz_admin);
+    $this->assertFalse($co1->getFulfillment()->isComplete(), 'Check that quiz fulfillment is not complete.');
+
+    // Pass the quiz.
+    $this->drupalGet("node/{$quizNode->nid}/take");
     $this->drupalPost(NULL, array(
       'tries' => 1,
     ), 'Finish');
+
+    // Reload because something happened in the DB.
     $co1 = course_get_course_object_by_id($co1->getId(), $this->quiz_admin);
-    $this->assertTrue($co1->getFulfillment()->isComplete(), 'Check that quiz is completed.');
+    $this->assertTrue($co1->getFulfillment()->isComplete(), 'Check that quiz fulfillment is complete.');
   }
 }

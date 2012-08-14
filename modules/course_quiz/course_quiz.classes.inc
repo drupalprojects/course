@@ -68,10 +68,12 @@ class CourseObjectQuiz extends CourseObjectNode {
     parent::optionsForm($form, $form_state);
     $defaults = $this->getOptions();
 
-    $form['passing_grade'] = array(
-      '#title' => 'Passing grade',
+    $form['grading']['passing_grade'] = array(
+      '#title' => t('Passing grade'),
       '#type' => 'textfield',
+      '#size' => 4,
       '#default_value' => $defaults['passing_grade'],
+      '#description' => t('The user will not be able to proceed past this object unless this grade is met.'),
     );
   }
 
@@ -120,6 +122,10 @@ class CourseObjectQuiz extends CourseObjectNode {
 
   function getNodeTypes() {
     return array('quiz');
+  }
+
+  function isGraded() {
+    return TRUE;
   }
 
 }
