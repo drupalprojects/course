@@ -292,7 +292,7 @@ class CourseReport extends CourseHandler {
   public function getCourse() {
     return $this->course;
   }
-  
+
   /**
    * Track the course (scan required objects, update progress, completion, etc).
    */
@@ -314,6 +314,11 @@ class CourseReport extends CourseHandler {
 
       // Count completed required objects.
       $required_complete += ($courseObject->getOption('required') && $courseObject->getFulfillment()->isComplete());
+
+      // Log last grade.
+      if ($courseObject->isGraded() && $courseObject->getOption('grade_include')) {
+        $this->setOption('grade_result', $courseObject->getFulfillment()->getOption('grade_result'));
+      }
 
       if (!$courseObject->getFulfillment()->isComplete() && $prev && $prev->getFulfillment()->isComplete()) {
         $this->setOption('section_name', $courseObject->getTitle());
@@ -346,22 +351,16 @@ class Course extends CourseHandler {
 
   // Node of course.
   private $node;
-
   // User in course.
   private $user;
-
   // Ordered list of course objects.
   private $courseObjects;
-
   // Course report tracker
   private $tracker;
-
   // The active course object.
   private $active = NULL;
-
   // The next course object.
   private $next;
-
   // The previous course object.
   private $prev;
 

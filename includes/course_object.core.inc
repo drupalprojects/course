@@ -221,6 +221,7 @@ abstract class CourseObject extends CourseHandler {
       'required' => 1,
       'delete' => 0,
       'delete_instance' => 0,
+      'grade_include' => 0,
     );
 
     return $defaults;
@@ -296,6 +297,21 @@ abstract class CourseObject extends CourseHandler {
       if (db_result(db_query($sql, $config['module'], $config['object_type'], $config['instance'])) > 1) {
         $form['delete_instance']['#description'] = t('<span class="error"><strong>WARNING</strong></span>: multiple course objects link to this instance. Deleting the instance might break the other course objects that use it.');
       }
+    }
+
+    if ($this->isGraded()) {
+      $form['grading'] = array(
+        '#title' => 'Grading',
+        '#type' => 'fieldset',
+        '#description' => t('Settings for graded objects.'),
+      );
+
+      $form['grading']['grade_include'] = array(
+        '#title' => 'Include in final course grade',
+        '#description' => 'Include this grade result for calculation of the final course grade.<br/>Currently, only the last grade result per Course will be used.',
+        '#default_value' => $config['grade_include'],
+        '#type' => 'checkbox',
+      );
     }
 
     // Bring in access plugin configuration.
@@ -613,6 +629,18 @@ abstract class CourseObject extends CourseHandler {
   }
 
   /**
+   * Is this object graded?
+   *
+   * Returning TRUE here will cause some more configurations to show on the
+   * object's form.
+   *
+   * @return bool
+   */
+  function isGraded() {
+    return FALSE;
+  }
+
+  /**
    * Get the user's status in this course object.
    *
    * This is how an object would notify the user why they cannot proceed to the
@@ -876,7 +904,7 @@ abstract class CourseObject extends CourseHandler {
   }
 
   function freeze() {
-    
+
   }
 
   function thaw() {
@@ -1075,7 +1103,7 @@ abstract class CourseObjectNode extends CourseObject {
 
   /**
    * Set the node and instance ID (node ID) of this CourseObjectNode.
-   * 
+   *
    * @param mixed $node
    *   A node or node ID.
    */
@@ -1123,14 +1151,20 @@ abstract class CourseObjectNode extends CourseObject {
       );
     }
 
-    $form['instance'] = array(
+    $form['node'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Node',
+      '#description' => ('Settings for node-based objects.'),
+    );
+
+    $form['node']['instance'] = array(
       '#title' => 'Existing node',
       '#autocomplete_path' => 'course/autocomplete/node/' . implode(',', $this->getNodeTypes()),
       '#type' => 'textfield',
       '#description' => t('Use an existing node instead of creating a new one.'),
     );
 
-    $form['private'] = array(
+    $form['node']['private'] = array(
       '#title' => t('Private'),
       '#description' => $this->hasNodePrivacySupport() ? t('This content will not be available to users who are not enrolled in this course.') : t('You must enable content_access and acl in order to restrict course content to users who are enrolled in this course.'),
       '#type' => 'checkbox',
@@ -1142,7 +1176,7 @@ abstract class CourseObjectNode extends CourseObject {
     if ($nid) {
       $node = node_load($nid);
       $link = l(t("'%title' [node id %nid]", array('%title' => $node->title, '%nid' => $node->nid)), "node/$node->nid", array('attributes' => array('target' => '_blank', 'title' => t('Open in new window')), 'html' => TRUE));
-      $form['instance']['#description'] = t('Currently set to !link', array('!link' => $link));
+      $form['node']['instance']['#description'] = t('Currently set to !link', array('!link' => $link));
     }
   }
 
@@ -1176,7 +1210,7 @@ abstract class CourseObjectNode extends CourseObject {
           '%t' => $this->getTitle(),
           '%c' => $this->getComponent(),
           '!l' => l('Access control', "admin/content/node-type/{$this->getComponent()}/access"),
-          ));
+        ));
       }
     }
     return $warnings;
@@ -1250,7 +1284,7 @@ abstract class CourseObjectNode extends CourseObject {
    *
    * @param array $data
    *   Unfrozen data.
-   * 
+   *
    * @return int
    *   The new instance ID.
    */

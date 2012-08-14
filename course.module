@@ -2072,7 +2072,8 @@ function course_course_credit_check_completion($course_node) {
   if (variable_get('course_user_types_enabled', 0) && count(course_user_type_get_options())) {
     // Check for active credit types. No user checking at this point.
     // @todo break out into function to get active credit types on a course.
-    foreach ($course_node->course_credit as $ctid => $type) {
+    $active = FALSE;
+    foreach ($course_node->course_credit as $type) {
       if ($type->active) {
         $active = TRUE;
       }

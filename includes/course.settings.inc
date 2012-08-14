@@ -189,12 +189,12 @@ function course_user_type_settings_form_validate(&$form, &$form_state) {
 function course_cck_kv_fields() {
   $field_options = array();
 
-  $field_options[] = 'none';
+  $field_options[] = '- none -';
 
   if (module_exists('content')) {
     foreach (content_fields() as $key => $field) {
       // If field isn't a profile field with allowed values, do not allow it to be selectable. It wouldn't work anyways.
-      if ($field['type_name'] == 'profile' && ($field['allowed_values'] != '' || $field['allowed_values_php'] != '')) {
+      if (optionwidgets_options($field)) {
         $field_options[$key] = $field['widget']['label'];
       }
     }
