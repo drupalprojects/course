@@ -31,8 +31,8 @@ class CourseObjectSignup extends CourseObjectNode {
   public function optionsForm(&$form, &$form_state) {
     parent::optionsForm($form, $form_state);
 
-    $form['instance']['#title'] = t('Signup to check');
-    $form['instance']['#description'] .= ' ' . t('Node must be signup-enabled. Defaults to this course.');
+    $form['node']['instance']['#title'] = t('Signup to check');
+    $form['node']['instance']['#description'] .= ' ' . t('Node must be signup-enabled. Defaults to this course.');
   }
 
   /**

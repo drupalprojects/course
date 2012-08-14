@@ -32,8 +32,8 @@ class CourseObjectUbercart extends CourseObjectNode {
   public function optionsForm(&$form, &$form_state) {
     parent::optionsForm($form, $form_state);
 
-    $form['instance']['#title'] = t('Product to check');
-    $form['instance']['#description'] .= '</br>' . t('Use an existing ubercart-enabled product for checking payment. Defaults to this course.');
+    $form['node']['instance']['#title'] = t('Product to check');
+    $form['node']['instance']['#description'] .= '</br>' . t('Use an existing ubercart-enabled product for checking payment. Defaults to this course.');
   }
 
   /**
