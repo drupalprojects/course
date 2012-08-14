@@ -29,6 +29,11 @@ function course_test_course_handlers() {
         'class' => 'CourseObjectTest',
         'description' => t('A test course object.'),
       ),
+      'course_test_graded_object' => array(
+        'name' => t('Test graded course object'),
+        'class' => 'CourseObjectGradedTest',
+        'description' => t('A test graded course object.'),
+      ),
     ),
   );
 }
