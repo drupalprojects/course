@@ -43,22 +43,16 @@ class CourseTestCase extends DrupalWebTestCase {
    * @param stdClass $courseNode
    * @return Course
    */
-  function createCourseObject($courseNode) {
-    $courseObject = course_get_course_object('course_test', 'course_test_object');
+  function createCourseObject($courseNode, $graded = FALSE) {
+    static $weight = 0;
+    if ($graded) {
+      $courseObject = course_get_course_object('course_test', 'course_test_graded_object');
+    }
+    else {
+      $courseObject = course_get_course_object('course_test', 'course_test_object');
+    }
     $courseObject->setCourse($courseNode->nid);
-    $courseObject->save();
-    return $courseObject;
-  }
-
-  /**
-   * Create a new persistent graded course object on a Course.
-   *
-   * @param stdClass $courseNode
-   * @return Course
-   */
-  function createGradedCourseObject($courseNode) {
-    $courseObject = course_get_course_object('course_test', 'course_test_graded_object');
-    $courseObject->setCourse($courseNode->nid);
+    $courseObject->setOption('weight', $weight++);
     $courseObject->save();
     return $courseObject;
   }
