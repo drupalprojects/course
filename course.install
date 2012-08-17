@@ -648,17 +648,21 @@ function course_update_6130() {
     ));
   }
 
-  db_add_field($ret, 'course_enrolment', 'created', array(
-    'type' => 'int',
-    'not null' => TRUE,
-    'unsigned' => TRUE,
-    'default' => 0,
-  ));
+  if (!db_column_exists('course_enrolment', 'created')) {
+    db_add_field($ret, 'course_enrolment', 'created', array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'unsigned' => TRUE,
+      'default' => 0,
+    ));
+  }
 
-  db_add_field($ret, 'course_outline', 'data', array(
-    'type' => 'text',
-    'serialize' => TRUE,
-  ));
+  if (!db_column_exists('course_outline', 'data')) {
+    db_add_field($ret, 'course_outline', 'data', array(
+      'type' => 'text',
+      'serialize' => TRUE,
+    ));
+  }
 
   return $ret;
 }
@@ -744,15 +748,13 @@ function course_update_6134() {
   $sql = "select * from {course_outline}";
   $result = db_query($sql);
   while ($row = db_fetch_object($result)) {
-    $row->uuid = uuid_uuid();
-    drupal_write_record('course_outline', $row, array('snid'));
+    db_query("update {course_outline} set uuid = '%s' where snid = %d", uuid_uuid(), $row->snid);
   }
 
   $sql = "select * from {course_outline_fulfillment}";
   $result = db_query($sql);
   while ($row = db_fetch_object($result)) {
-    $row->uuid = uuid_uuid();
-    drupal_write_record('course_outline_fulfillment', $row, array('sfid'));
+    db_query("update {course_outline_fulfillment} set uuid = '%s' where sfid = %d", uuid_uuid(), $row->sfid);
   }
 
   db_add_unique_key($ret, 'course_outline', 'uuid', array('uuid'));
