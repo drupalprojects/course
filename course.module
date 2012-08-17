@@ -2261,12 +2261,17 @@ function course_report_save($entry) {
  */
 function course_user($op, &$edit, &$account, $category = NULL) {
   if ($op == 'delete') {
-    $sql = "delete from {course_report} where uid = %d";
+    $sql = "DELETE FROM {course_report} WHERE uid = %d";
     db_query($sql, $account->uid);
     $sql = "DELETE FROM {course_outline_fulfillment} WHERE uid = %d";
     db_query($sql, $account->uid);
-    $sql = "delete from {course_enrolment} where uid = %d";
-    db_query($sql, $account->uid);
+
+    $sql = "SELECT * FROM {course_enrolment} WHERE uid = %d";
+    $result = db_query($sql, $account->uid);
+    while ($enrollment = db_fetch_object($result)) {
+      $node = node_load($enrollment->nid);
+      course_unenrol($node, $account);
+    }
   }
 }
 
@@ -2557,7 +2562,7 @@ function course_node_export_node_alter($node, $original_node, $op) {
 function course_cron() {
   $handlers = course_get_handlers('object');
   $modules = array();
-  
+
   foreach ($handlers as $module => $object) {
     foreach ($object as $key => $info) {
       if (is_subclass_of($info['class'], 'CourseObjectNode')) {
