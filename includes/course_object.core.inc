@@ -913,6 +913,17 @@ abstract class CourseObject extends CourseHandler {
   }
 
   /**
+   * Returns an translated error message if this object has issues with cloning.
+   *
+   * @return mixed
+   *   TRUE if cloning is supported, FALSE if cloning is not supported. A string
+   *   if the object can clone but with caveats.
+   */
+  function getCloneAbility() {
+    return t('The course object %object cannot be cloned. A new instance will be created.', array('%object' => $this->getTitle()));
+  }
+
+  /**
    * Let objects create their instances before saving the course object.
    */
   public function save() {
@@ -1211,7 +1222,7 @@ abstract class CourseObjectNode extends CourseObject {
           '%t' => $this->getTitle(),
           '%c' => $this->getComponent(),
           '!l' => l('Access control', "admin/content/node-type/{$this->getComponent()}/access"),
-        ));
+          ));
       }
     }
     return $warnings;
@@ -1275,9 +1286,12 @@ abstract class CourseObjectNode extends CourseObject {
    *   An array of data to be frozen.
    */
   function freeze() {
-    $ice = new stdClass;
-    $ice->node = $this->node;
-    return $ice;
+    if ($this->node->nid != $this->getCourse()->getNode()->nid) {
+      // Don't freeze the course, if this course is part of the objects.
+      $ice = new stdClass;
+      $ice->node = $this->node;
+      return $ice;
+    }
   }
 
   /**
@@ -1294,6 +1308,10 @@ abstract class CourseObjectNode extends CourseObject {
     unset($this->node->nid);
     node_save($this->node);
     return $this->node->nid;
+  }
+
+  function getCloneAbility() {
+    return t('%object will be cloned as a node. Results may vary.', array('%object' => $this->getTitle()));
   }
 
 }

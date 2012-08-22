@@ -103,4 +103,7 @@ class CourseObjectBook extends CourseObjectNode {
     }
   }
 
+  public function getCloneAbility() {
+    return t('%title will only clone the first page.', array('%title' => $this->getTitle()));
+  }
 }

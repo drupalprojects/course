@@ -72,4 +72,13 @@ class CourseObjectSignup extends CourseObjectNode {
     return signup_content_types();
   }
 
+  function getCloneAbility() {
+    return TRUE;
+  }
+
+  function thaw($ice) {
+    // Not creating a new signup. Using this course.
+    return $this->getCourseNid();
+  }
+
 }

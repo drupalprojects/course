@@ -68,4 +68,8 @@ class CourseObjectPoll extends CourseObjectNode {
     return array('poll');
   }
 
+  function getCloneAbility() {
+    return TRUE;
+  }
+
 }

@@ -61,4 +61,12 @@ class CourseObjectUbercart extends CourseObjectNode {
     return uc_product_types();
   }
 
+  function getCloneAbility() {
+    return TRUE;
+  }
+
+  function thaw($ice) {
+    // Not creating a new product. Using this course.
+    return $this->getCourseNid();
+  }
 }

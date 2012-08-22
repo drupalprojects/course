@@ -63,4 +63,8 @@ class CourseObjectWebform extends CourseObjectNode {
     return array('webform');
   }
 
+  function getCloneAbility() {
+    return TRUE;
+  }
+
 }

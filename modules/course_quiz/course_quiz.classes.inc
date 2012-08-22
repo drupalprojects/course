@@ -128,4 +128,19 @@ class CourseObjectQuiz extends CourseObjectNode {
     return TRUE;
   }
 
+  function getCloneAbility() {
+    return t('%object can only be partially cloned. It will be created with the same settings, but the without the questions', array('%object' => $this->getTitle()));
+  }
+
+  /**
+   * Exception for quiz: we need to set auto_created.
+   */
+  function thaw($ice) {
+    $this->node = $ice->node;
+    unset($this->node->nid);
+    $this->node->auto_created = TRUE;
+    node_save($this->node);
+    return $this->node->nid;
+  }
+
 }

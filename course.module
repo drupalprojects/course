@@ -4,8 +4,10 @@
  * @file course.module
  * Core functionality for Courses.
  */
-// Course Outline functions
+// Course outline functions
 require_once dirname(__FILE__) . '/includes/course.outline.inc';
+// Course exporting functions
+require_once dirname(__FILE__) . '/includes/course.exporting.inc';
 
 /**
  * Implements hook_menu().
@@ -796,9 +798,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         drupal_write_record('course_node', $record, $update);
 
         // Support cloning.
-        if (isset($node->clone_from_original_nid) && $original = node_load($node->clone_from_original_nid)) {
-          $node->course['objects'] = $original->course['objects'];
-        }
+        course_handle_clone($node);
 
         // Save the course objects - necessary for programmatic course creation.
         if (isset($node->course['objects'])) {
@@ -857,7 +857,7 @@ function course_save_objects(array $objects, Course $course = NULL) {
       if ($object->nid != $course->getNode()->nid) {
         // We are importing or cloning. Ensure the necessary keys are empty,
         // in order to prepare a new object using this object's definitions.
-        $unset = array('coid', 'nid', 'instance', 'uuid');
+        $unset = array('coid', 'nid', 'uuid');
         foreach ($unset as $key) {
           if (isset($object->{$key})) {
             unset($object->{$key});
@@ -1171,6 +1171,20 @@ function course_form_alter(&$form, &$form_state, $form_id) {
 
     foreach (element_children($form['course']) as $key) {
       $form['course'][$key]['#default_value'] = isset($node->course[$key]) ? $node->course[$key] : NULL;
+    }
+
+    if (arg(2) == 'clone') {
+      $form['course']['clone_type'] = array(
+        '#title' => t('Course object cloning'),
+        '#description' => t('"New" will create new instances of all course objects.<br/>"Reference" will link supported content in the old course to the new course.<br/>"Clone" will copy supported course objects, otherwise create new ones.'),
+        '#type' => 'radios',
+        '#options' => array(
+          'clone' => 'Clone',
+          'reference' => 'Reference',
+          'new' => 'New',
+        ),
+        '#default_value' => 'clone',
+      );
     }
 
     // After creating a new course, redirect the user to the course outline
@@ -2536,22 +2550,6 @@ function course_object_autocomplete_node($types, $string) {
   }
 
   drupal_json($matches);
-}
-
-/**
- * Implements hook_node_export_node_alter().
- *
- * Allow course objects to freeze data into the export.
- */
-function course_node_export_node_alter($node, $original_node, $op) {
-  if ($op == 'export') {
-    if (course_node_is_course($node)) {
-      $course = course_get_course($node);
-      foreach ($course->getObjects() as $object) {
-        $node->course['objects'][$object->getId()]->freeze = $object->freeze();
-      }
-    }
-  }
 }
 
 /**

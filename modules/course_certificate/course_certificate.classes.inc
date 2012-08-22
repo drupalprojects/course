@@ -32,4 +32,8 @@ class CourseObjectCertificate extends CourseObject {
     return 'content';
   }
 
+  public function getCloneAbility() {
+    return TRUE;
+  }
+
 }
