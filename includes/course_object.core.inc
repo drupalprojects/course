@@ -358,7 +358,7 @@ abstract class CourseObject extends CourseHandler {
       $values = & $form_state['values']['plugins']['access'][$key];
       $class = ctools_plugin_get_class($plugin, 'handler');
       $instance = new $class($values);
-      $instance->optionsValidate($values);
+      $instance->optionsValidate($form, $form_state['values']);
     }
   }
 
@@ -459,10 +459,10 @@ abstract class CourseObject extends CourseHandler {
     }
 
     // Instance edit link.
-    $instance = $this->getInstanceId();
-    if (!empty($instance)) {
+    $editUrl = $this->getEditUrl();
+    if (!empty($editUrl)) {
       $text = t('Edit instance');
-      $path = ltrim($this->getEditUrl(), '/');
+      $path = ltrim($editUrl, '/');
       $summary['instance'] = l($text, $path, array('query' => drupal_get_destination()));
     }
 

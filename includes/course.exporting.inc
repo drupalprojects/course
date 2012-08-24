@@ -8,16 +8,25 @@
 function course_clone_node_alter(&$node, $original_node, $method) {
   if ($method == 'prepopulate') {
     $course = course_get_course($original_node);
-    $messages = array();
-    foreach ($course->getObjects() as $courseObject) {
-      $warning = $courseObject->getCloneAbility();
-      if (is_string($warning)) {
-        $messages[] = $warning;
-      }
+    course_clone_warning_messages($course);
+  }
+}
+
+/**
+ * Show warning messages for a Course.
+ *
+ * @param Course $course
+ */
+function course_clone_warning_messages($course) {
+  $messages = array();
+  foreach ($course->getObjects() as $courseObject) {
+    $warning = $courseObject->getCloneAbility();
+    if (is_string($warning)) {
+      $messages[] = $warning;
     }
-    if ($messages) {
-      drupal_set_message(theme_item_list($messages, t('Cloning issues')), 'warning');
-    }
+  }
+  if ($messages) {
+    drupal_set_message(theme_item_list($messages, t('Cloning issues')), 'warning');
   }
 }
 
@@ -30,9 +39,12 @@ function course_node_export_node_alter($node, $original_node, $op) {
   if ($op == 'export') {
     if (course_node_is_course($node)) {
       $course = course_get_course($node);
-      foreach ($course->getObjects() as $object) {
-        if ($object->getCloneAbility() !== FALSE) {
-          $node->course['objects'][$object->getId()]->freeze = $object->freeze();
+      if (arg(2) == 'node_export') {
+        course_clone_warning_messages($course);
+        foreach ($course->getObjects() as $object) {
+          if ($object->getCloneAbility() !== FALSE) {
+            $node->course['objects'][$object->getId()]->freeze = $object->freeze();
+          }
         }
       }
     }
