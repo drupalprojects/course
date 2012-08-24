@@ -27,6 +27,7 @@ class CourseObjectAccessGrade extends CourseObjectAccess {
       return TRUE;
     }
     else {
+      $this->getCourseObject()->setAccessMessage('grade', t('You must have a grade of at least @grade% to take this activity.', array('@grade' => $this->getOption('course_grade'))));
       return FALSE;
     }
   }
