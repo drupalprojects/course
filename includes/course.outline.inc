@@ -147,12 +147,16 @@ function course_outline_overview_form(&$form_state) {
         $pair = each($object_definitions);
         $key = $pair[0];
         $object_info = $pair[1];
-        $object_types[$module . '-' . $key] = $object_info['name'];
+        if (empty($object_info['legacy'])) {
+          $object_types[$module . '-' . $key] = $object_info['name'];
+        }
       }
       else {
         foreach ($object_definitions as $key => $object_info) {
-          $module_string = ucwords(str_replace('_', ' ', $module));
-          $object_types[$module . '-' . $key] = $module_string . ': ' . $object_info['name'];
+          if (empty($object_info['legacy'])) {
+            $module_string = ucwords(str_replace('_', ' ', $module));
+            $object_types[$module . '-' . $key] = $module_string . ': ' . $object_info['name'];
+          }
         }
       }
     }
