@@ -18,7 +18,7 @@ class CourseObjectWebform extends CourseObjectNode {
     $warnings = parent::getWarnings();
 
     if (!$this->node->webform['components']) {
-      $warnings[] = t('The Webform %w has no questions.', array('%w' => $this->getTitle()));
+      $warnings[] = t('The Webform has no questions. Please !link.', array('!link' => l('add questions', "node/{$this->getInstanceId()}/webform")));
     }
 
     return $warnings;

@@ -113,12 +113,6 @@ function course_outline_overview_form(&$form_state) {
   if (count($objects)) {
     foreach (array_keys($objects) as $uniqid) {
       $courseObject = course_get_course_object_by_id($uniqid);
-
-      if ($courseObject) {
-        foreach ($courseObject->getWarnings() as $warning) {
-          drupal_set_message(filter_xss($warning), 'warning');
-        }
-      }
       $rform = _course_outline_object_form($courseObject);
 
       // Don't allow user to change type of object.

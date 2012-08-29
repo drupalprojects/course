@@ -45,7 +45,14 @@ class CourseHandler {
    *   An associative array of summary keys and values.
    */
   public function getOptionsSummary() {
-    return array();
+    $summary = array();
+
+    foreach ($this->getWarnings() as $warning) {
+      $warning = '<span class="error">' . $warning . '</span>';
+      $summary['warnings'] = filter_xss_admin($warning);
+    }
+
+    return $summary;
   }
 
   /**
