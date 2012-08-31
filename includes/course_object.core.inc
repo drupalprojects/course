@@ -1107,7 +1107,7 @@ abstract class CourseObjectNode extends CourseObject {
 
   public function create() {
     $node = new stdClass;
-    $node->type = $this->getComponent();
+    $node->type = $this->getOption('node_type');
     $node->title = $this->getTitle();
     $node->uid = $this->user->uid;
     node_save($node);
@@ -1146,8 +1146,6 @@ abstract class CourseObjectNode extends CourseObject {
   public function optionsForm(&$form, &$form_state) {
     parent::optionsForm($form, $form_state);
 
-    $instance = $this->getOption('instance');
-
     $config = $this->getOptions();
 
     if (!$this->getInstanceId()) {
@@ -1161,6 +1159,7 @@ abstract class CourseObjectNode extends CourseObject {
         '#type' => 'select',
         '#options' => $options,
         '#description' => 'Selecting a node type will automatically create this node and link it to this course object.',
+        '#default_value' => $config['node_type'],
       );
     }
 
