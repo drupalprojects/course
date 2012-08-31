@@ -486,6 +486,7 @@ abstract class CourseObject extends CourseHandler {
    * Get all course object implementations of getOptionsSummary().
    */
   public function renderOptionsSummary() {
+    ctools_include('plugins');
     $summary = $this->getOptionsSummary();
 
     // Get summaries from plugins, and merge into the summary.
