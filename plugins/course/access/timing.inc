@@ -74,7 +74,7 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
       $duration->normalize();
       $form['duration'] = array(
         '#title' => t('Duration'),
-        '#description' => 'Length of time in minutes a user can remain in this object before it is closed.',
+        '#description' => 'Length of time a user can remain in this object before it is closed.',
         '#type' => 'duration_combo',
         '#largest_metric' => 'days',
         '#smallest_metric' => 'minutes',

@@ -102,7 +102,7 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
       $form['conditional_time'] = array(
         '#title' => t('Time'),
         '#type' => 'duration_combo',
-        '#description' => t('Length of time in minutes after the event happens when this course object should be accessible.'),
+        '#description' => t('Length of time after the event happens when this course object should be accessible.'),
         '#largest_metric' => 'days',
         '#smallest_metric' => 'minutes',
         '#default_value' => $conditional_time,
