@@ -552,8 +552,9 @@ class Course extends CourseHandler {
       $result = db_query($sql, $this->node->nid);
 
       while ($row = db_fetch_object($result)) {
-        $courseObject = course_get_course_object($row, NULL, NULL, $this->user, $this);
-        $this->courseObjects[] = $courseObject;
+        if ($courseObject = course_get_course_object($row, NULL, NULL, $this->user, $this)) {
+          $this->courseObjects[] = $courseObject;
+        }
       }
     }
 
