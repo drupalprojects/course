@@ -471,13 +471,23 @@ function course_update_6121() {
  */
 function course_update_6122() {
   $ret = array();
-  db_drop_field($ret, 'course_node', 'transcript');
-  db_drop_field($ret, 'course_node', 'catalog');
-  db_drop_field($ret, 'course_node', 'outline_custom_titles');
+  $deletes = array(
+    array('course_node', 'transcript'),
+    array('course_node', 'catalog'),
+    array('course_node', 'outline_custom_titles'),
+    array('course_outline', 'graded'),
+    array('course_outline', 'passing_grade'),
+    array('course_outline', 'payment_required'),
+  );
 
-  db_drop_field($ret, 'course_outline', 'graded');
-  db_drop_field($ret, 'course_outline', 'passing_grade');
-  db_drop_field($ret, 'course_outline', 'payment_required');
+  foreach ($deletes as $delete) {
+    $table = $delete[0];
+    $column = $delete[1];
+    if (db_column_exists($table, $column)) {
+      db_drop_field($ret, $table, $column);
+    }
+  }
+  
   return $ret;
 }
 
@@ -487,11 +497,14 @@ function course_update_6122() {
 function course_update_6123() {
   $ret = array();
 
-  db_add_field($ret, 'course_outline', 'config', array(
-    'type' => 'text',
-    'size' => 'medium',
-    'serialized' => TRUE,
-  ));
+  if (!db_column_exists('course_outline', 'config')) {
+    db_add_field($ret, 'course_outline', 'config', array(
+      'type' => 'text',
+      'size' => 'medium',
+      'serialized' => TRUE,
+    ));
+  }
+
   return $ret;
 }
 
@@ -543,7 +556,7 @@ function course_update_6126() {
 
   $sql = "select * from {course_outline_fulfillment} order by sfid asc";
   $result = db_query($sql);
-  $tids = array();
+  $sfids = array();
   $delete = array();
 
   while ($row = db_fetch_object($result)) {
@@ -554,11 +567,10 @@ function course_update_6126() {
   }
 
   if ($delete) {
-    $values = implode(',', $delete);
-    $placeholders = db_placeholders($values);
+    $placeholders = db_placeholders($delete);
     $sql = "delete from {course_outline_fulfillment} where sfid in ($placeholders)";
     $ret[] = array(
-      'success' => db_query($sql, $values),
+      'success' => db_query($sql, $delete),
       'query' => $sql,
     );
   }
