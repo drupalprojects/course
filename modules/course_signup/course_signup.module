@@ -200,8 +200,19 @@ function course_signup_add_to_cart($nid, $qty, $data) {
  * If a user is enrolled outside of signup, sign them up as well.
  */
 function course_signup_course_enrol($node, $user, $from, $code, $status) {
-  if ($from != 'course_signup' && $status) {
-    course_signup_quick_register($node->nid, $user->uid);
+  // Check if uc_signup is enabled and this enrollment is from ubercart. If it
+  // is, we don't want to sign the user up, because uc_signup will convert the
+  // temporary signup and create a duplicate.
+  $uc_signup = (module_exists('uc_signup') && $from == 'ubercart' && isset($_SESSION['uc_signup']));
+  $uc_sid = FALSE;
+  if ($uc_signup) {
+    $sql = "SELECT ucsl.sid FROM {uc_signup_log} ucsl
+      LEFT JOIN {signup_log} sl USING (sid)
+      WHERE sl.nid = %d and sl.uid = %d";
+    $uc_sid = db_result(db_query($sql, $node->nid, $user->uid));
+  }
+  if ($from != 'signup_course' && !$uc_sid) {
+    signup_course_quick_register($node, $user);
   }
 }
 
@@ -210,7 +221,7 @@ function course_signup_course_enrol($node, $user, $from, $code, $status) {
  */
 function course_signup_course_can_enrol($node, $user) {
   $hooks = array();
-  
+
   // We depend on Signup Restrict by Role for enrollment access per role.
   if (module_exists('signup_restrict_by_role')) {
     $check = signup_restrict_by_role_access_signup($node, $user);
