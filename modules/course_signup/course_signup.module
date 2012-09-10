@@ -211,8 +211,8 @@ function course_signup_course_enrol($node, $user, $from, $code, $status) {
       WHERE sl.nid = %d and sl.uid = %d";
     $uc_sid = db_result(db_query($sql, $node->nid, $user->uid));
   }
-  if ($from != 'signup_course' && !$uc_sid) {
-    signup_course_quick_register($node, $user);
+  if ($from != 'course_signup' && !$uc_sid) {
+    course_signup_quick_register($node, $user);
   }
 }
 
