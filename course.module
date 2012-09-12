@@ -798,7 +798,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         // Unix timestamp before saving to the database.
         foreach ($builtin_dates as $element) {
           if (!empty($node->course[$element])) {
-            $record[$element] = strtotime($node->course[$element]);
+            $record[$element] = $node->validated ? strtotime($node->course[$element]) : $node->course[$element];
           }
         }
 
