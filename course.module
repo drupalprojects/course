@@ -1193,6 +1193,11 @@ function course_form_alter(&$form, &$form_state, $form_id) {
       $form['buttons']['submit']['#submit'][] = 'course_form_submit';
     }
   }
+
+  if (strpos($form_id, 'views_bulk_operations_form') === 0 && strpos($_GET['q'], 'admin/reports/course/overview/select') === 0) {
+    $form['url']['#default_value'] = url('admin/reports/course/overview/view', array('absolute' => TRUE));
+    $form['url']['#type'] = 'hidden';
+  }
 }
 
 /**
@@ -2094,7 +2099,7 @@ function course_course_credit_check_completion($course_node) {
     }
     if ($active) {
       $enrolment = course_enrolment_load($course_node, $user);
-      if (!$enrolment->user_type) {
+      if (!$enrolment->user_type && arg(2) == 'course-credit-app') {
         drupal_goto("node/{$course_node->nid}/course-user-type", drupal_get_destination());
       }
     }
