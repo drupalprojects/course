@@ -795,10 +795,10 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         // Support built-in non-cck date fields.
         $builtin_dates = array('open', 'close');
         // Check whether each element has a submitted value, and convert to a
-        // Unix timestamp beore saving to the database.
+        // Unix timestamp before saving to the database.
         foreach ($builtin_dates as $element) {
           if (!empty($node->course[$element])) {
-            $record[$key] = strtotime($node->course[$element]);
+            $record[$element] = strtotime($node->course[$element]);
           }
         }
 
@@ -2227,7 +2227,7 @@ function course_enrol_access($node, $user = NULL, $flush = FALSE) {
  * Block enrollments when a course has either not yet started or is expired.
  */
 function course_course_can_enrol($node, $user) {
-  if ($node->course['open'] && time() < $node->course['open']) {
+  if (!empty($node->course['open']) && time() < $node->course['open']) {
     return array(array(
         'success' => FALSE,
         'message' => t('This course opens on %date.', array(
@@ -2236,7 +2236,7 @@ function course_course_can_enrol($node, $user) {
       ));
   }
 
-  if ($node->course['close'] && time() > $node->course['close']) {
+  if (!empty($node->course['close']) && time() > $node->course['close']) {
     return array(array(
         'success' => FALSE,
         'message' => t('This course closed on %date and is no longer available for enrollments.', array(

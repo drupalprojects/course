@@ -17,7 +17,7 @@ class CourseObjectAccessTestCase extends CourseTestCase {
   }
 
   /**
-   * Test linear access (make sure 2nd object cannot be access until the 1st is complete).
+   * Test sequential object access.
    */
   function testCourseObjectLinearWorkflow() {
     // Create a course with 4 objects.
@@ -60,7 +60,7 @@ class CourseObjectAccessTestCase extends CourseTestCase {
   }
 
   /**
-   * Test an outline with required and optional objects.
+   * Test an outline with both required and optional objects.
    */
   function testCourseObjectOptionalWorkflow() {
     // Create a course with 4 objects.
@@ -119,7 +119,7 @@ class CourseObjectAccessTestCase extends CourseTestCase {
   }
 
   /**
-   * Test hidden course objects do not show up in the course outline.
+   * Test disabled course objects.
    */
   function testDisabledCourseObjects() {
     // Create a course.

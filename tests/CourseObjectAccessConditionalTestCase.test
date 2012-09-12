@@ -16,6 +16,9 @@ class CourseObjectAccessConditionalTestCase extends CourseTestCase {
     );
   }
 
+  /**
+   * Test the time based trigger for object access.
+   */
   function testTimeAfterStart() {
     $courseNode = $this->createCourseNode();
     $this->createCourseObject($courseNode);
@@ -54,6 +57,9 @@ class CourseObjectAccessConditionalTestCase extends CourseTestCase {
     $this->assertTrue($co2->access('take'), 'Check that user can access second course object after time has elapsed.');
   }
 
+  /**
+   * Test the completion based trigger for object access.
+   */
   function testTimeAfterCompletion() {
     $courseNode = $this->createCourseNode();
     $this->createCourseObject($courseNode);

@@ -32,7 +32,7 @@ class CourseOutlineUiTestCase extends CourseTestCase {
   }
 
   /**
-   * Test CRUD through the UI.
+   * Test creating a course object through the UI.
    */
   function testCourseOutlineCrud() {
     $courseNode = $this->createCourseNode();

@@ -17,7 +17,7 @@ class CourseContextTestCase extends CourseTestCase {
   }
 
   /**
-   * Testing finding course and objects via triplet.
+   * Testing finding course and objects via parameter search.
    */
   function testDetermineContext() {
     $courseNode = $this->createCourseNode();
@@ -36,7 +36,7 @@ class CourseContextTestCase extends CourseTestCase {
   }
 
   /**
-   * Test objects belonging to multiple courses.
+   * Test objects that belong to multiple courses.
    */
   function testMultiContext() {
     $courseNode1 = $this->createCourseNode();

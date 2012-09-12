@@ -17,7 +17,7 @@ class CourseEnrollmentTestCase extends CourseTestCase {
   }
 
   /**
-   * Enrol a user, make sure they have access, and timestamps get set properly.
+   * Test for enrollment access and timestamping.
    */
   function testCourseEnrollment() {
     global $user;
@@ -42,7 +42,7 @@ class CourseEnrollmentTestCase extends CourseTestCase {
   }
 
   /**
-   * If a course has duration, make sure it gets set.
+   * Test for course duration being set properly on enrollment.
    */
   function testCourseDuration() {
     global $user;

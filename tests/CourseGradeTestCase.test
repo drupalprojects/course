@@ -16,6 +16,9 @@ class CourseGradeTestCase extends CourseTestCase {
     );
   }
 
+  /**
+   * Test that the final grade is calculated correctly.
+   */
   public function testCourseFinalGrade() {
     $courseNode = $this->createCourseNode();
 
@@ -41,6 +44,9 @@ class CourseGradeTestCase extends CourseTestCase {
     $this->assertEqual($co1->getCourse()->getTracker()->getOption('grade_result'), 80, 'Course grade was given from course object');
   }
 
+  /**
+   * Test that the course grade access plugin functions properly.
+   */
   public function testCourseGradeAccess() {
     $courseNode = $this->createCourseNode();
 

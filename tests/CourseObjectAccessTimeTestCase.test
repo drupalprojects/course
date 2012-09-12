@@ -17,7 +17,7 @@ class CourseObjectAccessTimeTestCase extends CourseTestCase {
   }
 
   /**
-   * Test time based access (release and expiration).
+   * Test course object open date.
    */
   public function testCourseObjectRestrictByRelease() {
     $now = time();
@@ -40,7 +40,7 @@ class CourseObjectAccessTimeTestCase extends CourseTestCase {
   }
 
   /**
-   * Test time based access (release and expiration).
+   * Test course object expiration date.
    */
   public function testCourseObjectRestrictByExpiration() {
     $now = time();
@@ -63,7 +63,7 @@ class CourseObjectAccessTimeTestCase extends CourseTestCase {
   }
 
   /**
-   * Check that user cannot access course object outside of duration.
+   * Check that user cannot access course object outside of duration period.
    */
   public function testCourseObjectDuration() {
     $now = time();

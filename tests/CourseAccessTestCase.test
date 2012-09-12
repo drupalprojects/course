@@ -39,7 +39,7 @@ class CourseAccessTestCase extends CourseTestCase {
   }
 
   /**
-   * Test the open/close functionality.
+   * Test the open/close date functionality.
    */
   function testReleaseExpiration() {
     global $user;

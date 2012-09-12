@@ -25,7 +25,7 @@ class CourseObjectNodeTestCase extends CourseTestCase {
   }
 
   /**
-   * Test basic save/load of CourseObjects.
+   * Test content privacy for node based course objects.
    */
   function testContentAccess() {
     $user = $this->drupalLogin($this->student_user);
