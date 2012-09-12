@@ -863,7 +863,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           }
         }
         $node->course['objects'] = $objects;
-        
+
         break;
       case 'delete':
         // Clean up course specific settings and enrollments when a course is
@@ -2227,28 +2227,22 @@ function course_enrol_access($node, $user = NULL, $flush = FALSE) {
  * Block enrollments when a course has either not yet started or is expired.
  */
 function course_course_can_enrol($node, $user) {
-  $start = @unserialize(variable_get('course_start_date_' . $node->type, array()));
-  $end = @unserialize(variable_get('course_expiration_date_' . $node->type, array()));
+  if ($node->course['open'] && time() < $node->course['open']) {
+    return array(array(
+        'success' => FALSE,
+        'message' => t('This course opens on %date.', array(
+          '%date' => format_date($node->course['close'], 'custom', 'F, jS Y'),
+        )),
+      ));
+  }
 
-  if ($start && $end) {
-    if ($node->course['type'] == 'enduring') {
-      if (time() > strtotime($node->{$end['field']}[0]['value2'] . ' UTC')) {
-        return array(array(
-            'success' => FALSE,
-            'message' => t('This course closed on %date and is no longer available for enrollments.', array(
-              '%date' => format_date(strtotime($node->{$end['field']}[0]['value2']), 'custom', 'F, jS Y'),
-            )),
-          ));
-      }
-      elseif (time() < strtotime($node->{$start['field']}[0]['value'] . ' UTC')) {
-        return array(array(
-            'success' => FALSE,
-            'message' => t('This course opens on %date.', array(
-              '%date' => format_date(strtotime($node->{$start['field']}[0]['value']), 'custom', 'F, jS Y'),
-            )),
-          ));
-      }
-    }
+  if ($node->course['close'] && time() > $node->course['close']) {
+    return array(array(
+        'success' => FALSE,
+        'message' => t('This course closed on %date and is no longer available for enrollments.', array(
+          '%date' => format_date($node->course['open'], 'custom', 'F, jS Y'),
+        )),
+      ));
   }
 }
 
