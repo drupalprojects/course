@@ -757,7 +757,7 @@ function course_can_take_course($node, $user) {
   }
 
   if (isset($node->course['close']) && $node->course['close']) {
-    if (time() > strtotime($node->course['close'])) {
+    if (time() > $node->course['close']) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, this course is expired.',
@@ -791,8 +791,43 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       case 'update':
         $record = $node->course;
         $record['nid'] = $node->nid;
-        unset($record['open']);
-        unset($record['close']);
+
+        // Support built-in non-cck date fields.
+        $builtin_dates = array('open', 'close');
+        // Check whether each element has a submitted value, and convert to a
+        // Unix timestamp beore saving to the database.
+        foreach ($builtin_dates as $element) {
+          if (!empty($node->course[$element])) {
+            $record[$key] = strtotime($node->course[$element]);
+          }
+        }
+
+        // Add configurable dates to the node object for easy retrieval.
+        // Support both configurable cck and built-in non-cck date fields.
+        $cck_dates = array(
+          'open' => 'course_start_date_' . $node->type,
+          'close' => 'course_expiration_date_' . $node->type,
+          'live_from_date' => 'course_live_from_date_' . $node->type,
+          'live_to_date' => 'course_live_to_date_' . $node->type,
+        );
+        // Check whether each variable is set and the field exists on the
+        // content type. If so, load that field's value to the course object,
+        // overriding the coresponding column from the database.
+        foreach ($cck_dates as $key => $variable) {
+          $settings = @unserialize(variable_get($variable, array()));
+          $field_exists = module_exists('content')
+            && isset($settings['field'])
+            && content_fields($settings['field'], $node->type) != FALSE;
+          if ($field_exists) {
+            $value = $node->{$settings['field']}[0][$settings['value']];
+            if (!empty($value)) {
+              $date = new DateTime("$value UTC");
+              $value = $date->format('U');
+            }
+            $record[$key] = $value;
+          }
+        }
+
         $existing = db_result(db_query('select 1 from {course_node} where nid = %d', $node->nid));
         $update = $existing ? array('nid') : array();
         drupal_write_record('course_node', $record, $update);
@@ -827,9 +862,8 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
             $objects[$object->coid]->$key = $value;
           }
         }
-
-
         $node->course['objects'] = $objects;
+        
         break;
       case 'delete':
         // Clean up course specific settings and enrollments when a course is
@@ -1097,7 +1131,6 @@ function course_enable() {
  * the course settings tab.
  */
 function course_form_alter(&$form, &$form_state, $form_id) {
-  global $user;
   $node = isset($form['#node']) ? $form['#node'] : NULL;
 
   // Course node settings form.
@@ -1110,7 +1143,7 @@ function course_form_alter(&$form, &$form_state, $form_id) {
     // Course outline display handler.
     $outlines = array();
     $handlers = course_get_handlers('outline');
-    foreach ($handlers as $module => $outline_handlers) {
+    foreach ($handlers as $outline_handlers) {
       if ($outline_handlers) {
         foreach ($outline_handlers as $key => $outline_handler) {
           $outlines[$key] = $outline_handler['name'];
@@ -1134,16 +1167,19 @@ function course_form_alter(&$form, &$form_state, $form_id) {
     );
 
     if (module_exists('date')) {
+      $open = variable_get('course_start_date_' . $node->type, array());
+      $close = variable_get('course_expiration_date_' . $node->type, array());
+
       $form['course']['open'] = array(
         '#title' => t('Release date'),
         '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
-        '#access' => FALSE,
+        '#access' => empty($open['field']),
       );
 
       $form['course']['close'] = array(
         '#title' => t('Expiration date'),
         '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
-        '#access' => FALSE,
+        '#access' => empty($close['field']),
       );
     }
 
