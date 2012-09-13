@@ -373,6 +373,8 @@ function course_ajaj_fulfullment_check($node, $courseObject, $js = FALSE) {
     course_set_context($node);
   }
   module_load_include('inc', 'course', 'includes/course.block');
+  // Bust cache.
+  course_get_course($node, $courseObject->getCourse()->getUser(), TRUE);
   $block = _course_block_navigation_view();
   drupal_json(array(
     'content' => $block['content'],
