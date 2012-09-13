@@ -462,10 +462,21 @@ function course_update_6121() {
 }
 
 /**
- * Remove old fields that won't be used anymore.
+ * Migrate and remove old fields that won't be used anymore.
  */
 function course_update_6122() {
   $ret = array();
+
+  // Migrate any passing grade to serialized storage.
+  $sql = "select * from {course_outline}";
+  $result = db_query($sql);
+  while ($row = db_fetch_object($result)) {
+    $row->data = unserialize($row->data);
+    $row->data['passing_grade'] = $row->passing_grade;
+    $row->data = serialize($row->data);
+    db_query("update {course_outline} set data = '%s' where snid = %d", $row->data, $row->snid);
+  }
+
   $deletes = array(
     array('course_node', 'transcript'),
     array('course_node', 'catalog'),
@@ -482,7 +493,7 @@ function course_update_6122() {
       db_drop_field($ret, $table, $column);
     }
   }
-  
+
   return $ret;
 }
 
