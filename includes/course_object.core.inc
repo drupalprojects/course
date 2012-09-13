@@ -460,10 +460,13 @@ abstract class CourseObject extends CourseHandler {
 
     // Instance edit link.
     $editUrl = $this->getEditUrl();
-    if (!empty($editUrl)) {
+    if (!empty($editUrl) && !$this->isTemporary()) {
       $text = t('Edit instance');
       $path = ltrim($editUrl, '/');
       $summary['instance'] = l($text, $path, array('query' => drupal_get_destination()));
+    }
+    else {
+      $summary['instance'] = '<span class="warning">' . t('Save course to edit object') . '</span>';
     }
 
     // Required.
@@ -958,6 +961,13 @@ abstract class CourseObject extends CourseHandler {
    */
   function unEnroll() {
 
+  }
+
+  /**
+   * Checks the temporary status of a course object.
+   */
+  function isTemporary() {
+    return strpos($this->getId(), 'course_object_') === 0;
   }
 
 }
