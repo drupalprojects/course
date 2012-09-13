@@ -1991,7 +1991,7 @@ function course_edit_enrollment_action_form($context) {
     '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
     '#date_format' => 'm/d/Y H:i',
     '#description' => t('The date of completion.'),
-    '#default_value' => date('Y-m-d H:i:s', $course_report->date_completed),
+    '#default_value' => !empty($course_report->date_completed) ? date('Y-m-d H:i:s', $course_report->date_completed) : NULL,
   );
 
   $form['course_objects'] = array(
