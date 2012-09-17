@@ -1,5 +1,0 @@
-name = Course restrict credit
-description = Restricts claiming credit to only one of many similar courses.
-package = Course
-core = 6.x
-dependencies[] = course_credit
