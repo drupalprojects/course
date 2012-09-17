@@ -38,28 +38,21 @@ function course_signup_menu() {
 /**
  * Do a quick registration.
  *
- * @param int $nid
- *   A course node ID.
- * @param stdClass $account
- *   A user ID.
+ * @param stdClass $node
+ *   A signup enabled course node.
+ * @param stdClass $user
+ *   A user.
  * @param bool $notify
  *   Notify the user of this signup. This is passed to signup_sign_up_user().
  */
-function course_signup_quick_register($nid, $uid = NULL, $notify = TRUE) {
-  if (!$uid) {
-    global $user;
-    $uid = $user->uid;
-  }
-
-  $node = node_load($nid);
-
-  if (!$signup = db_fetch_object(db_query('select * from {signup_log} where nid = %d and uid = %d', $nid, $uid))) {
+function course_signup_quick_register($node, $account, $notify = TRUE) {
+  if (!$signup = db_fetch_object(db_query('select * from {signup_log} where nid = %d and uid = %d', $node->nid, $account->uid))) {
     // Save a new signup.
     if ($node->signup_status && $notify) {
       // Signup is open so we can use signup's function.
       signup_sign_up_user(array(
-        'nid' => $nid,
-        'uid' => $uid,
+        'nid' => $node->nid,
+        'uid' => $account->uid,
         ), $notify);
     }
     else {
@@ -67,8 +60,8 @@ function course_signup_quick_register($nid, $uid = NULL, $notify = TRUE) {
       // signup_sign_up_user() because this would result in a
       // drupal_access_denied() call.
       $signup = new stdClass();
-      $signup->uid = $uid;
-      $signup->nid = $nid;
+      $signup->nid = $node->nid;
+      $signup->uid = $account->uid;
       $signup->signup_time = time();
       $signup->attended = 0;
       $signup->form_data = array();
