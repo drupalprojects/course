@@ -280,14 +280,13 @@ function theme_course_outline_overview_form($form) {
   drupal_add_tabledrag('course-objects', 'order', 'sibling', 'course-object-weight');
   drupal_add_css(drupal_get_path('module', 'course') . '/css/admin.css');
 
-  $headers = array(t('Title'), t('Type'), t('Operations'), t('Weight'));
-
   $rows = array();
 
   foreach (element_children($objects) as $key) {
     $object = & $objects[$key];
     unset($objects[$key]['title']['#title']);
     unset($objects[$key]['object_type']['#title']);
+    $rows[$key]['data'][] = NULL;
     $rows[$key]['data'][] = drupal_render($objects[$key]['title']) . drupal_render($objects[$key]['summary']);
     $rows[$key]['data'][] = drupal_render($objects[$key]['object_type']) . drupal_render($objects[$key]['object_type_show']);
     $rows[$key]['data'][] = drupal_render($objects[$key]['options']);
@@ -310,7 +309,7 @@ function theme_course_outline_overview_form($form) {
     // Mark everything else as printed.
     drupal_render($objects[$key]);
   }
-  $table = theme('table', $headers, $rows, array('id' => 'course-objects'));
+  $table = theme_table(array(), $rows, array('id' => 'course-objects'));
   $table .= drupal_render($form);
   return $table;
 }
