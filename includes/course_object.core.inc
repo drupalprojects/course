@@ -253,7 +253,7 @@ abstract class CourseObject extends CourseHandler {
     $form['title'] = array(
       '#title' => 'Title',
       '#type' => 'textfield',
-      '#size' => 16,
+      '#size' => 100,
       '#default_value' => check_plain($config['title']),
     );
 
@@ -358,7 +358,7 @@ abstract class CourseObject extends CourseHandler {
       $values = & $form_state['values']['plugins']['access'][$key];
       $class = ctools_plugin_get_class($plugin, 'handler');
       $instance = new $class($values);
-      $instance->optionsValidate($form, $form_state['values']);
+      $instance->optionsValidate($form_state['values']['plugins']['access'][$key]);
     }
   }
 
