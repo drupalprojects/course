@@ -438,8 +438,7 @@ function course_views_data() {
 }
 
 /**
- * Implements hook_views_handlers() to register all of the basic handlers
- * views uses.
+ * Implements hook_views_handlers().
  */
 function course_views_handlers() {
   return array(

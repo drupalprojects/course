@@ -265,6 +265,9 @@ function course_uc_enrol_user_in_ordered_courses($order) {
   }
 }
 
+/**
+ * Implements hook_ca_predicate().
+ */
 function course_uc_ca_predicate() {
   $configurations['course_uc_enrol_user_in_ordered_courses'] = array(
     '#title' => t('Enroll user in ordered courses'),

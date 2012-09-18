@@ -42,6 +42,9 @@ function course_certificate_access_certificate($node, $user) {
   }
 }
 
+/**
+ * Implements hook_token_list().
+ */
 function course_certificate_token_list($type = 'all') {
   if ($type == 'certificate') {
     $tokens = array();
@@ -51,6 +54,9 @@ function course_certificate_token_list($type = 'all') {
   }
 }
 
+/**
+ * Implements hook_token_values().
+ */
 function course_certificate_token_values($type, $object = NULL, $options = array()) {
   if ($type == 'certificate') {
     $values = array();

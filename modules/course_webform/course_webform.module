@@ -53,6 +53,9 @@ function course_webform_webform_submission_insert($node, $submission) {
   }
 }
 
+/**
+ * Settings form callback.
+ */
 function course_webform_settings() {
   $form = array();
 

@@ -5,6 +5,9 @@
  *
  */
 
+/**
+ * Implements hook_install().
+ */
 function course_certificate_install() {
   course_certificate_update_6101();
 }

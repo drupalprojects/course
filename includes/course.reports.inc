@@ -57,10 +57,16 @@ function course_object_reports_page($node) {
   return theme('course_report', $nav, $header, $content);
 }
 
+/**
+ * Return a link to a report as HTML.
+ */
 function course_object_single_report_link($courseObject, $key, $report) {
   return l($report['title'], "node/{$courseObject->getCourseNid()}/course-reports/objects/{$courseObject->getId()}/$key");
 }
 
+/**
+ * Theme the course objects report page.
+ */
 function theme_course_report($nav, $header, $body) {
   if (!$nav) {
     $body = t('None of the objects in your course have reports associated with them.');

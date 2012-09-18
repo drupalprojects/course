@@ -31,9 +31,15 @@ function course_course_take_course_button_content_type_render($subtype, $conf, $
   return $block;
 }
 
+/**
+ * Return the translated admin string for the take course button.
+ */
 function course_course_take_course_button_content_type_admin_title($subtype, $conf, $context) {
   return t('"@s" Course take course button', array('@s' => $context->identifier));
 }
 
+/**
+ * The edit form for the take course button.
+ */
 function course_course_take_course_button_content_type_edit_form(&$form, &$form_state) {
 }

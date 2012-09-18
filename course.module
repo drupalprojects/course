@@ -307,8 +307,7 @@ function course_course_handlers() {
  *   If no type is specified, all types are returned.
  *
  * @return array
- *   A merged, structured array of course handlers returned by all
- *   implementations of hook_course_handlers(), optionally limited by type.
+ *   A merged, structured array of course handlers, optionally limited by type.
  *
  * @return array
  *   An array of hook implementations keyed by module name, containing:
@@ -367,6 +366,12 @@ function course_access_object($node, $courseObject) {
   return $courseObject->access('take');
 }
 
+/**
+ * Fulfillment check callback.
+ *
+ * This function is polled from nav.js to check remote fulfillments for external
+ * learning objects.
+ */
 function course_ajaj_fulfullment_check($node, $courseObject, $js = FALSE) {
   $courseObject->poll();
   if (course_node_is_course($node)) {
@@ -582,7 +587,9 @@ function course_block($op = 'list', $delta = 0) {
       );
       return $info;
     case 'configure':
+
     case 'view':
+
     case 'save':
       module_load_include('inc', 'course', 'includes/course.block');
       $function = "_course_block_{$delta}_{$op}";
@@ -2373,7 +2380,9 @@ function course_report_load($mixed, $user = NULL) {
 function course_theme() {
   return array(
     'course_outline_overview_form' => array(
-      'form' => NULL,
+      'arguments' => array(
+        'form' => NULL,
+      ),
     ),
     'course_report' => array(
       'file' => 'includes/course.reports.inc',

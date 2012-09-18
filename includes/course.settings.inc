@@ -173,6 +173,9 @@ function course_user_type_settings_form() {
   return system_settings_form($form);
 }
 
+/**
+ * Validate the user input for enrollment types.
+ */
 function course_user_type_settings_form_validate(&$form, &$form_state) {
   $lines = explode("\n", trim($form_state['values']['course_user_types']));
   foreach ($lines as $line) {
@@ -186,6 +189,9 @@ function course_user_type_settings_form_validate(&$form, &$form_state) {
   }
 }
 
+/**
+ * Get an array of field options that can be used as course enrollment types.
+ */
 function course_cck_kv_fields() {
   $field_options = array();
 
