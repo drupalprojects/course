@@ -288,7 +288,7 @@ function theme_course_outline_overview_form($form) {
     $object = & $objects[$key];
     unset($objects[$key]['title']['#title']);
     unset($objects[$key]['object_type']['#title']);
-    $rows[$key]['data'][] = NULL;
+    $rows[$key]['data'][] = array('data' => NULL, 'width' => 1);
     $rows[$key]['data'][] = drupal_render($objects[$key]['title']) . drupal_render($objects[$key]['summary']);
     $rows[$key]['data'][] = drupal_render($objects[$key]['object_type']) . drupal_render($objects[$key]['object_type_show']);
     $rows[$key]['data'][] = drupal_render($objects[$key]['options']);
