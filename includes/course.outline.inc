@@ -117,7 +117,13 @@ function course_outline_overview_form(&$form_state) {
       $rform = _course_outline_object_form($courseObject);
 
       // Keep track of how many of each course object we have.
-      $object_counts[$courseObject->getModule()][$courseObject->getComponent()]++;
+      // @todo probably some simpler way to do this effectively
+      if (!isset($object_counts[$courseObject->getModule()][$courseObject->getComponent()])) {
+        $object_counts[$courseObject->getModule()][$courseObject->getComponent()] = 1;
+      }
+      else {
+        $object_counts[$courseObject->getModule()][$courseObject->getComponent()]++;
+      }
 
       // Don't allow user to change type of object.
       $rform['object_type'] = array(
