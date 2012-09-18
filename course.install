@@ -474,7 +474,7 @@ function course_update_6122() {
     $row->data = unserialize($row->data);
     $row->data['passing_grade'] = $row->passing_grade;
     $row->data = serialize($row->data);
-    db_query("update {course_outline} set data = '%s' where snid = %d", $row->data, $row->snid);
+    db_query("UPDATE {course_outline} SET data = '%s' WHERE snid = %d", $row->data, $row->snid);
   }
 
   $deletes = array(
