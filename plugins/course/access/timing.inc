@@ -58,7 +58,7 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
     return $this->take();
   }
 
-  function optionsValidate(&$values) {
+  function optionsValidate(&$form, &$values) {
     if (module_exists('duration_element')) {
       $values['duration'] = $values['duration']->to_single_metric('seconds');
     }

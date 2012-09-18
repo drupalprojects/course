@@ -68,7 +68,7 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
     return $defaults;
   }
 
-  function optionsValidate(&$values) {
+  function optionsValidate(&$form, &$values) {
     if (module_exists('duration_element')) {
       $values['conditional_time'] = $values['conditional_time']->to_single_metric('seconds');
     }

@@ -970,6 +970,17 @@ abstract class CourseObject extends CourseHandler {
     return strpos($this->getId(), 'course_object_') === 0;
   }
 
+  /**
+   * Return the number of occurances that can be in a course at the same time.
+   * For example, the design of the Certificate module can only have 1 set of
+   * mappings per node. The same goes for Course Credit. We may also want a
+   * course object that can only be added twice (for example, a before/after
+   * comparison).
+   */
+  public static function getMaxOccurences() {
+    return FALSE;
+  }
+
 }
 
 /**

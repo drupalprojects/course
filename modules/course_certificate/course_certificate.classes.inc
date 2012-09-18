@@ -36,4 +36,8 @@ class CourseObjectCertificate extends CourseObject {
     return TRUE;
   }
 
+  public static function getMaxOccurences() {
+    return 1;
+  }
+
 }

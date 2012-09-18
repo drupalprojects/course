@@ -77,7 +77,7 @@ function course_outline_overview_form(&$form_state) {
         }
       }
     }
-    
+
     $new['nid'] = $node->nid;
     $new['coid'] = $obj_uniqid;
     list($new['module'], $new['object_type']) = explode('-', $form_state['values']['more']['object_type']);
@@ -107,13 +107,17 @@ function course_outline_overview_form(&$form_state) {
   }
 
   $handlers = course_get_handlers('object');
-  
+
   // Wrapper for just the objects.
   $cform['objects']['#tree'] = TRUE;
+  $object_counts = array();
   if (count($objects)) {
     foreach (array_keys($objects) as $uniqid) {
       $courseObject = course_get_course_object_by_id($uniqid);
       $rform = _course_outline_object_form($courseObject);
+
+      // Keep track of how many of each course object we have.
+      $object_counts[$courseObject->getModule()][$courseObject->getComponent()]++;
 
       // Don't allow user to change type of object.
       $rform['object_type'] = array(
@@ -137,25 +141,17 @@ function course_outline_overview_form(&$form_state) {
   );
   foreach ($handlers as $module => $object_definitions) {
     if ($object_definitions) {
-      if (count($object_definitions) == 1) {
-        $pair = each($object_definitions);
-        $key = $pair[0];
-        $object_info = $pair[1];
-        if (empty($object_info['legacy'])) {
-          $object_types[$module . '-' . $key] = $object_info['name'];
-        }
-      }
-      else {
-        foreach ($object_definitions as $key => $object_info) {
-          if (empty($object_info['legacy'])) {
-            $module_string = ucwords(str_replace('_', ' ', $module));
-            $object_types[$module . '-' . $key] = $module_string . ': ' . $object_info['name'];
-          }
+      foreach ($object_definitions as $key => $object_info) {
+        $class = $object_info['class'];
+        $max_object_count = $class::getMaxOccurences();
+        if ((!$max_object_count || $max_object_count > $object_counts[$module][$key]) && empty($object_info['legacy'])) {
+          $module_string = ucwords(str_replace('_', ' ', $module));
+          $object_types[$module . '-' . $key] = $module_string . ': ' . $object_info['name'];
         }
       }
     }
   }
-  
+
   $form['more'] = array(
     '#type' => 'markup',
     '#prefix' => '<div class="container-inline">',
@@ -352,7 +348,7 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   //   - object_type: The course object key as defined by
   //     hook_course_handlers().
   $objects = $form_state['values']['course_outline']['objects'];
-  
+
   // Sort by weight so we can renumber.
   uasort($objects, '_course_outline_overview_form_cmp_function');
 
@@ -469,7 +465,7 @@ function course_outline_list($node) {
     else {
       $data = $img . ' ' . l("{$courseObject->getTitle()}<br/>", $step['link'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status'] . '</span>';
     }
-    
+
     $item = array(
       'data' => $data,
       'id' => $step['id'],
