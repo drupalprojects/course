@@ -40,5 +40,22 @@ class CourseOutlineUiTestCase extends CourseTestCase {
     $this->createCourseObjectUi($courseNode);
   }
 
-}
+  /**
+   * Test maximum course objects per course.
+   */
+  function testCourseOutlineMaxOccurences() {
+    $courseNode = $this->createCourseNode();
+    $this->drupalGet("node/{$courseNode->nid}/course-outline");
+    $this->createCourseObjectUi($courseNode);
+    $this->createCourseObjectUi($courseNode);
 
+    $elements = $this->xpath('//select[@id=:id]//option[@value=:option]', array(':id' => 'edit-more-object-type', ':option' => 'course_test-course_test_object'));
+    $this->assertTrue((bool) $elements, 'User able to add up to maxOccurances of course objects.');
+
+    $this->createCourseObjectUi($courseNode);
+
+    $elements = $this->xpath('//select[@id=:id]//option[@value=:option]', array(':id' => 'edit-more-object-type', ':option' => 'course_test-course_test_object'));
+    $this->assertFalse((bool) $elements, 'User was not able to add more than maxOccurances of course objects.');
+  }
+
+}

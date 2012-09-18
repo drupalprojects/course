@@ -5,6 +5,10 @@
  */
 class CourseObjectTest extends CourseObject {
 
+  public static function getMaxOccurences() {
+    return 3;
+  }
+
 }
 
 /**

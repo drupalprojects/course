@@ -961,6 +961,9 @@ abstract class CourseObject extends CourseHandler {
    * mappings per node. The same goes for Course Credit. We may also want a
    * course object that can only be added twice (for example, a before/after
    * comparison).
+   *
+   * This method is static because we might have to call it without an object
+   * being instantiated.
    */
   public static function getMaxOccurences() {
     return FALSE;
