@@ -1,4 +1,9 @@
 <?php
+/**
+ * @file
+ * Install, update and uninstall functions for the course_certificate module.
+ *
+ */
 
 function course_certificate_install() {
   course_certificate_update_6101();

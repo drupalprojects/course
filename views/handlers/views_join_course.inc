@@ -7,6 +7,7 @@
  * http://drupal.org/node/560492
  */
 class views_join_course extends views_join {
+
   function db_safe($input, $info) {
     if (!is_array($input)) {
       return $input;
@@ -15,4 +16,5 @@ class views_join_course extends views_join {
       return parent::db_safe($input, $info);
     }
   }
+
 }

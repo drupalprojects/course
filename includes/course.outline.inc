@@ -132,8 +132,7 @@ function course_outline_overview_form(&$form_state) {
       );
       $rform['object_type_show'] = array(
         '#type' => 'markup',
-        '#value' => filter_xss_admin($handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')]['name'] . '<br/><small><i>'
-          . ucwords(str_replace('_', ' ', $courseObject->getOption('module'))) . '</i></small>'),
+        '#value' => filter_xss_admin($handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')]['name'] . '<br/><small><i>' . ucwords(str_replace('_', ' ', $courseObject->getOption('module'))) . '</i></small>'),
       );
 
       ctools_ajax_associate_url_to_element($form, $rform['object_type'], "course-object/nojs/store/$uniqid");

@@ -1,6 +1,6 @@
 <?php
 
-require_once(drupal_get_path('module', 'course') . '/tests/CourseTestCase.test');
+require_once drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
 
 /**
  * Tests for course object access based on time.
@@ -49,7 +49,7 @@ class CourseObjectAccessTimeTestCase extends CourseTestCase {
 
     // Test restricting by expiration.
     $o2 = $this->createCourseObject($courseNode);
-    
+
     // Set the expiration to 10 seconds ago.
     $options['plugins']['access']['timing']['expiration'] = gmdate('c', $now - 100);
     $o2->addOptions($options);
@@ -76,7 +76,7 @@ class CourseObjectAccessTimeTestCase extends CourseTestCase {
     // Start the course object 5 minutes ago.
     $o3->getFulfillment()->setOption('date_started', $now - 300);
     $this->assertTrue($o3->access('take'), 'Check that user can access course object without duration.');
-    
+
     // Set the duration to 1 minute.
     $options['plugins']['access']['timing']['duration'] = 60;
     $o3->addOptions($options);

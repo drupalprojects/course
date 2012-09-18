@@ -9,7 +9,7 @@ function course_content_context() {
   if (isset($node->nid)) {
     return array(
       'object_type' => $node->type,
-      'instance' => $node->nid
+      'instance' => $node->nid,
     );
   }
 }

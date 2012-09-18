@@ -652,17 +652,8 @@ abstract class CourseObject extends CourseHandler {
    * next step from the course outline. For example, if this was a quiz and
    * they failed, this should let them know.
    */
-  public function getStatus($type = 'short') {
-    /*
-      if (!$this->courseObjectFulfillment->isComplete()) {
-      if ($type == 'short') {
-      return "Failed";
-      }
-      if ($type == 'long') {
-      return "You received an 80% on this quiz but the minimum grade is 90%. You may retake this quiz 5 times.";
-      }
-      }
-     */
+  public function getStatus() {
+
   }
 
   /**

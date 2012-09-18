@@ -13,7 +13,7 @@ class CourseObjectManual extends CourseObject {
    * Return a message about the user's status in this object, for when this
    * object is hidden.
    */
-  public function getStatus($type = 'short') {
+  public function getStatus() {
     $grade = $this->getFulfillment()->getGrade();
     $config = $this->getOptions();
     if (!$this->getFulfillment()->getId()) {

@@ -1,6 +1,12 @@
 <?php
 
 /**
+ * @file course_test.install
+ * Install, update and uninstall functions for the course_test module.
+ *
+ */
+
+/**
  * Implements hook_install().
  */
 function course_test_install() {

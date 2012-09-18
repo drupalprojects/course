@@ -54,14 +54,3 @@ function course_poll_fulfill(&$form, &$form_state) {
     $courseObject->getFulfillment()->setComplete()->save();
   }
 }
-
-/**
- * Implements hook_autoload_info().
- */
-function course_poll_autoload_info() {
-  return array(
-    'CourseObjectPoll' => array(
-      'file' => 'course_poll.classes.inc',
-    ),
-  );
-}
