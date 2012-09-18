@@ -358,7 +358,7 @@ abstract class CourseObject extends CourseHandler {
       $values = & $form_state['values']['plugins']['access'][$key];
       $class = ctools_plugin_get_class($plugin, 'handler');
       $instance = new $class($values);
-      $instance->optionsValidate($form_state['values']['plugins']['access'][$key]);
+      $instance->optionsValidate($form['plugins']['access'][$key], $form_state['values']['plugins']['access'][$key]);
     }
   }
 
