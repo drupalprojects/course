@@ -460,12 +460,12 @@ abstract class CourseObject extends CourseHandler {
 
     // Instance edit link.
     $editUrl = $this->getEditUrl();
-    if (!empty($editUrl) && !$this->isTemporary()) {
+    if (!empty($editUrl)) {
       $text = t('Edit instance');
       $path = ltrim($editUrl, '/');
       $summary['instance'] = l($text, $path, array('query' => drupal_get_destination()));
     }
-    else {
+    else if ($this->isTemporary()) {
       $summary['instance'] = '<span class="warning">' . t('Save course to edit object') . '</span>';
     }
 
@@ -839,21 +839,6 @@ abstract class CourseObject extends CourseHandler {
    */
   function poll() {
 
-  }
-
-  protected function getDatabaseFields() {
-    return array(
-      'coid',
-      'nid',
-      'module',
-      'title',
-      'object_type',
-      'enabled',
-      'instance',
-      'required',
-      'weight',
-      'hidden',
-    );
   }
 
   /**
