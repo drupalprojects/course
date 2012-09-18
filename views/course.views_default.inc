@@ -8,10 +8,9 @@ function course_views_default_views() {
 
   $view_files = file_scan_directory(dirname(__FILE__) . '/default', '.*\.view\.inc');
   foreach ($view_files as $file) {
-    include "$file->filename";
+    include $file->filename;
     $views[$view->name] = $view;
   }
-
 
   return $views;
 }

@@ -2040,6 +2040,9 @@ function course_edit_enrollment_action_submit($form, $form_state) {
   );
 }
 
+/**
+ * Validates the edit enrollment action.
+ */
 function course_edit_enrollment_action_validate($form, $form_state) {
 
 }

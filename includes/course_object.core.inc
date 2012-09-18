@@ -465,7 +465,7 @@ abstract class CourseObject extends CourseHandler {
       $path = ltrim($editUrl, '/');
       $summary['instance'] = l($text, $path, array('query' => drupal_get_destination()));
     }
-    else if ($this->isTemporary()) {
+    elseif ($this->isTemporary()) {
       $summary['instance'] = '<span class="warning">' . t('Save course to edit object') . '</span>';
     }
 

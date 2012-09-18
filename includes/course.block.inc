@@ -57,7 +57,7 @@ function _course_block_navigation_view() {
     // Strip array keys so theme_item_list() works properly.
     $items = array_values($links);
 
-    // @todo docuemnt me.
+    // Add javascript poller to update the next step button.
     drupal_add_js(drupal_get_path('module', 'course') . '/js/nav.js', 'module', 'header', FALSE, FALSE, FALSE);
 
     return array(
