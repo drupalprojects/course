@@ -817,9 +817,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         // overriding the coresponding column from the database.
         foreach ($cck_dates as $key => $variable) {
           $settings = @unserialize(variable_get($variable, array()));
-          $field_exists = module_exists('content')
-            && isset($settings['field'])
-            && content_fields($settings['field'], $node->type) != FALSE;
+          $field_exists = module_exists('content') && isset($settings['field']) && content_fields($settings['field'], $node->type) != FALSE;
           if ($field_exists) {
             $value = $node->{$settings['field']}[0][$settings['value']];
             if (!empty($value)) {
@@ -1085,7 +1083,7 @@ function course_enrolment_check($nid, $uid) {
  *   Enrollment ID, or node ID.
  * @param int $uid
  *   User ID.
- * 
+ *
  * @return mixed
  *   Enrollment object or FALSE
  */
@@ -2058,7 +2056,7 @@ function course_init() {
           if (isset($handler['file'])) {
             $file_path = isset($handler['file path']) ? $handler['file path'] : drupal_get_path('module', $module);
             $include_file = $file_path . '/' . $handler['file'];
-            include_once($include_file);
+            include_once $include_file;
           }
 
           // We expect query parameters suitable for course_determine_context().
@@ -2190,7 +2188,7 @@ function course_user_type_form_submit(&$form, $form_state) {
  *   A node.
  * @param object $user
  *   A user.
- * 
+ *
  * @return array
  *   An array with values 'success', to indicate whether or not the user
  *   has permission to self-enroll in this course, and 'message', a
@@ -2533,9 +2531,8 @@ function course_date_api_tables() {
  * Implements hook_services_resources().
  */
 function course_services_resources() {
-  require_once("services/course_report_resource.inc");
-  require_once("services/course_credit_resource.inc");
-  require_once("services/course_enrollment_resource.inc");
+  require_once 'services/course_report_resource.inc';
+  require_once 'services/course_enrollment_resource.inc';
 
   $resources = array();
 
@@ -2591,7 +2588,7 @@ function course_object_autocomplete_node($types, $string) {
 
 /**
  * Implements hook_cron().
- * 
+ *
  * Revoke access to inaccessible objects.
  */
 function course_cron() {

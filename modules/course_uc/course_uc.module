@@ -1,15 +1,6 @@
 <?php
 
 /**
- * Implements hook_ctools_plugin_directory().
- */
-function course_uc_ctools_plugin_directory($owner, $plugin_type) {
-  if ($owner == 'ctools' && $plugin_type == 'content_types') {
-    return 'plugins/content_types';
-  }
-}
-
-/**
  * Implements hook_form_alter().
  *
  * Hide the add to cart button when the user satisfied the requirement.
@@ -143,7 +134,7 @@ function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
             'success' => FALSE,
             'message' => "You've already purchased this course.",
             'silent' => FALSE,
-          )
+          ),
         );
       }
       if (course_uc_restrict_qty_check_cart($user->uid, $nid)) {
@@ -152,7 +143,7 @@ function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
             'success' => FALSE,
             'message' => t("This course is already in your !cart.", array('!cart' => l('shopping cart', 'cart'))),
             'silent' => FALSE,
-          )
+          ),
         );
       }
     }
@@ -230,7 +221,7 @@ function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_stat
 function course_uc_ca_action() {
   $arg = array(
     '#entity' => 'uc_order',
-    '#title' => t('Order')
+    '#title' => t('Order'),
   );
 
   $actions['course_uc_enrol_user_in_ordered_courses'] = array(
@@ -391,7 +382,7 @@ function course_uc_course_can_enrol($node, $user) {
           array(
             'success' => FALSE,
             'message' => 'You must first purchase this course.',
-          )
+          ),
         );
       }
     }
@@ -404,4 +395,3 @@ function course_uc_course_can_enrol($node, $user) {
     ),
   );
 }
-
