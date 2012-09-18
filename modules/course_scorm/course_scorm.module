@@ -35,11 +35,11 @@ function course_scorm_course_handlers() {
 function course_scorm_exit() {
   if (arg(1) == 'datamodel') {
     global $user;
-    $nid = db_result(db_query('select nodereference from {scorm} where id = %d', $_POST['id']));
+    $nid = db_result(db_query('SELECT nodereference FROM {scorm} WHERE id = %d', $_POST['id']));
     $node = node_load($nid);
     if (course_determine_context('course_scorm', 'scorm', $node)) {
       $courseObject = new CourseObjectScorm($node->nid, $user);
-      $sql = "select * from {scorm_scoes_track} sst
+      $sql = "SELECT * FROM {scorm_scoes_track} sst
         where userid = %d and scormid = %d and scoid = %d and attempt = %d";
       $result = db_query($sql, $user->uid, $_POST['id'], $_POST['scoid'], $_POST['attempt']);
       while ($row = db_fetch_object($result)) {

@@ -154,7 +154,7 @@ function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
  * Check if a user purchased a node previously.
  */
 function course_uc_restrict_qty_check_purchased($uid, $nid) {
-  $sql = "select 1 from {uc_orders} uco
+  $sql = "SELECT 1 FROM {uc_orders} uco
   left join {uc_order_products} ucop on uco.order_id = ucop.order_id
   where uid = %d and nid = %d";
   $purchased = db_result(db_query($sql, $uid, $nid));

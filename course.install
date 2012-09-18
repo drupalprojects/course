@@ -468,7 +468,7 @@ function course_update_6122() {
   $ret = array();
 
   // Migrate any passing grade to serialized storage.
-  $sql = "select * from {course_outline}";
+  $sql = "SELECT * FROM {course_outline}";
   $result = db_query($sql);
   while ($row = db_fetch_object($result)) {
     $row->data = unserialize($row->data);
@@ -543,7 +543,7 @@ function course_update_6125() {
 function course_update_6126() {
   $ret = array();
 
-  $sql = "select * from {course_outline_fulfillment} order by sfid asc";
+  $sql = "SELECT * FROM {course_outline_fulfillment} order by sfid asc";
   $result = db_query($sql);
   $sfids = array();
   $delete = array();
@@ -557,7 +557,7 @@ function course_update_6126() {
 
   if ($delete) {
     $placeholders = db_placeholders($delete);
-    $sql = "delete from {course_outline_fulfillment} where sfid in ($placeholders)";
+    $sql = "DELETE FROM {course_outline_fulfillment} WHERE sfid in ($placeholders)";
     $ret[] = array(
       'success' => db_query($sql, $delete),
       'query' => $sql,
@@ -746,13 +746,13 @@ function course_update_6134() {
 
   drupal_install_modules(array('uuid'));
 
-  $sql = "select * from {course_outline}";
+  $sql = "SELECT * FROM {course_outline}";
   $result = db_query($sql);
   while ($row = db_fetch_object($result)) {
     db_query("update {course_outline} set uuid = '%s' where snid = %d", uuid_uuid(), $row->snid);
   }
 
-  $sql = "select * from {course_outline_fulfillment}";
+  $sql = "SELECT * FROM {course_outline_fulfillment}";
   $result = db_query($sql);
   while ($row = db_fetch_object($result)) {
     db_query("update {course_outline_fulfillment} set uuid = '%s' where sfid = %d", uuid_uuid(), $row->sfid);

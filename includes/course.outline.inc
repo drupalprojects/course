@@ -592,7 +592,7 @@ function course_outline_show_complete_links($course_node) {
  * Delete a fulfillment.
  */
 function course_outline_delete_fulfillment($mixed) {
-  $sql = "delete from {course_outline_fulfillment} where coid = %d and uid = %d";
+  $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid = %d and uid = %d";
   db_query($sql, $mixed->coid, $mixed->uid);
   return db_affected_rows() > 0;
 }

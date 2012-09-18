@@ -755,7 +755,7 @@ function course_settings_access($node) {
  * @param object $user The user to check.
  */
 function course_can_take_course($node, $user) {
-  $sql = "select * from {course_enrolment} where nid = %d and uid = %d";
+  $sql = "SELECT * FROM {course_enrolment} WHERE nid = %d and uid = %d";
   if ($row = db_fetch_object(db_query($sql, $node->nid, $user->uid))) {
     if ($row->enrol_end > 0 && time() > $row->enrol_end) {
       return array(array(
@@ -835,7 +835,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           }
         }
 
-        $existing = db_result(db_query('select 1 from {course_node} where nid = %d', $node->nid));
+        $existing = db_result(db_query('SELECT 1 FROM {course_node} WHERE nid = %d', $node->nid));
         $update = $existing ? array('nid') : array();
         drupal_write_record('course_node', $record, $update);
 
@@ -849,7 +849,7 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         }
         break;
       case 'load':
-        if ($course = db_fetch_array(db_query('select * from {course_node} where nid = %d', $node->nid))) {
+        if ($course = db_fetch_array(db_query('SELECT * FROM {course_node} WHERE nid = %d', $node->nid))) {
           // Attach additional module provided info to $node->course.
           $hooks = module_invoke_all('course_nodeapi_extra', $node, 'load');
           $load = array_merge($course, $hooks);
@@ -875,8 +875,8 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       case 'delete':
         // Clean up course specific settings and enrollments when a course is
         // deleted.
-        db_query("DELETE FROM {course_node} where nid = %d", $node->nid);
-        db_query("DELETE FROM {course_enrolment} where nid = %d", $node->nid);
+        db_query("DELETE FROM {course_node} WHERE nid = %d", $node->nid);
+        db_query("DELETE FROM {course_enrolment} WHERE nid = %d", $node->nid);
         break;
     }
   }
@@ -1048,9 +1048,9 @@ function course_unenrol(&$node, &$user) {
   if (course_node_is_course($node)) {
     $course = course_get_course($node, $user);
     $course->unenroll();
-    $sql = "delete from {course_report} where nid = %d and uid = %d";
+    $sql = "DELETE FROM {course_report} WHERE nid = %d AND uid = %d";
     db_query($sql, $node->nid, $user->uid);
-    $sql = "DELETE FROM {course_enrolment} where nid = %d and uid = %d";
+    $sql = "DELETE FROM {course_enrolment} WHERE nid = %d AND uid = %d";
     db_query($sql, $node->nid, $user->uid);
     // @todo change to delete w/left join
     $sql = "DELETE FROM {course_outline_fulfillment} WHERE uid = %d AND coid IN (SELECT coid FROM {course_outline} WHERE nid = %d)";
@@ -1427,7 +1427,7 @@ function course_take_course($node) {
  */
 function course_enrolment_save($enrolment) {
   if ($enrolment->nid && $enrolment->uid) {
-    if (db_result(db_query('select 1 from {course_enrolment} where nid = %d and uid = %d', $enrolment->nid, $enrolment->uid))) {
+    if (db_result(db_query('SELECT 1 FROM {course_enrolment} WHERE nid = %d and uid = %d', $enrolment->nid, $enrolment->uid))) {
       drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
     }
     else {
@@ -1499,7 +1499,7 @@ function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) 
     return _course_get_course_object_by_uniqid($coid, $account, $course);
   }
 
-  $sql = 'select * from {course_outline} where coid = %d';
+  $sql = 'SELECT * FROM {course_outline} WHERE coid = %d';
   $result = db_query($sql, $coid);
   if ($row = db_fetch_object($result)) {
     $ret = $available[$row->module][$row->object_type];
@@ -1529,7 +1529,7 @@ function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) 
  * @param string $object_type
  *   The object type belonging to the module.
  * @param string $instance
- *   The course object instance ID, from {course_outline}.instance.
+ *   The course object instance ID, FROM {course_outline}.instance.
  * @param stdClass $account
  *   The user object. This will instantiate a fulfillment record on the returned
  *   CourseObject.
@@ -1581,7 +1581,7 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
     }
 
     // Search for context.
-    $sql = "select * from {course_outline}
+    $sql = "SELECT * FROM {course_outline}
       where module = '%s'
       and object_type = '%s'
       and instance = '%s'";
@@ -1779,7 +1779,7 @@ function course_token_values($type, $object = NULL, $options = array()) {
   $values = array();
 
   if ($type == 'node') {
-    $sql = 'select * from {course_node} where nid = %d';
+    $sql = 'SELECT * FROM {course_node} WHERE nid = %d';
     if ($course = db_fetch_object(db_query($sql, $object->nid))) {
       foreach ($course as $key => $value) {
         $values["course-$key"] = $value;
@@ -2279,7 +2279,7 @@ function course_report_save($entry) {
   // Load user so we can serialize it.
   $account = user_load($entry->uid);
 
-  $sql = "select * from {course_report} where nid = %d and uid = %d";
+  $sql = "SELECT * FROM {course_report} WHERE nid = %d AND uid = %d";
   $result = db_query($sql, $entry->nid, $entry->uid);
   $old = db_fetch_object($result);
 
@@ -2361,15 +2361,15 @@ function course_views_bulk_operations_object_info() {
  */
 function course_report_load($mixed, $user = NULL) {
   if (is_object($mixed)) {
-    return db_fetch_object(db_query('select cr.* from {course_report} cr
+    return db_fetch_object(db_query('SELECT cr.* FROM {course_report} cr
     where nid = %d and uid = %d', $mixed->nid, $user->uid));
   }
   elseif (is_numeric($user)) {
-    return db_fetch_object(db_query('select cr.* from {course_report} cr
+    return db_fetch_object(db_query('SELECT cr.* FROM {course_report} cr
     where nid = %d and uid = %d', $mixed, $user));
   }
   else {
-    return db_fetch_object(db_query('select cr.* from {course_report} cr
+    return db_fetch_object(db_query('SELECT cr.* FROM {course_report} cr
     where crid = %d', $mixed));
   }
 }
@@ -2405,9 +2405,9 @@ function course_outline_delete_object($mixed) {
   if (is_object($mixed)) {
     $mixed = (array) $mixed;
   }
-  $sql = "delete from {course_outline} where coid = %d";
+  $sql = "DELETE FROM {course_outline} WHERE coid = %d";
   db_query($sql, $mixed['coid']);
-  $sql = "delete from {course_outline_fulfillment} where coid = %d";
+  $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid = %d";
   db_query($sql, $mixed['coid']);
 }
 
@@ -2464,7 +2464,7 @@ function course_determine_context($module = NULL, $object_type = NULL, $instance
 
   if (!$context || $flush || $no_set) {
     // Determine the course node based on passed query parameters.
-    $sql = "select nid from {course_outline}
+    $sql = "SELECT nid FROM {course_outline}
       where instance = '%s'
       and module = '%s'
       and object_type = '%s'";
