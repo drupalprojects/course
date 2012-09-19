@@ -25,7 +25,7 @@ function course_certificate_update_6101() {
     $idfield = db_column_exists('course_outline', 'snid') ? 'snid' : 'coid';
     // Find courses that had certificate checked, but no course object.
     $sql = "SELECT * FROM {course_node} cn
-      inner join {course_outline} co on (cn.nid = co.nid and co.module = 'course_certificate')
+      INNER JOIN {course_outline} co ON (cn.nid = co.nid AND co.module = 'course_certificate')
       where cn.certificate and co.%s is null";
     $result = db_query($sql, $idfield);
     while ($row = db_fetch_object($result)) {

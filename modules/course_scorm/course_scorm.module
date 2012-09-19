@@ -40,7 +40,7 @@ function course_scorm_exit() {
     if (course_determine_context('course_scorm', 'scorm', $node)) {
       $courseObject = new CourseObjectScorm($node->nid, $user);
       $sql = "SELECT * FROM {scorm_scoes_track} sst
-        where userid = %d and scormid = %d and scoid = %d and attempt = %d";
+        where userid = %d AND scormid = %d AND scoid = %d AND attempt = %d";
       $result = db_query($sql, $user->uid, $_POST['id'], $_POST['scoid'], $_POST['attempt']);
       while ($row = db_fetch_object($result)) {
         $completion_property = ($row->element == 'cmi.core.lesson_status' || $row->element == 'cmi.completion_status');

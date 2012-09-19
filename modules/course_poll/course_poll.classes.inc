@@ -60,7 +60,7 @@ class CourseObjectPoll extends CourseObjectNode {
    * Remove poll votes for this user.
    */
   function unEnroll() {
-    db_query('DELETE FROM {poll_votes} WHERE nid = %d and uid = %d', $this->node->nid, $this->getCourse()->getUser()->uid);
+    db_query('DELETE FROM {poll_votes} WHERE nid = %d AND uid = %d', $this->node->nid, $this->getCourse()->getUser()->uid);
     db_query("UPDATE {poll_choices} SET chvotes = chvotes - 1 WHERE nid = %d AND chorder = %d", $this->node->nid, $this->node->vote);
   }
 

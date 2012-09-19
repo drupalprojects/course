@@ -155,8 +155,8 @@ function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
  */
 function course_uc_restrict_qty_check_purchased($uid, $nid) {
   $sql = "SELECT 1 FROM {uc_orders} uco
-  left join {uc_order_products} ucop on uco.order_id = ucop.order_id
-  where uid = %d and nid = %d";
+  LEFT JOIN {uc_order_products} ucop ON (uco.order_id = ucop.order_id)
+  where uid = %d AND nid = %d";
   $purchased = db_result(db_query($sql, $uid, $nid));
   return $purchased;
 }
@@ -184,7 +184,7 @@ function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
       $node = node_load($cart_item->nid);
       if (course_node_is_course($node) && $cart_item->qty > 1) {
         $cart_items[$key]->qty = 1;
-        $sql = "update {uc_cart_products} set qty = 1 where cart_id = %d and nid = %d";
+        $sql = "update {uc_cart_products} set qty = 1 where cart_id = %d AND nid = %d";
         db_query($sql, $user->uid, $node->nid);
         if (!$message) {
           drupal_set_message('Sorry, you may not purchase multiple identical courses.', 'error');

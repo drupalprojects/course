@@ -46,7 +46,7 @@ function course_signup_menu() {
  *   Notify the user of this signup. This is passed to signup_sign_up_user().
  */
 function course_signup_quick_register($node, $account, $notify = TRUE) {
-  if (!$signup = db_fetch_object(db_query('SELECT * FROM {signup_log} WHERE nid = %d and uid = %d', $node->nid, $account->uid))) {
+  if (!$signup = db_fetch_object(db_query('SELECT * FROM {signup_log} WHERE nid = %d AND uid = %d', $node->nid, $account->uid))) {
     // Save a new signup.
     if ($node->signup_status && $notify) {
       // Signup is open so we can use signup's function.
@@ -201,7 +201,7 @@ function course_signup_course_enrol($node, $user, $from, $code, $status) {
   if ($uc_signup) {
     $sql = "SELECT ucsl.sid FROM {uc_signup_log} ucsl
       LEFT JOIN {signup_log} sl USING (sid)
-      WHERE sl.nid = %d and sl.uid = %d";
+      WHERE sl.nid = %d AND sl.uid = %d";
     $uc_sid = db_result(db_query($sql, $node->nid, $user->uid));
   }
   if ($from != 'course_signup' && !$uc_sid) {
@@ -224,7 +224,7 @@ function course_signup_course_can_enrol($node, $user) {
 
   if ($node->signup) {
     // This node is signup-enabled.
-    if (!db_result(db_query('SELECT 1 FROM {signup_log} WHERE nid = %d and uid = %d', $node->nid, $user->uid))) {
+    if (!db_result(db_query('SELECT 1 FROM {signup_log} WHERE nid = %d AND uid = %d', $node->nid, $user->uid))) {
       if ($signups[$node->nid]) {
         // Block enrollments until the user is signed up.
         $hooks[] = array(
@@ -286,7 +286,7 @@ function course_signup_migrate_enrollments() {
   if (db_table_exists('course_enrolment') && db_table_exists('signup_log')) {
     // Ensure a signup exists for each full course enrollment.
     $sql = "SELECT ce.* FROM {course_enrolment} ce
-    left join {signup_log} sl on (ce.nid = sl.nid and ce.uid = sl.uid)
+    LEFT JOIN {signup_log} sl ON (ce.nid = sl.nid AND ce.uid = sl.uid)
     where sid is null and ce.status";
     $result = db_query($sql);
     while ($row = db_fetch_object($result)) {

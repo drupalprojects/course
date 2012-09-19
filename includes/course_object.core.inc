@@ -294,7 +294,7 @@ abstract class CourseObject extends CourseHandler {
       );
 
       // Check for multiple instances.
-      $sql = "SELECT count(coid) FROM {course_outline} WHERE module = '%s' and object_type = '%s' and instance = '%s'";
+      $sql = "SELECT count(coid) FROM {course_outline} WHERE module = '%s' AND object_type = '%s' AND instance = '%s'";
       if (db_result(db_query($sql, $config['module'], $config['object_type'], $config['instance'])) > 1) {
         $form['delete_instance']['#description'] = t('<span class="error"><strong>WARNING</strong></span>: multiple course objects link to this instance. Deleting the instance might break the other course objects that use it.');
       }
@@ -988,7 +988,7 @@ class CourseObjectFulfillment extends CourseHandler {
     $this->serializedField = 'info';
 
     $this->courseObject = $courseObject;
-    $sql = "SELECT * FROM {course_outline_fulfillment} WHERE coid = %d and uid = %d";
+    $sql = "SELECT * FROM {course_outline_fulfillment} WHERE coid = %d AND uid = %d";
     $fulfillment = db_fetch_array(db_query($sql, $this->courseObject->getId(), $user->uid));
 
     $this->setOptions($fulfillment);

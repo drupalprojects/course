@@ -5,9 +5,9 @@
  * Core functionality for Courses.
  */
 // Course outline functions
-require_once dirname(__FILE__) . '/includes/course.outline.inc';
+require_once drupal_get_path('module', 'course') . '/includes/course.outline.inc';
 // Course exporting functions
-require_once dirname(__FILE__) . '/includes/course.exporting.inc';
+require_once drupal_get_path('module', 'course') . '/includes/course.exporting.inc';
 
 /**
  * Implements hook_menu().
@@ -755,7 +755,7 @@ function course_settings_access($node) {
  * @param object $user The user to check.
  */
 function course_can_take_course($node, $user) {
-  $sql = "SELECT * FROM {course_enrolment} WHERE nid = %d and uid = %d";
+  $sql = "SELECT * FROM {course_enrolment} WHERE nid = %d AND uid = %d";
   if ($row = db_fetch_object(db_query($sql, $node->nid, $user->uid))) {
     if ($row->enrol_end > 0 && time() > $row->enrol_end) {
       return array(array(
@@ -1048,13 +1048,16 @@ function course_unenrol(&$node, &$user) {
   if (course_node_is_course($node)) {
     $course = course_get_course($node, $user);
     $course->unenroll();
+
     $sql = "DELETE FROM {course_report} WHERE nid = %d AND uid = %d";
     db_query($sql, $node->nid, $user->uid);
+
     $sql = "DELETE FROM {course_enrolment} WHERE nid = %d AND uid = %d";
     db_query($sql, $node->nid, $user->uid);
-    // @todo change to delete w/left join
+
     $sql = "DELETE FROM {course_outline_fulfillment} WHERE uid = %d AND coid IN (SELECT coid FROM {course_outline} WHERE nid = %d)";
     db_query($sql, $user->uid, $node->nid);
+
     // Notify other modules after course unenrollment.
     module_invoke_all('course_unenrol', $node, $user);
     $watchdog_variables = array('!uid' => $user->uid, '!nid' => $node->nid);
@@ -1427,7 +1430,7 @@ function course_take_course($node) {
  */
 function course_enrolment_save($enrolment) {
   if ($enrolment->nid && $enrolment->uid) {
-    if (db_result(db_query('SELECT 1 FROM {course_enrolment} WHERE nid = %d and uid = %d', $enrolment->nid, $enrolment->uid))) {
+    if (db_result(db_query('SELECT 1 FROM {course_enrolment} WHERE nid = %d AND uid = %d', $enrolment->nid, $enrolment->uid))) {
       drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
     }
     else {
@@ -1583,8 +1586,8 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
     // Search for context.
     $sql = "SELECT * FROM {course_outline}
       where module = '%s'
-      and object_type = '%s'
-      and instance = '%s'";
+      AND object_type = '%s'
+      AND instance = '%s'";
     $result = db_query($sql, $module, $object_type, $instance);
     while ($row = db_fetch_object($result)) {
       $outline_entries[$row->nid] = $row;
@@ -2365,11 +2368,11 @@ function course_views_bulk_operations_object_info() {
 function course_report_load($mixed, $user = NULL) {
   if (is_object($mixed)) {
     return db_fetch_object(db_query('SELECT cr.* FROM {course_report} cr
-    where nid = %d and uid = %d', $mixed->nid, $user->uid));
+    where nid = %d AND uid = %d', $mixed->nid, $user->uid));
   }
   elseif (is_numeric($user)) {
     return db_fetch_object(db_query('SELECT cr.* FROM {course_report} cr
-    where nid = %d and uid = %d', $mixed, $user));
+    where nid = %d AND uid = %d', $mixed, $user));
   }
   else {
     return db_fetch_object(db_query('SELECT cr.* FROM {course_report} cr
@@ -2469,8 +2472,8 @@ function course_determine_context($module = NULL, $object_type = NULL, $instance
     // Determine the course node based on passed query parameters.
     $sql = "SELECT nid FROM {course_outline}
       where instance = '%s'
-      and module = '%s'
-      and object_type = '%s'";
+      AND module = '%s'
+      AND object_type = '%s'";
 
     $result = db_query($sql, $instance, $module, $object_type);
     $nids = array();

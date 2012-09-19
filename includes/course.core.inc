@@ -278,7 +278,7 @@ class CourseReport extends CourseHandler {
 
     $this->course = $course;
 
-    $sql = "SELECT * FROM {course_report} WHERE nid = %d and uid = %d";
+    $sql = "SELECT * FROM {course_report} WHERE nid = %d AND uid = %d";
     $result = db_query($sql, $this->course->getNode()->nid, $this->course->getUser()->uid);
     if ($config = db_fetch_array($result)) {
       parent::__construct($config);
