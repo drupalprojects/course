@@ -587,9 +587,7 @@ function course_block($op = 'list', $delta = 0) {
       );
       return $info;
     case 'configure':
-
     case 'view':
-
     case 'save':
       module_load_include('inc', 'course', 'includes/course.block');
       $function = "_course_block_{$delta}_{$op}";
