@@ -1053,8 +1053,20 @@ function course_unenrol(&$node, &$user) {
     $sql = "DELETE FROM {course_enrolment} WHERE nid = %d AND uid = %d";
     db_query($sql, $node->nid, $user->uid);
 
-    $sql = "DELETE FROM {course_outline_fulfillment} WHERE uid = %d AND coid IN (SELECT coid FROM {course_outline} WHERE nid = %d)";
-    db_query($sql, $user->uid, $node->nid);
+    // Find all course objects in this course and delete the fulfillment.
+    $sql = "SELECT coid FROM {course_outline} WHERE nid = %d";
+    $values = array();
+    $result = db_query($sql, $node->nid);
+    while ($row = db_fetch_object($result)) {
+      $values[] = $row->coid;
+    }
+
+    if (count($values)) {
+      $values[] = $user->uid;
+      $placeholders = db_placeholders($values);
+      $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid IN ($placeholders) AND uid = %d";
+      db_query($sql, $values);
+    }
 
     // Notify other modules after course unenrollment.
     module_invoke_all('course_unenrol', $node, $user);
