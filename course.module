@@ -2378,15 +2378,15 @@ function course_views_bulk_operations_object_info() {
 function course_report_load($mixed, $user = NULL) {
   if (is_object($mixed)) {
     return db_fetch_object(db_query('SELECT cr.* FROM {course_report} cr
-    where nid = %d AND uid = %d', $mixed->nid, $user->uid));
+    WHERE nid = %d AND uid = %d', $mixed->nid, $user->uid));
   }
   elseif (is_numeric($user)) {
     return db_fetch_object(db_query('SELECT cr.* FROM {course_report} cr
-    where nid = %d AND uid = %d', $mixed, $user));
+    WHERE nid = %d AND uid = %d', $mixed, $user));
   }
   else {
     return db_fetch_object(db_query('SELECT cr.* FROM {course_report} cr
-    where crid = %d', $mixed));
+    WHERE crid = %d', $mixed));
   }
 }
 

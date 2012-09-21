@@ -323,7 +323,7 @@ function hook_course_report_alter(&$entry, $account, $old) {
 function hook_course_report_saved($entry, $account, $old) {
   // Example: Do something completely unnecesary.
   if ($entry->crid == 1000000) {
-    drupal_set_message(t('Congratulations %name, you have just saved the one millionth course report!', array('%name' => theme_username($account))));
+    drupal_set_message(t('Congratulations %name, you have just saved the one millionth course report!', array('%name' => theme('username', $account))));
   }
 }
 

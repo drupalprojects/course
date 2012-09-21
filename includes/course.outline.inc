@@ -311,7 +311,7 @@ function theme_course_outline_overview_form($form) {
     // Mark everything else as printed.
     drupal_render($objects[$key]);
   }
-  $table = theme_table(array(), $rows, array('id' => 'course-objects'));
+  $table = theme('table', array(), $rows, array('id' => 'course-objects'));
   $table .= drupal_render($form);
   return $table;
 }
