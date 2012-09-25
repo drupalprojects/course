@@ -3,7 +3,7 @@
 require_once drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
 
 /**
- * Tests for conditional event-based access to course objects.
+ * Tests for quiz Course objects.
  */
 class CourseObjectQuizTestCase extends CourseTestCase {
 
