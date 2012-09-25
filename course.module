@@ -782,20 +782,24 @@ function course_can_take_course($node, $user) {
  * Renders the "take course" button on view.
  */
 function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
-  if (course_node_is_course($node)) {
-    switch ($op) {
-      case 'view':
+  switch ($op) {
+    case 'view':
+      if (course_node_is_course($node)) {
         // Render take course button.
         $show = variable_get('course_take_course_button_show', array());
         if (($teaser && !empty($show['teaser'])) || ($page && !empty($show['page']))) {
           $node->content['course']['#value'] = course_render_button($node);
         }
-        break;
-      case 'insert':
+      }
+      break;
+    case 'insert':
+      if (course_node_is_course($node)) {
         if (!isset($node->course)) {
           $node->course = array();
         }
-      case 'update':
+      }
+    case 'update':
+      if (course_node_is_course($node)) {
         $record = $node->course;
         $record['nid'] = $node->nid;
 
@@ -845,8 +849,10 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           $course = course_get_course($node);
           course_save_objects($node->course['objects'], $course);
         }
-        break;
-      case 'load':
+      }
+      break;
+    case 'load':
+      if (course_node_is_course($node)) {
         if ($course = db_fetch_array(db_query('SELECT * FROM {course_node} WHERE nid = %d', $node->nid))) {
           // Attach additional module provided info to $node->course.
           $hooks = module_invoke_all('course_nodeapi_extra', $node, 'load');
@@ -868,15 +874,16 @@ function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
           }
         }
         $node->course['objects'] = $objects;
-
-        break;
-      case 'delete':
+      }
+      break;
+    case 'delete':
+      if (course_node_is_course($node)) {
         // Clean up course specific settings and enrollments when a course is
         // deleted.
         db_query("DELETE FROM {course_node} WHERE nid = %d", $node->nid);
         db_query("DELETE FROM {course_enrolment} WHERE nid = %d", $node->nid);
-        break;
-    }
+      }
+      break;
   }
 }
 
@@ -1512,8 +1519,7 @@ function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) 
     return _course_get_course_object_by_uniqid($coid, $account, $course);
   }
 
-  $sql = 'SELECT * FROM {course_outline} WHERE coid = %d';
-  $result = db_query($sql, $coid);
+  $result = db_query('SELECT * FROM {course_outline} WHERE coid = %d', $coid);
   if ($row = db_fetch_object($result)) {
     $ret = $available[$row->module][$row->object_type];
     if (!class_exists($ret['class'])) {
