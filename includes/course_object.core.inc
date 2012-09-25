@@ -462,8 +462,7 @@ abstract class CourseObject extends CourseHandler {
     $editUrl = $this->getEditUrl();
     if (!empty($editUrl)) {
       $text = t('Edit instance');
-      $path = ltrim($editUrl, '/');
-      $summary['instance'] = l($text, $path, array('query' => drupal_get_destination()));
+      $summary['instance'] = l($text, $editUrl, array('external' => TRUE, 'query' => drupal_get_destination()));
     }
     elseif ($this->isTemporary()) {
       $summary['instance'] = '<span class="warning">' . t('Save course to edit object') . '</span>';
