@@ -143,4 +143,12 @@ class CourseObjectQuiz extends CourseObjectNode {
     return $this->node->nid;
   }
 
+  function getOptionsSummary() {
+    $summary = parent::getOptionsSummary();
+    if ($this->getInstanceId()) {
+      $summary['questions'] = l('Edit questions', "node/{$this->getInstanceId()}/questions");
+    }
+    return $summary;
+  }
+
 }
