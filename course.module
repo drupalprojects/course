@@ -2486,12 +2486,7 @@ function course_determine_context($module = NULL, $object_type = NULL, $instance
 
   if (!$context || $flush || $no_set) {
     // Determine the course node based on passed query parameters.
-    $sql = "SELECT nid FROM {course_outline}
-      where instance = '%s'
-      AND module = '%s'
-      AND object_type = '%s'";
-
-    $result = db_query($sql, $instance, $module, $object_type);
+    $result = db_query("SELECT nid FROM {course_outline} WHERE instance = '%s' AND module = '%s' AND object_type = '%s'", $instance, $module, $object_type);
     $nids = array();
     while ($course_outline = db_fetch_object($result)) {
       $nids[] = $course_outline->nid;
