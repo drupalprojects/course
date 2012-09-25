@@ -1,0 +1,7 @@
+name = Course quiz
+description = Exposes Drupal Quiz as a course object.
+package = Course objects
+core = 6.x
+dependencies[] = course
+dependencies[] = quiz
+files[] = course_quiz.classes.inc

@@ -1,0 +1,7 @@
+name = Course SCORM
+description = Exposes cck_scorm fields as Course objects.
+package = Course objects
+core = 6.x
+dependencies[] = course_content
+dependencies[] = SCORM
+files[] = course_scorm.classes.inc

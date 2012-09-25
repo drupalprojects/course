@@ -1,0 +1,6 @@
+name = Course object manual
+description = Allows a course admin to add an arbitrary step which must be completed by an administrator before a learner proceeds past it.
+package = Course objects
+core = 6.x
+dependencies[] = course
+files[] = course_object_manual.classes.inc
