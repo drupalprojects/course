@@ -1,7 +1,0 @@
-name = Course certificate
-description = Awards a certificate when a course is completed.
-core = 7.x
-dependencies[] = "certificate"
-dependencies[] = "course"
-
-files[] = course_certificate.module

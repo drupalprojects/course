@@ -1,5 +1,0 @@
-core = 7.x
-name = Expose poll as a Course object
-dependencies[] = poll
-
-files[] = course_poll.module
