@@ -459,7 +459,7 @@ function course_object_options($node, $js, $courseObject) {
 
     $form_state['args'][] = $courseObject;
 
-    $output = ctools_modal_form_wrapper('course_object_options_form', $form_state, $courseObject);
+    $output = ctools_modal_form_wrapper('course_object_options_form', $form_state);
     if (empty($output)) {
       $output[] = ctools_modal_command_loading();
       $output[] = ctools_modal_command_dismiss();
