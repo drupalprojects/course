@@ -1097,11 +1097,15 @@ abstract class CourseObjectNode extends CourseObject {
   }
 
   public function getTakeUrl() {
-    return url("node/{$this->node->nid}");
+    if ($this->getInstanceId()) {
+      return url("node/{$this->node->nid}");
+    }
   }
 
   public function getEditUrl() {
-    return url("node/{$this->node->nid}/edit");
+    if ($this->getInstanceId()) {
+      return url("node/{$this->node->nid}/edit");
+    }
   }
 
   public function create() {

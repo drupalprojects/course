@@ -83,7 +83,7 @@ class CourseObjectQuiz extends CourseObjectNode {
   public function getWarnings() {
     $warnings = parent::getWarnings();
 
-    if (isset($this->node->nid)) {
+    if ($this->getInstanceId()) {
       if (!quiz_get_number_of_questions($this->node->vid)) {
         $warnings[] = t('This Quiz does not have any questions. Please !link.', array('!link' => l('add questions', "node/{$this->getInstanceId()}/questions")));
       }
