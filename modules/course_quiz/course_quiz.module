@@ -40,8 +40,7 @@ function course_quiz_course_handlers() {
  * Update the fulfillment record.
  */
 function course_quiz_quiz_finished($quiz, $score, $rid) {
-  $sql = "SELECT uid FROM {quiz_node_results} WHERE result_id = %d";
-  $uid = db_result(db_query($sql, $rid));
+  $uid = db_result(db_query('SELECT uid FROM {quiz_node_results} WHERE result_id = %d', $rid));
 
   $account = user_load($uid);
 
