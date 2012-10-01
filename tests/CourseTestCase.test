@@ -17,7 +17,7 @@ class CourseTestCase extends DrupalWebTestCase {
     course_get_handlers(NULL, TRUE);
 
     // Flush autoload. Fixes some issues with late declaration of classes.
-    autoload_flush_caches();
+    //autoload_flush_caches();
   }
 
   /**
@@ -28,13 +28,13 @@ class CourseTestCase extends DrupalWebTestCase {
   function createCourseNode(array $extra = array()) {
     $node = $this->drupalCreateNode(array(
       'type' => 'course_test',
-      ) + $extra);
+    ) + $extra);
 
     return $node;
   }
 
   function getModules() {
-    return array('autoload', 'ahah_helper', 'ctools', 'uuid', 'course', 'course_test');
+    return array('ctools', 'uuid', 'course', 'course_test');
   }
 
   /**

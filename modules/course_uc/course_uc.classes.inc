@@ -18,7 +18,7 @@ class CourseObjectUbercart extends CourseObjectNode {
       return "You've already purchased this activity.";
     }
     else {
-      $atc = drupal_get_form('uc_product_add_to_cart_form', $this->node);
+      $atc = drupal_render(drupal_get_form('uc_product_add_to_cart_form', $this->node));
       if (!$atc) {
         // The add to cart form was hidden?
         return "Something isn't right...";

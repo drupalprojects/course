@@ -1,11 +1,34 @@
 name = Course
-core = 6.x
+core = 7.x
 description = Create Drupal e-learning courses.
-dependencies[] = ahah_helper
-dependencies[] = autoload
+
+
 dependencies[] = ctools
 dependencies[] = uuid
 php = 5
-files[] = includes/course_object.core.inc
-files[] = includes/course.core.inc
+
+
 package = Course
+
+files[] = includes/course.core.inc
+files[] = includes/course_object.core.inc
+files[] = access/conditional.inc
+files[] = access/grade.inc
+files[] = access/timing.inc
+files[] = tests/CourseAccessTestCase.test
+files[] = tests/CourseContextTestCase.test
+files[] = tests/CourseEnrollmentTestCase.test
+files[] = tests/CourseGradeTestCase.test
+files[] = tests/CourseObjectAccessConditionalTestCase.test
+files[] = tests/CourseObjectAccessTestCase.test
+files[] = tests/CourseObjectAccessTimeTestCase.test
+files[] = tests/CourseObjectNodeTestCase.test
+files[] = tests/CourseObjectTestCase.test
+files[] = tests/CourseOutlineUiTestCase.test
+files[] = tests/CourseTestCase.test
+files[] = handlers/course_views_handler_relationship_ce_cr.inc
+files[] = handlers/course_views_handler_relationship_ce_sl.inc
+files[] = handlers/views_handler_filter_course.inc
+files[] = handlers/views_handler_filter_course_type.inc
+files[] = handlers/views_join_course.inc
+files[] = plugins/views_plugin_argument_validate_course.inc

@@ -25,7 +25,7 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
   }
 
   function take() {
-    $time = time();
+    $time = REQUEST_TIME;
 
     if ($this->getOption('duration')) {
       if ($this->getCourseObject()->getFulfillment()->getOption('date_started')) {
@@ -122,7 +122,7 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
   }
 
   function isReleased() {
-    if (time() <= strtotime($this->getOption('release'))) {
+    if (REQUEST_TIME <= strtotime($this->getOption('release'))) {
       $this->getCourseObject()->setAccessMessage('not-open', t('This activity will be available on @release.', array('@release' => $this->getOption('release'))));
       return FALSE;
     }
@@ -132,7 +132,7 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
   }
 
   function isExpired() {
-    if ($this->getOption('expiration') && time() > strtotime($this->getOption('expiration'))) {
+    if ($this->getOption('expiration') && REQUEST_TIME > strtotime($this->getOption('expiration'))) {
       $this->getCourseObject()->setAccessMessage('closed', t('This activity closed on @expiration.', array('@expiration' => $this->getOption('expiration'))));
       return TRUE;
     }

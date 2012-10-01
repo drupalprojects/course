@@ -1,6 +1,6 @@
 <?php
 
-require_once drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
+require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
 
 /**
  * Tests for conditional event-based access to course objects.
@@ -50,14 +50,14 @@ class CourseAccessTestCase extends CourseTestCase {
     $this->assertTrue($result['success'], 'User can enroll in course past start date.');
 
     // Test a course that is not yet open.
-    $courseNode->course['open'] = time() + 30;
+    $courseNode->course['open'] = REQUEST_TIME + 30;
     node_save($courseNode);
     $result = course_enrol_access($courseNode, $user, TRUE);
     $this->assertFalse($result['success'], 'User cannot enroll in not yet open course.');
 
     // Test an opened course that is closed.
-    $courseNode->course['open'] = time() - 60;
-    $courseNode->course['close'] = time() - 30;
+    $courseNode->course['open'] = REQUEST_TIME - 60;
+    $courseNode->course['close'] = REQUEST_TIME - 30;
     node_save($courseNode);
     $result = course_enrol_access($courseNode, $user, TRUE);
     $this->assertFalse($result['success'], 'User cannot enroll in expired course.');

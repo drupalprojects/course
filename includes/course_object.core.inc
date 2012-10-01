@@ -295,7 +295,7 @@ abstract class CourseObject extends CourseHandler {
 
       // Check for multiple instances.
       $sql = "SELECT count(coid) FROM {course_outline} WHERE module = '%s' AND object_type = '%s' AND instance = '%s'";
-      if (db_result(db_query($sql, $config['module'], $config['object_type'], $config['instance'])) > 1) {
+      if (db_query("SELECT count(coid) FROM {course_outline} WHERE module = :module AND object_type = :object_type AND instance = :instance", array(':module' => $config['module'], ':object_type' => $config['object_type'], ':instance' => $config['instance']))->fetchField() > 1) {
         $form['delete_instance']['#description'] = t('<span class="error"><strong>WARNING</strong></span>: multiple course objects link to this instance. Deleting the instance might break the other course objects that use it.');
       }
     }
@@ -347,8 +347,6 @@ abstract class CourseObject extends CourseHandler {
       '#weight' => 999,
       '#type' => 'submit',
     );
-
-    $form['#redirect'] = 'node/' . $this->getCourseNid() . '/course-outline';
   }
 
   public function optionsValidate(&$form, &$form_state) {
@@ -388,30 +386,6 @@ abstract class CourseObject extends CourseHandler {
 
     // Update the options.
     $this->setOptions($_SESSION['course'][$nid]['editing'][$uniqid]);
-
-    // Perform ajax operations on the overview form, before overview submission.
-    if ($form_state['ajax']) {
-      $commands = array();
-
-      // Set title.
-      $title = '<div id="title-' . $uniqid . '">' . $form_state['values']['title'] . '</div>';
-      $commands[] = ctools_ajax_command_replace("#title-{$uniqid}", $title);
-
-      // Set summary.
-      $html = '<div id="summary-' . $uniqid . '">' . $this->renderOptionsSummary() . '</div>';
-      $commands[] = ctools_ajax_command_replace("#summary-{$uniqid}", $html);
-
-      // Deletion handling.
-      if ($form_state['values']['delete']) {
-        // Add `deleted` class to the row. An admin stylesheet is loaded from
-        // theme_course_outline_overview_form().
-        $commands[] = ctools_ajax_command_attr("#row-{$uniqid}", 'class', 'deleted');
-      }
-
-      $commands[] = ctools_modal_command_dismiss();
-
-      ctools_ajax_render($commands);
-    }
   }
 
   /**
@@ -462,8 +436,7 @@ abstract class CourseObject extends CourseHandler {
     $editUrl = $this->getEditUrl();
     if (!empty($editUrl)) {
       $text = t('Edit instance');
-      $path = ltrim($editUrl, '/');
-      $summary['instance'] = l($text, $path, array('query' => drupal_get_destination()));
+      $summary['instance'] = l($text, $editUrl, array('external' => TRUE, 'query' => drupal_get_destination()));
     }
     elseif ($this->isTemporary()) {
       $summary['instance'] = '<span class="warning">' . t('Save course to edit object') . '</span>';
@@ -501,7 +474,7 @@ abstract class CourseObject extends CourseHandler {
     //return theme('course_object_summary');
     $rendered_summary = '';
     if (!empty($summary)) {
-      $rendered_summary = $html = '<div class="description">' . theme('item_list', $summary) . '</div>';
+      $rendered_summary = $html = '<div class="description">' . theme('item_list', array('items' => $summary)) . '</div>';
     }
 
     return $rendered_summary;
@@ -544,7 +517,7 @@ abstract class CourseObject extends CourseHandler {
 
       // Record start date.
       if (!$this->getFulfillment()->getOption('date_started')) {
-        $this->getFulfillment()->setOption('date_started', time());
+        $this->getFulfillment()->setOption('date_started', REQUEST_TIME);
       }
     }
     else {
@@ -989,7 +962,7 @@ class CourseObjectFulfillment extends CourseHandler {
 
     $this->courseObject = $courseObject;
     $sql = "SELECT * FROM {course_outline_fulfillment} WHERE coid = %d AND uid = %d";
-    $fulfillment = db_fetch_array(db_query($sql, $this->courseObject->getId(), $user->uid));
+    $fulfillment = db_query("SELECT * FROM {course_outline_fulfillment} WHERE coid = :coid AND uid = :uid", array(':coid' => $this->courseObject->getId(), ':uid' => $user->uid))->fetch(PDO::FETCH_ASSOC);
 
     $this->setOptions($fulfillment);
 
@@ -1015,7 +988,7 @@ class CourseObjectFulfillment extends CourseHandler {
    */
   function setComplete($complete = 1) {
     if (!$this->getOption('date_completed')) {
-      $this->setOption('date_completed', time());
+      $this->setOption('date_completed', REQUEST_TIME);
     }
 
     return $this->setOption('complete', $complete);
@@ -1049,7 +1022,11 @@ class CourseObjectFulfillment extends CourseHandler {
 
   public function delete() {
     $sql = "DELETE FROM {course_outline_fulfillment} WHERE cofid = %d";
-    db_query($sql, $this->getId());
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query($sql, $this->getId()) */
+    db_delete('course_outline_fulfillment')
+  ->condition('cofid', $this->getId())
+  ->execute();
   }
 
   /**
@@ -1098,11 +1075,15 @@ abstract class CourseObjectNode extends CourseObject {
   }
 
   public function getTakeUrl() {
-    return url("node/{$this->node->nid}");
+    if ($this->getInstanceId()) {
+      return url("node/{$this->node->nid}");
+    }
   }
 
   public function getEditUrl() {
-    return url("node/{$this->node->nid}/edit");
+    if ($this->getInstanceId()) {
+      return url("node/{$this->node->nid}/edit");
+    }
   }
 
   public function create() {
@@ -1137,7 +1118,7 @@ abstract class CourseObjectNode extends CourseObject {
 
     $defaults['private'] = 0;
 
-    $options = array_intersect_key(node_get_types('names'), $this->getNodeTypes());
+    $options = array_intersect_key(node_type_get_names(), $this->getNodeTypes());
     $defaults['node_type'] = key($options);
 
     return $defaults;
@@ -1150,7 +1131,7 @@ abstract class CourseObjectNode extends CourseObject {
 
     if (!$this->getInstanceId()) {
       $types = drupal_map_assoc($this->getNodeTypes());
-      $options = array_intersect_key(node_get_types('names'), $types);
+      $options = array_intersect_key(node_type_get_names(), $types);
       if (count($options) > 1) {
         $options[''] = '- select -';
       }
@@ -1222,7 +1203,7 @@ abstract class CourseObjectNode extends CourseObject {
           '%t' => $this->getTitle(),
           '%c' => $this->getComponent(),
           '!l' => l('Access control', "admin/content/node-type/{$this->getComponent()}/access"),
-          ));
+        ));
       }
     }
     return $warnings;

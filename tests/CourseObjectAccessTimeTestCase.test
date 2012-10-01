@@ -1,6 +1,6 @@
 <?php
 
-require_once drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
+require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
 
 /**
  * Tests for course object access based on time.
@@ -20,7 +20,7 @@ class CourseObjectAccessTimeTestCase extends CourseTestCase {
    * Test course object open date.
    */
   public function testCourseObjectRestrictByRelease() {
-    $now = time();
+    $now = REQUEST_TIME;
     $courseNode = $this->createCourseNode();
     $options = array();
 
@@ -43,7 +43,7 @@ class CourseObjectAccessTimeTestCase extends CourseTestCase {
    * Test course object expiration date.
    */
   public function testCourseObjectRestrictByExpiration() {
-    $now = time();
+    $now = REQUEST_TIME;
     $courseNode = $this->createCourseNode();
     $options = array();
 
@@ -66,7 +66,7 @@ class CourseObjectAccessTimeTestCase extends CourseTestCase {
    * Check that user cannot access course object outside of duration period.
    */
   public function testCourseObjectDuration() {
-    $now = time();
+    $now = REQUEST_TIME;
     $courseNode = $this->createCourseNode();
     $options = array();
 

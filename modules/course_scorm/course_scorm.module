@@ -35,14 +35,14 @@ function course_scorm_course_handlers() {
 function course_scorm_exit() {
   if (arg(1) == 'datamodel') {
     global $user;
-    $nid = db_result(db_query('SELECT nodereference FROM {scorm} WHERE id = %d', $_POST['id']));
+    $nid = db_query('SELECT nodereference FROM {scorm} WHERE id = :id', array(':id' => $_POST['id']))->fetchField();
     $node = node_load($nid);
     if (course_determine_context('course_scorm', 'scorm', $node)) {
       $courseObject = new CourseObjectScorm($node->nid, $user);
       $sql = "SELECT * FROM {scorm_scoes_track} sst
         where userid = %d AND scormid = %d AND scoid = %d AND attempt = %d";
       $result = db_query($sql, $user->uid, $_POST['id'], $_POST['scoid'], $_POST['attempt']);
-      while ($row = db_fetch_object($result)) {
+      while ($row = $result->fetch()) {
         $completion_property = ($row->element == 'cmi.core.lesson_status' || $row->element == 'cmi.completion_status');
         $completion_value = ($row->value == 'completed' || $row->value == 'passed');
         $passed = $courseObject->isGraded() && $row->element == 'cmi.core.score.raw' && $row->value > $courseObject->getPassingGrade();

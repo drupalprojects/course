@@ -1,7 +1,10 @@
 name = Course signup
 description = Use Signup as an enrollment and attendance system for courses.
 package = Course
-core = 6.x
+core = 7.x
 dependencies[] = course
 dependencies[] = signup
+
+
 files[] = course_signup.classes.inc
+files[] = course_signup.test

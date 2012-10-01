@@ -11,7 +11,8 @@
  * Install a default content type, set some defaults.
  */
 function course_install() {
-  drupal_install_schema('course');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_install_schema('course')
 
   module_load_include('module', 'node', 'node');
 
@@ -31,7 +32,7 @@ function course_install() {
     'min_word_count' => '',
   );
 
-  $type = (object) _node_type_set_defaults($type);
+  $type = (object) node_type_set_defaults($type);
   node_type_save($type);
   node_types_rebuild();
   menu_rebuild();
@@ -43,7 +44,8 @@ function course_install() {
  * Implements hook_uninstall().
  */
 function course_uninstall() {
-  drupal_uninstall_schema('course');
+  // TODO The drupal_(un)install_schema functions are called automatically in D7.
+  // drupal_uninstall_schema('course')
 }
 
 /**
@@ -453,12 +455,16 @@ function course_schema() {
 function course_update_6121() {
   $ret = array();
   $sql = "DELETE ce.* FROM {course_enrolment} ce LEFT JOIN {users} u ON (ce.uid = u.uid) WHERE u.uid IS NULL";
-  $ret[] = update_sql($sql);
+  // TODO update_sql has been removed. Use the database API for any schema or data changes.
+  $ret[] = array() /* update_sql($sql) */;
   $ret[] = array(
     'success' => TRUE,
     'query' => db_affected_rows() . ' old enrollments deleted',
   );
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -470,11 +476,18 @@ function course_update_6122() {
   // Migrate any passing grade to serialized storage.
   $sql = "SELECT * FROM {course_outline}";
   $result = db_query($sql);
-  while ($row = db_fetch_object($result)) {
+  while ($row = $result->fetch()) {
     $row->data = unserialize($row->data);
     $row->data['passing_grade'] = $row->passing_grade;
     $row->data = serialize($row->data);
-    db_query("UPDATE {course_outline} SET data = '%s' WHERE snid = %d", $row->data, $row->snid);
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query("UPDATE {course_outline} SET data = '%s' WHERE snid = %d", $row->data, $row->snid) */
+    db_update('course_outline')
+  ->fields(array(
+      'data' => $row->data,
+    ))
+  ->condition('snid', $row->snid)
+  ->execute();
   }
 
   $deletes = array(
@@ -489,12 +502,15 @@ function course_update_6122() {
   foreach ($deletes as $delete) {
     $table = $delete[0];
     $column = $delete[1];
-    if (db_column_exists($table, $column)) {
-      db_drop_field($ret, $table, $column);
+    if (db_field_exists($table, $column)) {
+      db_drop_field($table, $column);
     }
   }
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -504,7 +520,7 @@ function course_update_6122() {
 function course_update_6124() {
   $ret = array();
 
-  db_add_field($ret, 'course_outline_fulfillment', 'date_started', array(
+  db_add_field('course_outline_fulfillment', 'date_started', array(
     'type' => 'int',
     'not null' => FALSE,
     'unsigned' => TRUE,
@@ -512,16 +528,19 @@ function course_update_6124() {
     'description' => 'Date object was started.',
   ));
 
-  db_add_field($ret, 'course_outline', 'duration', array(
+  db_add_field('course_outline', 'duration', array(
     'type' => 'int',
     'not null' => TRUE,
     'default' => 0,
     'description' => 'Amount of time in seconds a user has to access this object.',
   ));
 
-  db_drop_field($ret, 'course_node', 'type');
+  db_drop_field('course_node', 'type');
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -530,10 +549,13 @@ function course_update_6124() {
 function course_update_6125() {
   $ret = array();
 
-  db_add_index($ret, 'course_report', 'nid', array('nid'));
-  db_add_index($ret, 'course_report', 'uid', array('uid'));
+  db_add_index('course_report', 'nid', array('nid'));
+  db_add_index('course_report', 'uid', array('uid'));
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -548,7 +570,7 @@ function course_update_6126() {
   $sfids = array();
   $delete = array();
 
-  while ($row = db_fetch_object($result)) {
+  while ($row = $result->fetch()) {
     if ($sfids[$row->snid][$row->uid]) {
       $delete[] = $sfids[$row->snid][$row->uid];
     }
@@ -558,24 +580,29 @@ function course_update_6126() {
   if ($delete) {
     $placeholders = db_placeholders($delete);
     $sql = "DELETE FROM {course_outline_fulfillment} WHERE sfid in ($placeholders)";
+    // TODO Please convert this statement to the D7 database API syntax.
     $ret[] = array(
       'success' => db_query($sql, $delete),
       'query' => $sql,
     );
   }
 
-  db_add_unique_key($ret, 'course_outline_fulfillment', 'snid_uid', array('snid', 'uid'));
-  db_add_index($ret, 'course_outline_fulfillment', 'snid', array('snid'));
-  db_add_index($ret, 'course_outline', 'nid', array('nid'));
+  db_add_unique_key('course_outline_fulfillment', 'snid_uid', array('snid', 'uid'));
+  db_add_index('course_outline_fulfillment', 'snid', array('snid'));
+  db_add_index('course_outline', 'nid', array('nid'));
 
-  db_change_field($ret, 'course_outline_fulfillment', 'grade_result', 'grade_result', array('type' => 'int',
+  db_change_field('course_outline_fulfillment', 'grade_result', 'grade_result', array(
+    'type' => 'int',
     'not null' => TRUE,
     'unsigned' => FALSE,
     'default' => 0,
     'description' => 'grade_result',
   ));
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -585,23 +612,26 @@ function course_update_6127() {
   $ret = array();
 
   // Remove serialness of field.
-  db_change_field($ret, 'course_report', 'id', 'id', array(
+  db_change_field('course_report', 'id', 'id', array(
     'type' => 'int',
     'not null' => TRUE,
     'unsigned' => TRUE,
   ));
 
   // Drop primary key.
-  db_drop_primary_key($ret, 'course_report');
+  db_drop_primary_key('course_report');
 
   // Rename field, add back serialness.
-  db_change_field($ret, 'course_report', 'id', 'crid', array(
+  db_change_field('course_report', 'id', 'crid', array(
     'type' => 'serial',
     'not null' => TRUE,
     'unsigned' => TRUE,
-    ), array('primary key' => array('crid')));
+  ), array('primary key' => array('crid')));
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -610,17 +640,20 @@ function course_update_6127() {
 function course_update_6128() {
   $ret = array();
 
-  db_change_field($ret, 'course_node', 'open', 'open', array(
+  db_change_field('course_node', 'open', 'open', array(
     'type' => 'int',
     'unsigned' => TRUE,
   ));
 
-  db_change_field($ret, 'course_node', 'close', 'close', array(
+  db_change_field('course_node', 'close', 'close', array(
     'type' => 'int',
     'unsigned' => TRUE,
   ));
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -628,8 +661,11 @@ function course_update_6128() {
  */
 function course_update_6129() {
   $ret = array();
-  $ret = db_drop_field($ret, 'course_node', 'attendance');
-  return $ret;
+  $ret = db_drop_field('course_node', 'attendance');
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -639,8 +675,8 @@ function course_update_6129() {
 function course_update_6130() {
   $ret = array();
 
-  if (!db_column_exists('course_outline', 'hidden')) {
-    db_add_field($ret, 'course_outline', 'hidden', array(
+  if (!db_field_exists('course_outline', 'hidden')) {
+    db_add_field('course_outline', 'hidden', array(
       'type' => 'int',
       'size' => 'tiny',
       'not null' => TRUE,
@@ -649,8 +685,8 @@ function course_update_6130() {
     ));
   }
 
-  if (!db_column_exists('course_enrolment', 'created')) {
-    db_add_field($ret, 'course_enrolment', 'created', array(
+  if (!db_field_exists('course_enrolment', 'created')) {
+    db_add_field('course_enrolment', 'created', array(
       'type' => 'int',
       'not null' => TRUE,
       'unsigned' => TRUE,
@@ -658,14 +694,17 @@ function course_update_6130() {
     ));
   }
 
-  if (!db_column_exists('course_outline', 'data')) {
-    db_add_field($ret, 'course_outline', 'data', array(
+  if (!db_field_exists('course_outline', 'data')) {
+    db_add_field('course_outline', 'data', array(
       'type' => 'text',
       'serialize' => TRUE,
     ));
   }
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -673,8 +712,11 @@ function course_update_6130() {
  */
 function course_update_6131() {
   $ret = array();
-  db_change_field($ret, 'course_outline_fulfillment', 'info', 'info', array('type' => 'text'));
-  return $ret;
+  db_change_field('course_outline_fulfillment', 'info', 'info', array('type' => 'text'));
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -684,19 +726,22 @@ function course_update_6132() {
   $ret = array();
 
   // Delete old lms variables.
-  $types = node_get_types('names');
+  $types = node_type_get_names();
   foreach (array_keys($types) as $type) {
     variable_del("default_lms_{$type}");
   }
 
   // Migrate old lms column.
-  db_change_field($ret, 'course_node', 'lms', 'outline', array(
+  db_change_field('course_node', 'lms', 'outline', array(
     'type' => 'varchar',
     'length' => 255,
     'not null' => TRUE,
   ));
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -718,13 +763,17 @@ function course_update_6133() {
   foreach ($change as $table => $fields) {
     foreach ($fields as $field) {
       // Change schema definition.
-      db_change_field($ret, $table, $field, $field, $schema[$table]['fields'][$field]);
+      db_change_field($table, $field, $field, $schema[$table]['fields'][$field]);
       // Change values to NULL where 0 was stored.
       $sql = "UPDATE {{$table}} SET {$field} = NULL WHERE {$field} = 0";
-      $ret[] = update_sql($sql);
+      // TODO update_sql has been removed. Use the database API for any schema or data changes.
+      $ret[] = array() /* update_sql($sql) */;
     }
   }
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -741,28 +790,31 @@ function course_update_6134() {
     'description' => 'The Universally Unique Identifier.',
   );
 
-  db_add_field($ret, 'course_outline', 'uuid', $uuid_field);
-  db_add_field($ret, 'course_outline_fulfillment', 'uuid', $uuid_field);
+  db_add_field('course_outline', 'uuid', $uuid_field);
+  db_add_field('course_outline_fulfillment', 'uuid', $uuid_field);
 
   drupal_install_modules(array('uuid'));
 
   $sql = "SELECT * FROM {course_outline}";
   $result = db_query($sql);
-  while ($row = db_fetch_object($result)) {
+  while ($row = $result->fetch()) {
     db_query("update {course_outline} set uuid = '%s' where snid = %d", uuid_uuid(), $row->snid);
   }
 
   $sql = "SELECT * FROM {course_outline_fulfillment}";
   $result = db_query($sql);
-  while ($row = db_fetch_object($result)) {
+  while ($row = $result->fetch()) {
     db_query("update {course_outline_fulfillment} set uuid = '%s' where sfid = %d", uuid_uuid(), $row->sfid);
   }
 
-  db_add_unique_key($ret, 'course_outline', 'uuid', array('uuid'));
-  db_add_unique_key($ret, 'course_outline_fulfillment', 'uuid', array('uuid'));
+  db_add_unique_key('course_outline', 'uuid', array('uuid'));
+  db_add_unique_key('course_outline_fulfillment', 'uuid', array('uuid'));
 
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -772,59 +824,65 @@ function course_update_6135() {
   $ret = array();
 
   // Change primary keys to int (so we can drop the primary key).
-  db_change_field($ret, 'course_outline', 'snid', 'snid', array('type' => 'int'));
-  db_change_field($ret, 'course_outline_fulfillment', 'sfid', 'sfid', array('type' => 'int'));
+  db_change_field('course_outline', 'snid', 'snid', array('type' => 'int'));
+  db_change_field('course_outline_fulfillment', 'sfid', 'sfid', array('type' => 'int'));
 
   // Drop old PK.
-  db_drop_primary_key($ret, 'course_outline');
-  db_drop_primary_key($ret, 'course_outline_fulfillment');
+  db_drop_primary_key('course_outline');
+  db_drop_primary_key('course_outline_fulfillment');
 
   // Drop affected indexes.
-  db_drop_unique_key($ret, 'course_outline_fulfillment', 'snid_uid');
-  db_drop_index($ret, 'course_outline_fulfillment', 'snid');
+  db_drop_unique_key('course_outline_fulfillment', 'snid_uid');
+  db_drop_index('course_outline_fulfillment', 'snid');
 
 
   // Rename columns, add back PK.
-  db_change_field($ret, 'course_outline', 'snid', 'coid', array(
+  db_change_field('course_outline', 'snid', 'coid', array(
     'type' => 'serial',
     'not null' => TRUE,
     'unsigned' => TRUE,
-    ), array('primary key' => array('coid')));
-  db_change_field($ret, 'course_outline_fulfillment', 'sfid', 'cofid', array(
+  ), array('primary key' => array('coid')));
+  db_change_field('course_outline_fulfillment', 'sfid', 'cofid', array(
     'type' => 'serial',
     'not null' => TRUE,
     'unsigned' => TRUE,
-    ), array('primary key' => array('cofid')));
-  db_change_field($ret, 'course_outline_fulfillment', 'snid', 'coid', array(
+  ), array('primary key' => array('cofid')));
+  db_change_field('course_outline_fulfillment', 'snid', 'coid', array(
     'type' => 'int',
     'not null' => TRUE,
     'unsigned' => TRUE,
-    'default' => 0));
+    'default' => 0,
+  ));
 
   // Change requirement_type/requirement_component fields.
-  db_change_field($ret, 'course_outline', 'requirement_type', 'module', array(
+  db_change_field('course_outline', 'requirement_type', 'module', array(
     'type' => 'varchar',
     'length' => 255,
     'not null' => TRUE,
-    'default' => ''));
-  db_change_field($ret, 'course_outline', 'requirement_component', 'object_type', array(
+    'default' => '',
+  ));
+  db_change_field('course_outline', 'requirement_component', 'object_type', array(
     'type' => 'varchar',
     'length' => 255,
     'not null' => TRUE,
-    'default' => ''));
+    'default' => '',
+  ));
 
   // Add keys back.
-  db_add_unique_key($ret, 'course_outline_fulfillment', 'coid_uid', array('coid', 'uid'));
-  db_add_index($ret, 'course_outline_fulfillment', 'coid', array('coid'));
+  db_add_unique_key('course_outline_fulfillment', 'coid_uid', array('coid', 'uid'));
+  db_add_index('course_outline_fulfillment', 'coid', array('coid'));
 
   // Update crid to match schema.
-  db_change_field($ret, 'course_report', 'crid', 'crid', array(
+  db_change_field('course_report', 'crid', 'crid', array(
     'type' => 'serial',
     'not null' => TRUE,
     'unsigned' => TRUE,
   ));
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }
 
 /**
@@ -833,9 +891,12 @@ function course_update_6135() {
 function course_update_6136() {
   $ret = array();
 
-  if (db_column_exists('course_outline', 'config')) {
-    db_drop_field($ret, 'course_outline', 'config');
+  if (db_field_exists('course_outline', 'config')) {
+    db_drop_field('course_outline', 'config');
   }
 
-  return $ret;
+  // hook_update_N() no longer returns a $ret array. Instead, return
+  // nothing or a translated string indicating the update ran successfully.
+  // See http://drupal.org/node/224333#update_sql.
+  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
 }

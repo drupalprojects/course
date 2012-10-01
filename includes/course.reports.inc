@@ -32,7 +32,7 @@ function course_object_reports_page($node) {
       }
     }
     if ($lis) {
-      $nav .= theme('item_list', $lis, $courseObject->getTitle());
+      $nav .= theme('item_list', array('items' => $lis, 'title' => $courseObject->getTitle()));
     }
   }
 
@@ -54,7 +54,7 @@ function course_object_reports_page($node) {
   }
 
 
-  return theme('course_report', $nav, $header, $content);
+  return theme('course_report', array('nav' => $nav, 'header' => $header, 'body' => $content));
 }
 
 /**
@@ -67,7 +67,10 @@ function course_object_single_report_link($courseObject, $key, $report) {
 /**
  * Theme the course objects report page.
  */
-function theme_course_report($nav, $header, $body) {
+function theme_course_report($variables) {
+  $nav = $variables['nav'];
+  $header = $variables['header'];
+  $body = $variables['body'];
   if (!$nav) {
     $body = t('None of the objects in your course have reports associated with them.');
   }
@@ -90,9 +93,9 @@ function theme_course_report($nav, $header, $body) {
 
   $rows[] = $row;
 
-  $out = theme('table', NULL, $rows, array(
-    'id' => 'course-object-reports',
-    ));
+  $out = theme('table', array('header' => NULL, 'rows' => $rows, 'attributes' => array(
+  'id' => 'course-object-reports',
+)));
 
   return $out;
 }

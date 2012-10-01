@@ -38,7 +38,7 @@ function course_certificate_access_certificate($node, $user) {
     $course = course_get_course($node);
     $has_certificate = course_certificate_course_has_certificate($course);
     $sql = "SELECT 1 FROM {course_report} WHERE nid = %d AND uid = %d AND complete = %d";
-    return $has_certificate && (bool) db_result(db_query($sql, $node->nid, $user->uid, 1));
+    return $has_certificate && (bool) db_query("SELECT 1 FROM {course_report} WHERE nid = :nid AND uid = :uid AND complete = :complete", array(':nid' => $node->nid, ':uid' => $user->uid, ':complete' => 1))->fetchField();
   }
 }
 
@@ -61,10 +61,10 @@ function course_certificate_token_values($type, $object = NULL, $options = array
   if ($type == 'certificate') {
     $values = array();
     $sql = 'SELECT * FROM {course_report} WHERE nid = %d AND uid = %d';
-    if ($report = db_fetch_object(db_query($sql, $object['node']->nid, $object['user']->uid))) {
+    if ($report = db_query('SELECT * FROM {course_report} WHERE nid = :nid AND uid = :uid', array(':nid' => $object['node']->nid, ':uid' => $object['user']->uid))->fetch()) {
       $values['certificate-date_completed'] = date(variable_get('course_report_certificate_time_format', 'F jS, Y'), $report->date_completed);
     }
-    $values['certificate-number'] = time() . '-' . $object['node']->nid;
+    $values['certificate-number'] = REQUEST_TIME . '-' . $object['node']->nid;
     return $values;
   }
 }

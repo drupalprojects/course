@@ -1,5 +1,7 @@
 name = Course test module
-core = 6.x
-files[] = course_test.classes.inc
+core = 7.x
+
 dependencies[] = acl
 dependencies[] = content_access
+
+files[] = course_test.classes.inc

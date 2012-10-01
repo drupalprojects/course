@@ -13,18 +13,29 @@ class CourseObjectPoll extends CourseObjectNode {
    * Take or view the results of a poll. Wrapper for poll_view().
    */
   function take() {
-    poll_view($this->node);
-    return drupal_render($this->node->content['body']);
+    poll_view($this->node, 'full');
+    return drupal_render($this->node->content);
   }
 
   public function create() {
     $poll = new stdClass;
-    $poll->choice[0]['chtext'] = 'Yes';
-    $poll->choice[1]['chtext'] = 'No';
+    $poll->choice = array(
+      array(
+        'chtext' => 'Yes',
+        'chvotes' => 0,
+        'weight' => 0,
+      ),
+      array(
+        'chtext' => 'No',
+        'chvotes' => 0,
+        'weight' => 0,
+      ),
+    );
     $poll->type = 'poll';
     $poll->title = $this->getTitle();
     $poll->uid = $this->user->uid;
     $poll->active = 1;
+    $poll->runtime = 0;
     node_save($poll);
     $this->setNode($poll);
   }
@@ -51,7 +62,7 @@ class CourseObjectPoll extends CourseObjectNode {
       case 'all':
         return array(
           'title' => 'All votes',
-          'content' => poll_votes($this->node),
+          'content' => drupal_render(poll_votes($this->node)),
         );
     }
   }
@@ -60,8 +71,21 @@ class CourseObjectPoll extends CourseObjectNode {
    * Remove poll votes for this user.
    */
   function unEnroll() {
-    db_query('DELETE FROM {poll_votes} WHERE nid = %d AND uid = %d', $this->node->nid, $this->getCourse()->getUser()->uid);
-    db_query("UPDATE {poll_choices} SET chvotes = chvotes - 1 WHERE nid = %d AND chorder = %d", $this->node->nid, $this->node->vote);
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query('DELETE FROM {poll_votes} WHERE nid = %d AND uid = %d', $this->node->nid, $this->getCourse()->getUser()->uid) */
+    db_delete('poll_votes')
+      ->condition('nid', $this->node->nid)
+      ->condition('uid', $this->getCourse()->getUser()->uid)
+      ->execute();
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query("UPDATE {poll_choices} SET chvotes = chvotes - 1 WHERE nid = %d AND chorder = %d", $this->node->nid, $this->node->vote) */
+    db_update('poll_choices')
+      ->fields(array(
+        'chvotes' => chvotes - 1,
+      ))
+      ->condition('nid', $this->node->nid)
+      ->condition('chorder', $this->node->vote)
+      ->execute();
   }
 
   function getNodeTypes() {

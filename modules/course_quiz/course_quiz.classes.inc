@@ -83,7 +83,7 @@ class CourseObjectQuiz extends CourseObjectNode {
   public function getWarnings() {
     $warnings = parent::getWarnings();
 
-    if (isset($this->node->nid)) {
+    if ($this->getInstanceId()) {
       if (!quiz_get_number_of_questions($this->node->vid)) {
         $warnings[] = t('This Quiz does not have any questions. Please !link.', array('!link' => l('add questions', "node/{$this->getInstanceId()}/questions")));
       }
@@ -106,7 +106,7 @@ class CourseObjectQuiz extends CourseObjectNode {
       case 'results':
         return array(
           'title' => t('Quiz results'),
-          'content' => drupal_get_form('quiz_results_manage_results_form', $this->node),
+          'content' => drupal_render(drupal_get_form('quiz_results_manage_results_form', $this->node)),
         );
     }
   }
@@ -141,6 +141,14 @@ class CourseObjectQuiz extends CourseObjectNode {
     $this->node->auto_created = TRUE;
     node_save($this->node);
     return $this->node->nid;
+  }
+
+  function getOptionsSummary() {
+    $summary = parent::getOptionsSummary();
+    if ($this->getInstanceId()) {
+      $summary['questions'] = l('Edit questions', "node/{$this->getInstanceId()}/questions");
+    }
+    return $summary;
   }
 
 }

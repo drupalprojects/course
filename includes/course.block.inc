@@ -58,11 +58,11 @@ function _course_block_navigation_view() {
     $items = array_values($links);
 
     // Add javascript poller to update the next step button.
-    drupal_add_js(drupal_get_path('module', 'course') . '/js/nav.js', 'module', 'header', FALSE, FALSE, FALSE);
+    drupal_add_js(drupal_get_path('module', 'course') . '/js/nav.js', array('cache' => FALSE, 'preprocess' => FALSE));
 
     return array(
       'subject' => '',
-      'content' => theme('item_list', $items, NULL, 'ul', array('id' => 'course-nav')),
+      'content' => theme('item_list', array('items' => $items, 'title' => NULL, 'type' => 'ul', 'attributes' => array('id' => 'course-nav'))),
     );
   }
 }

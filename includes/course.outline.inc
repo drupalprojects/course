@@ -13,20 +13,8 @@
  * @see _course_outline_object_form()
  * @see theme_course_outline_overview_form()
  */
-function course_outline_overview_form(&$form_state) {
+function course_outline_overview_form($form, &$form_state) {
   $form = array();
-
-  // Get around ahah_helper PHP notices.
-  // @see http://drupal.org/node/1371792
-  $form['#action'] = '';
-  $form['#id'] = '';
-
-  // Register the form with ahah_helper so we can use it. Also updates
-  // $form_state['storage'] to ensure it contains the latest values that have
-  // been entered, even when the form item has temporarily been removed from
-  // the form. So if a form item *once* had a value, you *always* can retrieve
-  // it.
-  ahah_helper_register($form, $form_state);
 
   // Determine the default value of the 'usage' select. When nothing is stored
   // in $form_state['storage'] yet, it's the form hasn't been submitted yet,
@@ -132,7 +120,7 @@ function course_outline_overview_form(&$form_state) {
       );
       $rform['object_type_show'] = array(
         '#type' => 'markup',
-        '#value' => filter_xss_admin($handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')]['name'] . '<br/><small><i>' . ucwords(str_replace('_', ' ', $courseObject->getOption('module'))) . '</i></small>'),
+        '#markup' => filter_xss_admin($handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')]['name'] . '<br/><small><i>' . ucwords(str_replace('_', ' ', $courseObject->getOption('module'))) . '</i></small>'),
       );
       $cform['objects'][$uniqid] = $rform;
     }
@@ -163,16 +151,15 @@ function course_outline_overview_form(&$form_state) {
   );
 
   $form['more']['add_another'] = array(
-    '#type' => 'submit',
+    '#type' => 'button',
     '#value' => 'Add another',
-    '#ahah' => array(
-      'event' => 'click',
+    '#ajax' => array(
       'method' => 'replace',
-      'path' => ahah_helper_path(AHAH_HELPER_PARENTS_ENTIRE_FORM),
       'wrapper' => 'course-outline-wrapper',
+      'callback' => 'course_outline_overview_form_rebuild',
     ),
-    '#submit' => array('ahah_helper_submit'),
   );
+
   $form['more']['object_type'] = array(
     '#type' => 'select',
     '#options' => $object_types,
@@ -195,6 +182,13 @@ function course_outline_overview_form(&$form_state) {
 
   $cform['objects']['#element_validate'] = array('_course_outline_overview_validate_objects');
   //return for form on tab
+  return $form;
+}
+
+/**
+ * Rebuild outline overview form.
+ */
+function course_outline_overview_form_rebuild($form, $form_state) {
   return $form;
 }
 
@@ -229,7 +223,7 @@ function _course_outline_object_form($courseObject = NULL) {
     '#prefix' => '<div id="title-' . $uniqid . '">',
     '#suffix' => '</div>',
     '#type' => 'markup',
-    '#value' => check_plain($title ? $title : ' '),
+    '#markup' => check_plain($title ? $title : ' '),
   );
 
   $summary = $courseObject->renderOptionsSummary();
@@ -238,7 +232,7 @@ function _course_outline_object_form($courseObject = NULL) {
     '#prefix' => '<div id="summary-' . $uniqid . '">',
     '#suffix' => '</div>',
     '#type' => 'markup',
-    '#value' => filter_xss_admin($summary ? $summary : ' '),
+    '#markup' => filter_xss_admin($summary ? $summary : ' '),
   );
 
   // Placeholder for the settings link, it gets added after this function runs
@@ -247,15 +241,15 @@ function _course_outline_object_form($courseObject = NULL) {
   // Settings link for saved objects.
   $text = t('Settings');
   $path = "node/{$courseObject->getCourseNid()}/course-object/nojs/{$uniqid}/options";
-  $l_options = array('attributes' => array('class' => 'ctools-use-modal'));
-  $rform['options']['#value'] = l($text, $path, $l_options);
+  $l_options = array('query' => drupal_get_destination());
+  $rform['options']['#markup'] = l($text, $path, $l_options);
 
   $rform['weight'] = array(
     '#type' => 'weight',
     '#delta' => 50,
     '#default_value' => $courseObject->getOption('weight'),
     '#attributes' => array(
-      'class' => 'course-object-weight',
+      'class' => array('course-object-weight'),
     ),
   );
 
@@ -275,8 +269,9 @@ function _course_outline_object_form($courseObject = NULL) {
  *
  * @ingroup themeable
  */
-function theme_course_outline_overview_form($form) {
-  $objects = & $form['course_outline']['objects'];
+function theme_course_outline_overview_form(&$variables) {
+  $form = &$variables['form'];
+  $objects = &$form['course_outline']['objects'];
   drupal_add_tabledrag('course-objects', 'order', 'sibling', 'course-object-weight');
   drupal_add_css(drupal_get_path('module', 'course') . '/css/admin.css');
 
@@ -286,13 +281,16 @@ function theme_course_outline_overview_form($form) {
     $object = & $objects[$key];
     unset($objects[$key]['title']['#title']);
     unset($objects[$key]['object_type']['#title']);
-    $rows[$key]['data'][] = array('data' => NULL, 'width' => 1);
+    $rows[$key]['data'][] = array(
+      'data' => NULL,
+      'width' => 1,
+    );
     $rows[$key]['data'][] = drupal_render($objects[$key]['title']) . drupal_render($objects[$key]['summary']);
     $rows[$key]['data'][] = drupal_render($objects[$key]['object_type']) . drupal_render($objects[$key]['object_type_show']);
     $rows[$key]['data'][] = drupal_render($objects[$key]['options']);
 
     // Add draggable settings to row.
-    $rows[$key]['class'] = 'draggable';
+    $rows[$key]['class'] = array('draggable');
     $rows[$key]['data'][] = drupal_render($objects[$key]['weight']);
 
     // Add id to row for per-row ajax handling.
@@ -303,14 +301,14 @@ function theme_course_outline_overview_form($form) {
     // @todo should we unify this, so we always use $courseObject->getOptions()
     // instead of pulling from the session?
     if (!empty($_SESSION['course'][$nid]['editing'][$key]['delete'])) {
-      $rows[$key]['class'] = 'deleted';
+      $rows[$key]['class'] = array('deleted');
     }
 
     // Mark everything else as printed.
     drupal_render($objects[$key]);
   }
-  $table = theme('table', array(), $rows, array('id' => 'course-objects'));
-  $table .= drupal_render($form);
+  $table = theme('table', array('header' => array(), 'rows' => $rows, 'attributes' => array('id' => 'course-objects')));
+  $table .= drupal_render_children($form);
   return $table;
 }
 
@@ -345,12 +343,12 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
 
   // Get form state values for object elements on the course outline overview:
   // - An associative array of course objects, keyed by ID. The ID for already
-  //   saved objects is {course_outline}.coid, but for AHAH created objects the
-  //   key is a generated unique ID until save.
-  //   - coid: The key loaded from the database. If empty, the object is new.
-  //   - module: The implementing module name (course_quiz etc).
-  //   - object_type: The course object key as defined by
-  //     hook_course_handlers().
+//   saved objects is {course_outline}.coid, but for AHAH created objects the
+//   key is a generated unique ID until save.
+//   - coid: The key loaded from the database. If empty, the object is new.
+//   - module: The implementing module name (course_quiz etc).
+//   - object_type: The course object key as defined by
+//     hook_course_handlers().
   $objects = $form_state['values']['course_outline']['objects'];
 
   // Sort by weight so we can renumber.
@@ -437,19 +435,19 @@ function course_outline_list($node) {
 
       // Step is complete.
       if ($courseObject->getFulfillment()->isComplete()) {
-        $step['class'] = 'completed';
+        $step['class'] = array('completed');
         $step['status'] = 'Complete';
         $step['image'] = 'misc/watchdog-ok.png';
       }
       elseif ($courseObject->getFulfillment()->getId()) {
         $step['status'] = 'Continue';
-        $step['class'] = 'continue';
+        $step['class'] = array('continue');
         $step['image'] = 'misc/menu-collapsed.png';
         if ($course->getActive() === $courseObject) {
           $step['status'] = $courseObject->getStatus();
           if (!$step['status'] && $courseObject->getCourse()->getActive()->getId() == $courseObject->getId()) {
             $step['status'] = 'In progress';
-            $step['class'] = 'in-progress';
+            $step['class'] = array('in-progress');
             $step['image'] = 'misc/watchdog-warning.png';
           }
         }
@@ -461,7 +459,7 @@ function course_outline_list($node) {
       $step['status'] = implode('<br/>', $courseObject->getAccessMessages());
     }
 
-    $img = theme('image', $step['image']);
+    $img = theme('image', array('path' => $step['image']));
 
     if (empty($step['link'])) {
       $data = $courseObject->getTitle() . '<br/><span class="course-outline-status">' . $step['status'] . '</span>';
@@ -473,7 +471,7 @@ function course_outline_list($node) {
     $item = array(
       'data' => $data,
       'id' => $step['id'],
-      'class' => $step['style'],
+      'class' => array($step['style']),
     );
 
     // Allow other modules to modify this list item.
@@ -498,7 +496,7 @@ function course_outline_list($node) {
     $output .= '<div class="course-outline">';
     $output .= '<span class="trigger"></span>';
     $output .= '<h4 class="course-title">' . $node->title . '</h4>';
-    $output .= theme('item_list', $workflow);
+    $output .= theme('item_list', array('items' => $workflow));
     $output .= '</div>';
   }
   return $output;
@@ -533,9 +531,9 @@ function course_outline_show_complete_links($course_node) {
       // we must be this controlling?
       // Example:
       // @code
-      //   $element = t('A description');
-      //   $value = l($text, $path);
-      //   $links = array('element' => $element, 'value' => $value).
+//   $element = t('A description');
+//   $value = l($text, $path);
+//   $links = array('element' => $element, 'value' => $value).
       // @endcode
       // But why not allow modules to alter the landing page however they want
       // (instead of requiring 'links' with this very specific output format)?
@@ -561,13 +559,13 @@ function course_outline_show_complete_links($course_node) {
       $grade = $req->graded ? ' - Your grade: ' . $req->grade_result . '%, Pass grade: ' . $req->passing_grade . '%' : '';
       $items[] = array(
         array(
-          'data' => theme('image', "misc/watchdog-{$status_img}.png", $status_css),
+          'data' => theme('image', array('path' => "misc/watchdog-{$status_img}.png", 'width' => '', 'height' => '', 'alt' => $status_css)),
           'width' => 20,
         ),
         $req->title . $status_optional . $grade,
       );
     }
-    $reqs_txt = theme('table', NULL, $items);
+    $reqs_txt = theme('table', array('header' => NULL, 'rows' => $items));
 
     $txt_out .= '<p>' . t('You must complete the remaining requirements to proceed.') . '</p>';
     $txt_out .= $reqs_txt . '<div class="homelink"><p>' . l($course_out_return_array['course_outline_link_text'], $course_out_return_array['course_outline_link']) . '</p></div>';
@@ -591,6 +589,11 @@ function course_outline_show_complete_links($course_node) {
  */
 function course_outline_delete_fulfillment($mixed) {
   $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid = %d AND uid = %d";
-  db_query($sql, $mixed->coid, $mixed->uid);
+  // TODO Please review the conversion of this statement to the D7 database API syntax.
+  /* db_query($sql, $mixed->coid, $mixed->uid) */
+  db_delete('course_outline_fulfillment')
+  ->condition('coid', $mixed->coid)
+  ->condition('uid', $mixed->uid)
+  ->execute();
   return db_affected_rows() > 0;
 }

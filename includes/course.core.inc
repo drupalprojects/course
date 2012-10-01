@@ -142,11 +142,13 @@ class CourseHandler {
    */
   private function optionsMerge($Arr1, $Arr2) {
     foreach ($Arr2 as $key => $Value) {
-      if (array_key_exists($key, $Arr1) && is_array($Value))
+      if (array_key_exists($key, $Arr1) && is_array($Value)) {
         $Arr1[$key] = $this->optionsMerge($Arr1[$key], $Arr2[$key]);
+      }
 
-      else
+      else {
         $Arr1[$key] = $Value;
+      }
     }
 
     return $Arr1;
@@ -238,7 +240,7 @@ class CourseHandler {
   public function save() {
     $options = $this->getOptions();
     if (!isset($options['uuid'])) {
-      $options['uuid'] = uuid_uuid();
+      $options['uuid'] = uuid_generate();
     }
 
     // Set up serialized field for non-schema fields.
@@ -279,8 +281,8 @@ class CourseReport extends CourseHandler {
     $this->course = $course;
 
     $sql = "SELECT * FROM {course_report} WHERE nid = %d AND uid = %d";
-    $result = db_query($sql, $this->course->getNode()->nid, $this->course->getUser()->uid);
-    if ($config = db_fetch_array($result)) {
+    $result = db_query("SELECT * FROM {course_report} WHERE nid = :nid AND uid = :uid", array(':nid' => $this->course->getNode()->nid, ':uid' => $this->course->getUser()->uid));
+    if ($config = $result->fetch(PDO::FETCH_ASSOC)) {
       parent::__construct($config);
     }
     else {
@@ -340,7 +342,7 @@ class CourseReport extends CourseHandler {
       $this->setOption('section_name', 'Complete');
       $this->setOption('complete', 1);
       if (!$this->getOption('date_completed')) {
-        $this->setOption('date_completed', time());
+        $this->setOption('date_completed', REQUEST_TIME);
       }
     }
 
@@ -391,12 +393,15 @@ class Course extends CourseHandler {
       $this->user = $user;
     }
     else {
+      // TODO Convert "user_load" to "user_load_multiple" if "$user" is other than a uid.
+      // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+      // Example: array_shift(user_load_multiple(array(), $user))
       $this->user = user_load($user);
     }
 
     $sql = "SELECT * FROM {course_node} WHERE nid = %d";
-    $result = db_query($sql, $this->node->nid);
-    if ($config = db_fetch_array($result)) {
+    $result = db_query("SELECT * FROM {course_node} WHERE nid = :nid", array(':nid' => $this->node->nid));
+    if ($config = $result->fetch(PDO::FETCH_ASSOC)) {
       parent::__construct($config);
     }
     else {
@@ -549,9 +554,11 @@ class Course extends CourseHandler {
       $sql = 'SELECT * FROM {course_outline} co
         WHERE nid = %d
         ORDER BY weight ASC';
-      $result = db_query($sql, $this->node->nid);
+      $result = db_query('SELECT * FROM {course_outline} co
+        WHERE nid = :nid
+        ORDER BY weight ASC', array(':nid' => $this->node->nid));
 
-      while ($row = db_fetch_object($result)) {
+      while ($row = $result->fetch()) {
         if ($courseObject = course_get_course_object($row, NULL, NULL, $this->user, $this)) {
           $this->courseObjects[] = $courseObject;
         }

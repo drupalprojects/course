@@ -26,7 +26,7 @@ function course_clone_warning_messages($course) {
     }
   }
   if ($messages) {
-    drupal_set_message(filter_xss_admin(theme('item_list', $messages, t('Cloning issues')), 'warning'));
+    drupal_set_message(filter_xss_admin(theme('item_list', array('items' => $messages, 'title' => t('Cloning issues'))), 'warning'));
   }
 }
 

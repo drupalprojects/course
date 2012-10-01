@@ -1,6 +1,6 @@
 <?php
 
-require_once drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
+require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
 
 /**
  * Tests for Book support in Course
@@ -49,13 +49,15 @@ class CourseObjectBookTestCase extends CourseTestCase {
       'type' => 'book',
       'book' => array(
         'bid' => $co1->getInstanceId(),
-      )));
+      ),
+    ));
 
     $bp2 = $this->drupalCreateNode(array(
       'type' => 'book',
       'book' => array(
         'bid' => $co1->getInstanceId(),
-      )));
+      ),
+    ));
 
     // Test fulfillment tracking, set to view all pages before complete.
     $this->assertFalse($co1->getFulfillment()->isComplete(), 'Check that book object is not complete.');

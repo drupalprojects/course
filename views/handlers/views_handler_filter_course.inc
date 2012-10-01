@@ -15,7 +15,10 @@ class views_handler_filter_course extends views_handler_filter_boolean_operator 
   }
 
   function get_value_options() {
-    $this->value_options = array(1 => t('Yes'), 0 => t('No'));
+    $this->value_options = array(
+      1 => t('Yes'),
+      0 => t('No'),
+    );
   }
 
 }

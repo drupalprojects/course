@@ -1,7 +1,10 @@
 name = Course webform
 description = Expose Webform as a course object.
 package = Course objects
-core = 6.x
+core = 7.x
 dependencies[] = course
 dependencies[] = webform
+
+
 files[] = course_webform.classes.inc
+files[] = course_webform.test

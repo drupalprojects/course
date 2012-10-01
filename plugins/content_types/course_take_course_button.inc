@@ -16,7 +16,7 @@ $plugin = array(
  * Render callback.
  */
 function course_course_take_course_button_content_type_render($subtype, $conf, $panel_args, $context) {
-  $node = isset($context->data) ? drupal_clone($context->data) : NULL;
+  $node = isset($context->data) ? clone $context->data : NULL;
   $block = new stdClass();
   $block->module = 'course';
 
@@ -41,5 +41,4 @@ function course_course_take_course_button_content_type_admin_title($subtype, $co
 /**
  * The edit form for the take course button.
  */
-function course_course_take_course_button_content_type_edit_form(&$form, &$form_state) {
-}
+function course_course_take_course_button_content_type_edit_form(&$form, &$form_state) { }

@@ -106,15 +106,14 @@ function course_book_override_outline_list_item(&$item, CourseObject $courseObje
           if ($data['below']) {
             //$item['children'] = menu_tree_output($data['below']);
             $output = menu_tree_output($data['below']);
-            // Append to the existing book outline item's data output, since we 
+            // Append to the existing book outline item's data output, since we
             // don't have an array but already rendered active menu tree output.
             $item['data'] .= $output;
           }
           // Note we do not break here purposefully, to additionally append the
           // number of pages to the course outline item title. We do this
           // because when not a page within the active tree, no children items
-          // display, so without this there is no indicator they are there.
-          ; // Ignore this. Fixes my NetBeans.
+          // display, so without this there is no indicator they are there. // Ignore this. Fixes my NetBeans.
 
         case 'count':
           $count = course_book_count($bid);

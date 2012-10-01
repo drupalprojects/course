@@ -1,6 +1,9 @@
 name = Course content
 description = Expose selected content types as course content objects with configurable completion tracking.
 package = Course objects
-core = 6.x
+core = 7.x
 dependencies[] = course
+
+
 files[] = course_content.classes.inc
+files[] = course_content.test

@@ -3,7 +3,7 @@
 /**
  * Signup course admin form.
  */
-function course_signup_admin() {
+function course_signup_admin($form, &$form_state) {
   $form = array();
 
   $form['signup_intro']['#value'] = "Course uses Signup's built-in functionality to allow learners to register for courses and for administrators to manage attendance.";
@@ -24,7 +24,7 @@ function course_signup_admin() {
 function course_signup_menu() {
   $items = array();
 
-  $items['admin/settings/course/signup'] = array(
+  $items['admin/config/course/signup'] = array(
     'access arguments' => array('administer courses'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_signup_admin'),
@@ -46,14 +46,14 @@ function course_signup_menu() {
  *   Notify the user of this signup. This is passed to signup_sign_up_user().
  */
 function course_signup_quick_register($node, $account, $notify = TRUE) {
-  if (!$signup = db_fetch_object(db_query('SELECT * FROM {signup_log} WHERE nid = %d AND uid = %d', $node->nid, $account->uid))) {
+  if (!$signup = db_query('SELECT * FROM {signup_log} WHERE nid = :nid AND uid = :uid', array(':nid' => $node->nid, ':uid' => $account->uid))->fetch()) {
     // Save a new signup.
     if ($node->signup_status && $notify) {
       // Signup is open so we can use signup's function.
       signup_sign_up_user(array(
         'nid' => $node->nid,
         'uid' => $account->uid,
-        ), $notify);
+      ), $notify);
     }
     else {
       // The signup was closed. Do it silently. We can't use
@@ -62,7 +62,7 @@ function course_signup_quick_register($node, $account, $notify = TRUE) {
       $signup = new stdClass();
       $signup->nid = $node->nid;
       $signup->uid = $account->uid;
-      $signup->signup_time = time();
+      $signup->signup_time = REQUEST_TIME;
       $signup->attended = 0;
       $signup->form_data = array();
       $signup->count_towards_limit = 1;
@@ -116,6 +116,9 @@ function course_signup_signup_enroll($signup) {
   if ($signup->uid && $signup->nid && $signup->count_towards_limit && empty($signup->anon_mail)) {
     $node = node_load($signup->nid);
     if (course_node_is_course($node)) {
+      // TODO Convert "user_load" to "user_load_multiple" if "$signup->uid" is other than a uid.
+      // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+      // Example: array_shift(user_load_multiple(array(), $signup->uid))
       $user = user_load($signup->uid);
       course_enrol($node, $user, 'course_signup');
     }
@@ -128,6 +131,9 @@ function course_signup_signup_enroll($signup) {
  * Un-enrol user from course on signup cancellation.
  */
 function course_signup_signup_cancel($signup, $node) {
+  // TODO Convert "user_load" to "user_load_multiple" if "$signup->uid" is other than a uid.
+  // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+  // Example: array_shift(user_load_multiple(array(), $signup->uid))
   $user = user_load($signup->uid);
   course_unenrol($node, $user);
 }
@@ -202,7 +208,9 @@ function course_signup_course_enrol($node, $user, $from, $code, $status) {
     $sql = "SELECT ucsl.sid FROM {uc_signup_log} ucsl
       LEFT JOIN {signup_log} sl USING (sid)
       WHERE sl.nid = %d AND sl.uid = %d";
-    $uc_sid = db_result(db_query($sql, $node->nid, $user->uid));
+    $uc_sid = db_query("SELECT ucsl.sid FROM {uc_signup_log} ucsl
+      LEFT JOIN {signup_log} sl USING (sid)
+      WHERE sl.nid = :sl.nid AND sl.uid = :sl.uid", array(':sl.nid' => $node->nid, ':sl.uid' => $user->uid))->fetchField();
   }
   if ($from != 'course_signup' && !$uc_sid) {
     course_signup_quick_register($node, $user);
@@ -224,7 +232,7 @@ function course_signup_course_can_enrol($node, $user) {
 
   if ($node->signup) {
     // This node is signup-enabled.
-    if (!db_result(db_query('SELECT 1 FROM {signup_log} WHERE nid = %d AND uid = %d', $node->nid, $user->uid))) {
+    if (!db_query('SELECT 1 FROM {signup_log} WHERE nid = :nid AND uid = :uid', array(':nid' => $node->nid, ':uid' => $user->uid))->fetchField()) {
       if ($signups[$node->nid]) {
         // Block enrollments until the user is signed up.
         $hooks[] = array(
@@ -289,7 +297,7 @@ function course_signup_migrate_enrollments() {
     LEFT JOIN {signup_log} sl ON (ce.nid = sl.nid AND ce.uid = sl.uid)
     where sid is null and ce.status";
     $result = db_query($sql);
-    while ($row = db_fetch_object($result)) {
+    while ($row = $result->fetch()) {
       $row->signup_time = $row->timestamp;
       drupal_write_record('signup_log', $row);
     }

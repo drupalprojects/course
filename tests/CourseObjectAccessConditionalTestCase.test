@@ -1,6 +1,6 @@
 <?php
 
-require_once drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
+require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
 
 /**
  * Tests for conditional event-based access to course objects.
@@ -53,7 +53,7 @@ class CourseObjectAccessConditionalTestCase extends CourseTestCase {
     $this->assertFalse($co2->access('see'), 'Check that user cannot still see pending course object when hidden is checked.');
 
     // Set the completion of this object to more than 5 minutes ago.
-    $co1->getFulfillment()->setOption('date_started', time() - 301);
+    $co1->getFulfillment()->setOption('date_started', REQUEST_TIME - 301);
     $this->assertTrue($co2->access('take'), 'Check that user can access second course object after time has elapsed.');
   }
 
@@ -94,7 +94,7 @@ class CourseObjectAccessConditionalTestCase extends CourseTestCase {
     $this->assertFalse($co2->access('see'), 'Check that user cannot still see pending course object when hidden is checked.');
 
     // Set the completion of this object to more than 5 minutes ago.
-    $co1->getFulfillment()->setOption('date_completed', time() - 301);
+    $co1->getFulfillment()->setOption('date_completed', REQUEST_TIME - 301);
     $this->assertTrue($co2->access('take'), 'Check that user can access second course object after time has elapsed.');
   }
 

@@ -1,7 +1,9 @@
 name = Course certificate
 description = Uses Certificate module to award a certificate when a course is completed.
 package = Course
-core = 6.x
+core = 7.x
 dependencies[] = certificate
 dependencies[] = course
+
+
 files[] = course_certificate.classes.inc

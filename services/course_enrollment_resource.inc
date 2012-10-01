@@ -67,7 +67,11 @@ function _course_enrollment_resource() {
         ),
       ),
       'create' => array(
-        'file' => array('type' => 'inc', 'module' => 'course', 'name' => 'services/course_enrollment_resource'),
+        'file' => array(
+          'type' => 'inc',
+          'module' => 'course',
+          'name' => 'services/course_enrollment_resource',
+        ),
         'callback' => '_course_enrollment_create',
         'args' => array(
           array(
@@ -79,12 +83,20 @@ function _course_enrollment_resource() {
           ),
         ),
         'access callback' => '_course_access_services',
-        'access callback file' => array('type' => 'inc', 'module' => 'course', 'name' => 'services/course_report_resource'),
+        'access callback file' => array(
+          'type' => 'inc',
+          'module' => 'course',
+          'name' => 'services/course_report_resource',
+        ),
         'access arguments' => array('course_enrollment', 'create'),
         'access arguments append' => TRUE,
       ),
       'delete' => array(
-        'file' => array('type' => 'inc', 'module' => 'course', 'name' => 'services/course_enrollment_resource'),
+        'file' => array(
+          'type' => 'inc',
+          'module' => 'course',
+          'name' => 'services/course_enrollment_resource',
+        ),
         'callback' => '_course_enrollment_delete',
         'args' => array(
           array(
@@ -95,7 +107,11 @@ function _course_enrollment_resource() {
           ),
         ),
         'access callback' => '_course_access_services',
-        'access callback file' => array('type' => 'inc', 'module' => 'course', 'name' => 'services/course_report_resource'),
+        'access callback file' => array(
+          'type' => 'inc',
+          'module' => 'course',
+          'name' => 'services/course_report_resource',
+        ),
         'access arguments' => array('course_enrollment', 'delete'),
         'access arguments append' => TRUE,
       ),
@@ -109,6 +125,9 @@ function _course_enrollment_resource() {
 function _course_enrollment_delete($eid) {
   if ($enrollment = course_enrolment_load($eid)) {
     $node = node_load($enrollment->nid);
+    // TODO Convert "user_load" to "user_load_multiple" if "$enrollment->uid" is other than a uid.
+    // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+    // Example: array_shift(user_load_multiple(array(), $enrollment->uid))
     $user = user_load($enrollment->uid);
     course_unenrol($node, $user);
     return TRUE;
@@ -131,6 +150,9 @@ function _course_enrollment_retrieve($id) {
  */
 function _course_enrollment_create($enrollment) {
   $node = node_load($enrollment['nid']);
+  // TODO Convert "user_load" to "user_load_multiple" if "$enrollment['uid']" is other than a uid.
+  // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+  // Example: array_shift(user_load_multiple(array(), $enrollment['uid']))
   $user = user_load($enrollment['uid']);
   if ($node->nid && $user->uid) {
     if (course_enrolment_check($node->nid, $user->uid)) {
@@ -155,7 +177,7 @@ function _course_enrollment_index($page, $fields, $parameters, $page_size) {
   $out = array();
 
   $result = services_resource_build_index_query('course_enrolment', 'created', $page, $fields, $parameters, 'ce', 'eid', $page_size, 'course_enrollment');
-  while ($row = db_fetch_object($result)) {
+  while ($row = $result->fetch()) {
     $out[] = $row;
   }
 

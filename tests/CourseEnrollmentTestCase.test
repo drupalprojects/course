@@ -1,6 +1,6 @@
 <?php
 
-require_once drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
+require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
 
 /**
  * Tests for Course enrollment
@@ -54,7 +54,7 @@ class CourseEnrollmentTestCase extends CourseTestCase {
     $this->assertFalse($enroll, 'Check that enrollment does not exist.');
     course_take_course($courseNode);
     $enroll = course_enrolment_load($courseNode, $user);
-    $this->assertTrue($enroll->enrol_end > time(), 'Duration end got set with course start.');
+    $this->assertTrue($enroll->enrol_end > REQUEST_TIME, 'Duration end got set with course start.');
   }
 
 }

@@ -23,7 +23,7 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
   function take() {
     $type = $this->getOption('conditional_type');
     $offset = $this->getOption('conditional_time');
-    $time = time();
+    $time = REQUEST_TIME;
     $access = TRUE;
     if ($type) {
       foreach ($this->getCourseObject()->getCourse()->getObjects() as $courseObject) {

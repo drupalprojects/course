@@ -5,9 +5,9 @@
  * Core functionality for Courses.
  */
 // Course outline functions
-require_once drupal_get_path('module', 'course') . '/includes/course.outline.inc';
+require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/includes/course.outline.inc';
 // Course exporting functions
-require_once drupal_get_path('module', 'course') . '/includes/course.exporting.inc';
+require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/includes/course.exporting.inc';
 
 /**
  * Implements hook_menu().
@@ -16,7 +16,7 @@ function course_menu() {
   $items = array();
 
   // Base configuration.
-  $items['admin/settings/course'] = array(
+  $items['admin/config/course'] = array(
     'title' => 'Course',
     'description' => 'Configure courses.',
     'page callback' => 'drupal_get_form',
@@ -26,7 +26,7 @@ function course_menu() {
   );
 
   // Default tab for settings.
-  $items['admin/settings/course/overview'] = array(
+  $items['admin/config/course/overview'] = array(
     'title' => 'Overview',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
@@ -81,10 +81,10 @@ function course_menu() {
     $package_info = $handlers[$packages[$package_key]];
 
     // Define a path for the handler's specified package.
-    $package_router = "admin/settings/course/{$package_key}";
+    $package_router = "admin/config/course/{$package_key}";
 
     // Define a path for the handler.
-    $handler_router = "admin/settings/course/{$package_key}/{$module_handler_key}";
+    $handler_router = "admin/config/course/{$package_key}/{$module_handler_key}";
 
     // Add the handler item, either as the default page content
     // (MENU_NORMAL_ITEM will work with the MENU_DEFAULT_LOCAL_TASK below)
@@ -381,7 +381,7 @@ function course_ajaj_fulfullment_check($node, $courseObject, $js = FALSE) {
   // Bust cache.
   course_get_course($node, $courseObject->getCourse()->getUser(), TRUE);
   $block = _course_block_navigation_view();
-  drupal_json(array(
+  drupal_json_output(array(
     'content' => $block['content'],
     'complete' => $courseObject->getFulfillment()->isComplete(),
   ));
@@ -425,10 +425,11 @@ function course_object_restore($node, $js, CourseObject $courseObject) {
 
     // Reset summary.
     // @todo reload just this row. How?
-    //$commands[] = ctools_ajax_command_replace("#row-{$uniqid}", $html);
+    //$commands[] = ajax_command_replace("#row-{$uniqid}", $html);
     $commands[] = ctools_ajax_command_reload();
 
-    ctools_ajax_render($commands);
+    print ajax_render($commands);
+    exit;
   }
   else {
     drupal_goto("node/$nid/course-outline");
@@ -457,14 +458,15 @@ function course_object_options($node, $js, $courseObject) {
       'title' => t("Settings for %t", array('%t' => $courseObject->getTitle())),
     );
 
-    $form_state['args'][] = $courseObject;
+    $form_state['build_info']['args'][] = $courseObject;
 
     $output = ctools_modal_form_wrapper('course_object_options_form', $form_state);
     if (empty($output)) {
       $output[] = ctools_modal_command_loading();
       $output[] = ctools_modal_command_dismiss();
     }
-    ctools_ajax_render($output);
+    print ajax_render($output);
+    exit;
   }
   else {
     return drupal_get_form('course_object_options_form', $courseObject);
@@ -487,7 +489,7 @@ function course_object_options($node, $js, $courseObject) {
  * @return array
  *   The FAPI array.
  */
-function course_object_options_form(&$form_state, $courseObject) {
+function course_object_options_form($form, &$form_state, $courseObject) {
   $form = array();
   $courseObject->optionsForm($form, $form_state);
   return $form;
@@ -576,25 +578,52 @@ function course_menu_alter(&$items) {
 }
 
 /**
- * Implements hook_block().
+ * Implements hook_block_info().
  */
-function course_block($op = 'list', $delta = 0) {
-  switch ($op) {
-    case 'list':
-      $info = array(
-        'outline' => array('info' => t('Course: Outline'), 'cache' => BLOCK_NO_CACHE),
-        'navigation' => array('info' => t('Course: Navigation'), 'cache' => BLOCK_NO_CACHE),
-      );
-      return $info;
-    case 'configure':
-    case 'view':
-    case 'save':
-      module_load_include('inc', 'course', 'includes/course.block');
-      $function = "_course_block_{$delta}_{$op}";
-      if (function_exists($function)) {
-        return $function();
-      }
-      break;
+function course_block_info() {
+  $info = array(
+    'outline' => array(
+      'info' => t('Course: Outline'),
+      'cache' => DRUPAL_NO_CACHE,
+    ),
+    'navigation' => array(
+      'info' => t('Course: Navigation'),
+      'cache' => DRUPAL_NO_CACHE,
+    ),
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function course_block_configure($delta) {
+  module_load_include('inc', 'course', 'includes/course.block');
+  $function = "_course_block_{$delta}_{$op}";
+  if (function_exists($function)) {
+    return $function();
+  }
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function course_block_view($delta) {
+  module_load_include('inc', 'course', 'includes/course.block');
+  $function = "_course_block_{$delta}_{$op}";
+  if (function_exists($function)) {
+    return $function();
+  }
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function course_block_save($delta, $edit) {
+  module_load_include('inc', 'course', 'includes/course.block');
+  $function = "_course_block_{$delta}_{$op}";
+  if (function_exists($function)) {
+    return $function();
   }
 }
 
@@ -614,28 +643,45 @@ function course_takecourse_title($node) {
 /**
  * Menu loader: check if node is a Course.
  */
-function course_load($arg) {
-  $node = node_load($arg);
-  return course_node_is_course($node) ? $node : FALSE;
+function course_load($nid = NULL, $vid = NULL, $reset = FALSE) {
+  $nids = (isset($nid) ? array($nid) : array());
+  $conditions = (isset($vid) ? array('vid' => $vid) : array());
+  $node = node_load_multiple($nids, $conditions, $reset);
+  return $node ? (course_node_is_course(reset($node)) ? reset($node) : FALSE) : FALSE;
 }
 
 /**
- * Implements hook_perm().
+ * Implements hook_permission().
  *
  * Define permissions to take courses and edit course settings.
  */
-function course_perm() {
+function course_permission() {
   return array(
     // Manage course settings
-    'administer course',
+    'administer course' => array(
+      'title' => t('administer course'),
+      'description' => t('TODO Add a description for \'administer course\''),
+    ),
     // Take courses
-    'access course',
+    'access course' => array(
+      'title' => t('access course'),
+      'description' => t('TODO Add a description for \'access course\''),
+    ),
     // Edit course objects (not the node itself)
-    'edit courses',
+    'edit courses' => array(
+      'title' => t('edit courses'),
+      'description' => t('TODO Add a description for \'edit courses\''),
+    ),
     // Can user get to the course reports area
-    'access course reports',
+    'access course reports' => array(
+      'title' => t('access course reports'),
+      'description' => t('TODO Add a description for \'access course reports\''),
+    ),
     // Can use view all course reports
-    'access all course reports',
+    'access all course reports' => array(
+      'title' => t('access all course reports'),
+      'description' => t('TODO Add a description for \'access all course reports\''),
+    ),
   );
 }
 
@@ -705,7 +751,8 @@ function course_take_course_access($node, $account = NULL, $flush = FALSE) {
   // Don't let anonymous users see /takecourse. Also keeps from being indexed.
   if (arg(2) == 'takecourse' && !user_is_logged_in() && $_SERVER['SCRIPT_NAME'] != '/cron.php') {
     drupal_set_message(t('You must login or register before taking this course.'));
-    drupal_goto('user/login', drupal_get_destination());
+    // TODO drupal_get_destination() needs to be an array of keys and values instead of a string.
+    drupal_goto('user/login', array('query' => drupal_get_destination()));
   }
 
   if (!isset($courses[$node->nid]) || $flush) {
@@ -754,8 +801,8 @@ function course_settings_access($node) {
  */
 function course_can_take_course($node, $user) {
   $sql = "SELECT * FROM {course_enrolment} WHERE nid = %d AND uid = %d";
-  if ($row = db_fetch_object(db_query($sql, $node->nid, $user->uid))) {
-    if ($row->enrol_end > 0 && time() > $row->enrol_end) {
+  if ($row = db_query("SELECT * FROM {course_enrolment} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid))->fetch()) {
+    if ($row->enrol_end > 0 && REQUEST_TIME > $row->enrol_end) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, your enrollment has expired for this course.',
@@ -764,7 +811,7 @@ function course_can_take_course($node, $user) {
   }
 
   if (isset($node->course['close']) && $node->course['close']) {
-    if (time() > $node->course['close']) {
+    if (REQUEST_TIME > $node->course['close']) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, this course is expired.',
@@ -774,116 +821,115 @@ function course_can_take_course($node, $user) {
 }
 
 /**
- * Implements hook_nodeapi().
- *
- * When a course is saved, handles changes to the course outline and the
- * creation of external courses.
- *
- * Renders the "take course" button on view.
+ * Implements hook_node_view().
  */
-function course_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
-  switch ($op) {
-    case 'view':
-      if (course_node_is_course($node)) {
-        // Render take course button.
-        $show = variable_get('course_take_course_button_show', array());
-        if (($teaser && !empty($show['teaser'])) || ($page && !empty($show['page']))) {
-          $node->content['course']['#value'] = course_render_button($node);
-        }
+function course_node_view($node, $view_mode = 'full') {
+  if (course_node_is_course($node)) {
+    // Render take course button.
+    $show = variable_get('course_take_course_button_show', array());
+    if (($view_mode == 'teaser' && !empty($show['teaser'])) || ($view_mode == 'page' && !empty($show['page']))) {
+      $node->content['course']['#value'] = course_render_button($node);
+    }
+  }
+}
+
+/**
+ * Implements hook_node_insert().
+ */
+function course_node_insert($node) {
+  if (course_node_is_course($node)) {
+    if (!isset($node->course)) {
+      $node->course = array();
+    }
+  }
+}
+
+/**
+ * Implements hook_node_update().
+ */
+function course_node_update($node) {
+  if (course_node_is_course($node)) {
+    $record = $node->course;
+    $record['nid'] = $node->nid;
+
+    // Support built-in non-cck date fields.
+    $builtin_dates = array('open', 'close');
+    // Check whether each element has a submitted value, and convert to a
+    // Unix timestamp before saving to the database.
+    foreach ($builtin_dates as $element) {
+      if (!empty($node->course[$element])) {
+        $record[$element] = !empty($node->validated) ? strtotime($node->course[$element]) : $node->course[$element];
       }
-      break;
-    case 'insert':
-      if (course_node_is_course($node)) {
-        if (!isset($node->course)) {
-          $node->course = array();
+    }
+
+    // Add configurable dates to the node object for easy retrieval.
+    // Support both configurable cck and built-in non-cck date fields.
+    $cck_dates = array(
+      'open' => 'course_start_date_' . $node->type,
+      'close' => 'course_expiration_date_' . $node->type,
+      'live_from_date' => 'course_live_from_date_' . $node->type,
+      'live_to_date' => 'course_live_to_date_' . $node->type,
+    );
+    // Check whether each variable is set and the field exists on the
+    // content type. If so, load that field's value to the course object,
+    // overriding the coresponding column from the database.
+    foreach ($cck_dates as $key => $variable) {
+      $settings = @unserialize(variable_get($variable, array()));
+      $field_exists = module_exists('content') && isset($settings['field']) && content_fields($settings['field'], $node->type) != FALSE;
+      if ($field_exists) {
+        $value = $node->{$settings['field']}[0][$settings['value']];
+        if (!empty($value)) {
+          $date = new DateTime("$value UTC");
+          $value = $date->format('U');
         }
+        $record[$key] = $value;
       }
-    case 'update':
-      if (course_node_is_course($node)) {
-        $record = $node->course;
-        $record['nid'] = $node->nid;
+    }
 
-        // Support built-in non-cck date fields.
-        $builtin_dates = array('open', 'close');
-        // Check whether each element has a submitted value, and convert to a
-        // Unix timestamp before saving to the database.
-        foreach ($builtin_dates as $element) {
-          if (!empty($node->course[$element])) {
-            $record[$element] = !empty($node->validated) ? strtotime($node->course[$element]) : $node->course[$element];
-          }
-        }
+    $existing = db_query('SELECT 1 FROM {course_node} WHERE nid = :nid', array(':nid' => $node->nid))->fetchField();
+    $update = $existing ? array('nid') : array();
+    drupal_write_record('course_node', $record, $update);
 
-        // Add configurable dates to the node object for easy retrieval.
-        // Support both configurable cck and built-in non-cck date fields.
-        $cck_dates = array(
-          'open' => 'course_start_date_' . $node->type,
-          'close' => 'course_expiration_date_' . $node->type,
-          'live_from_date' => 'course_live_from_date_' . $node->type,
-          'live_to_date' => 'course_live_to_date_' . $node->type,
-        );
-        // Check whether each variable is set and the field exists on the
-        // content type. If so, load that field's value to the course object,
-        // overriding the coresponding column from the database.
-        foreach ($cck_dates as $key => $variable) {
-          $settings = @unserialize(variable_get($variable, array()));
-          $field_exists = module_exists('content') && isset($settings['field']) && content_fields($settings['field'], $node->type) != FALSE;
-          if ($field_exists) {
-            $value = $node->{$settings['field']}[0][$settings['value']];
-            if (!empty($value)) {
-              $date = new DateTime("$value UTC");
-              $value = $date->format('U');
-            }
-            $record[$key] = $value;
-          }
-        }
+    // Support cloning.
+    course_handle_clone($node);
 
-        $existing = db_result(db_query('SELECT 1 FROM {course_node} WHERE nid = %d', $node->nid));
-        $update = $existing ? array('nid') : array();
-        drupal_write_record('course_node', $record, $update);
+    // Save the course objects - necessary for programmatic course creation.
+    if (isset($node->course['objects'])) {
+      $course = course_get_course($node);
+      course_save_objects($node->course['objects'], $course);
+    }
+  }
+}
 
-        // Support cloning.
-        course_handle_clone($node);
+/**
+ * Implements hook_node_load().
+ */
+function course_node_load($nodes, $types) {
+  $result = db_query("SELECT * FROM {course_outline}
+    WHERE nid IN (:nids)
+    ORDER BY weight ASC", array(':nids' => array_keys($nodes)));
+  while ($row = $result->fetch()) {
+    $nodes[$row->nid]->course['objects'][$row->coid] = $row;
+  }
+}
 
-        // Save the course objects - necessary for programmatic course creation.
-        if (isset($node->course['objects'])) {
-          $course = course_get_course($node);
-          course_save_objects($node->course['objects'], $course);
-        }
-      }
-      break;
-    case 'load':
-      if (course_node_is_course($node)) {
-        if ($course = db_fetch_array(db_query('SELECT * FROM {course_node} WHERE nid = %d', $node->nid))) {
-          // Attach additional module provided info to $node->course.
-          $hooks = module_invoke_all('course_nodeapi_extra', $node, 'load');
-          $load = array_merge($course, $hooks);
-          foreach ($load as $key => $data) {
-            $node->course[$key] = $data;
-          }
-        }
-
-        // Load the course outline to the node.
-        $sql = "SELECT * FROM {course_outline}
-          WHERE nid = %d
-          ORDER BY weight ASC";
-        $result = db_query($sql, $node->nid);
-        $objects = array();
-        while ($object = db_fetch_object($result)) {
-          foreach ($object as $key => $value) {
-            $objects[$object->coid]->$key = $value;
-          }
-        }
-        $node->course['objects'] = $objects;
-      }
-      break;
-    case 'delete':
-      if (course_node_is_course($node)) {
-        // Clean up course specific settings and enrollments when a course is
-        // deleted.
-        db_query("DELETE FROM {course_node} WHERE nid = %d", $node->nid);
-        db_query("DELETE FROM {course_enrolment} WHERE nid = %d", $node->nid);
-      }
-      break;
+/**
+ * Implements hook_node_delete().
+ */
+function course_node_delete($node) {
+  if (course_node_is_course($node)) {
+    // Clean up course specific settings and enrollments when a course is
+    // deleted.
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query("DELETE FROM {course_node} WHERE nid = %d", $node->nid) */
+    db_delete('course_node')
+      ->condition('nid', $node->nid)
+      ->execute();
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query("DELETE FROM {course_enrolment} WHERE nid = %d", $node->nid) */
+    db_delete('course_enrolment')
+      ->condition('nid', $node->nid)
+      ->execute();
   }
 }
 
@@ -1009,12 +1055,15 @@ function course_enrol($node, $account = NULL, $from = NULL, $code = NULL, $statu
 
     if (isset($node->course['duration']) && $node->course['duration'] > 0) {
       // Set enrolment end to now + the duration of the course.
-      $enroll['enrol_end'] = time() + $node->course['duration'] * 86400;
+      $enroll['enrol_end'] = REQUEST_TIME + $node->course['duration'] * 86400;
     }
 
     $enroll = (object) $enroll;
 
-    $watchdog_variables = array('!uid' => $account->uid, '!nid' => $node->nid);
+    $watchdog_variables = array(
+      '!uid' => $account->uid,
+      '!nid' => $node->nid,
+    );
     if (!course_enrolment_check($node->nid, $account->uid)) {
       // User is not enrolled yet.
       watchdog('course_enrol', 'Enrolling user !uid into !nid', $watchdog_variables);
@@ -1055,16 +1104,26 @@ function course_unenrol(&$node, &$user) {
     $course->unenroll();
 
     $sql = "DELETE FROM {course_report} WHERE nid = %d AND uid = %d";
-    db_query($sql, $node->nid, $user->uid);
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query($sql, $node->nid, $user->uid) */
+    db_delete('course_report')
+      ->condition('nid', $node->nid)
+      ->condition('uid', $user->uid)
+      ->execute();
 
     $sql = "DELETE FROM {course_enrolment} WHERE nid = %d AND uid = %d";
-    db_query($sql, $node->nid, $user->uid);
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query($sql, $node->nid, $user->uid) */
+    db_delete('course_enrolment')
+      ->condition('nid', $node->nid)
+      ->condition('uid', $user->uid)
+      ->execute();
 
     // Find all course objects in this course and delete the fulfillment.
     $sql = "SELECT coid FROM {course_outline} WHERE nid = %d";
     $values = array();
-    $result = db_query($sql, $node->nid);
-    while ($row = db_fetch_object($result)) {
+    $result = db_query("SELECT coid FROM {course_outline} WHERE nid = :nid", array(':nid' => $node->nid));
+    while ($row = $result->fetch()) {
       $values[] = $row->coid;
     }
 
@@ -1072,12 +1131,16 @@ function course_unenrol(&$node, &$user) {
       $values[] = $user->uid;
       $placeholders = db_placeholders($values);
       $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid IN ($placeholders) AND uid = %d";
+      // TODO Please convert this statement to the D7 database API syntax.
       db_query($sql, $values);
     }
 
     // Notify other modules after course unenrollment.
     module_invoke_all('course_unenrol', $node, $user);
-    $watchdog_variables = array('!uid' => $user->uid, '!nid' => $node->nid);
+    $watchdog_variables = array(
+      '!uid' => $user->uid,
+      '!nid' => $node->nid,
+    );
     watchdog('course_enrol', 'Removed user !uid from !nid', $watchdog_variables);
     return TRUE;
   }
@@ -1099,8 +1162,8 @@ function course_unenrol(&$node, &$user) {
  */
 function course_enrolment_check($nid, $uid) {
   $sql_check = "SELECT 1 FROM {course_enrolment} WHERE nid = %d AND uid = %d AND status = %d";
-  $query = db_query($sql_check, $nid, $uid, 1);
-  return db_result($query) > 0;
+  $query = db_query("SELECT 1 FROM {course_enrolment} WHERE nid = :nid AND uid = :uid AND status = :status", array(':nid' => $nid, ':uid' => $uid, ':status' => 1));
+  return $query->fetchField() > 0;
 }
 
 /**
@@ -1121,7 +1184,7 @@ function course_enrolment_load($nid, $uid = NULL) {
 
   if (!$uid) {
     $sql = "SELECT * FROM {course_enrolment} WHERE eid = %d";
-    return db_fetch_object(db_query($sql, $nid));
+    return db_query("SELECT * FROM {course_enrolment} WHERE eid = :eid", array(':eid' => $nid))->fetch();
   }
 
   if (is_object($uid)) {
@@ -1129,7 +1192,7 @@ function course_enrolment_load($nid, $uid = NULL) {
   }
 
   $sql = "SELECT * FROM {course_enrolment} WHERE nid = %d AND uid = %d";
-  return db_fetch_object(db_query($sql, $nid, $uid));
+  return db_query("SELECT * FROM {course_enrolment} WHERE nid = :nid AND uid = :uid", array(':nid' => $nid, ':uid' => $uid))->fetch();
 }
 
 /**
@@ -1146,7 +1209,7 @@ function course_enable() {
   }
 
   // Flush autoload caches.
-  autoload_flush_caches();
+  //autoload_flush_caches();
 }
 
 /**
@@ -1401,7 +1464,7 @@ function course_take_course($node) {
     }
     if (empty($enrolment->timestamp)) {
       // If user hasn't started course, mark start of enrolment.
-      $enrolment->timestamp = time();
+      $enrolment->timestamp = REQUEST_TIME;
       course_enrolment_save($enrolment);
       drupal_set_message(t('Your enrollment in this course has been recorded.'));
     }
@@ -1433,7 +1496,7 @@ function course_take_course($node) {
     return $outline;
   }
   else {
-    drupal_set_header('HTTP/1.1 403 Forbidden');
+    drupal_add_http_header('Status', '403 Forbidden');
     drupal_set_title(t('Access denied'));
     if (empty($result['message'])) {
       return t('Sorry, you do not have access to take this course. (No message provided by module).');
@@ -1447,12 +1510,12 @@ function course_take_course($node) {
  */
 function course_enrolment_save($enrolment) {
   if ($enrolment->nid && $enrolment->uid) {
-    if (db_result(db_query('SELECT 1 FROM {course_enrolment} WHERE nid = %d AND uid = %d', $enrolment->nid, $enrolment->uid))) {
+    if (db_query('SELECT 1 FROM {course_enrolment} WHERE nid = :nid AND uid = :uid', array(':nid' => $enrolment->nid, ':uid' => $enrolment->uid))->fetchField()) {
       drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
     }
     else {
       if (!isset($enrolment->created) || $enrolment->created == 0) {
-        $enrolment->created = time();
+        $enrolment->created = REQUEST_TIME;
       }
       drupal_write_record('course_enrolment', $enrolment);
     }
@@ -1519,8 +1582,8 @@ function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) 
     return _course_get_course_object_by_uniqid($coid, $account, $course);
   }
 
-  $result = db_query('SELECT * FROM {course_outline} WHERE coid = %d', $coid);
-  if ($row = db_fetch_object($result)) {
+  $result = db_query('SELECT * FROM {course_outline} WHERE coid = :coid', array(':coid' => $coid));
+  if ($row = $result->fetch()) {
     $ret = $available[$row->module][$row->object_type];
     if (!class_exists($ret['class'])) {
       drupal_set_message(t("Could not find class for %m-%c!", array('%m' => $row->module, '%c' => $row->object_type)), 'error');
@@ -1600,12 +1663,8 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
     }
 
     // Search for context.
-    $sql = "SELECT * FROM {course_outline}
-      where module = '%s'
-      AND object_type = '%s'
-      AND instance = '%s'";
-    $result = db_query($sql, $module, $object_type, $instance);
-    while ($row = db_fetch_object($result)) {
+    $result = db_query("SELECT * FROM {course_outline} WHERE module = :module AND object_type = :object_type AND instance = :instance", array(':module' => $module, ':object_type' => $object_type, ':instance' => $instance));
+    while ($row = $result->fetch()) {
       $outline_entries[$row->nid] = $row;
     }
 
@@ -1765,7 +1824,7 @@ function course_preprocess_page(&$variables) {
 function course_get_types() {
   $types = array();
 
-  foreach (node_get_types() as $type => $info) {
+  foreach (node_type_get_types() as $type => $info) {
     if (variable_get("course_use_$type", 0)) {
       $types[] = $type;
     }
@@ -1799,7 +1858,7 @@ function course_token_values($type, $object = NULL, $options = array()) {
 
   if ($type == 'node') {
     $sql = 'SELECT * FROM {course_node} WHERE nid = %d';
-    if ($course = db_fetch_object(db_query($sql, $object->nid))) {
+    if ($course = db_query('SELECT * FROM {course_node} WHERE nid = :nid', array(':nid' => $object->nid))->fetch()) {
       foreach ($course as $key => $value) {
         $values["course-$key"] = $value;
       }
@@ -1817,19 +1876,19 @@ function course_action_info() {
 
   $actions['course_add_enrollment_action'] = array(
     'type' => 'user',
-    'description' => t('Enroll user in current course'),
+    'label' => t('Enroll user in current course'),
     'configurable' => FALSE,
   );
 
   $actions['course_edit_enrollment_action'] = array(
     'type' => 'course_enrolment',
-    'description' => t('Edit enrollment'),
+    'label' => t('Edit enrollment'),
     'configurable' => TRUE,
   );
 
   $actions['course_remove_enrollment_action'] = array(
     'type' => 'course_enrolment',
-    'description' => t('Remove a user from current course'),
+    'label' => t('Remove a user from current course'),
     'configurable' => FALSE,
   );
 
@@ -1851,6 +1910,9 @@ function course_add_enrollment_action($user, $context) {
  */
 function course_remove_enrollment_action(&$enrollment, $context) {
   $node = node_load(arg(1));
+  // TODO Convert "user_load" to "user_load_multiple" if "$enrollment->uid" is other than a uid.
+  // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+  // Example: array_shift(user_load_multiple(array(), $enrollment->uid))
   $user = user_load($enrollment->uid);
   course_unenrol($node, $user);
 }
@@ -2085,7 +2147,7 @@ function course_init() {
           if (isset($handler['file'])) {
             $file_path = isset($handler['file path']) ? $handler['file path'] : drupal_get_path('module', $module);
             $include_file = $file_path . '/' . $handler['file'];
-            include_once $include_file;
+            include_once DRUPAL_ROOT . '/' . $include_file;
           }
 
           // We expect query parameters suitable for course_determine_context().
@@ -2112,8 +2174,8 @@ function course_init() {
         drupal_add_js(
           array(
           'courseAjaxNavPath' => url('node/' . $courseNode->nid . '/course-object/' . $course->getActive()->getId() . '/ajax/nav'),
-          ), 'setting'
-        );
+          ), array('type' => 'setting'
+          , 'scope' => JS_DEFAULT));
       }
     }
   }
@@ -2165,7 +2227,8 @@ function course_course_credit_check_completion($course_node) {
     if ($active) {
       $enrolment = course_enrolment_load($course_node, $user);
       if (!$enrolment->user_type && arg(2) == 'course-credit-app') {
-        drupal_goto("node/{$course_node->nid}/course-user-type", drupal_get_destination());
+        // TODO drupal_get_destination() needs to be an array of keys and values instead of a string.
+        drupal_goto("node/{$course_node->nid}/course-user-type", array('query' => drupal_get_destination()));
       }
     }
   }
@@ -2174,7 +2237,7 @@ function course_course_credit_check_completion($course_node) {
 /**
  * Allow the user to set their per-course user type.
  */
-function course_user_type_form($form_state, $node) {
+function course_user_type_form($form, $form_state, $node) {
   $form = array();
 
   $form['#node'] = $node;
@@ -2256,7 +2319,7 @@ function course_enrol_access($node, $user = NULL, $flush = FALSE) {
  * Block enrollments when a course has either not yet started or is expired.
  */
 function course_course_can_enrol($node, $user) {
-  if (!empty($node->course['open']) && time() < $node->course['open']) {
+  if (!empty($node->course['open']) && REQUEST_TIME < $node->course['open']) {
     return array(array(
         'success' => FALSE,
         'message' => t('This course opens on %date.', array(
@@ -2265,7 +2328,7 @@ function course_course_can_enrol($node, $user) {
       ));
   }
 
-  if (!empty($node->course['close']) && time() > $node->course['close']) {
+  if (!empty($node->course['close']) && REQUEST_TIME > $node->course['close']) {
     return array(array(
         'success' => FALSE,
         'message' => t('This course closed on %date and is no longer available for enrollments.', array(
@@ -2299,16 +2362,19 @@ function course_report_save($entry) {
   }
 
   // Load user so we can serialize it.
+  // TODO Convert "user_load" to "user_load_multiple" if "$entry->uid" is other than a uid.
+  // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+  // Example: array_shift(user_load_multiple(array(), $entry->uid))
   $account = user_load($entry->uid);
 
   $sql = "SELECT * FROM {course_report} WHERE nid = %d AND uid = %d";
-  $result = db_query($sql, $entry->nid, $entry->uid);
-  $old = db_fetch_object($result);
+  $result = db_query("SELECT * FROM {course_report} WHERE nid = :nid AND uid = :uid", array(':nid' => $entry->nid, ':uid' => $entry->uid));
+  $old = $result->fetch();
 
-  $entry->updated = time();
+  $entry->updated = REQUEST_TIME;
 
   if ($entry->complete && empty($entry->date_completed)) {
-    $entry->date_completed = time();
+    $entry->date_completed = REQUEST_TIME;
   }
 
   if ($old && $old->complete && !$entry->complete) {
@@ -2332,25 +2398,40 @@ function course_report_save($entry) {
 }
 
 /**
+ * Implements hook_user_cancel().
+ */
+function course_user_cancel($edit, $account, $method) {
+  if (TRUE) {
+    $sql = "DELETE FROM {course_report} WHERE uid = %d";
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query($sql, $account->uid) */
+    db_delete('course_report')
+      ->condition('uid', $account->uid)
+      ->execute();
+    $sql = "DELETE FROM {course_outline_fulfillment} WHERE uid = %d";
+    // TODO Please review the conversion of this statement to the D7 database API syntax.
+    /* db_query($sql, $account->uid) */
+    db_delete('course_outline_fulfillment')
+      ->condition('uid', $account->uid)
+      ->execute();
+
+    $sql = "SELECT * FROM {course_enrolment} WHERE uid = %d";
+    $result = db_query("SELECT * FROM {course_enrolment} WHERE uid = :uid", array(':uid' => $account->uid));
+    while ($enrollment = $result->fetch()) {
+      $node = node_load($enrollment->nid);
+      course_unenrol($node, $account);
+    }
+  }
+}
+
+/**
  * Implements hook_user().
  *
  * Delete the user's course records, fulfillments, and enrollments upon
  * deletion.
  */
-function course_user($op, &$edit, &$account, $category = NULL) {
-  if ($op == 'delete') {
-    $sql = "DELETE FROM {course_report} WHERE uid = %d";
-    db_query($sql, $account->uid);
-    $sql = "DELETE FROM {course_outline_fulfillment} WHERE uid = %d";
-    db_query($sql, $account->uid);
+function course_user_OLD($op, &$edit, &$account, $category = NULL) {
 
-    $sql = "SELECT * FROM {course_enrolment} WHERE uid = %d";
-    $result = db_query($sql, $account->uid);
-    while ($enrollment = db_fetch_object($result)) {
-      $node = node_load($enrollment->nid);
-      course_unenrol($node, $account);
-    }
-  }
 }
 
 /**
@@ -2383,16 +2464,16 @@ function course_views_bulk_operations_object_info() {
  */
 function course_report_load($mixed, $user = NULL) {
   if (is_object($mixed)) {
-    $result = db_query('SELECT cr.* FROM {course_report} cr WHERE nid = %d AND uid = %d', $mixed->nid, $user->uid);
-    return db_fetch_object($result);
+    $result = db_query('SELECT cr.* FROM {course_report} cr WHERE nid = :nid AND uid = :uid', array(':nid' => $mixed->nid, ':uid' => $user->uid));
+    return $result->fetch();
   }
   elseif (is_numeric($user)) {
-    $result = db_query('SELECT cr.* FROM {course_report} cr WHERE nid = %d AND uid = %d', $mixed, $user);
-    return db_fetch_object($result);
+    $result = db_query('SELECT cr.* FROM {course_report} cr WHERE nid = :nid AND uid = :uid', array(':nid' => $mixed, ':uid' => $user));
+    return $result->fetch();
   }
   else {
-    $result = db_query('SELECT cr.* FROM {course_report} cr WHERE crid = %d', $mixed);
-    return db_fetch_object($result);
+    $result = db_query('SELECT cr.* FROM {course_report} cr WHERE crid = :crid', array(':crid' => $mixed));
+    return $result->fetch();
   }
 }
 
@@ -2402,13 +2483,11 @@ function course_report_load($mixed, $user = NULL) {
 function course_theme() {
   return array(
     'course_outline_overview_form' => array(
-      'arguments' => array(
-        'form' => NULL,
-      ),
+      'render element' => 'form',
     ),
     'course_report' => array(
       'file' => 'includes/course.reports.inc',
-      'arguments' => array(
+      'variables' => array(
         'nav' => NULL,
         'header' => NULL,
         'body' => NULL,
@@ -2428,9 +2507,17 @@ function course_outline_delete_object($mixed) {
     $mixed = (array) $mixed;
   }
   $sql = "DELETE FROM {course_outline} WHERE coid = %d";
-  db_query($sql, $mixed['coid']);
+  // TODO Please review the conversion of this statement to the D7 database API syntax.
+  /* db_query($sql, $mixed['coid']) */
+  db_delete('course_outline')
+    ->condition('coid', $mixed['coid'])
+    ->execute();
   $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid = %d";
-  db_query($sql, $mixed['coid']);
+  // TODO Please review the conversion of this statement to the D7 database API syntax.
+  /* db_query($sql, $mixed['coid']) */
+  db_delete('course_outline_fulfillment')
+    ->condition('coid', $mixed['coid'])
+    ->execute();
 }
 
 /**
@@ -2486,14 +2573,9 @@ function course_determine_context($module = NULL, $object_type = NULL, $instance
 
   if (!$context || $flush || $no_set) {
     // Determine the course node based on passed query parameters.
-    $sql = "SELECT nid FROM {course_outline}
-      where instance = '%s'
-      AND module = '%s'
-      AND object_type = '%s'";
-
-    $result = db_query($sql, $instance, $module, $object_type);
+    $result = db_query("SELECT nid FROM {course_outline} WHERE instance = :instance AND module = :module AND object_type = :object_type", array(':instance' => $instance, ':module' => $module, ':object_type' => $object_type));
     $nids = array();
-    while ($course_outline = db_fetch_object($result)) {
+    while ($course_outline = $result->fetch()) {
       $nids[] = $course_outline->nid;
     }
 
@@ -2562,8 +2644,8 @@ function course_date_api_tables() {
  * Implements hook_services_resources().
  */
 function course_services_resources() {
-  require_once 'services/course_report_resource.inc';
-  require_once 'services/course_enrollment_resource.inc';
+  require_once DRUPAL_ROOT . '/' . 'services/course_report_resource.inc';
+  require_once DRUPAL_ROOT . '/' . 'services/course_enrollment_resource.inc';
 
   $resources = array();
 
@@ -2605,16 +2687,17 @@ function course_object_autocomplete_node($types, $string) {
   $placeholders = db_placeholders($values, 'varchar');
   $values[] = $string;
   $values[] = $string;
+  // TODO Please convert this statement to the D7 database API syntax.
   $result = db_query_range(db_rewrite_sql("SELECT n.nid, n.title, u.name FROM {node} n
     INNER JOIN {users} u ON u.uid = n.uid
-    WHERE n.type IN ($placeholders) AND (title LIKE '%%%s%%' OR n.nid = %d)"), $values, 0, 10);
+    WHERE n.type IN ($placeholders) AND (title LIKE '%%%s%%' OR n.nid = %d)"), $values);
 
   $matches = array();
-  while ($node = db_fetch_object($result)) {
+  while ($node = $result->fetch()) {
     $matches[$node->title . " [nid: $node->nid]"] = '<span class="autocomplete_title">' . check_plain($node->title) . '</span>';
   }
 
-  drupal_json($matches);
+  drupal_json_output($matches);
 }
 
 /**
@@ -2637,15 +2720,18 @@ function course_cron() {
 
   if ($modules) {
     // Get a list of fulfillments for CourseObjectNodes.
-    $placeholders = db_placeholders($modules, 'varchar');
     $sql = "SELECT * FROM {course_outline}
     INNER JOIN {course_outline_fulfillment} USING (coid)
-    WHERE module in ($placeholders)";
+    WHERE module in (:modules)";
+    // TODO Please convert this statement to the D7 database API syntax.
     $result = db_query($sql, $modules);
-    while ($row = db_fetch_object($result)) {
+    while ($row = $result->fetch()) {
       $extra = unserialize($row->data);
       if ($extra['private']) {
         // This fulfillment used private content.
+        // TODO Convert "user_load" to "user_load_multiple" if "$row->uid" is other than a uid.
+        // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
+        // Example: array_shift(user_load_multiple(array(), $row->uid))
         $user = user_load($row->uid);
         $courseObject = course_get_course_object_by_id($row->coid, $user);
         if (!$courseObject->access('take')) {
@@ -2655,4 +2741,10 @@ function course_cron() {
       }
     }
   }
+}
+
+function course_admin_paths() {
+  return array(
+    'node/*/course-object/nojs/*/options' => TRUE,
+  );
 }

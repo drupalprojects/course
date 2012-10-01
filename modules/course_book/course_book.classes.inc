@@ -59,7 +59,7 @@ class CourseObjectBook extends CourseObjectNode {
    * Grade (track) the book based on the fulfillment data.
    */
   function grade() {
-    $mlids = array_keys(book_toc($this->node->nid, array(), 99));
+    $mlids = array_keys(book_toc($this->node->nid, 99));
     $viewed = array_keys(array_filter($this->getFulfillment()->getOption('book_fulfillment')));
     if ($this->getOption('book_tracking') == 'all') {
       if (!array_diff($mlids, $viewed)) {

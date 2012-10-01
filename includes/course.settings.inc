@@ -11,7 +11,7 @@
  * @param array $settings
  *   (optional) The loaded settings handler.
  */
-function course_settings_overview() {
+function course_settings_overview($form, &$form_state) {
   // Course settings handler forms. This allows Course to ensure consistent
   // placement of forms from modules that define settings handlers through
   // hook_course_handlers().
@@ -37,12 +37,12 @@ function course_settings_overview() {
       $rows[] = array(
         $package_info['name'],
         $package_info['description'],
-        l(t('Edit'), "admin/settings/course/{$package_key}", array('query' => drupal_get_destination())),
+        l(t('Edit'), "admin/config/course/{$package_key}", array('query' => drupal_get_destination())),
       );
       $package_set[$package_key] = TRUE;
     }
   }
-  $form['course_extensions']['course_extensions_table'] = array('#value' => theme('table', $header, $rows));
+  $form['course_extensions']['course_extensions_table'] = array('#value' => theme('table', array('header' => $header, 'rows' => $rows)));
 
   return $form;
 }

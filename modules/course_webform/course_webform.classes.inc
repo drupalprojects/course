@@ -17,8 +17,10 @@ class CourseObjectWebform extends CourseObjectNode {
   public function getWarnings() {
     $warnings = parent::getWarnings();
 
-    if (!$this->node->webform['components']) {
-      $warnings[] = t('The Webform has no questions. Please !link.', array('!link' => l('add questions', "node/{$this->getInstanceId()}/webform")));
+    if ($this->getInstanceId()) {
+      if (!$this->node->webform['components']) {
+        $warnings[] = t('The Webform has no questions. Please !link.', array('!link' => l('add questions', "node/{$this->getInstanceId()}/webform")));
+      }
     }
 
     return $warnings;
@@ -54,7 +56,7 @@ class CourseObjectWebform extends CourseObjectNode {
       case 'download':
         return array(
           'title' => t('Webform results'),
-          'content' => drupal_get_form('webform_results_download_form', $this->node),
+          'content' => drupal_render(drupal_get_form('webform_results_download_form', $this->node)),
         );
     }
   }
@@ -65,6 +67,14 @@ class CourseObjectWebform extends CourseObjectNode {
 
   function getCloneAbility() {
     return TRUE;
+  }
+
+  function getOptionsSummary() {
+    $summary = parent::getOptionsSummary();
+    if ($this->getInstanceId()) {
+      $summary['questions'] = l('Edit questions', "node/{$this->getInstanceId()}/webform");
+    }
+    return $summary;
   }
 
 }

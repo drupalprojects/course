@@ -1,7 +1,10 @@
 name = Course book
 description = Supports Drupal Books as course objects, with configurable completion requirements.
 package = Course objects
-core = 6.x
+core = 7.x
 dependencies[] = book
 dependencies[] = course
+
+
 files[] = course_book.classes.inc
+files[] = course_book.test

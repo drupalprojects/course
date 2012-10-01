@@ -99,7 +99,7 @@ function _course_report_index($page, $fields, $parameters, $page_size) {
   $out = array();
 
   $result = services_resource_build_index_query('course_report', 'date_completed', $page, $fields, $parameters, 'cr', 'id', $page_size, 'course_report');
-  while ($row = db_fetch_object($result)) {
+  while ($row = $result->fetch()) {
     $out[] = $row;
   }
 
