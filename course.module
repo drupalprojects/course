@@ -900,6 +900,7 @@ function course_node_load($nodes, $types) {
   $result = db_query('SELECT * FROM {course_node} WHERE nid IN (:nids)', array(':nids' => array_keys($nodes)));
   while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     $nodes[$row['nid']]->course = $row;
+    $nodes[$row['nid']]->course['objects'] = array();
   }
 
   $result = db_query("SELECT * FROM {course_outline}
