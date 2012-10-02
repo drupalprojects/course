@@ -867,9 +867,8 @@ function course_node_update($node) {
     foreach ($cck_dates as $key => $variable) {
       $settings = @unserialize(variable_get($variable, array()));
       $field_exists = isset($settings['field']);
-      $items = field_get_items('node', $node, $settings['field'], $node->language);
-
       if ($field_exists) {
+        $items = field_get_items('node', $node, $settings['field'], $node->language);
         $value = $items[0][$settings['value']];
         if (!empty($value)) {
           $date = new DateTime("$value UTC");
@@ -1226,7 +1225,7 @@ function course_form_alter(&$form, &$form_state, $form_id) {
     $form['course']['#tree'] = TRUE;
     $form['course']['#type'] = 'fieldset';
     $form['course']['#title'] = t('Course settings');
-    $form['course']['#group'] = TRUE;
+    $form['course']['#group'] = 'additional_settings';
 
     // Course outline display handler.
     $outlines = array();
