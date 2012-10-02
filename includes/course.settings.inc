@@ -139,6 +139,9 @@ function course_object_custom_fields() {
 
 /**
  * Form for configuring user types.
+ *
+ * @todo move to entities or something, to store information about the user's
+ * enrollment. maybe registration?
  */
 function course_user_type_settings_form() {
   $form = array();

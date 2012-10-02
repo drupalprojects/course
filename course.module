@@ -841,6 +841,7 @@ function course_node_insert($node) {
     if (!isset($node->course)) {
       $node->course = array();
     }
+    course_node_update($node);
   }
 }
 
@@ -852,18 +853,8 @@ function course_node_update($node) {
     $record = $node->course;
     $record['nid'] = $node->nid;
 
-    // Support built-in non-cck date fields.
-    $builtin_dates = array('open', 'close');
-    // Check whether each element has a submitted value, and convert to a
-    // Unix timestamp before saving to the database.
-    foreach ($builtin_dates as $element) {
-      if (!empty($node->course[$element])) {
-        $record[$element] = !empty($node->validated) ? strtotime($node->course[$element]) : $node->course[$element];
-      }
-    }
-
     // Add configurable dates to the node object for easy retrieval.
-    // Support both configurable cck and built-in non-cck date fields.
+    // Support configurable date fields.
     $cck_dates = array(
       'open' => 'course_start_date_' . $node->type,
       'close' => 'course_expiration_date_' . $node->type,
@@ -875,9 +866,11 @@ function course_node_update($node) {
     // overriding the coresponding column from the database.
     foreach ($cck_dates as $key => $variable) {
       $settings = @unserialize(variable_get($variable, array()));
-      $field_exists = module_exists('content') && isset($settings['field']) && content_fields($settings['field'], $node->type) != FALSE;
+      $field_exists = isset($settings['field']);
+      $items = field_get_items('node', $node, $settings['field'], $node->language);
+
       if ($field_exists) {
-        $value = $node->{$settings['field']}[0][$settings['value']];
+        $value = $items[0][$settings['value']];
         if (!empty($value)) {
           $date = new DateTime("$value UTC");
           $value = $date->format('U');
@@ -905,6 +898,11 @@ function course_node_update($node) {
  * Implements hook_node_load().
  */
 function course_node_load($nodes, $types) {
+  $result = db_query('SELECT * FROM {course_node} WHERE nid IN (:nids)', array(':nids' => array_keys($nodes)));
+  while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+    $nodes[$row['nid']]->course = $row;
+  }
+
   $result = db_query("SELECT * FROM {course_outline}
     WHERE nid IN (:nids)
     ORDER BY weight ASC", array(':nids' => array_keys($nodes)));
@@ -1367,7 +1365,7 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
   if (module_exists('date')) {
     $options = array();
     $options[0] = t('<Not specified>');
-    $fields = content_fields();
+    $fields = field_info_fields();
     foreach ($fields as $field) {
       if ($field['module'] == 'date') {
         foreach ($field['columns'] as $column => $value) {
@@ -2664,7 +2662,8 @@ function course_user_type_get_options() {
   $options = array();
 
   if (!empty($field_name)) {
-    $options = content_allowed_values(content_fields($field_name));
+    $field = field_read_field($field_name);
+    $options = $field['settings']['allowed_values'];
   }
 
   $lines = explode("\n", variable_get('course_user_types', ''));
