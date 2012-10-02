@@ -30,6 +30,7 @@ function course_install() {
     'locked' => FALSE,
     'help' => '',
     'min_word_count' => '',
+    'base' => 'node_content',
   );
 
   $type = (object) node_type_set_defaults($type);
