@@ -1254,23 +1254,6 @@ function course_form_alter(&$form, &$form_state, $form_id) {
       '#access' => FALSE,
     );
 
-    if (module_exists('date')) {
-      $open = variable_get('course_start_date_' . $node->type, array());
-      $close = variable_get('course_expiration_date_' . $node->type, array());
-
-      $form['course']['open'] = array(
-        '#title' => t('Release date'),
-        '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
-        '#access' => empty($open['field']),
-      );
-
-      $form['course']['close'] = array(
-        '#title' => t('Expiration date'),
-        '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
-        '#access' => empty($close['field']),
-      );
-    }
-
     $form['course']['duration'] = array(
       '#title' => t('Duration'),
       '#type' => 'textfield',
@@ -1346,12 +1329,14 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#access' => user_access('administer course'),
-    '#group' => TRUE,
+    '#group' => 'additional_settings',
+    '#description' => '<b>' . t('Course settings') . '</b>',
   );
   $form['course']['course_use'] = array(
     '#title' => t('Use as course type'),
     '#type' => 'checkbox',
     '#default_value' => variable_get("course_use_{$form['#node_type']->type}", 0),
+    '#description' => t('This content type will have %course functionality.', array('%course' => 'Course')),
   );
 
   // Ctools dependency.
