@@ -223,6 +223,7 @@ abstract class CourseObject extends CourseHandler {
       'delete' => 0,
       'delete_instance' => 0,
       'grade_include' => 0,
+      'instance' => NULL,
     );
 
     return $defaults;
