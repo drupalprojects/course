@@ -52,8 +52,8 @@ function course_book_init() {
         if (!empty($node->book['mlid'])) {
           $options['book_fulfillment'][$node->book['mlid']] = TRUE;
           $courseObject->getFulfillment()->addOptions($options)->save();
-          $courseObject->grade();
         }
+        $courseObject->grade();
       }
     }
   }
@@ -99,16 +99,18 @@ function course_book_override_outline_list_item(&$item, CourseObject $courseObje
         case 'active_tree':
           // @see book_block().
           $book_node = node_load($bid);
-          $tree = menu_tree_page_data($book_node->book['menu_name'], $book_node->book);
-          // There should only be one element at the top level.
-          $data = array_shift($tree);
+          if (!empty($book_node->book)) {
+            $tree = menu_tree_page_data($book_node->book['menu_name'], $book_node->book);
+            // There should only be one element at the top level.
+            $data = array_shift($tree);
 
-          if ($data['below']) {
-            //$item['children'] = menu_tree_output($data['below']);
-            $output = menu_tree_output($data['below']);
-            // Append to the existing book outline item's data output, since we 
-            // don't have an array but already rendered active menu tree output.
-            $item['data'] .= $output;
+            if ($data['below']) {
+              //$item['children'] = menu_tree_output($data['below']);
+              $output = menu_tree_output($data['below']);
+              // Append to the existing book outline item's data output, since we
+              // don't have an array but already rendered active menu tree output.
+              $item['data'] .= $output;
+            }
           }
           // Note we do not break here purposefully, to additionally append the
           // number of pages to the course outline item title. We do this
@@ -121,12 +123,14 @@ function course_book_override_outline_list_item(&$item, CourseObject $courseObje
           // @kludge replace outline object title with an appended version.
           $subject = $item['data'];
           $pattern = check_plain($courseObject->getTitle());
-          $replacement = t('!title (@count pages)', array('!title' => $pattern, '@count' => $count));
-          // Replace only the first instance of the title (in case the same
-          // string also exists elsewhere in the data output.
-          //$replaced = str_replace($pattern, $replacement, $subject);
-          $replaced = preg_replace('/' . $pattern . '/', $replacement, $subject, 1);
-          $item['data'] = $replaced;
+          if ($count > 1) {
+            $replacement = t('!title (@count pages)', array('!title' => $pattern, '@count' => $count));
+            // Replace only the first instance of the title (in case the same
+            // string also exists elsewhere in the data output.
+            //$replaced = str_replace($pattern, $replacement, $subject);
+            $replaced = preg_replace('/' . $pattern . '/', $replacement, $subject, 1);
+            $item['data'] = $replaced;
+          }
           break;
       }
     }

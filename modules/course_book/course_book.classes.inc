@@ -59,9 +59,15 @@ class CourseObjectBook extends CourseObjectNode {
    * Grade (track) the book based on the fulfillment data.
    */
   function grade() {
-    $mlids = array_keys(book_toc($this->node->nid, array(), 99));
-    $viewed = array_keys(array_filter($this->getFulfillment()->getOption('book_fulfillment')));
+    if (course_book_count($this->node->nid) == 0) {
+      // Book has no pages. Complete object.
+      $this->getFulfillment()->setComplete(1)->save();
+      return;
+    }
+
     if ($this->getOption('book_tracking') == 'all') {
+      $mlids = array_keys(book_toc($this->node->nid, array(), 99));
+      $viewed = array_keys(array_filter($this->getFulfillment()->getOption('book_fulfillment')));
       if (!array_diff($mlids, $viewed)) {
         $this->getFulfillment()->setComplete(1)->save();
       }
@@ -106,4 +112,5 @@ class CourseObjectBook extends CourseObjectNode {
   public function getCloneAbility() {
     return t('%title will only clone the first page.', array('%title' => $this->getTitle()));
   }
+
 }
