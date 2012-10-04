@@ -1600,6 +1600,7 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
     }
 
     // Search for context.
+    $outline_entries = array();
     $result = db_query("SELECT * FROM {course_outline} WHERE module = '%s' AND object_type = '%s' AND instance = '%s'", $module, $object_type, $instance);
     while ($row = db_fetch_object($result)) {
       $outline_entries[$row->nid] = $row;
