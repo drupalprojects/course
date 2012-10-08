@@ -375,7 +375,7 @@ abstract class CourseObject extends CourseHandler {
 
     // Object-specific settings
     foreach (array_keys($this->getOptions()) as $key) {
-      if (!is_null($form_state['values'][$key])) {
+      if (isset($form_state['values'][$key]) && !is_null($form_state['values'][$key])) {
         $_SESSION['course'][$nid]['editing'][$uniqid][$key] = $form_state['values'][$key];
       }
     }
@@ -1178,8 +1178,9 @@ abstract class CourseObjectNode extends CourseObject {
     $nid = $form_state['values']['instance'];
 
     if (!is_numeric($nid)) {
-      preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $nid, $matches);
-      $nid = $matches[2];
+      if (preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $nid, $matches)) {
+        $nid = $matches[2];
+      }
     }
 
     if ($nid) {
