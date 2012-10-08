@@ -599,9 +599,9 @@ function course_block_info() {
  */
 function course_block_configure($delta) {
   module_load_include('inc', 'course', 'includes/course.block');
-  $function = "_course_block_{$delta}_{$op}";
+  $function = "_course_block_{$delta}_configure";
   if (function_exists($function)) {
-    return $function();
+    return $function($delta);
   }
 }
 
@@ -610,9 +610,9 @@ function course_block_configure($delta) {
  */
 function course_block_view($delta) {
   module_load_include('inc', 'course', 'includes/course.block');
-  $function = "_course_block_{$delta}_{$op}";
+  $function = "_course_block_{$delta}_view";
   if (function_exists($function)) {
-    return $function();
+    return $function($delta);
   }
 }
 
@@ -621,9 +621,9 @@ function course_block_view($delta) {
  */
 function course_block_save($delta, $edit) {
   module_load_include('inc', 'course', 'includes/course.block');
-  $function = "_course_block_{$delta}_{$op}";
+  $function = "_course_block_{$delta}_save";
   if (function_exists($function)) {
-    return $function();
+    return $function($delta);
   }
 }
 
