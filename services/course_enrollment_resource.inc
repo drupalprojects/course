@@ -123,13 +123,13 @@ function _course_enrollment_resource() {
  * Delete an enrollment by eid.
  */
 function _course_enrollment_delete($eid) {
-  if ($enrollment = course_enrolment_load($eid)) {
+  if ($enrollment = course_enrollment_load($eid)) {
     $node = node_load($enrollment->nid);
     // TODO Convert "user_load" to "user_load_multiple" if "$enrollment->uid" is other than a uid.
     // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
     // Example: array_shift(user_load_multiple(array(), $enrollment->uid))
     $user = user_load($enrollment->uid);
-    course_unenrol($node, $user);
+    course_unenroll($node, $user);
     return TRUE;
   }
   else {
@@ -142,7 +142,7 @@ function _course_enrollment_delete($eid) {
  * Get one enrollment record.
  */
 function _course_enrollment_retrieve($id) {
-  return course_enrolment_load($id);
+  return course_enrollment_load($id);
 }
 
 /**
@@ -155,10 +155,10 @@ function _course_enrollment_create($enrollment) {
   // Example: array_shift(user_load_multiple(array(), $enrollment['uid']))
   $user = user_load($enrollment['uid']);
   if ($node->nid && $user->uid) {
-    if (course_enrolment_check($node->nid, $user->uid)) {
+    if (course_enrollment_check($node->nid, $user->uid)) {
       services_error('Enrollment already exists.');
     }
-    if ($enroll = course_enrol($node, $user)) {
+    if ($enroll = course_enroll($node, $user)) {
       return $enroll;
     }
     else {
@@ -176,7 +176,7 @@ function _course_enrollment_create($enrollment) {
 function _course_enrollment_index($page, $fields, $parameters, $page_size) {
   $out = array();
 
-  $result = services_resource_build_index_query('course_enrolment', 'created', $page, $fields, $parameters, 'ce', 'eid', $page_size, 'course_enrollment');
+  $result = services_resource_build_index_query('course_enrollment', 'created', $page, $fields, $parameters, 'ce', 'eid', $page_size, 'course_enrollment');
   while ($row = $result->fetch()) {
     $out[] = $row;
   }

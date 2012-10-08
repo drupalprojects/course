@@ -800,9 +800,9 @@ function course_settings_access($node) {
  * @param object $user The user to check.
  */
 function course_can_take_course($node, $user) {
-  $sql = "SELECT * FROM {course_enrolment} WHERE nid = %d AND uid = %d";
-  if ($row = db_query("SELECT * FROM {course_enrolment} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid))->fetch()) {
-    if ($row->enrol_end > 0 && REQUEST_TIME > $row->enrol_end) {
+  $sql = "SELECT * FROM {course_enrollment} WHERE nid = %d AND uid = %d";
+  if ($row = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid))->fetch()) {
+    if ($row->enroll_end > 0 && REQUEST_TIME > $row->enroll_end) {
       return array(array(
           'success' => FALSE,
           'message' => 'Sorry, your enrollment has expired for this course.',
@@ -924,8 +924,8 @@ function course_node_delete($node) {
       ->condition('nid', $node->nid)
       ->execute();
     // TODO Please review the conversion of this statement to the D7 database API syntax.
-    /* db_query("DELETE FROM {course_enrolment} WHERE nid = %d", $node->nid) */
-    db_delete('course_enrolment')
+    /* db_query("DELETE FROM {course_enrollment} WHERE nid = %d", $node->nid) */
+    db_delete('course_enrollment')
       ->condition('nid', $node->nid)
       ->execute();
   }
@@ -996,10 +996,10 @@ function course_save_objects(array $objects, Course $course = NULL) {
 function course_render_button($node) {
   global $user;
 
-  $can_enrol = course_enrol_access($node, $user);
+  $can_enroll = course_enroll_access($node, $user);
 
-  if ($can_enrol['success']) {
-    // User can self-enrol and take the course. Show the button.
+  if ($can_enroll['success']) {
+    // User can self-enroll and take the course. Show the button.
     return course_take_course_button_html($node);
   }
 }
@@ -1020,7 +1020,7 @@ function course_take_course_button_html(&$node) {
 }
 
 /**
- * Enrols a user in a course.
+ * Enrolls a user in a course.
  *
  * Timestamp is by design 0, so a user may purchase a course but start taking
  * it later.
@@ -1030,13 +1030,13 @@ function course_take_course_button_html(&$node) {
  * @param object $user
  *   By reference. The enrolling user.
  * @param string $from
- *   The type of enrollment, if applicable. {course_enrolment}.enrollmenttype.
+ *   The type of enrollment, if applicable. {course_enrollment}.enrollmenttype.
  * @param string $code
- *   The access code used to enroll. {course_enrolment}.code.
+ *   The access code used to enroll. {course_enrollment}.code.
  * @param integer $status
- *   The enrolment status. {course_enrolment}.status.
+ *   The enrollment status. {course_enrollment}.status.
  */
-function course_enrol($node, $account = NULL, $from = NULL, $code = NULL, $status = 1) {
+function course_enroll($node, $account = NULL, $from = NULL, $code = NULL, $status = 1) {
   if (!$account) {
     global $user;
     $account = $user;
@@ -1052,8 +1052,8 @@ function course_enrol($node, $account = NULL, $from = NULL, $code = NULL, $statu
     );
 
     if (isset($node->course['duration']) && $node->course['duration'] > 0) {
-      // Set enrolment end to now + the duration of the course.
-      $enroll['enrol_end'] = REQUEST_TIME + $node->course['duration'] * 86400;
+      // Set enrollment end to now + the duration of the course.
+      $enroll['enroll_end'] = REQUEST_TIME + $node->course['duration'] * 86400;
     }
 
     $enroll = (object) $enroll;
@@ -1062,20 +1062,20 @@ function course_enrol($node, $account = NULL, $from = NULL, $code = NULL, $statu
       '!uid' => $account->uid,
       '!nid' => $node->nid,
     );
-    if (!course_enrolment_check($node->nid, $account->uid)) {
+    if (!course_enrollment_check($node->nid, $account->uid)) {
       // User is not enrolled yet.
-      watchdog('course_enrol', 'Enrolling user !uid into !nid', $watchdog_variables);
-      course_enrolment_save($enroll);
+      watchdog('course_enroll', 'Enrolling user !uid into !nid', $watchdog_variables);
+      course_enrollment_save($enroll);
       $op = 'insert';
     }
     else {
-      watchdog('course_enrol', 'Re-enrolling user !uid into !nid', $watchdog_variables);
-      // return drupal_write_record('course_enrolment', $enroll, array('nid', 'uid'));
+      watchdog('course_enroll', 'Re-enrolling user !uid into !nid', $watchdog_variables);
+      // return drupal_write_record('course_enrollment', $enroll, array('nid', 'uid'));
       $op = 'update';
     }
     // @todo figure $op out.
     // Notify modules about a course enrollment.
-    module_invoke_all('course_enrol', $node, $account, $from, $code, $status);
+    module_invoke_all('course_enroll', $node, $account, $from, $code, $status);
     return $enroll;
   }
   else {
@@ -1096,7 +1096,7 @@ function course_enrol($node, $account = NULL, $from = NULL, $code = NULL, $statu
  * @return bool
  *   TRUE if user is un-enrolled, FALSE if node is not a course.
  */
-function course_unenrol(&$node, &$user) {
+function course_unenroll(&$node, &$user) {
   if (course_node_is_course($node)) {
     $course = course_get_course($node, $user);
     $course->unenroll();
@@ -1109,10 +1109,10 @@ function course_unenrol(&$node, &$user) {
       ->condition('uid', $user->uid)
       ->execute();
 
-    $sql = "DELETE FROM {course_enrolment} WHERE nid = %d AND uid = %d";
+    $sql = "DELETE FROM {course_enrollment} WHERE nid = %d AND uid = %d";
     // TODO Please review the conversion of this statement to the D7 database API syntax.
     /* db_query($sql, $node->nid, $user->uid) */
-    db_delete('course_enrolment')
+    db_delete('course_enrollment')
       ->condition('nid', $node->nid)
       ->condition('uid', $user->uid)
       ->execute();
@@ -1134,12 +1134,12 @@ function course_unenrol(&$node, &$user) {
     }
 
     // Notify other modules after course unenrollment.
-    module_invoke_all('course_unenrol', $node, $user);
+    module_invoke_all('course_unenroll', $node, $user);
     $watchdog_variables = array(
       '!uid' => $user->uid,
       '!nid' => $node->nid,
     );
-    watchdog('course_enrol', 'Removed user !uid from !nid', $watchdog_variables);
+    watchdog('course_enroll', 'Removed user !uid from !nid', $watchdog_variables);
     return TRUE;
   }
   else {
@@ -1158,9 +1158,9 @@ function course_unenrol(&$node, &$user) {
  * @return bool
  *   TRUE if the user is enrolled, FALSE otherwise.
  */
-function course_enrolment_check($nid, $uid) {
-  $sql_check = "SELECT 1 FROM {course_enrolment} WHERE nid = %d AND uid = %d AND status = %d";
-  $query = db_query("SELECT 1 FROM {course_enrolment} WHERE nid = :nid AND uid = :uid AND status = :status", array(':nid' => $nid, ':uid' => $uid, ':status' => 1));
+function course_enrollment_check($nid, $uid) {
+  $sql_check = "SELECT 1 FROM {course_enrollment} WHERE nid = %d AND uid = %d AND status = %d";
+  $query = db_query("SELECT 1 FROM {course_enrollment} WHERE nid = :nid AND uid = :uid AND status = :status", array(':nid' => $nid, ':uid' => $uid, ':status' => 1));
   return $query->fetchField() > 0;
 }
 
@@ -1175,22 +1175,22 @@ function course_enrolment_check($nid, $uid) {
  * @return mixed
  *   Enrollment object or FALSE
  */
-function course_enrolment_load($nid, $uid = NULL) {
+function course_enrollment_load($nid, $uid = NULL) {
   if (is_object($nid)) {
     $nid = $nid->nid;
   }
 
   if (!$uid) {
-    $sql = "SELECT * FROM {course_enrolment} WHERE eid = %d";
-    return db_query("SELECT * FROM {course_enrolment} WHERE eid = :eid", array(':eid' => $nid))->fetch();
+    $sql = "SELECT * FROM {course_enrollment} WHERE eid = %d";
+    return db_query("SELECT * FROM {course_enrollment} WHERE eid = :eid", array(':eid' => $nid))->fetch();
   }
 
   if (is_object($uid)) {
     $uid = $uid->uid;
   }
 
-  $sql = "SELECT * FROM {course_enrolment} WHERE nid = %d AND uid = %d";
-  return db_query("SELECT * FROM {course_enrolment} WHERE nid = :nid AND uid = :uid", array(':nid' => $nid, ':uid' => $uid))->fetch();
+  $sql = "SELECT * FROM {course_enrollment} WHERE nid = %d AND uid = %d";
+  return db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $nid, ':uid' => $uid))->fetch();
 }
 
 /**
@@ -1433,22 +1433,22 @@ function course_take_course($node) {
   global $user;
   drupal_set_title($node->title);
 
-  $result = course_enrol_access($node);
-  $enrolment = course_enrolment_load($node, $user);
+  $result = course_enroll_access($node);
+  $enrollment = course_enrollment_load($node, $user);
   // Check enroll access or if user is already enrolled.
-  if ($result['success'] || $enrolment->status) {
+  if ($result['success'] || $enrollment->status) {
     $result = course_take_course_access($node);
   }
   if ($result['success'] === TRUE) {
-    if (empty($enrolment->eid)) {
+    if (empty($enrollment->eid)) {
       // User has access to take this course, but they haven't been enrolled. So
       // enroll them now.
-      $enrolment = course_enrol($node, $user);
+      $enrollment = course_enroll($node, $user);
     }
-    if (empty($enrolment->timestamp)) {
-      // If user hasn't started course, mark start of enrolment.
-      $enrolment->timestamp = REQUEST_TIME;
-      course_enrolment_save($enrolment);
+    if (empty($enrollment->timestamp)) {
+      // If user hasn't started course, mark start of enrollment.
+      $enrollment->timestamp = REQUEST_TIME;
+      course_enrollment_save($enrollment);
       drupal_set_message(t('Your enrollment in this course has been recorded.'));
     }
 
@@ -1489,18 +1489,18 @@ function course_take_course($node) {
 }
 
 /**
- * Create or update an enrolment.
+ * Create or update an enrollment.
  */
-function course_enrolment_save($enrolment) {
-  if ($enrolment->nid && $enrolment->uid) {
-    if (db_query('SELECT 1 FROM {course_enrolment} WHERE nid = :nid AND uid = :uid', array(':nid' => $enrolment->nid, ':uid' => $enrolment->uid))->fetchField()) {
-      drupal_write_record('course_enrolment', $enrolment, array('nid', 'uid'));
+function course_enrollment_save($enrollment) {
+  if ($enrollment->nid && $enrollment->uid) {
+    if (db_query('SELECT 1 FROM {course_enrollment} WHERE nid = :nid AND uid = :uid', array(':nid' => $enrollment->nid, ':uid' => $enrollment->uid))->fetchField()) {
+      drupal_write_record('course_enrollment', $enrollment, array('nid', 'uid'));
     }
     else {
-      if (!isset($enrolment->created) || $enrolment->created == 0) {
-        $enrolment->created = REQUEST_TIME;
+      if (!isset($enrollment->created) || $enrollment->created == 0) {
+        $enrollment->created = REQUEST_TIME;
       }
-      drupal_write_record('course_enrolment', $enrolment);
+      drupal_write_record('course_enrollment', $enrollment);
     }
   }
   else {
@@ -1865,13 +1865,13 @@ function course_action_info() {
   );
 
   $actions['course_edit_enrollment_action'] = array(
-    'type' => 'course_enrolment',
+    'type' => 'course_enrollment',
     'label' => t('Edit enrollment'),
     'configurable' => TRUE,
   );
 
   $actions['course_remove_enrollment_action'] = array(
-    'type' => 'course_enrolment',
+    'type' => 'course_enrollment',
     'label' => t('Remove a user from current course'),
     'configurable' => FALSE,
   );
@@ -1880,17 +1880,17 @@ function course_action_info() {
 }
 
 /**
- * Action to enrol a user in current course.
+ * Action to enroll a user in current course.
  */
 function course_add_enrollment_action($user, $context) {
   if ($node = node_load(arg(1))) {
-    course_enrol($node, $user);
+    course_enroll($node, $user);
     drupal_set_message(t("Enrolled %name in %title.", array('%name' => $user->name, '%title' => $node->title)));
   }
 }
 
 /**
- * Action to unenrol a user.
+ * Action to unenroll a user.
  */
 function course_remove_enrollment_action(&$enrollment, $context) {
   $node = node_load(arg(1));
@@ -1898,11 +1898,11 @@ function course_remove_enrollment_action(&$enrollment, $context) {
   // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
   // Example: array_shift(user_load_multiple(array(), $enrollment->uid))
   $user = user_load($enrollment->uid);
-  course_unenrol($node, $user);
+  course_unenroll($node, $user);
 }
 
 /**
- * Edit enrolment action
+ * Edit enrollment action
  *
  * @param object $object
  *   An object containing nid and uid properties.
@@ -1910,7 +1910,7 @@ function course_remove_enrollment_action(&$enrollment, $context) {
  *   Values from user input.
  */
 function course_edit_enrollment_action($object, $context) {
-  $enrollment = course_enrolment_load($object->nid, $object->uid);
+  $enrollment = course_enrollment_load($object->nid, $object->uid);
   $node = node_load($enrollment->nid);
   $account = user_load($enrollment->uid);
   $course_report = course_report_load($node, $account);
@@ -1921,10 +1921,10 @@ function course_edit_enrollment_action($object, $context) {
   }
 
   // Update enrollment duration.
-  if ($context['enrol_end']) {
+  if ($context['enroll_end']) {
     // Parse date from popup/plain text.
-    if ($unixtime = strtotime($context['enrol_end'])) {
-      $enrollment->enrol_end = $unixtime + 86399;
+    if ($unixtime = strtotime($context['enroll_end'])) {
+      $enrollment->enroll_end = $unixtime + 86399;
     }
   }
 
@@ -1940,7 +1940,7 @@ function course_edit_enrollment_action($object, $context) {
     }
   }
 
-  course_enrolment_save($enrollment);
+  course_enrollment_save($enrollment);
   course_report_save($course_report);
 
   $course = course_get_course($node, $account);
@@ -2002,7 +2002,7 @@ function course_edit_enrollment_action_form($context) {
     // Only one user, so let's prefill values.
     $selection = reset($context['selection']);
 
-    $enroll = course_enrolment_load($selection->eid);
+    $enroll = course_enrollment_load($selection->eid);
     $account = user_load($enroll->uid);
     $course_report = course_report_load($node, $account);
   }
@@ -2035,12 +2035,12 @@ function course_edit_enrollment_action_form($context) {
     '#description' => t('Setting an enrollment to "inactive" will prevent a user from accessing the course.'),
   );
 
-  $form['enrol_end'] = array(
+  $form['enroll_end'] = array(
     '#title' => t('Extend course enrollment until'),
     '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
     '#date_format' => 'm/d/Y H:i',
     '#description' => t('The date when the user will not be able to access the course.'),
-    '#default_value' => $enroll->enrol_end ? date('Y-m-d H:i:s', $enroll->enrol_end) : '',
+    '#default_value' => $enroll->enroll_end ? date('Y-m-d H:i:s', $enroll->enroll_end) : '',
   );
 
 
@@ -2097,7 +2097,7 @@ function course_edit_enrollment_action_form($context) {
  */
 function course_edit_enrollment_action_submit($form, $form_state) {
   return array(
-    'enrol_end' => $form_state['values']['enrol_end'],
+    'enroll_end' => $form_state['values']['enroll_end'],
     'status' => $form_state['values']['status'],
     'complete' => $form_state['values']['complete'],
     'date_completed' => $form_state['values']['date_completed'],
@@ -2209,8 +2209,8 @@ function course_course_credit_check_completion($course_node) {
       }
     }
     if ($active) {
-      $enrolment = course_enrolment_load($course_node, $user);
-      if (!$enrolment->user_type && arg(2) == 'course-credit-app') {
+      $enrollment = course_enrollment_load($course_node, $user);
+      if (!$enrollment->user_type && arg(2) == 'course-credit-app') {
         // TODO drupal_get_destination() needs to be an array of keys and values instead of a string.
         drupal_goto("node/{$course_node->nid}/course-user-type", array('query' => drupal_get_destination()));
       }
@@ -2248,9 +2248,9 @@ function course_user_type_form($form, $form_state, $node) {
 function course_user_type_form_submit(&$form, $form_state) {
   global $user;
 
-  $enrolment = course_enrolment_load($form['#node'], $user);
-  $enrolment->user_type = $form_state['values']['course_user_type'];
-  course_enrolment_save($enrolment);
+  $enrollment = course_enrollment_load($form['#node'], $user);
+  $enrollment->user_type = $form_state['values']['course_user_type'];
+  course_enrollment_save($enrollment);
 }
 
 /**
@@ -2270,7 +2270,7 @@ function course_user_type_form_submit(&$form, $form_state) {
  *   has permission to self-enroll in this course, and 'message', a
  *   module-provided message that should be displayed to the user.
  */
-function course_enrol_access($node, $user = NULL, $flush = FALSE) {
+function course_enroll_access($node, $user = NULL, $flush = FALSE) {
   static $courses = array();
 
   if (!$user) {
@@ -2280,7 +2280,7 @@ function course_enrol_access($node, $user = NULL, $flush = FALSE) {
   if (!isset($courses[$node->nid]) || $flush) {
     $courses[$node->nid]['success'] = TRUE;
     // Allow modules to set self-enrollment access for a user.
-    $hooks = module_invoke_all('course_can_enrol', $node, $user);
+    $hooks = module_invoke_all('course_can_enroll', $node, $user);
     foreach ($hooks as $key => $hook) {
       if (!$hook) {
         // Ok. Old style blocker. But look for messages.
@@ -2298,11 +2298,11 @@ function course_enrol_access($node, $user = NULL, $flush = FALSE) {
 }
 
 /**
- * Implements hook_course_can_enrol().
+ * Implements hook_course_can_enroll().
  *
  * Block enrollments when a course has either not yet started or is expired.
  */
-function course_course_can_enrol($node, $user) {
+function course_course_can_enroll($node, $user) {
   if (!empty($node->course['open']) && REQUEST_TIME < $node->course['open']) {
     return array(array(
         'success' => FALSE,
@@ -2399,11 +2399,11 @@ function course_user_cancel($edit, $account, $method) {
       ->condition('uid', $account->uid)
       ->execute();
 
-    $sql = "SELECT * FROM {course_enrolment} WHERE uid = %d";
-    $result = db_query("SELECT * FROM {course_enrolment} WHERE uid = :uid", array(':uid' => $account->uid));
+    $sql = "SELECT * FROM {course_enrollment} WHERE uid = %d";
+    $result = db_query("SELECT * FROM {course_enrollment} WHERE uid = :uid", array(':uid' => $account->uid));
     while ($enrollment = $result->fetch()) {
       $node = node_load($enrollment->nid);
-      course_unenrol($node, $account);
+      course_unenroll($node, $account);
     }
   }
 }
@@ -2431,10 +2431,10 @@ function course_views_bulk_operations_object_info() {
       'load' => 'course_report_load',
       'title' => 'name',
     ),
-    'course_enrolment' => array(
-      'type' => 'course_enrolment',
-      'base_table' => 'course_enrolment',
-      'load' => 'course_enrolment_load',
+    'course_enrollment' => array(
+      'type' => 'course_enrollment',
+      'base_table' => 'course_enrollment',
+      'load' => 'course_enrollment_load',
       'title' => 'eid',
     ),
   );
@@ -2609,8 +2609,8 @@ function course_date_api_fields($field) {
   switch ($field) {
     case 'course_report.date_completed':
     case 'course_report.updated':
-    case 'course_enrolment.timestamp':
-    case 'course_enrolment.enrol_end':
+    case 'course_enrollment.timestamp':
+    case 'course_enrollment.enroll_end':
     case 'course_node.open':
     case 'course_node.close':
       return $values;
@@ -2621,7 +2621,7 @@ function course_date_api_fields($field) {
  * Implements hook_date_api_tables().
  */
 function course_date_api_tables() {
-  return array('course_report', 'course_enrolment', 'course_node');
+  return array('course_report', 'course_enrollment', 'course_node');
 }
 
 /**
@@ -2743,5 +2743,34 @@ function course_admin_paths() {
 function course_ctools_plugin_type() {
   return array(
    'access' => array(),
+  );
+}
+
+/**
+ * Implements hook_entity_info().
+ */
+function course_entity_info() {
+  return array(
+    'course_enrollment' => array(
+      'label' => 'Course enrollment',
+      // Not yet.
+      //'controller class' => 'CourseEnrollment',
+      'base table' => 'course_enrollment',
+      'load hook' => 'course_enrollment_load',
+      'uri callback' => 'course_enrollment_uri',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'eid',
+      ),
+    ),
+  );
+}
+
+/**
+ * Generate URI from enrollment entity.
+ */
+function course_enrollment_uri($enrollment) {
+  return array(
+    'path' => 'node/' . $enrollment->nid,
   );
 }

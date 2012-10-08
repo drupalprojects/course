@@ -139,11 +139,11 @@ function course_uc_init() {
 }
 
 /**
- * Implements hook_course_enrol().
+ * Implements hook_course_enroll().
  *
  * Satisfy payment requirement when manually enrolled.
  */
-function course_uc_course_enrol($node, $user) {
+function course_uc_course_enroll($node, $user) {
   $course = course_get_course($node, $user);
   foreach ($course->getObjects() as $idx => $courseObject) {
     if ($idx == 0 && $courseObject->getComponent() == 'payment') {
@@ -246,7 +246,7 @@ function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_stat
 /**
  * Implements hook_ca_action().
  *
- * Add action to enrol a user in a course.
+ * Add action to enroll a user in a course.
  *
  * @return array
  */
@@ -256,10 +256,10 @@ function course_uc_ca_action() {
     '#title' => t('Order'),
   );
 
-  $actions['course_uc_enrol_user_in_ordered_courses'] = array(
+  $actions['course_uc_enroll_user_in_ordered_courses'] = array(
     '#title' => t('Enroll user in course(s)'),
     '#category' => t('Order'),
-    '#callback' => 'course_uc_enrol_user_in_ordered_courses',
+    '#callback' => 'course_uc_enroll_user_in_ordered_courses',
     '#arguments' => array(
       'order' => $arg,
     ),
@@ -269,9 +269,9 @@ function course_uc_ca_action() {
 }
 
 /**
- * Loops through items in an Ubercart order and enrols the user in courses purchased.
+ * Loops through items in an Ubercart order and enrolls the user in courses purchased.
  */
-function course_uc_enrol_user_in_ordered_courses($order) {
+function course_uc_enroll_user_in_ordered_courses($order) {
   foreach ($order->products as $product) {
     $node = node_load($product->nid);
     // TODO Convert "user_load" to "user_load_multiple" if "$order->uid" is other than a uid.
@@ -282,8 +282,8 @@ function course_uc_enrol_user_in_ordered_courses($order) {
     if (course_node_is_course($node)) {
       // This product is an actual course. They have to be enrolled.
       // This will also satisfy the first payment requirement.
-      // @see course_uc_course_enrol()
-      course_enrol($node, $user, 'ubercart');
+      // @see course_uc_course_enroll()
+      course_enroll($node, $user, 'ubercart');
     }
 
     if ($courseNode = course_determine_context('course_uc', 'payment', $node->nid)) {
@@ -304,7 +304,7 @@ function course_uc_enrol_user_in_ordered_courses($order) {
  * Implements hook_ca_predicate().
  */
 function course_uc_ca_predicate() {
-  $configurations['course_uc_enrol_user_in_ordered_courses'] = array(
+  $configurations['course_uc_enroll_user_in_ordered_courses'] = array(
     '#title' => t('Enroll user in ordered courses'),
     '#class' => 'course',
     '#trigger' => 'uc_order_status_update',
@@ -326,7 +326,7 @@ function course_uc_ca_predicate() {
     ),
     '#actions' => array(
       array(
-        '#name' => 'course_uc_enrol_user_in_ordered_courses',
+        '#name' => 'course_uc_enroll_user_in_ordered_courses',
         '#title' => t('Enroll user in ordered courses'),
         '#argument_map' => array(
           'order' => 'order',
@@ -406,11 +406,11 @@ function course_uc_course_handlers() {
 }
 
 /**
- * Implements hook_course_can_enrol().
+ * Implements hook_course_can_enroll().
  *
- * Can the user self-enrol in this course? No, they have to pay for it.
+ * Can the user self-enroll in this course? No, they have to pay for it.
  */
-function course_uc_course_can_enrol($node, $user) {
+function course_uc_course_can_enroll($node, $user) {
   $course = course_get_course($node, $user);
   foreach ($course->getObjects() as $idx => $courseObject) {
     if ($idx == 0) {

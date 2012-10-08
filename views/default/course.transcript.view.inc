@@ -91,9 +91,9 @@ $handler->display->display_options['fields']['title']['alter']['html'] = 0;
 $handler->display->display_options['fields']['title']['hide_empty'] = 0;
 $handler->display->display_options['fields']['title']['empty_zero'] = 0;
 $handler->display->display_options['fields']['title']['link_to_node'] = 1;
-/* Field: Course enrolments: Start of enrolment */
+/* Field: Course enrollments: Start of enrollment */
 $handler->display->display_options['fields']['timestamp']['id'] = 'timestamp';
-$handler->display->display_options['fields']['timestamp']['table'] = 'course_enrolment';
+$handler->display->display_options['fields']['timestamp']['table'] = 'course_enrollment';
 $handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
 $handler->display->display_options['fields']['timestamp']['relationship'] = 'course_enrollment';
 $handler->display->display_options['fields']['timestamp']['label'] = 'Date enrolled';
@@ -212,9 +212,9 @@ $handler->display->display_options['fields']['title']['alter']['html'] = 0;
 $handler->display->display_options['fields']['title']['hide_empty'] = 0;
 $handler->display->display_options['fields']['title']['empty_zero'] = 0;
 $handler->display->display_options['fields']['title']['link_to_node'] = 1;
-/* Field: Course enrolments: Start of enrolment */
+/* Field: Course enrollments: Start of enrollment */
 $handler->display->display_options['fields']['timestamp']['id'] = 'timestamp';
-$handler->display->display_options['fields']['timestamp']['table'] = 'course_enrolment';
+$handler->display->display_options['fields']['timestamp']['table'] = 'course_enrollment';
 $handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
 $handler->display->display_options['fields']['timestamp']['relationship'] = 'course_enrollment';
 $handler->display->display_options['fields']['timestamp']['label'] = 'Date enrolled';

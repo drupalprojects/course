@@ -4,7 +4,7 @@ $view = new view;
 $view->name = 'course_enrollment_vbo_admin';
 $view->description = 'Per-node signup administration interface with checkboxes for bulk operations.';
 $view->tag = 'Signup';
-$view->base_table = 'course_enrolment';
+$view->base_table = 'course_enrollment';
 $view->human_name = '';
 $view->core = 0;
 $view->api_version = '3.0';
@@ -22,7 +22,7 @@ $handler->display->display_options['style_plugin'] = 'bulk';
 $handler->display->display_options['style_options']['columns'] = array(
   'name' => 'name',
   'timestamp' => 'timestamp',
-  'enrol_end' => 'enrol_end',
+  'enroll_end' => 'enroll_end',
 );
 $handler->display->display_options['style_options']['default'] = '-1';
 $handler->display->display_options['style_options']['info'] = array(
@@ -38,7 +38,7 @@ $handler->display->display_options['style_options']['info'] = array(
     'align' => '',
     'separator' => '',
   ),
-  'enrol_end' => array(
+  'enroll_end' => array(
     'sortable' => 0,
     'default_sort_order' => 'asc',
     'align' => '',
@@ -96,14 +96,14 @@ $handler->display->display_options['style_options']['display_result'] = 1;
 $handler->display->display_options['style_options']['merge_single_action'] = 0;
 $handler->display->display_options['style_options']['hide_selector'] = 0;
 $handler->display->display_options['style_options']['preserve_selection'] = 1;
-/* Relationship: Course enrolments: Course node */
+/* Relationship: Course enrollments: Course node */
 $handler->display->display_options['relationships']['nid_1']['id'] = 'nid_1';
-$handler->display->display_options['relationships']['nid_1']['table'] = 'course_enrolment';
+$handler->display->display_options['relationships']['nid_1']['table'] = 'course_enrollment';
 $handler->display->display_options['relationships']['nid_1']['field'] = 'nid';
 $handler->display->display_options['relationships']['nid_1']['required'] = 0;
-/* Relationship: Course enrolments: User */
+/* Relationship: Course enrollments: User */
 $handler->display->display_options['relationships']['uid_1']['id'] = 'uid_1';
-$handler->display->display_options['relationships']['uid_1']['table'] = 'course_enrolment';
+$handler->display->display_options['relationships']['uid_1']['table'] = 'course_enrollment';
 $handler->display->display_options['relationships']['uid_1']['field'] = 'uid';
 $handler->display->display_options['relationships']['uid_1']['required'] = 0;
 /* Field: User: Name */
@@ -130,9 +130,9 @@ $handler->display->display_options['fields']['name']['empty_zero'] = 0;
 $handler->display->display_options['fields']['name']['hide_alter_empty'] = 1;
 $handler->display->display_options['fields']['name']['link_to_user'] = 1;
 $handler->display->display_options['fields']['name']['overwrite_anonymous'] = 0;
-/* Field: Course enrolments: Start of enrolment */
+/* Field: Course enrollments: Start of enrollment */
 $handler->display->display_options['fields']['timestamp']['id'] = 'timestamp';
-$handler->display->display_options['fields']['timestamp']['table'] = 'course_enrolment';
+$handler->display->display_options['fields']['timestamp']['table'] = 'course_enrollment';
 $handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
 $handler->display->display_options['fields']['timestamp']['relationship'] = 'course_enrollment';
 $handler->display->display_options['fields']['timestamp']['label'] = 'Enroll start';
@@ -153,29 +153,29 @@ $handler->display->display_options['fields']['timestamp']['element_default_class
 $handler->display->display_options['fields']['timestamp']['hide_empty'] = 0;
 $handler->display->display_options['fields']['timestamp']['empty_zero'] = 0;
 $handler->display->display_options['fields']['timestamp']['hide_alter_empty'] = 1;
-/* Field: Course enrolments: End of enrolment */
-$handler->display->display_options['fields']['enrol_end']['id'] = 'enrol_end';
-$handler->display->display_options['fields']['enrol_end']['table'] = 'course_enrolment';
-$handler->display->display_options['fields']['enrol_end']['field'] = 'enrol_end';
-$handler->display->display_options['fields']['enrol_end']['relationship'] = 'course_enrollment';
-$handler->display->display_options['fields']['enrol_end']['label'] = 'Enroll End';
-$handler->display->display_options['fields']['enrol_end']['alter']['alter_text'] = 0;
-$handler->display->display_options['fields']['enrol_end']['alter']['make_link'] = 0;
-$handler->display->display_options['fields']['enrol_end']['alter']['absolute'] = 0;
-$handler->display->display_options['fields']['enrol_end']['alter']['external'] = 0;
-$handler->display->display_options['fields']['enrol_end']['alter']['replace_spaces'] = 0;
-$handler->display->display_options['fields']['enrol_end']['alter']['trim_whitespace'] = 0;
-$handler->display->display_options['fields']['enrol_end']['alter']['nl2br'] = 0;
-$handler->display->display_options['fields']['enrol_end']['alter']['word_boundary'] = 1;
-$handler->display->display_options['fields']['enrol_end']['alter']['ellipsis'] = 1;
-$handler->display->display_options['fields']['enrol_end']['alter']['strip_tags'] = 0;
-$handler->display->display_options['fields']['enrol_end']['alter']['trim'] = 0;
-$handler->display->display_options['fields']['enrol_end']['alter']['html'] = 0;
-$handler->display->display_options['fields']['enrol_end']['element_label_colon'] = 1;
-$handler->display->display_options['fields']['enrol_end']['element_default_classes'] = 1;
-$handler->display->display_options['fields']['enrol_end']['hide_empty'] = 0;
-$handler->display->display_options['fields']['enrol_end']['empty_zero'] = 0;
-$handler->display->display_options['fields']['enrol_end']['hide_alter_empty'] = 1;
+/* Field: Course enrollments: End of enrollment */
+$handler->display->display_options['fields']['enroll_end']['id'] = 'enroll_end';
+$handler->display->display_options['fields']['enroll_end']['table'] = 'course_enrollment';
+$handler->display->display_options['fields']['enroll_end']['field'] = 'enroll_end';
+$handler->display->display_options['fields']['enroll_end']['relationship'] = 'course_enrollment';
+$handler->display->display_options['fields']['enroll_end']['label'] = 'Enroll End';
+$handler->display->display_options['fields']['enroll_end']['alter']['alter_text'] = 0;
+$handler->display->display_options['fields']['enroll_end']['alter']['make_link'] = 0;
+$handler->display->display_options['fields']['enroll_end']['alter']['absolute'] = 0;
+$handler->display->display_options['fields']['enroll_end']['alter']['external'] = 0;
+$handler->display->display_options['fields']['enroll_end']['alter']['replace_spaces'] = 0;
+$handler->display->display_options['fields']['enroll_end']['alter']['trim_whitespace'] = 0;
+$handler->display->display_options['fields']['enroll_end']['alter']['nl2br'] = 0;
+$handler->display->display_options['fields']['enroll_end']['alter']['word_boundary'] = 1;
+$handler->display->display_options['fields']['enroll_end']['alter']['ellipsis'] = 1;
+$handler->display->display_options['fields']['enroll_end']['alter']['strip_tags'] = 0;
+$handler->display->display_options['fields']['enroll_end']['alter']['trim'] = 0;
+$handler->display->display_options['fields']['enroll_end']['alter']['html'] = 0;
+$handler->display->display_options['fields']['enroll_end']['element_label_colon'] = 1;
+$handler->display->display_options['fields']['enroll_end']['element_default_classes'] = 1;
+$handler->display->display_options['fields']['enroll_end']['hide_empty'] = 0;
+$handler->display->display_options['fields']['enroll_end']['empty_zero'] = 0;
+$handler->display->display_options['fields']['enroll_end']['hide_alter_empty'] = 1;
 /* Argument: Node: Nid */
 $handler->display->display_options['arguments']['nid']['id'] = 'nid';
 $handler->display->display_options['arguments']['nid']['table'] = 'node';
