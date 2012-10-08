@@ -48,12 +48,12 @@ class CourseObjectSignupTestCase extends CourseTestCase {
     $sid = signup_sign_up_user($form);
 
     // Check the enrollment.
-    $enroll = course_enrolment_load($courseNode->nid, $user->uid);
+    $enroll = course_enrollment_load($courseNode->nid, $user->uid);
     $this->assertTrue($enroll->eid > 0, 'Found enrollment after signing up.');
 
     // Cancel the signup and check the enrollment.
     signup_cancel_signup($sid);
-    $enroll = course_enrolment_load($courseNode->nid, $user->uid);
+    $enroll = course_enrollment_load($courseNode->nid, $user->uid);
     $this->assertFalse($enroll, 'Cancelled enrollment after cancelling signup.');
   }
 }

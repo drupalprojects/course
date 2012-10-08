@@ -52,9 +52,9 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $courseNode->sell_price = 5;
     node_save($courseNode);
 
-    $result = course_enrol_access($courseNode);
+    $result = course_enroll_access($courseNode);
     $this->assertFalse($result['success'], 'User prevented from enrolling into paid course.');
-    $result = course_enrol_access($courseNode);
+    $result = course_enroll_access($courseNode);
     $this->assertFalse($result['success'], 'User prevented from taking paid course.');
 
     $order = uc_order_new($user->uid);
@@ -63,7 +63,7 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     uc_order_update_status($order->order_id, 'completed');
 
     // Check newly granted access to course.
-    $result = course_enrol_access($courseNode, $user, TRUE);
+    $result = course_enroll_access($courseNode, $user, TRUE);
     $this->assertTrue($result['success'], 'User granted access to enroll into course.');
     $result = course_take_course_access($courseNode);
     $this->assertTrue($result['success'], 'User granted access to take course.');

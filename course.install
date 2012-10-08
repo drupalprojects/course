@@ -135,11 +135,11 @@ function course_schema() {
     ),
   );
 
-  $schema['course_enrolment'] = array(
-    'description' => 'Stores enrolment records.',
+  $schema['course_enrollment'] = array(
+    'description' => 'Stores enrollment records.',
     'fields' => array(
       'eid' => array(
-        'description' => 'Primary Key: The eid of the enrolment.',
+        'description' => 'Primary Key: The eid of the enrollment.',
         'type' => 'serial',
         'unsigned' => TRUE,
         'not null' => TRUE,
@@ -170,14 +170,14 @@ function course_schema() {
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'description' => 'The enrolment status.',
+        'description' => 'The enrollment status.',
       ),
       'created' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'description' => 'The time this enrolment was created.',
+        'description' => 'The time this enrollment was created.',
       ),
       'timestamp' => array(
         'type' => 'int',
@@ -186,12 +186,12 @@ function course_schema() {
         'default' => 0,
         'description' => 'The time the user started the course.',
       ),
-      'enrol_end' => array(
+      'enroll_end' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-        'description' => 'Date enrolment ends.',
+        'description' => 'Date enrollment ends.',
       ),
       'code' => array(
         'type' => 'varchar',
@@ -671,7 +671,7 @@ function course_update_6129() {
 
 /**
  * Add `hidden` column to course_outline, add `created` column to
- * course_enrolment. Add serialized `data` column to course_outline.
+ * course_enrollment. Add serialized `data` column to course_outline.
  */
 function course_update_6130() {
   $ret = array();
@@ -900,4 +900,20 @@ function course_update_6136() {
   // nothing or a translated string indicating the update ran successfully.
   // See http://drupal.org/node/224333#update_sql.
   return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
+}
+
+/**
+ * Rename schema instances of "enrol" to "enroll".
+ */
+function course_update_7000() {
+  db_change_field('course_enrolment', 'enrol_end', 'enroll_end', array(
+    'type' => 'int',
+    'unsigned' => TRUE,
+    'not null' => TRUE,
+    'default' => 0,
+    'description' => 'Date enrollment ends.',
+  ));
+  db_rename_table('course_enrolment', 'course_enrollment');
+
+  return t('Renamed table course_enrolment to course_enrollment');
 }

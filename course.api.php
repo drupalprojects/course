@@ -230,15 +230,15 @@ function hook_course_button($node) {
  * @param object $user
  *   The enrolling user.
  * @param string $from
- *   The type of enrollment, if applicable. {course_enrolment}.enrollmenttype.
+ *   The type of enrollment, if applicable. {course_enrollment}.enrollmenttype.
  * @param string $code
- *   The access code used to enroll. {course_enrolment}.code.
+ *   The access code used to enroll. {course_enrollment}.code.
  * @param integer $status
- *   The enrolment status. {course_enrolment}.status.
+ *   The enrollment status. {course_enrollment}.status.
  *
- * @see course_enrol()
+ * @see course_enroll()
  */
-function hook_course_enrol($node, $user, $from, $code, $status) {
+function hook_course_enroll($node, $user, $from, $code, $status) {
   // @todo add example.
 }
 
@@ -250,9 +250,9 @@ function hook_course_enrol($node, $user, $from, $code, $status) {
  * @param object $user.
  *   The unenrolled user.
  *
- * @see course_unenrol()
+ * @see course_unenroll()
  */
-function hook_course_unenrol($node, $user) {
+function hook_course_unenroll($node, $user) {
   // @todo add example.
 }
 
@@ -273,9 +273,9 @@ function hook_course_unenrol($node, $user) {
  *     self-enroll in this course.
  *   - message: String. If success is FALSE, a message to display to the user.
  *
- * @see course_enrol_access()
+ * @see course_enroll_access()
  */
-function hook_course_can_enrol($node, $user) {
+function hook_course_can_enroll($node, $user) {
   // Example: do not allow users to take courses on Wednesdays.
   if (date('L') == 'wednesday') {
     $hooks[] = array(

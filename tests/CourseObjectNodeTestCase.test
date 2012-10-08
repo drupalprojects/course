@@ -43,7 +43,7 @@ class CourseObjectNodeTestCase extends CourseTestCase {
     node_access_rebuild();
 
     $co1->setUser($this->student_user);
-    course_enrol($courseNode, $user);
+    course_enroll($courseNode, $user);
 
     $this->drupalGet("node/" . $co1->getInstanceId());
     $this->assertResponse(403, 'Check that node is protected outside the course.');

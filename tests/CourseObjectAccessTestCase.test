@@ -37,7 +37,7 @@ class CourseObjectAccessTestCase extends CourseTestCase {
     $this->assertFalse($co[0]->access('take', $user), 'Check that object 1 is not accessible.');
 
     // (until they are enrolled)
-    course_enrol($courseNode, $user);
+    course_enroll($courseNode, $user);
 
     // User should be able to access first object, but no others.
     $this->assertTrue($co[0]->access('take', $user), 'Check that object 1 is accessible after enrollment.');
@@ -76,7 +76,7 @@ class CourseObjectAccessTestCase extends CourseTestCase {
 
     $co = $course->getObjects();
 
-    course_enrol($courseNode, $user);
+    course_enroll($courseNode, $user);
 
     // Set all optional except the second object.
     $co[0]->setOption('required', 0);

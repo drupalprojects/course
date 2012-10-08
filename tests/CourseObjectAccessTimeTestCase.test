@@ -70,7 +70,7 @@ class CourseObjectAccessTimeTestCase extends CourseTestCase {
     $courseNode = $this->createCourseNode();
     $options = array();
 
-    course_enrol($courseNode);
+    course_enroll($courseNode);
     $o3 = $this->createCourseObject($courseNode);
 
     // Start the course object 5 minutes ago.

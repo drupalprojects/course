@@ -80,7 +80,7 @@ function course_signup_quick_register($node, $account, $notify = TRUE) {
 /**
  * Implements hook_signup_insert().
  *
- * Enrol a user in the course if they sign up for a course.
+ * Enroll a user in the course if they sign up for a course.
  */
 function course_signup_signup_insert($signup) {
   course_signup_signup_enroll($signup);
@@ -89,7 +89,7 @@ function course_signup_signup_insert($signup) {
 /**
  * Implements hook_signup_update().
  *
- * Enrol a user in criteria passes when the sign up gets updated (status etc).
+ * Enroll a user in criteria passes when the sign up gets updated (status etc).
  */
 function course_signup_signup_update($signup) {
   course_signup_signup_enroll($signup);
@@ -98,12 +98,12 @@ function course_signup_signup_update($signup) {
 /**
  * Implements hook_signup_delete().
  *
- * Un-enrol the user.
+ * Un-enroll the user.
  */
 function course_signup_signup_delete($signup) {
   $node = node_load($signup->nid);
   $user = node_load($signup->uid);
-  course_unenrol($node, $user);
+  course_unenroll($node, $user);
 }
 
 /**
@@ -120,7 +120,7 @@ function course_signup_signup_enroll($signup) {
       // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
       // Example: array_shift(user_load_multiple(array(), $signup->uid))
       $user = user_load($signup->uid);
-      course_enrol($node, $user, 'course_signup');
+      course_enroll($node, $user, 'course_signup');
     }
   }
 }
@@ -128,20 +128,20 @@ function course_signup_signup_enroll($signup) {
 /**
  * Implements hook_signup_cancel().
  *
- * Un-enrol user from course on signup cancellation.
+ * Un-enroll user from course on signup cancellation.
  */
 function course_signup_signup_cancel($signup, $node) {
   // TODO Convert "user_load" to "user_load_multiple" if "$signup->uid" is other than a uid.
   // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
   // Example: array_shift(user_load_multiple(array(), $signup->uid))
   $user = user_load($signup->uid);
-  course_unenrol($node, $user);
+  course_unenroll($node, $user);
 }
 
 /**
  * Implements hook_init().
  *
- * Override signup admin VBO to use course VBO. Enrol user in course before the
+ * Override signup admin VBO to use course VBO. Enroll user in course before the
  * access checks happen if the user can quick register.
  */
 function course_signup_init() {
@@ -194,11 +194,11 @@ function course_signup_add_to_cart($nid, $qty, $data) {
 }
 
 /**
- * Implements hook_course_enrol().
+ * Implements hook_course_enroll().
  *
  * If a user is enrolled outside of signup, sign them up as well.
  */
-function course_signup_course_enrol($node, $user, $from, $code, $status) {
+function course_signup_course_enroll($node, $user, $from, $code, $status) {
   // Check if uc_signup is enabled and this enrollment is from ubercart. If it
   // is, we don't want to sign the user up, because uc_signup will convert the
   // temporary signup and create a duplicate.
@@ -218,9 +218,9 @@ function course_signup_course_enrol($node, $user, $from, $code, $status) {
 }
 
 /**
- * Implements hook_course_can_enrol().
+ * Implements hook_course_can_enroll().
  */
-function course_signup_course_can_enrol($node, $user) {
+function course_signup_course_can_enroll($node, $user) {
   $hooks = array();
 
   // We depend on Signup Restrict by Role for enrollment access per role.
@@ -291,9 +291,9 @@ function course_signup_watchdog($watchdog) {
  * Create a signup for every enrollment.
  */
 function course_signup_migrate_enrollments() {
-  if (db_table_exists('course_enrolment') && db_table_exists('signup_log')) {
+  if (db_table_exists('course_enrollment') && db_table_exists('signup_log')) {
     // Ensure a signup exists for each full course enrollment.
-    $sql = "SELECT ce.* FROM {course_enrolment} ce
+    $sql = "SELECT ce.* FROM {course_enrollment} ce
     LEFT JOIN {signup_log} sl ON (ce.nid = sl.nid AND ce.uid = sl.uid)
     where sid is null and ce.status";
     $result = db_query($sql);

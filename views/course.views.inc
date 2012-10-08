@@ -47,15 +47,15 @@ function course_views_data() {
     }
   }
 
-  $data['course_enrolment']['table']['base'] = array(
+  $data['course_enrollment']['table']['base'] = array(
     'field' => 'eid',
     'title' => t('Course enrollment'),
     'help' => t('Course enrollments.'),
   );
 
-  $data['course_enrolment']['table']['group'] = t('Course enrolments');
+  $data['course_enrollment']['table']['group'] = t('Course enrollments');
 
-  $data['course_enrolment']['table']['join'] = array(
+  $data['course_enrollment']['table']['join'] = array(
     'node' => array(
       'left_field' => 'nid',
       'field' => 'nid',
@@ -69,7 +69,7 @@ function course_views_data() {
   $data['course_report']['course_enrollment'] = array(
     'title' => 'Course enrollment',
     'relationship' => array(
-      'base' => 'course_enrolment',
+      'base' => 'course_enrollment',
       'handler' => 'course_views_handler_relationship_ce_cr',
       'label' => t('Enrollment'),
       'help' => 'Create a relationship from the course report to the course enrollment data.',
@@ -79,15 +79,15 @@ function course_views_data() {
   $data['signup_log']['course_enrollment'] = array(
     'title' => 'Course enrollment',
     'relationship' => array(
-      'base' => 'course_enrolment',
+      'base' => 'course_enrollment',
       'handler' => 'course_views_handler_relationship_ce_sl',
       'label' => t('Enrollment'),
       'help' => 'Create a relationship from the signup log to the course enrollment data.',
     ),
   );
 
-  $data['course_enrolment']['nid'] = array(
-    'title' => 'Node ID of enrolment',
+  $data['course_enrollment']['nid'] = array(
+    'title' => 'Node ID of enrollment',
     'field' => array(
       'handler' => 'views_handler_field_node',
       'click_sortable' => TRUE,
@@ -104,8 +104,8 @@ function course_views_data() {
     ),
   );
 
-  $data['course_enrolment']['uid'] = array(
-    'title' => 'User ID of enrolment',
+  $data['course_enrollment']['uid'] = array(
+    'title' => 'User ID of enrollment',
     'field' => array(
       'handler' => 'views_handler_field_user',
       'click_sortable' => TRUE,
@@ -125,7 +125,7 @@ function course_views_data() {
   $data['users']['course_enrollments'] = array(
     'title' => 'Enrollments',
     'relationship' => array(
-      'base' => 'course_enrolment',
+      'base' => 'course_enrollment',
       'base field' => 'uid',
       'relationship field' => 'uid',
       'handler' => 'views_handler_relationship',
@@ -134,8 +134,8 @@ function course_views_data() {
     ),
   );
 
-  $data['course_enrolment']['timestamp'] = array(
-    'title' => t('Start of enrolment'),
+  $data['course_enrollment']['timestamp'] = array(
+    'title' => t('Start of enrollment'),
     'help' => t('The date the user started the course.'),
     'field' => array(
       'handler' => 'views_handler_field_date',
@@ -152,8 +152,8 @@ function course_views_data() {
     ),
   );
 
-  $data['course_enrolment']['enrol_end'] = array(
-    'title' => t('End of enrolment'),
+  $data['course_enrollment']['enroll_end'] = array(
+    'title' => t('End of enrollment'),
     'help' => t('The date the user will expire in this course.'),
     'field' => array(
       'handler' => 'views_handler_field_date',
@@ -170,9 +170,9 @@ function course_views_data() {
     ),
   );
 
-  $data['course_enrolment']['eid'] = array(
-    'title' => t('Enrolment ID'),
-    'help' => t('The ID of the enrolment.'),
+  $data['course_enrollment']['eid'] = array(
+    'title' => t('Enrollment ID'),
+    'help' => t('The ID of the enrollment.'),
     'sort' => array(
       'handler' => 'views_handler_sort',
     ),
@@ -341,7 +341,7 @@ function course_views_data() {
 
   $data['course_report']['enrollmenttype'] = array(
     'title' => t('Enrollment type'),
-    'help' => t('The module responsible for this enrolment.'),
+    'help' => t('The module responsible for this enrollment.'),
     'field' => array(
       'handler' => 'views_handler_field',
     ),

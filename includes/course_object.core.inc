@@ -133,7 +133,7 @@ abstract class CourseObject extends CourseHandler {
           // This is the first course object. The learner should be able to
           // access it. Also, check for enrollment. Since there are no other
           // checks (as in previous object completions) we do have to check this.
-          $access = course_enrolment_check($this->getCourseNid(), $account->uid);
+          $access = course_enrollment_check($this->getCourseNid(), $account->uid);
         }
 
         if ($course->getPrev() && !$course->getPrev()->isRequired()) {

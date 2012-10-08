@@ -169,9 +169,9 @@ $handler->display->display_options['fields']['name']['empty_zero'] = 0;
 $handler->display->display_options['fields']['name']['hide_alter_empty'] = 1;
 $handler->display->display_options['fields']['name']['link_to_user'] = 1;
 $handler->display->display_options['fields']['name']['overwrite_anonymous'] = 0;
-/* Field: Course enrolments: Start of enrolment */
+/* Field: Course enrollments: Start of enrollment */
 $handler->display->display_options['fields']['timestamp']['id'] = 'timestamp';
-$handler->display->display_options['fields']['timestamp']['table'] = 'course_enrolment';
+$handler->display->display_options['fields']['timestamp']['table'] = 'course_enrollment';
 $handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
 $handler->display->display_options['fields']['timestamp']['relationship'] = 'course_enrollment';
 $handler->display->display_options['fields']['timestamp']['label'] = 'Date Started';
