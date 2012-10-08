@@ -2728,8 +2728,20 @@ function course_cron() {
   }
 }
 
+/**
+ * Implements hook_course_admin_paths().
+ */
 function course_admin_paths() {
   return array(
     'node/*/course-object/nojs/*/options' => TRUE,
+  );
+}
+
+/**
+ * Implements hook_ctools_plugin_type().
+ */
+function course_ctools_plugin_type() {
+  return array(
+   'access' => array(),
   );
 }
