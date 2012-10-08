@@ -28,7 +28,7 @@ class CourseObjectQuizTestCase extends CourseTestCase {
   function setUp() {
     parent::setUp();
 
-    $this->quiz_admin = $this->drupalCreateUser(array('administer nodes') + quiz_perm());
+    $this->quiz_admin = $this->drupalCreateUser(array('administer nodes') + quiz_permission());
   }
 
   function testQuizCourseObject() {

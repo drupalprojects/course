@@ -26,7 +26,7 @@ class CourseObjectBookTestCase extends CourseTestCase {
   function setUp() {
     parent::setUp();
 
-    $this->book_admin = $this->drupalCreateUser(array('administer nodes') + book_perm());
+    $this->book_admin = $this->drupalCreateUser(array('administer nodes') + book_permission());
   }
 
   function testBookCourseObject() {
