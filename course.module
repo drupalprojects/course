@@ -2763,6 +2763,18 @@ function course_entity_info() {
         'id' => 'eid',
       ),
     ),
+    'course_report' => array(
+      'label' => 'Course report',
+      // Not yet.
+      //'controller class' => 'CourseReport',
+      'base table' => 'course_report',
+      'load hook' => 'course_report_load',
+      'uri callback' => 'course_report_uri',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'crid',
+      ),
+    ),
   );
 }
 
@@ -2772,5 +2784,14 @@ function course_entity_info() {
 function course_enrollment_uri($enrollment) {
   return array(
     'path' => 'node/' . $enrollment->nid,
+  );
+}
+
+/**
+ * Generate URI from course_report entity.
+ */
+function course_report_uri($course_report) {
+  return array(
+    'path' => 'node/' . $course_report->nid,
   );
 }
