@@ -2828,3 +2828,12 @@ function course_enrollment_label($enrollment) {
   $account = user_load($enrollment->uid);
   return t("@username's enrollment in @title", array('@username' => $account->name, '@title' => $node->title));
 }
+
+/**
+ * Course report entity label callback.
+ */
+function course_report_label($enrollment) {
+  $node = node_load($enrollment->nid);
+  $account = user_load($enrollment->uid);
+  return t("@username's course report for @title", array('@username' => $account->name, '@title' => $node->title));
+}
