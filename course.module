@@ -1291,11 +1291,6 @@ function course_form_alter(&$form, &$form_state, $form_id) {
       $form['buttons']['submit']['#submit'][] = 'course_form_submit';
     }
   }
-
-  if (strpos($form_id, 'views_bulk_operations_form') === 0 && strpos($_GET['q'], 'admin/reports/course/overview/select') === 0) {
-    $form['url']['#default_value'] = url('admin/reports/course/overview/view', array('absolute' => TRUE));
-    $form['url']['#type'] = 'hidden';
-  }
 }
 
 /**

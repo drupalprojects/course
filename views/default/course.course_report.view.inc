@@ -52,8 +52,9 @@ $handler->display->display_options['style_options']['order'] = 'desc';
 $handler->display->display_options['empty']['area']['id'] = 'area';
 $handler->display->display_options['empty']['area']['table'] = 'views';
 $handler->display->display_options['empty']['area']['field'] = 'area';
+$handler->display->display_options['empty']['area']['empty'] = TRUE;
 $handler->display->display_options['empty']['area']['content'] = 'Sorry, there is no course data to report on.';
-$handler->display->display_options['empty']['area']['format'] = '1';
+$handler->display->display_options['empty']['area']['format'] = 'filtered_html';
 /* Relationship: Course report: Course node */
 $handler->display->display_options['relationships']['nid']['id'] = 'nid';
 $handler->display->display_options['relationships']['nid']['table'] = 'course_report';
@@ -161,17 +162,20 @@ $handler = $view->new_display('page', 'Global course report', 'page_2');
 $handler->display->display_options['defaults']['title'] = FALSE;
 $handler->display->display_options['title'] = 'All courses';
 $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
-$handler->display->display_options['path'] = 'admin/reports/course/overview/view';
+$handler->display->display_options['path'] = 'admin/reports/course/overview/list';
 $handler->display->display_options['menu']['type'] = 'default tab';
 $handler->display->display_options['menu']['title'] = 'All courses';
 $handler->display->display_options['menu']['description'] = 'View or download a report of all courses.';
 $handler->display->display_options['menu']['weight'] = '0';
+$handler->display->display_options['menu']['name'] = 'management';
+$handler->display->display_options['menu']['context'] = 0;
 $handler->display->display_options['tab_options']['type'] = 'normal';
-$handler->display->display_options['tab_options']['title'] = 'Course reports';
+$handler->display->display_options['tab_options']['title'] = 'All courses';
 $handler->display->display_options['tab_options']['description'] = 'View and download course information.';
 $handler->display->display_options['tab_options']['weight'] = '0';
+$handler->display->display_options['tab_options']['name'] = 'management';
 
-/* Display: Global feed */
+/* Display: Global export */
 $handler = $view->new_display('views_data_export', 'Global export', 'views_data_export_1');
 $handler->display->display_options['defaults']['title'] = FALSE;
 $handler->display->display_options['title'] = 'Global feed';
@@ -190,15 +194,17 @@ $handler->display->display_options['displays'] = array(
 );
 $handler->display->display_options['sitename_title'] = 0;
 
-/* Display: Feed */
+/* Display: Export */
 $handler = $view->new_display('views_data_export', 'Export', 'views_data_export_2');
 $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
 $handler->display->display_options['pager']['type'] = 'none';
 $handler->display->display_options['style_plugin'] = 'views_data_export_csv';
 $handler->display->display_options['style_options']['provide_file'] = 1;
-$handler->display->display_options['style_options']['filename'] = 'course-report-!1.csv';
+$handler->display->display_options['style_options']['filename'] = 'course-report-%1-title.csv';
 $handler->display->display_options['style_options']['parent_sort'] = 0;
 $handler->display->display_options['style_options']['quote'] = 1;
+$handler->display->display_options['style_options']['trim'] = 0;
+$handler->display->display_options['style_options']['replace_newlines'] = 0;
 $handler->display->display_options['style_options']['header'] = 1;
 $handler->display->display_options['path'] = 'node/%/report/csv';
 $handler->display->display_options['displays'] = array(
