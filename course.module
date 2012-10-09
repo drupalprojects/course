@@ -2696,16 +2696,12 @@ function course_cron() {
     // Get a list of fulfillments for CourseObjectNodes.
     $sql = "SELECT * FROM {course_outline}
     INNER JOIN {course_outline_fulfillment} USING (coid)
-    WHERE module in (:modules)";
-    // TODO Please convert this statement to the D7 database API syntax.
-    $result = db_query($sql, $modules);
+    WHERE module IN (:modules)";
+    $result = db_query($sql, array(':modules' => $modules));
     while ($row = $result->fetch()) {
       $extra = unserialize($row->data);
       if ($extra['private']) {
         // This fulfillment used private content.
-        // TODO Convert "user_load" to "user_load_multiple" if "$row->uid" is other than a uid.
-        // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
-        // Example: array_shift(user_load_multiple(array(), $row->uid))
         $user = user_load($row->uid);
         $courseObject = course_get_course_object_by_id($row->coid, $user);
         if (!$courseObject->access('take')) {
