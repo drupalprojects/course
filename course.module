@@ -1862,18 +1862,21 @@ function course_action_info() {
     'type' => 'user',
     'label' => t('Enroll user in current course'),
     'configurable' => FALSE,
+    'vbo_configurable' => FALSE,
   );
 
   $actions['course_edit_enrollment_action'] = array(
     'type' => 'course_enrollment',
     'label' => t('Edit enrollment'),
-    'configurable' => TRUE,
+    'configurable' => FALSE,
+    'vbo_configurable' => TRUE,
   );
 
   $actions['course_remove_enrollment_action'] = array(
     'type' => 'course_enrollment',
     'label' => t('Remove a user from current course'),
     'configurable' => FALSE,
+    'vbo_configurable' => FALSE,
   );
 
   return $actions;
@@ -1978,7 +1981,7 @@ function course_edit_enrollment_action($object, $context) {
 /**
  * Edit enrollment action form.
  */
-function course_edit_enrollment_action_form($context) {
+function course_edit_enrollment_action_form($a1, $context) {
   $form = array();
 
   $node = node_load(arg(1));
@@ -2002,7 +2005,7 @@ function course_edit_enrollment_action_form($context) {
     // Only one user, so let's prefill values.
     $selection = reset($context['selection']);
 
-    $enroll = course_enrollment_load($selection->eid);
+    $enroll = course_enrollment_load($selection);
     $account = user_load($enroll->uid);
     $course_report = course_report_load($node, $account);
   }
