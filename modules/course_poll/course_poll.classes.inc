@@ -71,20 +71,14 @@ class CourseObjectPoll extends CourseObjectNode {
    * Remove poll votes for this user.
    */
   function unEnroll() {
-    // TODO Please review the conversion of this statement to the D7 database API syntax.
-    /* db_query('DELETE FROM {poll_votes} WHERE nid = %d AND uid = %d', $this->node->nid, $this->getCourse()->getUser()->uid) */
-    db_delete('poll_votes')
+    db_delete('poll_vote')
       ->condition('nid', $this->node->nid)
       ->condition('uid', $this->getCourse()->getUser()->uid)
       ->execute();
-    // TODO Please review the conversion of this statement to the D7 database API syntax.
-    /* db_query("UPDATE {poll_choices} SET chvotes = chvotes - 1 WHERE nid = %d AND chorder = %d", $this->node->nid, $this->node->vote) */
-    db_update('poll_choices')
-      ->fields(array(
-        'chvotes' => chvotes - 1,
-      ))
+    db_update('poll_choice')
+      ->expression('chvotes', 'chvotes - 1')
       ->condition('nid', $this->node->nid)
-      ->condition('chorder', $this->node->vote)
+      ->condition('weight', $this->node->vote)
       ->execute();
   }
 
