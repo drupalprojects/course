@@ -132,6 +132,12 @@ $handler->display->display_options['filters']['date_completed']['expose']['opera
 $handler->display->display_options['filters']['date_completed']['expose']['label'] = 'Completed between';
 $handler->display->display_options['filters']['date_completed']['expose']['operator'] = 'date_completed_op';
 $handler->display->display_options['filters']['date_completed']['expose']['identifier'] = 'date_completed';
+/* Filter criterion: Content: Is a course */
+$handler->display->display_options['filters']['course']['id'] = 'course';
+$handler->display->display_options['filters']['course']['table'] = 'node';
+$handler->display->display_options['filters']['course']['field'] = 'course';
+$handler->display->display_options['filters']['course']['relationship'] = 'nid';
+$handler->display->display_options['filters']['course']['value'] = '1';
 
 /* Display: Course report */
 $handler = $view->new_display('page', 'Course report', 'page_1');
