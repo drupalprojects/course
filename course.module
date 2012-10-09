@@ -315,7 +315,7 @@ function course_course_handlers() {
  *   - Or an associative array of all course handler definitions keyed by type.
  */
 function course_get_handlers($type = NULL, $flush = FALSE) {
-  static $all = array();
+  $all = &drupal_static(__FUNCTION__, array());
   if (!$all || $flush) {
     // Allow modules to define handlers that extend Course functionality.
     // Do not use module_invoke_all() here because we need to know which module
@@ -698,7 +698,7 @@ function course_permission() {
  */
 function course_take_course_menu_access($node) {
   global $user;
-  static $courses = array();
+  $courses = &drupal_static(__FUNCTION__, array());
 
   if (!isset($courses[$node->nid])) {
     // Allow modules to restrict menu access to the take course tab.
@@ -717,7 +717,7 @@ function course_take_course_menu_access($node) {
  */
 function course_settings_menu_access($node) {
   global $user;
-  static $courses = array();
+  $courses = &drupal_static(__FUNCTION__, array());
 
   if (!isset($courses[$node->nid])) {
     // Allow modules to restrict menu access to the course setting tab.
@@ -746,7 +746,7 @@ function course_take_course_access($node, $account = NULL, $flush = FALSE) {
     $account = $user;
   }
 
-  static $courses = array();
+  $courses = &drupal_static(__FUNCTION__, array());
 
   // Don't let anonymous users see /takecourse. Also keeps from being indexed.
   if (arg(2) == 'takecourse' && !user_is_logged_in() && $_SERVER['SCRIPT_NAME'] != '/cron.php') {
@@ -1702,7 +1702,7 @@ function course_get_course($node, $account = NULL, $flush = FALSE) {
     $account = $user;
   }
 
-  static $courses = array();
+  $courses = &drupal_static(__FUNCTION__, array());
 
   if ($flush || !isset($courses[$node->nid]) || !isset($courses[$node->nid][$account->uid])) {
     $course = new Course($node, $account);
@@ -2260,7 +2260,7 @@ function course_user_type_form_submit(&$form, $form_state) {
  *   module-provided message that should be displayed to the user.
  */
 function course_enroll_access($node, $user = NULL, $flush = FALSE) {
-  static $courses = array();
+  $courses = &drupal_static(__FUNCTION__, array());
 
   if (!$user) {
     global $user;
@@ -2508,7 +2508,7 @@ function course_get_context() {
  * @todo support Context.
  */
 function course_set_context($node = NULL, $clear = FALSE) {
-  static $stored_course_node;
+  $stored_course_node = &drupal_static(__FUNCTION__);
 
   if ($clear) {
     $stored_course_node = NULL;
@@ -2541,7 +2541,7 @@ function course_set_context($node = NULL, $clear = FALSE) {
  *   A course node or NULL if course context not found.
  */
 function course_determine_context($module = NULL, $object_type = NULL, $instance = NULL, $no_set = FALSE, $flush = FALSE) {
-  static $cache = NULL;
+  $cache = &drupal_static(__FUNCTION__);
   $context = NULL;
 
   if (!$context || $flush || $no_set) {
