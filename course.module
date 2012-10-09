@@ -1096,41 +1096,32 @@ function course_enroll($node, $account = NULL, $from = NULL, $code = NULL, $stat
  * @return bool
  *   TRUE if user is un-enrolled, FALSE if node is not a course.
  */
-function course_unenroll(&$node, &$user) {
+function course_unenroll($node, $user) {
   if (course_node_is_course($node)) {
     $course = course_get_course($node, $user);
     $course->unenroll();
 
-    $sql = "DELETE FROM {course_report} WHERE nid = %d AND uid = %d";
-    // TODO Please review the conversion of this statement to the D7 database API syntax.
-    /* db_query($sql, $node->nid, $user->uid) */
     db_delete('course_report')
       ->condition('nid', $node->nid)
       ->condition('uid', $user->uid)
       ->execute();
 
-    $sql = "DELETE FROM {course_enrollment} WHERE nid = %d AND uid = %d";
-    // TODO Please review the conversion of this statement to the D7 database API syntax.
-    /* db_query($sql, $node->nid, $user->uid) */
     db_delete('course_enrollment')
       ->condition('nid', $node->nid)
       ->condition('uid', $user->uid)
       ->execute();
 
     // Find all course objects in this course and delete the fulfillment.
-    $sql = "SELECT coid FROM {course_outline} WHERE nid = %d";
-    $values = array();
+    $coids = array();
     $result = db_query("SELECT coid FROM {course_outline} WHERE nid = :nid", array(':nid' => $node->nid));
     while ($row = $result->fetch()) {
-      $values[] = $row->coid;
+      $coids[] = $row->coid;
     }
 
-    if (count($values)) {
-      $values[] = $user->uid;
-      $placeholders = db_placeholders($values);
-      $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid IN ($placeholders) AND uid = %d";
+    if (count($coids)) {
+      $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid IN (:coids) AND uid = :uid";
       // TODO Please convert this statement to the D7 database API syntax.
-      db_query($sql, $values);
+      db_query($sql, $coids, $user->uid);
     }
 
     // Notify other modules after course unenrollment.
