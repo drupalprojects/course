@@ -68,12 +68,6 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
     return $defaults;
   }
 
-  function optionsValidate(&$form, &$values) {
-    if (module_exists('duration_element')) {
-      $values['conditional_time'] = $values['conditional_time']->to_single_metric('seconds');
-    }
-  }
-
   function optionsForm() {
     $form = array();
     $config = $this->getOptions();
@@ -95,17 +89,17 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
       $options[$courseObject->getId()] = $courseObject->getTitle();
     }
 
-    if (module_exists('duration_element')) {
-      $conditional_time = duration_create();
-      $conditional_time->set_seconds($config['conditional_time']);
-      $conditional_time->normalize();
+    if (module_exists('timeperiod')) {
       $form['conditional_time'] = array(
         '#title' => t('Time'),
-        '#type' => 'duration_combo',
+        '#type' => 'timeperiod_select',
+        '#units' => array(
+          '86400' => array('max' => 30, 'step size' => 1),
+          '3600' => array('max' => 24, 'step size' => 1),
+          '60' => array('max' => 60, 'step size' => 1),
+        ),
         '#description' => t('Length of time after the event happens when this course object should be accessible.'),
-        '#largest_metric' => 'days',
-        '#smallest_metric' => 'minutes',
-        '#default_value' => $conditional_time,
+        '#default_value' => $config['conditional_time'],
       );
     }
     else {

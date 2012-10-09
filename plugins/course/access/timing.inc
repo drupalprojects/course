@@ -58,27 +58,21 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
     return $this->take();
   }
 
-  function optionsValidate(&$form, &$values) {
-    if (module_exists('duration_element')) {
-      $values['duration'] = $values['duration']->to_single_metric('seconds');
-    }
-  }
-
   function optionsForm() {
     $form = array();
     $config = $this->getOptions();
 
-    if (module_exists('duration_element')) {
-      $duration = duration_create();
-      $duration->set_seconds($config['duration']);
-      $duration->normalize();
+    if (module_exists('timeperiod')) {
       $form['duration'] = array(
         '#title' => t('Duration'),
         '#description' => 'Length of time a user can remain in this object before it is closed.',
-        '#type' => 'duration_combo',
-        '#largest_metric' => 'days',
-        '#smallest_metric' => 'minutes',
-        '#default_value' => $duration,
+        '#type' => 'timeperiod_select',
+        '#units' => array(
+          '86400' => array('max' => 30, 'step size' => 1),
+          '3600' => array('max' => 24, 'step size' => 1),
+          '60' => array('max' => 60, 'step size' => 1),
+        ),
+        '#default_value' => $config['duration'],
       );
     }
     else {
