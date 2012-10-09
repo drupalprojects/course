@@ -1860,7 +1860,7 @@ function course_action_info() {
 
   $actions['course_add_enrollment_action'] = array(
     'type' => 'user',
-    'label' => t('Enroll user in current course'),
+    'label' => t('Enroll user'),
     'configurable' => FALSE,
     'vbo_configurable' => FALSE,
   );
@@ -1874,7 +1874,7 @@ function course_action_info() {
 
   $actions['course_remove_enrollment_action'] = array(
     'type' => 'course_enrollment',
-    'label' => t('Remove a user from current course'),
+    'label' => t('Remove enrollment'),
     'configurable' => FALSE,
     'vbo_configurable' => FALSE,
   );
@@ -2755,7 +2755,7 @@ function course_ctools_plugin_type() {
 function course_entity_info() {
   return array(
     'course_enrollment' => array(
-      'label' => 'Course enrollment',
+      'label' => t('Course enrollment'),
       // Not yet.
       //'controller class' => 'CourseEnrollment',
       'base table' => 'course_enrollment',
@@ -2765,9 +2765,10 @@ function course_entity_info() {
       'entity keys' => array(
         'id' => 'eid',
       ),
+      'label callback' => 'course_enrollment_label',
     ),
     'course_report' => array(
-      'label' => 'Course report',
+      'label' => t('Course report'),
       // Not yet.
       //'controller class' => 'CourseReport',
       'base table' => 'course_report',
@@ -2777,6 +2778,7 @@ function course_entity_info() {
       'entity keys' => array(
         'id' => 'crid',
       ),
+      'label callback' => 'course_report_label',
     ),
   );
 }
@@ -2797,4 +2799,32 @@ function course_report_uri($course_report) {
   return array(
     'path' => 'node/' . $course_report->nid,
   );
+}
+
+/**
+ * Implementation of hook_course_enroll().
+ *
+ * Set the user's status in the course to enrolled if this is the start.
+ *
+ */
+function course_course_enroll($node, $user, $from) {
+  if (!course_report_load($node, $user)) {
+    // If we don't have a course report record already, save a new one.
+    $entry = (object) array(
+      'nid' => $node->nid,
+      'uid' => $user->uid,
+      'section_name' => 'Enrolled',
+      'complete' => 0,
+    );
+    course_report_save($entry);
+  }
+}
+
+/**
+ * Enrollment entity label callback.
+ */
+function course_enrollment_label($enrollment) {
+  $node = node_load($enrollment->nid);
+  $account = user_load($enrollment->uid);
+  return t("@username's enrollment in @title", array('@username' => $account->name, '@title' => $node->title));
 }

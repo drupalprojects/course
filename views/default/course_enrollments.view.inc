@@ -61,7 +61,7 @@ $handler->display->display_options['relationships']['uid_1']['field'] = 'uid';
 $handler->display->display_options['fields']['views_bulk_operations']['id'] = 'views_bulk_operations';
 $handler->display->display_options['fields']['views_bulk_operations']['table'] = 'course_enrollment';
 $handler->display->display_options['fields']['views_bulk_operations']['field'] = 'views_bulk_operations';
-$handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['display_type'] = '0';
+$handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['display_type'] = '1';
 $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['enable_select_all_pages'] = 1;
 $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['force_single'] = 0;
 $handler->display->display_options['fields']['views_bulk_operations']['vbo_settings']['display_result'] = 1;
@@ -125,7 +125,7 @@ $handler->display->display_options['fields']['views_bulk_operations']['vbo_opera
     'label' => '',
   ),
   'action::course_remove_enrollment_action' => array(
-    'selected' => 0,
+    'selected' => 1,
     'use_queue' => 0,
     'skip_confirmation' => 0,
     'override_label' => 0,
@@ -165,6 +165,40 @@ $handler->display->display_options['arguments']['nid']['default_argument_type'] 
 $handler->display->display_options['arguments']['nid']['summary']['format'] = 'default_summary';
 $handler->display->display_options['arguments']['nid']['specify_validation'] = TRUE;
 $handler->display->display_options['arguments']['nid']['validate']['type'] = 'course';
+/* Filter criterion: User: Name (raw) */
+$handler->display->display_options['filters']['name']['id'] = 'name';
+$handler->display->display_options['filters']['name']['table'] = 'users';
+$handler->display->display_options['filters']['name']['field'] = 'name';
+$handler->display->display_options['filters']['name']['relationship'] = 'uid_1';
+$handler->display->display_options['filters']['name']['operator'] = 'contains';
+$handler->display->display_options['filters']['name']['group'] = 1;
+$handler->display->display_options['filters']['name']['exposed'] = TRUE;
+$handler->display->display_options['filters']['name']['expose']['operator_id'] = 'name_op';
+$handler->display->display_options['filters']['name']['expose']['label'] = 'User: Name';
+$handler->display->display_options['filters']['name']['expose']['operator'] = 'name_op';
+$handler->display->display_options['filters']['name']['expose']['identifier'] = 'name';
+$handler->display->display_options['filters']['name']['expose']['remember_roles'] = array(
+  2 => '2',
+  1 => 0,
+  3 => 0,
+);
+/* Filter criterion: User: E-mail */
+$handler->display->display_options['filters']['mail']['id'] = 'mail';
+$handler->display->display_options['filters']['mail']['table'] = 'users';
+$handler->display->display_options['filters']['mail']['field'] = 'mail';
+$handler->display->display_options['filters']['mail']['relationship'] = 'uid_1';
+$handler->display->display_options['filters']['mail']['operator'] = 'contains';
+$handler->display->display_options['filters']['mail']['group'] = 1;
+$handler->display->display_options['filters']['mail']['exposed'] = TRUE;
+$handler->display->display_options['filters']['mail']['expose']['operator_id'] = 'mail_op';
+$handler->display->display_options['filters']['mail']['expose']['label'] = 'User: E-mail';
+$handler->display->display_options['filters']['mail']['expose']['operator'] = 'mail_op';
+$handler->display->display_options['filters']['mail']['expose']['identifier'] = 'mail';
+$handler->display->display_options['filters']['mail']['expose']['remember_roles'] = array(
+  2 => '2',
+  1 => 0,
+  3 => 0,
+);
 
 /* Display: Page */
 $handler = $view->new_display('page', 'Page', 'page_1');
