@@ -192,6 +192,7 @@ function course_views_data() {
     'help' => t('Whether or not the content type is marked as a course.'),
     'real field' => 'type',
     'filter' => array(
+      'label' => 'Course',
       'handler' => 'views_handler_filter_course',
     ),
   );
