@@ -28,7 +28,7 @@ class CourseObjectQuizTestCase extends CourseTestCase {
   function setUp() {
     parent::setUp();
 
-    $this->quiz_admin = $this->drupalCreateUser(array('administer nodes') + array_keys(quiz_permission()));
+    $this->quiz_admin = $this->drupalCreateUser(array('access quiz', 'create truefalse content', 'edit any truefalse content', 'create quiz content', 'edit any quiz content'));
   }
 
   function testQuizCourseObject() {
@@ -45,9 +45,9 @@ class CourseObjectQuizTestCase extends CourseTestCase {
     $this->assertTrue($quizNode->type == 'quiz', 'Quiz node is a quiz.');
 
     // Add a question.
-    $this->drupalGet('node/add/truefalse', array('query' => 'quiz_nid=2&quiz_vid=2'));
+    $this->drupalGet('node/add/truefalse', array('query' => array('quiz_nid' => $quizNode->nid, 'quiz_vid' => $quizNode->vid)));
     $this->drupalPost(NULL, array(
-      'body' => 'Test question',
+      'body[und][0][value]' => 'Test question',
       'correct_answer' => 1,
     ), 'Save');
 

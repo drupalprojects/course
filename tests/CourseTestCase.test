@@ -7,17 +7,10 @@ class CourseTestCase extends DrupalWebTestCase {
 
   public function setUp() {
     $deps = $this->getModules();
-    call_user_func_array(array('parent', 'setUp'), $deps);
-
+    parent::setUp($deps);
     $this->admin_user = $this->drupalCreateUser(array('administer nodes', 'edit courses'));
     $this->student_user = $this->drupalCreateUser(array('access content'));
     $this->drupalLogin($this->admin_user);
-
-    // Flush handlers (because we created this one on the fly).
-    course_get_handlers(NULL, TRUE);
-
-    // Flush autoload. Fixes some issues with late declaration of classes.
-    //autoload_flush_caches();
   }
 
   /**
