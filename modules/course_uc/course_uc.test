@@ -22,7 +22,6 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $modules[] = 'uc_store';
     $modules[] = 'uc_order';
     $modules[] = 'uc_product';
-    $modules[] = 'ca';
     $modules[] = 'course_uc';
     return $modules;
   }
