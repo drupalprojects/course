@@ -1053,7 +1053,7 @@ function course_enroll($node, $account = NULL, $from = NULL, $code = NULL, $stat
 
     if (isset($node->course['duration']) && $node->course['duration'] > 0) {
       // Set enrollment end to now + the duration of the course.
-      $enroll['enroll_end'] = REQUEST_TIME + $node->course['duration'] * 86400;
+      $enroll['enroll_end'] = REQUEST_TIME + $node->course['duration'];
     }
 
     $enroll = (object) $enroll;
@@ -1248,9 +1248,18 @@ function course_form_alter(&$form, &$form_state, $form_id) {
     $form['course']['duration'] = array(
       '#title' => t('Duration'),
       '#type' => 'textfield',
-      '#size' => 4,
-      '#description' => t('Length in days a user can remain in the course. Enter 0 for unlimited.'),
+      '#description' => t('Length of time in seconds that a user can remain in the course. Leave blank for unlimited. For a better experience, install the !link module.', array('!link' => l('Time period', 'http://drupal.org/project/timeperiod'))),
     );
+
+    if (module_exists('timeperiod')) {
+      $form['course']['duration']['#type'] = 'timeperiod_select';
+      $form['course']['duration']['#units'] = array(
+        '86400' => array('max' => 30, 'step size' => 1),
+        '3600' => array('max' => 24, 'step size' => 1),
+        '60' => array('max' => 60, 'step size' => 1),
+      );
+      $form['course']['duration']['#description'] = t('Length of time that a user can remain in the course.');
+    }
 
     $form['course']['cid'] = array(
       '#title' => t('External learning application course ID'),
@@ -2727,7 +2736,7 @@ function course_admin_paths() {
  */
 function course_ctools_plugin_type() {
   return array(
-   'access' => array(),
+    'access' => array(),
   );
 }
 
