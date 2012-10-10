@@ -1120,8 +1120,7 @@ function course_unenroll($node, $user) {
 
     if (count($coids)) {
       $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid IN (:coids) AND uid = :uid";
-      // TODO Please convert this statement to the D7 database API syntax.
-      db_query($sql, $coids, $user->uid);
+      db_query($sql, array(':coids' => $coids, ':uid' => $user->uid));
     }
 
     // Notify other modules after course unenrollment.
