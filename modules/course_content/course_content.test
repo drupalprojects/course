@@ -18,7 +18,6 @@ class CourseObjectContentTestCase extends CourseTestCase {
 
   function getModules() {
     $modules = parent::getModules();
-    $modules[] = 'content';
     $modules[] = 'course_content';
     return $modules;
   }
