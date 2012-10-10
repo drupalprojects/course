@@ -805,7 +805,8 @@ function course_can_take_course($node, $user) {
     if ($row->enroll_end > 0 && REQUEST_TIME > $row->enroll_end) {
       return array(array(
           'success' => FALSE,
-          'message' => 'Sorry, your enrollment has expired for this course.',
+          'header' => t('Enrollment expired'),
+          'message' => t('Sorry, your enrollment has expired for this course.'),
         ));
     }
   }
@@ -814,7 +815,8 @@ function course_can_take_course($node, $user) {
     if (REQUEST_TIME > $node->course['close']) {
       return array(array(
           'success' => FALSE,
-          'message' => 'Sorry, this course is expired.',
+          'header' => t('Course expired'),
+          'message' => t('Sorry, this course is expired.'),
         ));
     }
   }
@@ -1430,7 +1432,7 @@ function course_take_course($node) {
   $result = course_enroll_access($node);
   $enrollment = course_enrollment_load($node, $user);
   // Check enroll access or if user is already enrolled.
-  if ($result['success'] || $enrollment->status) {
+  if ($result['success'] || ($enrollment && $enrollment->status)) {
     $result = course_take_course_access($node);
   }
   if ($result['success'] === TRUE) {
@@ -2303,6 +2305,7 @@ function course_course_can_enroll($node, $user) {
   if (!empty($node->course['open']) && REQUEST_TIME < $node->course['open']) {
     return array(array(
         'success' => FALSE,
+        'header' => t('Course not open'),
         'message' => t('This course opens on %date.', array(
           '%date' => format_date($node->course['open'], 'custom', 'F, jS Y'),
         )),
@@ -2312,6 +2315,7 @@ function course_course_can_enroll($node, $user) {
   if (!empty($node->course['close']) && REQUEST_TIME > $node->course['close']) {
     return array(array(
         'success' => FALSE,
+        'header' => t('Course closed'),
         'message' => t('This course closed on %date and is no longer available for enrollments.', array(
           '%date' => format_date($node->course['close'], 'custom', 'F, jS Y'),
         )),
