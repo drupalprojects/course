@@ -915,5 +915,13 @@ function course_update_7000() {
   ));
   db_rename_table('course_enrolment', 'course_enrollment');
 
-  return t('Renamed table course_enrolment to course_enrollment');
+  return t('Renamed schema instances of "enrol" to "enroll".');
+}
+
+/**
+ * Migrate old duration value.
+ */
+function course_update_7001() {
+  db_update('course_node')->expression('duration', 'duration*86400')->execute();
+  return t('Migrated old duration values.');
 }
