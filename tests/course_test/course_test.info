@@ -1,7 +1,8 @@
 name = Course test module
 core = 7.x
-
 dependencies[] = acl
 dependencies[] = content_access
-
+dependencies[] = entity
+dependencies[] = entity_token
+dependencies[] = rules
 files[] = course_test.classes.inc
