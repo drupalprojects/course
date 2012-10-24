@@ -18,10 +18,12 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
       $course = course_get_course($courseNode, $user);
     }
 
-    foreach ($course->getObjects() as $idx => $courseObject) {
-      if ($courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
-        if ($courseObject->getFulfillment()->isComplete()) {
-          $form['#access'] = FALSE;
+    if ($course) {
+      foreach ($course->getObjects() as $idx => $courseObject) {
+        if ($courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
+          if ($courseObject->getFulfillment()->isComplete()) {
+            $form['#access'] = FALSE;
+          }
         }
       }
     }
