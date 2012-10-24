@@ -32,7 +32,7 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
  * Implements hook_node_view().
  */
 function course_uc_node_view($node, $view_mode = 'full') {
-  if (course_node_is_course($node) && isset($node->sell_price)) {
+  if (course_node_is_course($node) && isset($node->sell_price) && $node->sell_price > 0) {
     $hides = array(
       'sell_price',
       'display_price',
@@ -80,37 +80,8 @@ function course_uc_node_insert($node) {
  * Implements hook_node_update().
  */
 function course_uc_node_update($node) {
-  if (course_node_is_course($node) && isset($node->sell_price) && $node->sell_price > 0) {
-    // Course has a sell price.
-    $course = course_get_course($node);
-    foreach ($course->getObjects() as $courseObject) {
-      if ($courseObject->getComponent() == 'payment') {
-        return;
-      }
-    }
-
-    // If we are here, the course did not have a payment object.
-    $newObject = course_get_course_object('course_uc', 'payment');
-    $newObject->setCourse($course);
-    $newObject->setCourse($node->nid);
-    $newObject->setModule('course_uc');
-    $newObject->setComponent('payment');
-    $newObject->setInstanceId($node->nid);
-    $newObject->setOption('title', 'Payment required');
-    $newObject->setOption('required', TRUE);
-    $newObject->setOption('enabled', TRUE);
-    $newObject->setOption('hidden', TRUE);
-    $newObject->save();
-  }
+  course_uc_node_insert($node);
 }
-
-/**
- * Implements hook_nodeapi().
- *
- * Add a course object to the course when a sell price is added. Remove fields
- * we don't need for selling courses.
- */
-function course_uc_nodeapi_OLD($node, $op, $a3, $a4) { }
 
 /**
  * Ubercart course settings form.
@@ -244,24 +215,21 @@ function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_stat
 }
 
 /**
- * Implements hook_ca_action().
- *
- * Add action to enroll a user in a course.
- *
- * @return array
+ * Implements hook_rules_action_info().
  */
-function course_uc_ca_action() {
-  $arg = array(
-    '#entity' => 'uc_order',
-    '#title' => t('Order'),
+function course_uc_rules_action_info() {
+  $actions = array();
+
+  $order_arg = array(
+    'type' => 'uc_order',
+    'label' => t('Order'),
   );
 
   $actions['course_uc_enroll_user_in_ordered_courses'] = array(
-    '#title' => t('Enroll user in course(s)'),
-    '#category' => t('Order'),
-    '#callback' => 'course_uc_enroll_user_in_ordered_courses',
-    '#arguments' => array(
-      'order' => $arg,
+    'label' => t('Enroll user in ordered courses'),
+    'group' => t('Order'),
+    'parameter' => array(
+      'order' => $order_arg,
     ),
   );
 
@@ -298,45 +266,6 @@ function course_uc_enroll_user_in_ordered_courses($order) {
       }
     }
   }
-}
-
-/**
- * Implements hook_ca_predicate().
- */
-function course_uc_ca_predicate() {
-  $configurations['course_uc_enroll_user_in_ordered_courses'] = array(
-    '#title' => t('Enroll user in ordered courses'),
-    '#class' => 'course',
-    '#trigger' => 'uc_order_status_update',
-    '#status' => 1,
-    '#conditions' => array(
-      '#operator' => 'OR',
-      '#conditions' => array(
-        array(
-          '#name' => 'uc_order_status_condition',
-          '#title' => t('If order is marked as completed'),
-          '#argument_map' => array(
-            'order' => 'updated_order',
-          ),
-          '#settings' => array(
-            'order_status' => 'completed',
-          ),
-        ),
-      ),
-    ),
-    '#actions' => array(
-      array(
-        '#name' => 'course_uc_enroll_user_in_ordered_courses',
-        '#title' => t('Enroll user in ordered courses'),
-        '#argument_map' => array(
-          'order' => 'order',
-        ),
-        '#settings' => array(),
-      ),
-    ),
-  );
-
-  return $configurations;
 }
 
 /**
@@ -419,6 +348,7 @@ function course_uc_course_can_enroll($node, $user) {
         return array(
           array(
             'success' => FALSE,
+            'header' => 'Payment required',
             'message' => 'You must first purchase this course.',
           ),
         );
@@ -432,4 +362,26 @@ function course_uc_course_can_enroll($node, $user) {
       'message' => 'You have purchased this course.',
     ),
   );
+}
+
+/**
+ * Implements hook_default_rules_configuration().
+ */
+function course_uc_default_rules_configuration() {
+  $configs = array();
+  $rule = '{ "rules_enroll_user_in_ordered_courses_when_order_marked_as_comple" : {
+    "LABEL" : "Enroll user in ordered courses when order marked as complete",
+    "PLUGIN" : "reaction rule",
+    "REQUIRES" : [ "rules", "course_uc", "uc_order" ],
+    "ON" : [ "uc_order_status_update" ],
+    "IF" : [
+      { "data_is" : { "data" : [ "updated-order:order-status" ], "value" : "completed" } }
+    ],
+    "DO" : [
+      { "course_uc_enroll_user_in_ordered_courses" : { "order" : [ "order" ] } }
+    ]
+  }
+}';
+  $configs['rules_enroll_user_in_ordered_courses_when_complete'] = rules_import($rule);
+  return $configs;
 }
