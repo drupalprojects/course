@@ -1350,12 +1350,13 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
     foreach ($fields as $field) {
       if ($field['module'] == 'date') {
         foreach ($field['columns'] as $column => $value) {
-          if (in_array($column, array('value', 'value2'))) {
+          if (in_array($form['#node_type']->type, $field['bundles']['node']) && in_array($column, array('value', 'value2'))) {
             $position = $column == 'value' ? 'From' : 'To';
             // Use the same label pattern as date_api_fields() for consistency
             // with Views, and in case we support other date options than
             // content date fields.
-            $label = t('Content: !label (!name) - @position date', array('!label' => $field['widget']['label'], '!name' => $field['field_name'], '@position' => $position));
+            $info = field_info_instance('node', $field['field_name'], $form['#node_type']->type);
+            $label = t('Content: !label (!name) - @position date', array('!label' => $info['label'], '!name' => $field['field_name'], '@position' => $position));
             #$key = "{$field['field_name']}[0]['{$column}']";
             $key = serialize(array('field' => $field['field_name'], 'value' => $column));
             $options[$key] = $label;
