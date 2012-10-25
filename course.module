@@ -2671,15 +2671,12 @@ function course_user_type_get_options() {
  */
 function course_object_autocomplete_node($types, $string) {
   $values = explode(',', $types);
-  $placeholders = db_placeholders($values, 'varchar');
-  $values[] = $string;
-  $values[] = $string;
-  // TODO Please convert this statement to the D7 database API syntax.
-  $result = db_query_range(db_rewrite_sql("SELECT n.nid, n.title, u.name FROM {node} n
-    INNER JOIN {users} u ON u.uid = n.uid
-    WHERE n.type IN ($placeholders) AND (title LIKE '%%%s%%' OR n.nid = %d)"), $values);
-
-  $matches = array();
+  $query = db_select('node', 'n');
+  $query->condition('n.type', $values, 'in')
+    ->condition('n.title', "%$string%", 'like')
+    ->fields('n', array('nid', 'title'))
+    ->range(0, 10);
+  $result = $query->execute();
   while ($node = $result->fetch()) {
     $matches[$node->title . " [nid: $node->nid]"] = '<span class="autocomplete_title">' . check_plain($node->title) . '</span>';
   }
