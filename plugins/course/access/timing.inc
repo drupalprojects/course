@@ -58,8 +58,7 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
     return $this->take();
   }
 
-  function optionsForm() {
-    $form = array();
+  function optionsForm(&$form, &$form_state) {
     $config = $this->getOptions();
 
     if (module_exists('timeperiod')) {

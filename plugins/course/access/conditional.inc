@@ -68,8 +68,7 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
     return $defaults;
   }
 
-  function optionsForm() {
-    $form = array();
+  function optionsForm(&$form, &$form_state) {
     $config = $this->getOptions();
     ctools_include('dependent');
 

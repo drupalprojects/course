@@ -42,8 +42,7 @@ class CourseObjectAccessGrade extends CourseObjectAccess {
     return $this->take();
   }
 
-  function optionsForm() {
-    $form = array();
+  function optionsForm(&$form, &$form_state) {
     $config = $this->getOptions();
 
     $form['course_grade'] = array(

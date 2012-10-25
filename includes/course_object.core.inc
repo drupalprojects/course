@@ -339,7 +339,8 @@ abstract class CourseObject extends CourseHandler {
       $courseAccess->setCourseObject($this);
 
       // Add access plugin form to our form.
-      $form['plugins']['access'][$key] += $courseAccess->optionsForm();
+      $access_form = $access_form_state = array();
+      $form['plugins']['access'][$key] += $courseAccess->optionsForm($access_form, $access_form_state);
     }
 
     // Update settings
@@ -862,7 +863,7 @@ abstract class CourseObject extends CourseHandler {
 
   }
 
-  function thaw() {
+  function thaw($ice) {
 
   }
 
