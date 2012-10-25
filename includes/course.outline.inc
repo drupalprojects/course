@@ -526,18 +526,12 @@ function course_outline_show_complete_links($course_node) {
     // post-course actions.
     drupal_alter('course_outline_completion_links', $links, $course_node, $account);
     foreach ($links as $link) {
-      // @todo change the way $links work. Replace the three element array with
-      // something else. Maybe $element and $value from theme_form_element() if
-      // we must be this controlling?
-      // Example:
-      // @code
-//   $element = t('A description');
-//   $value = l($text, $path);
-//   $links = array('element' => $element, 'value' => $value).
-      // @endcode
-      // But why not allow modules to alter the landing page however they want
-      // (instead of requiring 'links' with this very specific output format)?
-      $txt_out .= theme('form_element', array('#description' => $link[2]), l($link[0], $link[1]));
+      $element = array(
+        '#title' => l($link[0], $link[1]),
+        '#description' => $link[2],
+        '#children' => '',
+      );
+      $txt_out .= theme('form_element', array('element' => $element));
     }
   }
   else {
