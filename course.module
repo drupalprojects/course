@@ -8,6 +8,8 @@
 require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/includes/course.outline.inc';
 // Course exporting functions
 require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/includes/course.exporting.inc';
+// Rules support
+require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/includes/course.rules.inc';
 
 /**
  * Implements hook_menu().
@@ -1045,7 +1047,7 @@ function course_enroll($node, $account = NULL, $from = NULL, $code = NULL, $stat
   }
 
   if (course_node_is_course($node)) {
-    $enroll = array(
+    $enrollment = array(
       'nid' => $node->nid,
       'uid' => $account->uid,
       'enrollmenttype' => $from,
@@ -1055,10 +1057,10 @@ function course_enroll($node, $account = NULL, $from = NULL, $code = NULL, $stat
 
     if (isset($node->course['duration']) && $node->course['duration'] > 0) {
       // Set enrollment end to now + the duration of the course.
-      $enroll['enroll_end'] = REQUEST_TIME + $node->course['duration'];
+      $enrollment['enroll_end'] = REQUEST_TIME + $node->course['duration'];
     }
 
-    $enroll = (object) $enroll;
+    $enrollment = (object) $enrollment;
 
     $watchdog_variables = array(
       '!uid' => $account->uid,
@@ -1067,18 +1069,19 @@ function course_enroll($node, $account = NULL, $from = NULL, $code = NULL, $stat
     if (!course_enrollment_check($node->nid, $account->uid)) {
       // User is not enrolled yet.
       watchdog('course_enroll', 'Enrolling user !uid into !nid', $watchdog_variables);
-      course_enrollment_save($enroll);
+      course_enrollment_save($enrollment);
       $op = 'insert';
+      rules_invoke_event_by_args("course_enrollment_$op", array('node' => $node, 'user' => $account, 'course_enrollment' => $enrollment));
     }
     else {
       watchdog('course_enroll', 'Re-enrolling user !uid into !nid', $watchdog_variables);
-      // return drupal_write_record('course_enrollment', $enroll, array('nid', 'uid'));
+      // figure out if there's any harm in updating enrollment here.
       $op = 'update';
     }
-    // @todo figure $op out.
+
     // Notify modules about a course enrollment.
     module_invoke_all('course_enroll', $node, $account, $from, $code, $status);
-    return $enroll;
+    return $enrollment;
   }
   else {
     return FALSE;
@@ -1100,6 +1103,7 @@ function course_enroll($node, $account = NULL, $from = NULL, $code = NULL, $stat
  */
 function course_unenroll($node, $user) {
   if (course_node_is_course($node)) {
+    $enrollment = course_enrollment_load($node->nid, $user->uid);
     $course = course_get_course($node, $user);
     $course->unenroll();
 
@@ -1131,6 +1135,7 @@ function course_unenroll($node, $user) {
       '!uid' => $user->uid,
       '!nid' => $node->nid,
     );
+    rules_invoke_event_by_args('course_enrollment_delete', array('node' => $node, 'user' => $user, 'course_enrollment' => $enrollment));
     watchdog('course_enroll', 'Removed user !uid from !nid', $watchdog_variables);
     return TRUE;
   }
@@ -2408,16 +2413,6 @@ function course_user_cancel($edit, $account, $method) {
       course_unenroll($node, $account);
     }
   }
-}
-
-/**
- * Implements hook_user().
- *
- * Delete the user's course records, fulfillments, and enrollments upon
- * deletion.
- */
-function course_user_OLD($op, &$edit, &$account, $category = NULL) {
-
 }
 
 /**
