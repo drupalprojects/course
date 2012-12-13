@@ -1570,6 +1570,9 @@ function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) 
   $result = db_query('SELECT * FROM {course_outline} WHERE coid = :coid', array(':coid' => $coid));
   if ($row = $result->fetch()) {
     $ret = $available[$row->module][$row->object_type];
+    if (!$ret['class']) {
+      $ret['class'] = 'CourseObjectBroken';
+    }
     if (!class_exists($ret['class'])) {
       drupal_set_message(t("Could not find class for %m-%c!", array('%m' => $row->module, '%c' => $row->object_type)), 'error');
       return FALSE;
@@ -1686,7 +1689,7 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
     $class = $ret['class'];
   }
   else {
-    return FALSE;
+    $class = 'CourseObjectBroken';
   }
 
   $courseObject = new $class($outline_entry, $account, $course);

@@ -1299,3 +1299,7 @@ abstract class CourseObjectNode extends CourseObject {
   }
 
 }
+
+class CourseObjectBroken extends CourseObject {
+
+}
