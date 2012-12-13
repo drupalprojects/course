@@ -41,7 +41,8 @@ class CourseObjectQuiz extends CourseObjectNode {
     $result_ids[] = $rid;
     $fulfillment->setOption('quiz_result_ids', $result_ids);
 
-    $result = reset(quiz_get_score_data(array($nid), $user->uid));
+    $results = quiz_get_score_data(array($nid), $user->uid);
+    $result = reset($results);
     if ($result && ($result->percent_score >= $this->getOption('passing_grade'))) {
       $fulfillment->setGrade($result->percent_score)->setComplete()->save();
     }
