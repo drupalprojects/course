@@ -118,9 +118,15 @@ function course_outline_overview_form($form, &$form_state) {
         '#type' => 'hidden',
         '#value' => $courseObject->getOption('object_type'),
       );
+      if (empty($handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')])) {
+        $show_object_name = t('Missing CourseObject handler for <br/><i>@m/@t</i>', array('@m' => $courseObject->getOption('module'), '@t' => $courseObject->getOption('module')));
+      }
+      else {
+        $show_object_name = $handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')]['name'] . '<br/><small><i>' . ucwords(str_replace('_', ' ', $courseObject->getOption('module'))) . '</i></small>';
+      }
       $rform['object_type_show'] = array(
         '#type' => 'markup',
-        '#markup' => filter_xss_admin($handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')]['name'] . '<br/><small><i>' . ucwords(str_replace('_', ' ', $courseObject->getOption('module'))) . '</i></small>'),
+        '#markup' => filter_xss_admin($show_object_name),
       );
       $cform['objects'][$uniqid] = $rform;
     }

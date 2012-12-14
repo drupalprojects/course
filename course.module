@@ -1569,11 +1569,14 @@ function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) 
 
   $result = db_query('SELECT * FROM {course_outline} WHERE coid = :coid', array(':coid' => $coid));
   if ($row = $result->fetch()) {
-    $ret = $available[$row->module][$row->object_type];
-    if (!$ret['class']) {
-      $ret['class'] = 'CourseObjectBroken';
+    $object_definition = array();
+    if (!empty($available[$row->module][$row->object_type])) {
+      $object_definition = $available[$row->module][$row->object_type];
     }
-    if (!class_exists($ret['class'])) {
+    if (empty($object_definition['class'])) {
+      $object_definition['class'] = 'CourseObjectBroken';
+    }
+    if (!class_exists($object_definition['class'])) {
       drupal_set_message(t("Could not find class for %m-%c!", array('%m' => $row->module, '%c' => $row->object_type)), 'error');
       return FALSE;
     }
@@ -1581,7 +1584,7 @@ function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) 
       if (!$course) {
         $course = new Course(node_load($row->nid), $account);
       }
-      return new $ret['class']($row, $account, $course);
+      return new $object_definition['class']($row, $account, $course);
     }
   }
   else {

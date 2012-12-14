@@ -1027,8 +1027,8 @@ class CourseObjectFulfillment extends CourseHandler {
     // TODO Please review the conversion of this statement to the D7 database API syntax.
     /* db_query($sql, $this->getId()) */
     db_delete('course_outline_fulfillment')
-  ->condition('cofid', $this->getId())
-  ->execute();
+      ->condition('cofid', $this->getId())
+      ->execute();
   }
 
   /**
@@ -1206,7 +1206,7 @@ abstract class CourseObjectNode extends CourseObject {
           '%t' => $this->getTitle(),
           '%c' => $this->getComponent(),
           '!l' => l('Access control', "admin/content/node-type/{$this->getComponent()}/access"),
-        ));
+          ));
       }
     }
     return $warnings;
@@ -1301,5 +1301,9 @@ abstract class CourseObjectNode extends CourseObject {
 }
 
 class CourseObjectBroken extends CourseObject {
+
+  function take() {
+    return t('This course object is misconfigured. Please contact the administrator.');
+  }
 
 }
