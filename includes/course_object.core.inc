@@ -1135,7 +1135,7 @@ abstract class CourseObjectNode extends CourseObject {
       $types = drupal_map_assoc($this->getNodeTypes());
       $options = array_intersect_key(node_type_get_names(), $types);
       if (count($options) > 1) {
-        $options[''] = '- select -';
+        array_unshift($options, '- select -');
       }
       $form['node_type'] = array(
         '#title' => 'Create node',
@@ -1144,6 +1144,9 @@ abstract class CourseObjectNode extends CourseObject {
         '#description' => 'Selecting a node type will automatically create this node and link it to this course object.',
         '#default_value' => $config['node_type'],
       );
+      if (count($options) > 1) {
+        $form['node_type']['#required'] = TRUE;
+      }
     }
 
     $form['node'] = array(
@@ -1172,6 +1175,15 @@ abstract class CourseObjectNode extends CourseObject {
       $node = node_load($nid);
       $link = l(t("'%title' [node id %nid]", array('%title' => $node->title, '%nid' => $node->nid)), "node/$node->nid", array('attributes' => array('target' => '_blank', 'title' => t('Open in new window')), 'html' => TRUE));
       $form['node']['instance']['#description'] = t('Currently set to !link', array('!link' => $link));
+    }
+  }
+
+  /**
+   * Validate the options form. Check the node type.
+   */
+  public function optionsValidate(&$form, &$form_state) {
+    if (!$form_state['values']['node_type']) {
+      form_set_error('node_type', 'Please select a node type.');
     }
   }
 
