@@ -1071,7 +1071,7 @@ function course_enroll($node, $account = NULL, $from = NULL, $code = NULL, $stat
       watchdog('course_enroll', 'Enrolling user !uid into !nid', $watchdog_variables);
       course_enrollment_save($enrollment);
       $op = 'insert';
-      rules_invoke_event_by_args("course_enrollment_$op", array('node' => $node, 'user' => $account, 'course_enrollment' => $enrollment));
+      course_rules_invoke_event_by_args("course_enrollment_$op", array('node' => $node, 'user' => $account, 'course_enrollment' => $enrollment));
     }
     else {
       watchdog('course_enroll', 'Re-enrolling user !uid into !nid', $watchdog_variables);
@@ -1135,7 +1135,7 @@ function course_unenroll($node, $user) {
       '!uid' => $user->uid,
       '!nid' => $node->nid,
     );
-    rules_invoke_event_by_args('course_enrollment_delete', array('node' => $node, 'user' => $user, 'course_enrollment' => $enrollment));
+    course_rules_invoke_event_by_args('course_enrollment_delete', array('node' => $node, 'user' => $user, 'course_enrollment' => $enrollment));
     watchdog('course_enroll', 'Removed user !uid from !nid', $watchdog_variables);
     return TRUE;
   }
@@ -2829,4 +2829,13 @@ function course_report_label($enrollment) {
   $node = node_load($enrollment->nid);
   $account = user_load($enrollment->uid);
   return t("@username's course report for @title", array('@username' => $account->name, '@title' => $node->title));
+}
+
+/**
+ * Trigger a rules event if rules is enabled.
+ */
+function course_rules_invoke_event_by_args($event_name, $args) {
+  if (module_exists('rules')) {
+    rules_invoke_event_by_args($event_name, $args);
+  }
 }
