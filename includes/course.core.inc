@@ -346,6 +346,17 @@ class CourseReport extends CourseHandler {
       }
     }
 
+    $crid = db_select('course_report', 'cr')
+      ->fields('cr', array('crid'))
+      ->condition('nid', $this->course->getNode()->nid)
+      ->condition('uid', $this->course->getUser()->uid)
+      ->execute()
+      ->fetchField();
+
+    if ($crid) {
+      $this->setOption('crid', $crid);
+    }
+
     $this->setOption('nid', $this->course->getNode()->nid);
     $this->setOption('uid', $this->course->getUser()->uid);
     $this->save();
