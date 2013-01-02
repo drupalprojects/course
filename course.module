@@ -2283,7 +2283,7 @@ function course_user_type_form_submit(&$form, $form_state) {
  *   has permission to self-enroll in this course, and 'message', a
  *   module-provided message that should be displayed to the user.
  */
-function course_enroll_access($node, $user = NULL, $flush = FALSE, $all = FALSE){
+function course_enroll_access($node, $user = NULL, $flush = FALSE, $all = FALSE) {
   $courses = &drupal_static(__FUNCTION__, array());
 
   if (!$user) {
@@ -2333,6 +2333,15 @@ function course_course_can_enroll($node, $user) {
         'header' => t('Course closed'),
         'message' => t('This course closed on %date and is no longer available for enrollments.', array(
           '%date' => format_date($node->course['close'], 'custom', 'F, jS Y'),
+        )),
+      ));
+  }
+
+  if (!empty($node->course['live_from_date']) && REQUEST_TIME > $node->course['live_from_date']) {
+    return array('course_live_started' => array(
+        'success' => FALSE,
+        'message' => t('This live activity started on %date and is no longer available for enrollments.', array(
+          '%date' => date('F, jS Y', $node->course['live_from_date']),
         )),
       ));
   }
