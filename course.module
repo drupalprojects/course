@@ -2233,12 +2233,12 @@ function course_enrol_access($node, $user = NULL, $flush = FALSE, $all = FALSE) 
     if ($flush) {
       $courses = array();
     }
-    $courses[$node->nid]['success'] = TRUE;
     // Allow modules to set self-enrollment access for a user.
     $hooks = module_invoke_all('course_can_enrol', $node, $user);
     if ($all) {
       return $hooks;
     }
+    $courses[$node->nid]['success'] = TRUE;
     foreach ($hooks as $key => $hook) {
       if (is_array($hook) && !$hook['success']) {
         $courses[$node->nid] = $hook;
