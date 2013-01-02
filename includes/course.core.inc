@@ -359,7 +359,10 @@ class CourseReport extends CourseHandler {
 
     $this->setOption('nid', $this->course->getNode()->nid);
     $this->setOption('uid', $this->course->getUser()->uid);
+    module_invoke_all('course_report_presave', $this);
+    $op = $this->getOption($this->primaryKey) ? 'update' : 'insert';
     $this->save();
+    module_invoke_all("course_report_$op", $this);
   }
 
 }
