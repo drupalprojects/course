@@ -37,13 +37,15 @@ function course_uc_node_view($node, $view_mode = 'full') {
   if (course_node_is_course($node) && isset($node->sell_price) && $node->sell_price > 0) {
     $hides = array(
       'sell_price',
-      'display_price',
       'model',
       'list_price',
       'cost',
       'weight',
       'dimensions',
     );
+    if (!($node->sell_price > 0)) {
+      $hides[] = 'display_price';
+    }
     foreach ($hides as $hide) {
       unset($node->content[$hide]);
     }
@@ -91,13 +93,20 @@ function course_uc_node_update($node) {
 function course_uc_settings_form() {
   $form = array();
 
+  $form['course_access_bypass_checkout'] = array(
+    '#title' => 'Bypass checkout for free course products.',
+    '#description' > 'Users will not have to go through checkout for course products that are free.',
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('course_access_bypass_checkout', 1),
+  );
+
   $form['course_uc_restrict_qty'] = array(
     '#title' => 'Restrict course products to 1 per customer.', '#description' > 'Course will restrict users from adding the product to cart if they have already purchased the course or already have the course in their cart.',
     '#type' => 'checkbox',
     '#default_value' => variable_get('course_uc_restrict_qty', 1),
   );
 
-  return $form;
+  return system_settings_form($form);
 }
 
 /**
