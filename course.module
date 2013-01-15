@@ -1866,7 +1866,7 @@ function course_edit_enrollment_action($object, $context) {
   $account = user_load($enrollment->uid);
   if (!$course_report = course_report_load($node, $account)) {
     $course_report->nid = $node->nid;
-    $course_report->uid = $node->uid;
+    $course_report->uid = $account->uid;
   }
 
   // Update enrollment status.
