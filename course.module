@@ -1864,7 +1864,10 @@ function course_edit_enrollment_action($object, $context) {
   $enrollment = course_enrolment_load($object->nid, $object->uid);
   $node = node_load($enrollment->nid);
   $account = user_load($enrollment->uid);
-  $course_report = course_report_load($node, $account);
+  if (!$course_report = course_report_load($node, $account)) {
+    $course_report->nid = $node->nid;
+    $course_report->uid = $node->uid;
+  }
 
   // Update enrollment status.
   if ($context['status'] != '') {
@@ -2036,7 +2039,7 @@ function course_edit_enrollment_action_form($context) {
         -1 => t('Incomplete'),
         0 => t('Failed'),
       ),
-      '#default_value' => $fulfillments[$courseObject->getId()]->isComplete(),
+      '#default_value' => $fulfillments ? $fulfillments[$courseObject->getId()]->isComplete() : NULL,
     );
   }
 
