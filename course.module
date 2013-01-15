@@ -2217,30 +2217,33 @@ function course_user_type_form_submit(&$form, $form_state) {
  *   A node.
  * @param object $user
  *   A user.
+ * @param bool $all
+ *   Return all values from implementations.
  *
  * @return array
  *   An array with values 'success', to indicate whether or not the user
  *   has permission to self-enroll in this course, and 'message', a
  *   module-provided message that should be displayed to the user.
  */
-function course_enrol_access($node, $user = NULL, $flush = FALSE) {
+function course_enrol_access($node, $user = NULL, $flush = FALSE, $all = FALSE) {
   static $courses = array();
 
   if (!$user) {
     global $user;
   }
 
-  if (!isset($courses[$node->nid]) || $flush) {
-    $courses[$node->nid]['success'] = TRUE;
+  if (!isset($courses[$node->nid]) || $flush || $all) {
+    if ($flush) {
+      $courses = array();
+    }
     // Allow modules to set self-enrollment access for a user.
     $hooks = module_invoke_all('course_can_enrol', $node, $user);
+    if ($all) {
+      return $hooks;
+    }
+    $courses[$node->nid]['success'] = TRUE;
     foreach ($hooks as $key => $hook) {
-      if (!$hook) {
-        // Ok. Old style blocker. But look for messages.
-        $courses[$node->nid] = FALSE;
-      }
       if (is_array($hook) && !$hook['success']) {
-        // New style blocker, return immediately.
         $courses[$node->nid] = $hook;
         return $hook;
       }
@@ -2270,6 +2273,15 @@ function course_course_can_enrol($node, $user) {
         'success' => FALSE,
         'message' => t('This course closed on %date and is no longer available for enrollments.', array(
           '%date' => format_date($node->course['close'], 'custom', 'F, jS Y'),
+        )),
+      ));
+  }
+
+  if (!empty($node->course['live_from_date']) && REQUEST_TIME > $node->course['live_from_date']) {
+    return array('course_live_started' => array(
+        'success' => FALSE,
+        'message' => t('This live activity started on %date and is no longer available for enrollments.', array(
+          '%date' => date('F, jS Y', $node->course['live_from_date']),
         )),
       ));
   }

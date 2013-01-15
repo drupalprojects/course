@@ -40,13 +40,15 @@ function course_uc_nodeapi($node, $op, $a3, $a4) {
       if (course_node_is_course($node) && isset($node->sell_price)) {
         $hides = array(
           'sell_price',
-          'display_price',
           'model',
           'list_price',
           'cost',
           'weight',
           'dimensions',
         );
+        if (!($node->sell_price > 0)) {
+          $hides[] = 'display_price';
+        }
         foreach ($hides as $hide) {
           unset($node->content[$hide]);
         }
@@ -85,6 +87,13 @@ function course_uc_nodeapi($node, $op, $a3, $a4) {
 function course_uc_settings_form() {
   $form = array();
 
+  $form['course_access_bypass_checkout'] = array(
+    '#title' => 'Bypass checkout for free course products.',
+    '#description' > 'Users will not have to go through checkout for course products that are free.',
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('course_access_bypass_checkout', 1),
+  );
+
   $form['course_uc_restrict_qty'] = array(
     '#title' => 'Restrict course products to 1 per customer.',
     '#description' > 'Course will restrict users from adding the product to cart if they have already purchased the course or already have the course in their cart.',
@@ -92,7 +101,7 @@ function course_uc_settings_form() {
     '#default_value' => variable_get('course_uc_restrict_qty', 1),
   );
 
-  return $form;
+  return system_settings_form($form);
 }
 
 /**
@@ -381,8 +390,7 @@ function course_uc_course_can_enrol($node, $user) {
     if ($idx == 0) {
       // Completely block access if it is the first object.
       if ($courseObject->getComponent() == 'payment' && !$courseObject->getFulfillment()->isComplete()) {
-        return array(
-          array(
+        return array('course_must_purchase' => array(
             'success' => FALSE,
             'message' => 'You must first purchase this course.',
           ),
@@ -390,11 +398,4 @@ function course_uc_course_can_enrol($node, $user) {
       }
     }
   }
-
-  return array(
-    array(
-      'success' => TRUE,
-      'message' => 'You have purchased this course.',
-    ),
-  );
 }
