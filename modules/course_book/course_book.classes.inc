@@ -41,7 +41,7 @@ class CourseObjectBook extends CourseObjectNode {
 
     // Add a book-specific configuration for course outline list item type, only
     // if the standard course list outline handler is selected.
-    if ($this->getCourse()->getNode()->course['outline'] == 'course_outline_list') {
+    if ($this->getCourse()->getNode()->course['outline'] == 'course') {
       $form['outline_list_item_type'] = array(
         '#title' => t('Course outline list item type'),
         '#type' => 'select',
