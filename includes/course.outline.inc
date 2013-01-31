@@ -436,23 +436,23 @@ function course_outline_list($node) {
       $step['link'] = $courseObject->getUrl();
 
       if (!$prev_req || $prev_req->getFulfillment()->isComplete()) {
-        $step['status'] = 'Begin';
+        $step['status'] = t('Begin');
       }
 
       // Step is complete.
       if ($courseObject->getFulfillment()->isComplete()) {
         $step['class'] = array('completed');
-        $step['status'] = 'Complete';
+        $step['status'] = t('Complete');
         $step['image'] = 'misc/watchdog-ok.png';
       }
       elseif ($courseObject->getFulfillment()->getId()) {
-        $step['status'] = 'Continue';
+        $step['status'] = t('Continue');
         $step['class'] = array('continue');
         $step['image'] = 'misc/menu-collapsed.png';
         if ($course->getActive() === $courseObject) {
           $step['status'] = $courseObject->getStatus();
           if (!$step['status'] && $courseObject->getCourse()->getActive()->getId() == $courseObject->getId()) {
-            $step['status'] = 'In progress';
+            $step['status'] = t('In progress');
             $step['class'] = array('in-progress');
             $step['image'] = 'misc/watchdog-warning.png';
           }
@@ -526,7 +526,7 @@ function course_outline_show_complete_links($course_node) {
   if ($report->complete) {
     $txt_out .= '<p>' . t('Thank you for participating in this activity.') . '</p>';
     $links = array(
-      'course' => array('Return to course', "node/$course_node->nid", 'Return to the course to view course details and material.'),
+      'course' => array(t('Return to course'), "node/$course_node->nid", t('Return to the course to view course details and material.')),
     );
     // Allow modules to add links to the course completion landing page, such as
     // post-course actions.
@@ -556,7 +556,10 @@ function course_outline_show_complete_links($course_node) {
       $status_css = $req->complete ? 'complete' : 'incomplete';
       $status_img = $req->complete ? 'ok' : ($req->required ? 'error' : 'warning');
       $status_optional = ($status_img == 'warning') ? ' (optional)' : '';
-      $grade = $req->graded ? ' - Your grade: ' . $req->grade_result . '%, Pass grade: ' . $req->passing_grade . '%' : '';
+      $grade = $req->graded ? ' - ' . t('Your grade: %grade_result%, Pass grade: %passing_grade%', array(
+        '%grade_result' => $req->grade_result,
+        '%passing_grade' => $req->passing_grade,
+      )) : '';
       $items[] = array(
         array(
           'data' => theme('image', array('path' => "misc/watchdog-{$status_img}.png", 'width' => '', 'height' => '', 'alt' => $status_css)),
@@ -571,7 +574,7 @@ function course_outline_show_complete_links($course_node) {
     $txt_out .= $reqs_txt . '<div class="homelink"><p>' . l($course_out_return_array['course_outline_link_text'], $course_out_return_array['course_outline_link']) . '</p></div>';
 
     $links = array(
-      'course' => array('Return to course', "node/$course_node->nid/takecourse", 'Return to the course to view course details and material.'),
+      'course' => array(t('Return to course'), "node/$course_node->nid/takecourse", t('Return to the course to view course details and material.')),
     );
     // Allow modules to alter remaining requirement links on the course
     // completion landing page.
@@ -588,12 +591,9 @@ function course_outline_show_complete_links($course_node) {
  * Delete a fulfillment.
  */
 function course_outline_delete_fulfillment($mixed) {
-  $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid = %d AND uid = %d";
-  // TODO Please review the conversion of this statement to the D7 database API syntax.
-  /* db_query($sql, $mixed->coid, $mixed->uid) */
   db_delete('course_outline_fulfillment')
-  ->condition('coid', $mixed->coid)
-  ->condition('uid', $mixed->uid)
-  ->execute();
+    ->condition('coid', $mixed->coid)
+    ->condition('uid', $mixed->uid)
+    ->execute();
   return db_affected_rows() > 0;
 }
