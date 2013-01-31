@@ -109,7 +109,7 @@ function course_book_override_outline_list_item(&$item, CourseObject $courseObje
               $output = menu_tree_output($data['below']);
               // Append to the existing book outline item's data output, since we
               // don't have an array but already rendered active menu tree output.
-              $item['data'] .= $output;
+              $item['data'] .= drupal_render($output);
             }
           }
           // Note we do not break here purposefully, to additionally append the
