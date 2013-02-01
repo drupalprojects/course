@@ -1215,96 +1215,89 @@ function course_enable() {
  * @todo move this course node settings form to a secondary local task, under
  * the course settings tab.
  */
-function course_form_alter(&$form, &$form_state, $form_id) {
-  $node = isset($form['#node']) ? $form['#node'] : NULL;
-
-  // Course node settings form.
-  if (course_node_is_course($node) && strpos($form_id, '_node_form') !== FALSE) {
-    $form['course']['#tree'] = TRUE;
-    $form['course']['#type'] = 'fieldset';
-    $form['course']['#title'] = t('Course settings');
-    $form['course']['#group'] = 'additional_settings';
-
-    // Course outline display handler.
-    $outlines = array();
-    $handlers = course_get_handlers('outline');
-    foreach ($handlers as $outline_handlers) {
-      if ($outline_handlers) {
-        foreach ($outline_handlers as $key => $outline_handler) {
-          $outlines[$key] = $outline_handler['name'];
-        }
+function course_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
+  $form['course']['#tree'] = TRUE;
+  $form['course']['#type'] = 'fieldset';
+  $form['course']['#title'] = t('Course settings');
+  // Course outline display handler.
+  $outlines = array();
+  $handlers = course_get_handlers('outline');
+  foreach ($handlers as $outline_handlers) {
+    if ($outline_handlers) {
+      foreach ($outline_handlers as $key => $outline_handler) {
+        $outlines[$key] = $outline_handler['name'];
       }
     }
+  }
 
-    $form['course']['outline'] = array(
-      '#title' => t('Available outline displays'),
-      '#type' => 'select',
-      '#options' => $outlines,
+  $form['course']['outline'] = array(
+    '#title' => t('Available outline displays'),
+    '#type' => 'select',
+    '#options' => $outlines,
+  );
+
+  // This is a fake field. It stores the aggregate credit from course_credit.
+  // @todo...something
+  $form['course']['credits'] = array(
+    '#title' => t('Credit hours'),
+    '#type' => 'textfield',
+    '#size' => 4,
+    '#access' => FALSE,
+  );
+
+  $form['course']['duration'] = array(
+    '#title' => t('Duration'),
+    '#type' => 'textfield',
+    '#description' => t('Length of time in seconds that a user can remain in the course. Leave blank for unlimited. For a better experience, install the !link module.', array('!link' => l('Time period', 'http://drupal.org/project/timeperiod'))),
+  );
+
+  if (module_exists('timeperiod')) {
+    $form['course']['duration']['#type'] = 'timeperiod_select';
+    $form['course']['duration']['#units'] = array(
+      '86400' => array('max' => 30, 'step size' => 1),
+      '3600' => array('max' => 24, 'step size' => 1),
+      '60' => array('max' => 60, 'step size' => 1),
     );
+    $form['course']['duration']['#description'] = t('Length of time that a user can remain in the course.');
+  }
 
-    // This is a fake field. It stores the aggregate credit from course_credit.
-    // @todo...something
-    $form['course']['credits'] = array(
-      '#title' => t('Credit hours'),
-      '#type' => 'textfield',
-      '#size' => 4,
-      '#access' => FALSE,
+  $form['course']['cid'] = array(
+    '#title' => t('External learning application course ID'),
+    '#description' => t('If using an external learning application, the ID of the external course.'),
+    '#type' => 'textfield',
+    '#size' => 4,
+    '#access' => FALSE,
+  );
+
+  $form['course']['external_id'] = array(
+    '#title' => t('External course ID'),
+    '#description' => t('Course ID used to relate to an outside system.'),
+    '#type' => 'textfield',
+    '#size' => 16,
+  );
+
+  foreach (element_children($form['course']) as $key) {
+    $form['course'][$key]['#default_value'] = isset($entity->course[$key]) ? $entity->course[$key] : NULL;
+  }
+
+  if (arg(2) == 'clone') {
+    $form['course']['clone_type'] = array(
+      '#title' => t('Course object cloning'),
+      '#description' => t('"New" will create new instances of all course objects.<br/>"Reference" will link supported content in the old course to the new course.<br/>"Clone" will copy supported course objects, otherwise create new ones.'),
+      '#type' => 'radios',
+      '#options' => array(
+        'clone' => 'Clone',
+        'reference' => 'Reference',
+        'new' => 'New',
+      ),
+      '#default_value' => 'clone',
     );
+  }
 
-    $form['course']['duration'] = array(
-      '#title' => t('Duration'),
-      '#type' => 'textfield',
-      '#description' => t('Length of time in seconds that a user can remain in the course. Leave blank for unlimited. For a better experience, install the !link module.', array('!link' => l('Time period', 'http://drupal.org/project/timeperiod'))),
-    );
-
-    if (module_exists('timeperiod')) {
-      $form['course']['duration']['#type'] = 'timeperiod_select';
-      $form['course']['duration']['#units'] = array(
-        '86400' => array('max' => 30, 'step size' => 1),
-        '3600' => array('max' => 24, 'step size' => 1),
-        '60' => array('max' => 60, 'step size' => 1),
-      );
-      $form['course']['duration']['#description'] = t('Length of time that a user can remain in the course.');
-    }
-
-    $form['course']['cid'] = array(
-      '#title' => t('External learning application course ID'),
-      '#description' => t('If using an external learning application, the ID of the external course.'),
-      '#type' => 'textfield',
-      '#size' => 4,
-      '#access' => FALSE,
-    );
-
-    $form['course']['external_id'] = array(
-      '#title' => t('External course ID'),
-      '#description' => t('Course ID used to relate to an outside system.'),
-      '#type' => 'textfield',
-      '#size' => 16,
-    );
-
-    foreach (element_children($form['course']) as $key) {
-      $form['course'][$key]['#default_value'] = isset($node->course[$key]) ? $node->course[$key] : NULL;
-    }
-
-    if (arg(2) == 'clone') {
-      $form['course']['clone_type'] = array(
-        '#title' => t('Course object cloning'),
-        '#description' => t('"New" will create new instances of all course objects.<br/>"Reference" will link supported content in the old course to the new course.<br/>"Clone" will copy supported course objects, otherwise create new ones.'),
-        '#type' => 'radios',
-        '#options' => array(
-          'clone' => 'Clone',
-          'reference' => 'Reference',
-          'new' => 'New',
-        ),
-        '#default_value' => 'clone',
-      );
-    }
-
-    // After creating a new course, redirect the user to the course outline
-    // overview form.
-    if (empty($node->nid)) {
-      $form['buttons']['submit']['#submit'][] = 'course_form_submit';
-    }
+  // After creating a new course, redirect the user to the course outline
+  // overview form.
+  if (empty($node->nid)) {
+    $form['buttons']['submit']['#submit'][] = 'course_form_submit';
   }
 }
 
@@ -1773,20 +1766,21 @@ function course_views_api() {
 }
 
 /**
- * Implements hook_content_extra_fields().
+ * Implements hook_field_extra_fields().
  */
-function course_content_extra_fields($type) {
-  $extras = array();
-
-  if (course_node_is_course($type)) {
-    $extras['course'] = array(
-      'label' => t('Course settings'),
-      'description' => t('Course settings and button.'),
-      'weight' => 0,
-    );
+function course_field_extra_fields() {
+  $extra = array();
+  foreach (entity_get_info() as $entity_type => $entity_info) {
+    foreach (array_keys($entity_info['bundles']) as $bundle) {
+      if (in_array($bundle, course_get_types())) {
+        $extra[$entity_type][$bundle]['form']['course'] = array(
+          'label' => t('Course'),
+          'description' => t('Course form elements.'),
+        );
+      }
+    }
   }
-
-  return $extras;
+  return $extra;
 }
 
 /**
@@ -2819,10 +2813,10 @@ function course_course_enroll($node, $user, $from) {
   if (!course_report_load($node, $user)) {
     // If we don't have a course report record already, save a new one.
     $entry = (object) array(
-      'nid' => $node->nid,
-      'uid' => $user->uid,
-      'section_name' => 'Enrolled',
-      'complete' => 0,
+        'nid' => $node->nid,
+        'uid' => $user->uid,
+        'section_name' => 'Enrolled',
+        'complete' => 0,
     );
     course_report_save($entry);
   }
