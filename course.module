@@ -1216,6 +1216,10 @@ function course_enable() {
  * the course settings tab.
  */
 function course_field_attach_form($entity_type, $entity, &$form, &$form_state, $langcode) {
+  if (!course_node_is_course($entity)) {
+    return;
+  }
+
   $form['course']['#tree'] = TRUE;
   $form['course']['#type'] = 'fieldset';
   $form['course']['#title'] = t('Course settings');
