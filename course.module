@@ -1780,6 +1780,7 @@ function course_field_extra_fields() {
         $extra[$entity_type][$bundle]['form']['course'] = array(
           'label' => t('Course'),
           'description' => t('Course form elements.'),
+          'weight' => 0,
         );
       }
     }
