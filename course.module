@@ -802,6 +802,13 @@ function course_settings_access($node) {
  * @param object $user The user to check.
  */
 function course_can_take_course($node, $user) {
+  if (!node_access('view', $node)) {
+    return array(array(
+        'success' => FALSE,
+        'header' => t('Access denied'),
+        'message' => t('You do not have permission to take this course.')
+    ));
+  }
   $sql = "SELECT * FROM {course_enrollment} WHERE nid = %d AND uid = %d";
   if ($row = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid))->fetch()) {
     if ($row->enroll_end > 0 && REQUEST_TIME > $row->enroll_end) {
@@ -2319,6 +2326,13 @@ function course_enroll_access($node, $user = NULL, $flush = FALSE, $all = FALSE)
  * Block enrollments when a course has either not yet started or is expired.
  */
 function course_course_can_enroll($node, $user) {
+  if (!node_access('view', $node)) {
+    return array(array(
+        'success' => FALSE,
+        'header' => t('Access denied'),
+        'message' => t('You do not have permission to enroll into this course'),
+    ));
+  }
   if (!empty($node->course['open']) && REQUEST_TIME < $node->course['open']) {
     return array(array(
         'success' => FALSE,
