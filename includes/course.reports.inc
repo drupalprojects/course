@@ -49,7 +49,7 @@ function course_object_reports_page($node) {
       $header = '<h3>' . $courseObject->getTitle() . ': ' . $report['title'] . '</h3>';
     }
     else {
-      $content = 'Sorry, no report is available for this type.';
+      $content = t('Sorry, no report is available for this type.');
     }
   }
 

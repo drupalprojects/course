@@ -48,19 +48,19 @@ class CourseObjectManual extends CourseObject {
 
     $form['complete_msg'] = array(
       '#type' => 'textfield',
-      '#title' => 'Complete message',
+      '#title' => t('Complete message'),
       '#default_value' => $config['complete_msg'],
     );
 
     $form['failed_msg'] = array(
       '#type' => 'textfield',
-      '#title' => 'Failed message',
+      '#title' => t('Failed message'),
       '#default_value' => $config['failed_msg'],
     );
 
     $form['incomplete_msg'] = array(
       '#type' => 'textfield',
-      '#title' => 'Incomplete message',
+      '#title' => t('Incomplete message'),
       '#default_value' => $config['incomplete_msg'],
     );
   }

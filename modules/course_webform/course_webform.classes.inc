@@ -29,13 +29,13 @@ class CourseObjectWebform extends CourseObjectNode {
   public function getReports() {
     return array(
       'submissions' => array(
-        'title' => 'Submissions',
+        'title' => t('Submissions'),
       ),
       'analysis' => array(
-        'title' => 'Analysis',
+        'title' => t('Analysis'),
       ),
       'download' => array(
-        'title' => 'Download',
+        'title' => t('Download'),
       ),
     );
   }

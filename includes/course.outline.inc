@@ -44,7 +44,7 @@ function course_outline_overview_form($form, &$form_state) {
   $course = course_get_course($node);
 
   // Check if "Add another" was clicked.
-  if (isset($form_state['values']['op']) && $form_state['values']['op'] == 'Add another' && !empty($form_state['values']['more']['object_type'])) {
+  if (isset($form_state['values']['op']) && $form_state['values']['op'] == t('Add another') && !empty($form_state['values']['more']['object_type'])) {
     // Ensure that we cached the course.
     course_editing_start($course);
 
@@ -87,7 +87,7 @@ function course_outline_overview_form($form, &$form_state) {
   // display.
   uasort($objects, '_course_outline_overview_form_cmp_function');
 
-  $cform['#title'] = 'Course objects';
+  $cform['#title'] = t('Course objects');
   $form['#theme'] = 'course_outline_overview_form';
 
   if (!empty($_SESSION['course'][$node->nid]['editing'])) {
@@ -158,7 +158,7 @@ function course_outline_overview_form($form, &$form_state) {
 
   $form['more']['add_another'] = array(
     '#type' => 'button',
-    '#value' => 'Add another',
+    '#value' => t('Add another'),
     '#ajax' => array(
       'method' => 'replace',
       'wrapper' => 'course-outline-wrapper',
@@ -174,14 +174,14 @@ function course_outline_overview_form($form, &$form_state) {
   // Submit and reset buttons.
   $form['submit'] = array(
     '#type' => 'submit',
-    '#value' => 'Save',
+    '#value' => t('Save'),
     '#submit' => array('course_outline_overview_form_submit'),
   );
 
   if (!empty($_SESSION['course'][$node->nid]['editing'])) {
     $form['reset'] = array(
       '#type' => 'submit',
-      '#value' => 'Reset',
+      '#value' => t('Reset'),
       '#submit' => array('course_outline_overview_form_reset'),
     );
   }

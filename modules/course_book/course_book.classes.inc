@@ -33,8 +33,8 @@ class CourseObjectBook extends CourseObjectNode {
       '#title' => t('Completion criteria'),
       '#type' => 'select',
       '#options' => array(
-        'one' => 'View any page',
-        'all' => 'View all pages',
+        'one' => t('View any page'),
+        'all' => t('View all pages'),
       ),
       '#default_value' => $config['book_tracking'],
     );

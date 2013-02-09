@@ -20,10 +20,10 @@ class CourseObjectCertificate extends CourseObject {
     $options = $this->getOptions();
 
     $form['certificate_node'] = array(
-      '#title' => 'Use node settings from Certificate',
+      '#title' => t('Use node settings from Certificate'),
       '#type' => 'checkbox',
       '#default_value' => $options['certificate_node'],
-      '#description' => 'This will direct the user to node/' . $this->getCourseNid() . '/certificate',
+      '#description' => t('This will direct the user to node/%course/certificate'),
       '#disabled' => TRUE,
     );
   }

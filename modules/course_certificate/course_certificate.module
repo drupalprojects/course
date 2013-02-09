@@ -9,9 +9,9 @@ function course_certificate_course_outline_completion_links_alter(&$links, $node
   $course = course_get_course($node);
   if (course_certificate_course_has_certificate($course)) {
     $links['certificate'] = array(
-      'Download certificate',
+      t('Download certificate'),
       "node/$node->nid/certificate",
-      'Download a PDF of your certificate.',
+      t('Download a PDF of your certificate.'),
     );
   }
 }
@@ -49,7 +49,7 @@ function course_certificate_token_list($type = 'all') {
   if ($type == 'certificate') {
     $tokens = array();
     $tokens['certificate']["certificate-date_completed"] = t('Date of course completion');
-    $tokens['certificate']['certificate-number'] = 'Generated certificate number';
+    $tokens['certificate']['certificate-number'] = t('Generated certificate number');
     return $tokens;
   }
 }

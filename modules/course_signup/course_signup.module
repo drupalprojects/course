@@ -6,13 +6,13 @@
 function course_signup_admin($form, &$form_state) {
   $form = array();
 
-  $form['signup_intro']['#value'] = "Course uses Signup's built-in functionality to allow learners to register for courses and for administrators to manage attendance.";
+  $form['signup_intro']['#value'] = t("Course uses Signup's built-in functionality to allow learners to register for courses and for administrators to manage attendance.");
 
   $form['course_signup_bypass_checkout'] = array(
-    '#title' => 'Bypass registration and checkout for free courses.',
+    '#title' => t('Bypass registration and checkout for free courses.'),
     '#type' => 'checkbox',
     '#default_value' => variable_get('course_signup_bypass_checkout', 1),
-    '#description' => "Turning this on will allow registered users to immediately begin free courses without going through any kind of course registration or checkout when Ubercart Signup is used.",
+    '#description' => t("Turning this on will allow registered users to immediately begin free courses without going through any kind of course registration or checkout when Ubercart Signup is used."),
   );
 
   return system_settings_form($form);
@@ -154,8 +154,8 @@ function course_signup_init() {
     //$conf['signup_admin_list_view'] = variable_get('signup_admin_list_view_course_override', 'course_signup_user_vbo_admin');
     $conf['signup_ignore_default_fields'] = 1;
     $conf['signup_fieldset_collapsed'] = 0;
-    $conf['uc_signup_add_cart_text'] = 'Register';
-    $conf['uc_signup_signups_closed_text'] = 'Registration is closed for this activity.';
+    $conf['uc_signup_add_cart_text'] = t('Register');
+    $conf['uc_signup_signups_closed_text'] = t('Registration is closed for this activity.');
   }
 }
 
@@ -173,7 +173,7 @@ function course_signup_form_uc_signup_attendees_form_alter(&$form, &$form_state)
         $form[$key][0]['#default_value'] = $user->mail;
         $form[$key][0]['#value'] = $user->mail;
         $form[$key][0]['#disabled'] = TRUE;
-        $form[$key][0]['#description'] = 'Your email has been pre-filled from your account.';
+        $form[$key][0]['#description'] = t('Your email has been pre-filled from your account.');
       }
     }
   }
@@ -237,7 +237,7 @@ function course_signup_course_can_enroll($node, $user) {
         // Block enrollments until the user is signed up.
         $hooks[] = array(
           'success' => FALSE,
-          'message' => 'You must be signed up for this course to enroll.',
+          'message' => t('You must be signed up for this course to enroll.'),
         );
       }
     }

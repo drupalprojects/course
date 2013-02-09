@@ -50,7 +50,7 @@ class CourseObjectSignup extends CourseObjectNode {
   public function getReports() {
     return array(
       'attendance' => array(
-        'title' => 'Attendance',
+        'title' => t('Attendance'),
       ),
     );
   }

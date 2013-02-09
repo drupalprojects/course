@@ -32,7 +32,7 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
         $duration_end = $this->getCourseObject()->getFulfillment()->getOption('date_started') + ($this->getOption('duration'));
         if ($time > $duration_end) {
           $duration_end_h = date('Y-m-d H:i:s', $duration_end);
-          $this->getCourseObject()->setAccessMessage('duration-expired', 'Your enrollment in this activity expired on ' . $duration_end_h);
+          $this->getCourseObject()->setAccessMessage('duration-expired', t('Your enrollment in this activity expired on ') . $duration_end_h);
           return FALSE;
         }
       }
@@ -64,7 +64,7 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
     if (module_exists('timeperiod')) {
       $form['duration'] = array(
         '#title' => t('Duration'),
-        '#description' => 'Length of time a user can remain in this object before it is closed.',
+        '#description' => t('Length of time a user can remain in this object before it is closed.'),
         '#type' => 'timeperiod_select',
         '#units' => array(
           '86400' => array('max' => 30, 'step size' => 1),
@@ -77,7 +77,7 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
     else {
       $form['duration'] = array(
         '#title' => t('Duration'),
-        '#description' => 'Length of time in seconds a user can remain in this object before it is closed.',
+        '#description' => t('Length of time in seconds a user can remain in this object before it is closed.'),
         '#type' => 'textfield',
         '#size' => 8,
         '#default_value' => $config['duration'],
@@ -99,15 +99,15 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
     );
 
     $form['release_hidden'] = array(
-      '#title' => 'Hide until release date',
+      '#title' => t('Hide until release date'),
       '#type' => 'checkbox',
       '#default_value' => $config['release_hidden'],
     );
 
     $form['expiration_hidden'] = array(
-      '#title' => 'Hide after expiration date',
+      '#title' => t('Hide after expiration date'),
       '#type' => 'checkbox',
-      '#description' => 'Hide the object after the expiration. For example, an optional pre-test that expires.',
+      '#description' => t('Hide the object after the expiration. For example, an optional pre-test that expires.'),
       '#default_value' => $config['expiration_hidden'],
     );
 

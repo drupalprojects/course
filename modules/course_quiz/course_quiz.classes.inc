@@ -96,7 +96,7 @@ class CourseObjectQuiz extends CourseObjectNode {
   public function getReports() {
     return array(
       'results' => array(
-        'title' => 'Results',
+        'title' => t('Results'),
       ),
     );
   }
