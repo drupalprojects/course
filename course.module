@@ -1749,8 +1749,16 @@ function course_get_course($node, $account = NULL, $flush = FALSE) {
  * @return bool
  */
 function course_node_is_course($node) {
-  $type = isset($node->type) ? $node->type : $node;
-  return variable_get("course_use_{$type}", 0);
+  if (is_object($node)) {
+    if (!isset($node->type)) {
+      return FALSE;
+    }
+    else {
+      $node = $node->type;
+    }
+  }
+
+  return variable_get("course_use_{$node}", 0);
 }
 
 /**
