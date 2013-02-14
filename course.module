@@ -807,7 +807,7 @@ function course_can_take_course($node, $user) {
         'success' => FALSE,
         'header' => t('Access denied'),
         'message' => t('You do not have permission to take this course.')
-    ));
+      ));
   }
   $sql = "SELECT * FROM {course_enrollment} WHERE nid = %d AND uid = %d";
   if ($row = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid))->fetch()) {
@@ -880,12 +880,14 @@ function course_node_update($node) {
       $field_exists = isset($settings['field']);
       if ($field_exists) {
         $items = field_get_items('node', $node, $settings['field'], $node->language);
-        $value = $items[0][$settings['value']];
-        if (!empty($value)) {
-          $date = new DateTime("$value UTC");
-          $value = $date->format('U');
+        if (count($items)) {
+          $value = $items[0][$settings['value']];
+          if (!empty($value)) {
+            $date = new DateTime("$value UTC");
+            $value = $date->format('U');
+          }
+          $record[$key] = $value;
         }
-        $record[$key] = $value;
       }
     }
 
@@ -1359,7 +1361,7 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
     foreach ($fields as $field) {
       if ($field['module'] == 'date') {
         foreach ($field['columns'] as $column => $value) {
-          if (in_array($form['#node_type']->type, $field['bundles']['node']) && in_array($column, array('value', 'value2'))) {
+          if (!empty($field['bundles']['node']) && in_array($form['#node_type']->type, $field['bundles']['node']) && in_array($column, array('value', 'value2'))) {
             $position = $column == 'value' ? 'From' : 'To';
             // Use the same label pattern as date_api_fields() for consistency
             // with Views, and in case we support other date options than
@@ -2331,7 +2333,7 @@ function course_course_can_enroll($node, $user) {
         'success' => FALSE,
         'header' => t('Access denied'),
         'message' => t('You do not have permission to enroll into this course'),
-    ));
+      ));
   }
   if (!empty($node->course['open']) && REQUEST_TIME < $node->course['open']) {
     return array(array(
