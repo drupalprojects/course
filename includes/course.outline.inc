@@ -247,7 +247,7 @@ function _course_outline_object_form($courseObject = NULL) {
   // Settings link for saved objects.
   $text = t('Settings');
   $path = "node/{$courseObject->getCourseNid()}/course-object/nojs/{$uniqid}/options";
-  $l_options = array('query' => drupal_get_destination());
+  $l_options = array('query' => array('destination' => "node/{$courseObject->getCourseNid()}/course-outline"));
   $rform['options']['#markup'] = l($text, $path, $l_options);
 
   $rform['weight'] = array(
