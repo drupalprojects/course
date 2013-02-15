@@ -420,9 +420,9 @@ function course_outline_list($node) {
   $prev_req = NULL;
   foreach ($course->getObjects() as $key => $courseObject) {
     $step = array();
-    $step['style'] = 'not-started';
+    $step['class'] = array('not-started');
     $step['id'] = 'course-object-' . $courseObject->getId();
-    $step['image'] = '';
+    $step['image'] = 'misc/menu-collapsed.png';
     $step['status'] = '';
 
     if (!$courseObject->access('see')) {
@@ -437,6 +437,7 @@ function course_outline_list($node) {
 
       if (!$prev_req || $prev_req->getFulfillment()->isComplete()) {
         $step['status'] = t('Begin');
+        $step['class'] = array('begin');
       }
 
       // Step is complete.
@@ -461,7 +462,7 @@ function course_outline_list($node) {
     }
     else {
       // User cannot access this step yet.
-      $step['style'] = 'not-started';
+      $step['class'] = array('not-started');
       $step['status'] = implode('<br/>', $courseObject->getAccessMessages());
     }
 
@@ -477,7 +478,7 @@ function course_outline_list($node) {
     $item = array(
       'data' => $data,
       'id' => $step['id'],
-      'class' => array($step['style']),
+      'class' => $step['class'],
     );
 
     // Allow other modules to modify this list item.
