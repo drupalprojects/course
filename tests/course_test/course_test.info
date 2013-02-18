@@ -6,3 +6,4 @@ dependencies[] = entity
 dependencies[] = entity_token
 dependencies[] = rules
 files[] = course_test.classes.inc
+test_dependencies[] = uuid (7.x-1.x-dev)
