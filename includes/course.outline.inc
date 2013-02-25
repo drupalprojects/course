@@ -345,16 +345,21 @@ function _course_outline_overview_form_cmp_function($a, $b) {
  * Submit handler.
  */
 function course_outline_overview_form_submit(&$form, &$form_state) {
+  if (empty($form_state['values']['course_outline']['objects'])) {
+    // Empty form submitted.
+    return;
+  }
+
   $node = node_load($form['nid']['#value']);
 
   // Get form state values for object elements on the course outline overview:
   // - An associative array of course objects, keyed by ID. The ID for already
-//   saved objects is {course_outline}.coid, but for AHAH created objects the
-//   key is a generated unique ID until save.
-//   - coid: The key loaded from the database. If empty, the object is new.
-//   - module: The implementing module name (course_quiz etc).
-//   - object_type: The course object key as defined by
-//     hook_course_handlers().
+  //   saved objects is {course_outline}.coid, but for AHAH created objects the
+  //   key is a generated unique ID until save.
+  //   - coid: The key loaded from the database. If empty, the object is new.
+  //   - module: The implementing module name (course_quiz etc).
+  //   - object_type: The course object key as defined by
+  //     hook_course_handlers().
   $objects = $form_state['values']['course_outline']['objects'];
 
   // Sort by weight so we can renumber.
@@ -558,9 +563,9 @@ function course_outline_show_complete_links($course_node) {
       $status_img = $req->complete ? 'ok' : ($req->required ? 'error' : 'warning');
       $status_optional = ($status_img == 'warning') ? ' (optional)' : '';
       $grade = $req->graded ? ' - ' . t('Your grade: %grade_result%, Pass grade: %passing_grade%', array(
-        '%grade_result' => $req->grade_result,
-        '%passing_grade' => $req->passing_grade,
-      )) : '';
+          '%grade_result' => $req->grade_result,
+          '%passing_grade' => $req->passing_grade,
+        )) : '';
       $items[] = array(
         array(
           'data' => theme('image', array('path' => "misc/watchdog-{$status_img}.png", 'width' => '', 'height' => '', 'alt' => $status_css)),
