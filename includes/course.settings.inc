@@ -82,9 +82,9 @@ function course_settings_appearance_form() {
     '#type' => 'checkboxes',
     '#options' => array(
       'teaser' => t('Teaser'),
-      'page' => t('Page'),
+      'full' => t('Full'),
     ),
-    '#default_value' => variable_get('course_take_course_button_show', array()),
+    '#default_value' => variable_get('course_take_course_button_show', array('full' => 'full')),
     '#description' => t('Check to show a "take course" button on courses.'),
   );
 
