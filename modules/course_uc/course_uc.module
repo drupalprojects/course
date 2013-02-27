@@ -350,7 +350,7 @@ function course_uc_course_handlers() {
  *
  * Can the user self-enroll in this course? No, they have to pay for it.
  */
-function course_course_access($op, $node, $user) {
+function course_uc_course_access($op, $node, $user) {
   if ($op == 'enroll') {
     $course = course_get_course($node, $user);
     foreach ($course->getObjects() as $idx => $courseObject) {
