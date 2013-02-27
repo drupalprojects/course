@@ -190,22 +190,38 @@ function hook_course_has_settings($node, $user) {
  * If any module implementing this hook returns FALSE or an array containing
  * 'success' => FALSE, the course will be restricted.
  *
+ * @param string $op
+ *   Either 'enroll' or 'take'.
  * @param object $node
  *   The course node.
  * @param object $user
- *   The user who may or may not take the course.
+ *   The user who may or may not enroll/take the course.
  *
  * @return boolean|array
  *   Either FALSE, or an array containing:
  *   - success: Boolean. Indicates whether or not the user has permission to
- *     take this course.
+ *     enroll or take this course.
  *   - message: String. If success is FALSE, a message to display to the user.
  *
  * @see course_take_course_access()
+ * @see course_enroll_access()
  */
-function hook_can_take_course($node, $user) {
-  // @see course_can_take_course() and hook_can_take_course() for examples of
-  // how to use this hook.
+function hook_course_access($op, $node, $user) {
+  if ($op == 'take') {
+    // Example: do not allow users to take courses on Wednesdays.
+    if (date('L') == 'wednesday') {
+      $hooks[] = array(
+        'success' => FALSE,
+        'message' => t('Courses are closed on Wednesdays.'),
+      );
+    }
+    // Example: however allow users to bypass enrollment restriction on Christmas.
+    elseif ((date('m') == 12) && (date('d') == 25)) {
+      $hooks[] = array('success' => TRUE);
+    }
+
+    return $hooks;
+  }
 }
 
 /**
@@ -254,41 +270,6 @@ function hook_course_enroll($node, $user, $from, $code, $status) {
  */
 function hook_course_unenroll($node, $user) {
   // @todo add example.
-}
-
-/**
- * Allow modules to set self-enrollment access for a user.
- *
- * Modules implementating This hook should return the status, and optionally a
- * failure message if success is FALSE.
- *
- * @param object $node
- *   The course node.
- * @param object $user
- *   The user who may or may not take the course.
- *
- * @return array
- *   An associative array of access arrays, each containing an array of:
- *   - success: Boolean. Indicates whether or not the user has permission to
- *     self-enroll in this course.
- *   - message: String. If success is FALSE, a message to display to the user.
- *
- * @see course_enroll_access()
- */
-function hook_course_can_enroll($node, $user) {
-  // Example: do not allow users to take courses on Wednesdays.
-  if (date('L') == 'wednesday') {
-    $hooks[] = array(
-      'success' => FALSE,
-      'message' => t('Courses are closed on Wednesdays.'),
-    );
-  }
-  // Example: however allow users to bypass enrollment restriction on Christmas.
-  elseif ((date('m') == 12) && (date('d') == 25)) {
-    $hooks[] = array('success' => TRUE);
-  }
-
-  return $hooks;
 }
 
 /**

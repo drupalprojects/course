@@ -756,7 +756,7 @@ function course_take_course_access($node, $account = NULL, $flush = FALSE) {
   if (!isset($courses[$node->nid]) || $flush) {
     $courses[$node->nid]['success'] = TRUE;
     // Allow modules to determine if this course should be restricted.
-    $hooks = module_invoke_all('can_take_course', $node, $account);
+    $hooks = module_invoke_all('course_access', 'take', $node, $account);
     foreach ($hooks as $key => $hook) {
       if (!$hook) {
         // Ok. Old style blocker. But look for messages.
@@ -786,44 +786,6 @@ function course_take_course_access($node, $account = NULL, $flush = FALSE) {
  */
 function course_settings_access($node) {
   return node_access('update', $node);
-}
-
-/**
- * Implements hook_can_take_course().
- *
- * Check for built-in access restrictions (enrollment, release/expiration).
- *
- * @param object $node The course node.
- * @param object $user The user to check.
- */
-function course_can_take_course($node, $user) {
-  if (!node_access('view', $node)) {
-    return array(array(
-        'success' => FALSE,
-        'header' => t('Access denied'),
-        'message' => t('You do not have permission to take this course.')
-      ));
-  }
-  $sql = "SELECT * FROM {course_enrollment} WHERE nid = %d AND uid = %d";
-  if ($row = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid))->fetch()) {
-    if ($row->enroll_end > 0 && REQUEST_TIME > $row->enroll_end) {
-      return array(array(
-          'success' => FALSE,
-          'header' => t('Enrollment expired'),
-          'message' => t('Sorry, your enrollment has expired for this course.'),
-        ));
-    }
-  }
-
-  if (isset($node->course['close']) && $node->course['close']) {
-    if (REQUEST_TIME > $node->course['close']) {
-      return array(array(
-          'success' => FALSE,
-          'header' => t('Course expired'),
-          'message' => t('Sorry, this course is expired.'),
-        ));
-    }
-  }
 }
 
 /**
@@ -2306,7 +2268,7 @@ function course_enroll_access($node, $user = NULL, $flush = FALSE, $all = FALSE)
       $courses = array();
     }
     // Allow modules to set self-enrollment access for a user.
-    $hooks = module_invoke_all('course_can_enroll', $node, $user);
+    $hooks = module_invoke_all('course_access', 'enroll', $node, $user);
     if ($all) {
       return $hooks;
     }
@@ -2323,45 +2285,76 @@ function course_enroll_access($node, $user = NULL, $flush = FALSE, $all = FALSE)
 }
 
 /**
- * Implements hook_course_can_enroll().
+ * Implements hook_course_access().
  *
  * Block enrollments when a course has either not yet started or is expired.
  */
-function course_course_can_enroll($node, $user) {
-  if (!node_access('view', $node)) {
-    return array(array(
-        'success' => FALSE,
-        'header' => t('Access denied'),
-        'message' => t('You do not have permission to enroll into this course'),
-      ));
-  }
-  if (!empty($node->course['open']) && REQUEST_TIME < $node->course['open']) {
-    return array(array(
-        'success' => FALSE,
-        'header' => t('Course not open'),
-        'message' => t('This course opens on %date.', array(
-          '%date' => format_date($node->course['open'], 'custom', 'F, jS Y'),
-        )),
-      ));
-  }
+function course_course_access($op, $node, $user) {
+  if ($op == 'enroll') {
+    if (!node_access('view', $node)) {
+      return array(array(
+          'success' => FALSE,
+          'header' => t('Access denied'),
+          'message' => t('You do not have permission to enroll into this course'),
+        ));
+    }
+    if (!empty($node->course['open']) && REQUEST_TIME < $node->course['open']) {
+      return array(array(
+          'success' => FALSE,
+          'header' => t('Course not open'),
+          'message' => t('This course opens on %date.', array(
+            '%date' => format_date($node->course['open'], 'custom', 'F, jS Y'),
+          )),
+        ));
+    }
 
-  if (!empty($node->course['close']) && REQUEST_TIME > $node->course['close']) {
-    return array(array(
-        'success' => FALSE,
-        'header' => t('Course closed'),
-        'message' => t('This course closed on %date and is no longer available for enrollments.', array(
-          '%date' => format_date($node->course['close'], 'custom', 'F, jS Y'),
-        )),
-      ));
-  }
+    if (!empty($node->course['close']) && REQUEST_TIME > $node->course['close']) {
+      return array(array(
+          'success' => FALSE,
+          'header' => t('Course closed'),
+          'message' => t('This course closed on %date and is no longer available for enrollments.', array(
+            '%date' => format_date($node->course['close'], 'custom', 'F, jS Y'),
+          )),
+        ));
+    }
 
-  if (!empty($node->course['live_from_date']) && REQUEST_TIME > $node->course['live_from_date']) {
-    return array('course_live_started' => array(
-        'success' => FALSE,
-        'message' => t('This live activity started on %date and is no longer available for enrollments.', array(
-          '%date' => date('F, jS Y', $node->course['live_from_date']),
-        )),
-      ));
+    if (!empty($node->course['live_from_date']) && REQUEST_TIME > $node->course['live_from_date']) {
+      return array('course_live_started' => array(
+          'success' => FALSE,
+          'message' => t('This live activity started on %date and is no longer available for enrollments.', array(
+            '%date' => date('F, jS Y', $node->course['live_from_date']),
+          )),
+        ));
+    }
+  }
+  if ($op == 'take') {
+    if (!node_access('view', $node)) {
+      return array(array(
+          'success' => FALSE,
+          'header' => t('Access denied'),
+          'message' => t('You do not have permission to take this course.')
+        ));
+    }
+    $sql = "SELECT * FROM {course_enrollment} WHERE nid = %d AND uid = %d";
+    if ($row = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid))->fetch()) {
+      if ($row->enroll_end > 0 && REQUEST_TIME > $row->enroll_end) {
+        return array(array(
+            'success' => FALSE,
+            'header' => t('Enrollment expired'),
+            'message' => t('Sorry, your enrollment has expired for this course.'),
+          ));
+      }
+    }
+
+    if (isset($node->course['close']) && $node->course['close']) {
+      if (REQUEST_TIME > $node->course['close']) {
+        return array(array(
+            'success' => FALSE,
+            'header' => t('Course expired'),
+            'message' => t('Sorry, this course is expired.'),
+          ));
+      }
+    }
   }
 }
 
