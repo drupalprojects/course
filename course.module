@@ -669,11 +669,6 @@ function course_permission() {
       'title' => t('access course'),
       'description' => t('TODO Add a description for \'access course\''),
     ),
-    // Edit course objects (not the node itself)
-    'edit courses' => array(
-      'title' => t('edit courses'),
-      'description' => t('TODO Add a description for \'edit courses\''),
-    ),
     // Can user get to the course reports area
     'access course reports' => array(
       'title' => t('access course reports'),
@@ -789,8 +784,7 @@ function course_take_course_access($node, $account = NULL, $flush = FALSE) {
  * Callback for checking course settings permission.
  */
 function course_settings_access($node) {
-  global $user;
-  return ((user_access('edit own course products') || user_access('edit own course content')) && $node->uid == $user->uid) || user_access('edit courses');
+  return node_access('update', $node);
 }
 
 /**
