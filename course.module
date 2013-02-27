@@ -1864,7 +1864,7 @@ function course_action_info() {
  * Action to enroll a user in current course.
  */
 function course_add_enrollment_action($user, $context) {
-  if ($node = node_load(arg(1))) {
+  if ($node = node_load($_SESSION['vbo_course'])) {
     course_enroll($node, $user);
     drupal_set_message(t("Enrolled %name in %title.", array('%name' => $user->name, '%title' => $node->title)));
   }
@@ -1874,7 +1874,7 @@ function course_add_enrollment_action($user, $context) {
  * Action to unenroll a user.
  */
 function course_remove_enrollment_action(&$enrollment, $context) {
-  $node = node_load(arg(1));
+  $node = node_load($_SESSION['vbo_course']);
   // TODO Convert "user_load" to "user_load_multiple" if "$enrollment->uid" is other than a uid.
   // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
   // Example: array_shift(user_load_multiple(array(), $enrollment->uid))
@@ -2199,6 +2199,11 @@ function course_course_credit_check_completion($course_node) {
         drupal_goto("node/{$course_node->nid}/course-user-type", array('query' => drupal_get_destination()));
       }
     }
+  }
+
+  if (arg(0) == 'node' && arg(2) == 'course-enrollments') {
+    // Hack until #1902104 is fixed.
+    $_SESSION['vbo_course'] = arg(1);
   }
 }
 
