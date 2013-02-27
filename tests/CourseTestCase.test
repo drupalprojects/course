@@ -8,7 +8,7 @@ class CourseTestCase extends DrupalWebTestCase {
   public function setUp() {
     $deps = $this->getModules();
     parent::setUp($deps);
-    $this->admin_user = $this->drupalCreateUser(array('administer nodes', 'edit courses'));
+    $this->admin_user = $this->drupalCreateUser(array('administer nodes'));
     $this->student_user = $this->drupalCreateUser(array('access content'));
     $this->drupalLogin($this->admin_user);
   }
