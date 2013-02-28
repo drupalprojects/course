@@ -26,7 +26,7 @@ class CourseOutlineUiTestCase extends CourseTestCase {
     // Add a new course content object.
     $edit = array();
     $edit["more[object_type]"] = 'course_test-course_test_object';
-    $this->drupalPost(NULL, $edit, t('Add another'));
+    $this->drupalPost(NULL, $edit, t('Add object'));
 
     $this->assertText(t('Test course object'));
   }
