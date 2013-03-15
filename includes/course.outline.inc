@@ -140,7 +140,7 @@ function course_outline_overview_form($form, &$form_state) {
     if ($object_definitions) {
       foreach ($object_definitions as $key => $object_info) {
         $class = $object_info['class'];
-        $max_object_count = $class::getMaxOccurences();
+        $max_object_count = call_user_func(array($class, 'getMaxOccurences'));
         $under_limit = !$max_object_count || !(isset($object_counts[$module][$key]) && $object_counts[$module][$key] >= $max_object_count);
         if ($under_limit && empty($object_info['legacy'])) {
           $module_string = ucwords(str_replace('_', ' ', $module));
