@@ -28,6 +28,19 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
       }
     }
   }
+
+  if ($form_id == 'uc_cart_view_form') {
+    if (variable_get('course_uc_restrict_qty', 1)) {
+      foreach ($form['items'] as $key => &$item) {
+        if (isset($item['nid'])) {
+          $node = node_load($item['nid']['#value']);
+          if (course_node_is_course($node)) {
+            $item['qty']['#disabled'] = TRUE;
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -137,12 +150,12 @@ function course_uc_course_enroll($node, $user) {
 /**
  * Implements hook_add_to_cart().
  */
-function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
+function course_uc_uc_add_to_cart($nid, $qty, $data) {
   if (variable_get('course_uc_restrict_qty', 1)) {
     global $user;
     $node = node_load($nid);
     if (course_node_is_course($node)) {
-      if (course_uc_restrict_qty_check_purchased($user->uid, $nid)) {
+      if (course_uc_check_purchased($user->uid, $nid)) {
         return array(
           array(
             'success' => FALSE,
@@ -151,7 +164,7 @@ function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
           ),
         );
       }
-      if (course_uc_restrict_qty_check_cart($user->uid, $nid)) {
+      if (course_uc_check_cart($nid)) {
         return array(
           array(
             'success' => FALSE,
@@ -167,60 +180,23 @@ function course_uc_restrict_qty_add_to_cart($nid, $qty, $data) {
 /**
  * Check if a user purchased a node previously.
  */
-function course_uc_restrict_qty_check_purchased($uid, $nid) {
+function course_uc_check_purchased($uid, $nid) {
   $sql = "SELECT 1 FROM {uc_orders} uco
   LEFT JOIN {uc_order_products} ucop ON (uco.order_id = ucop.order_id)
-  where uid = %d AND nid = %d";
-  $purchased = db_query($sql, $uid, $nid)->fetchField();
+  WHERE uid = :uid AND nid = :nid AND uco.order_status = 'completed'";
+  $purchased = db_query($sql, array(':nid' => $nid, ':uid' => $uid))->fetchField();
   return $purchased;
 }
 
 /**
  * Check if a node is in a user's cart.
  */
-function course_uc_restrict_qty_check_cart($uid, $nid) {
-  $cid = !(is_null($cid) || empty($cid)) ? $cid : uc_cart_get_id();
+function course_uc_check_cart($nid) {
+  $cid = uc_cart_get_id();
   $contents = uc_cart_get_contents($cid);
   foreach ($contents as $item) {
     if ($item->nid == $nid) {
       return TRUE;
-    }
-  }
-}
-
-/**
- * Implements hook_uc_cart_alter().
- */
-function course_uc_restrict_qty_uc_cart_alter(&$cart_items) {
-  if (variable_get('course_uc_restrict_qty', 1)) {
-    global $user;
-    foreach ($cart_items as $key => $cart_item) {
-      $node = node_load($cart_item->nid);
-      if (course_node_is_course($node) && $cart_item->qty > 1) {
-        $cart_items[$key]->qty = 1;
-        $sql = "update {uc_cart_products} set qty = 1 where cart_id = %d AND nid = %d";
-        db_query($sql, $user->uid, $node->nid);
-        if (!$message) {
-          drupal_set_message('Sorry, you may not purchase multiple identical courses.', 'error');
-          $message = true;
-        }
-      }
-    }
-  }
-}
-
-/**
- * Implements hook_form_FORM_ID_alter().
- */
-function course_uc_restrict_qty_form_uc_cart_view_form_alter(&$form, &$form_state) {
-  if (variable_get('course_uc_restrict_qty', 1)) {
-    foreach ($form['items'] as $key => &$item) {
-      if (is_numeric($key)) {
-        $node = node_load($item['nid']['#value']);
-        if (course_node_is_course($node)) {
-          //$item['qty']['#disabled'] = TRUE;
-        }
-      }
     }
   }
 }
