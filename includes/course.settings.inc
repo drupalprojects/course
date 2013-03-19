@@ -48,24 +48,6 @@ function course_settings_overview($form, &$form_state) {
 }
 
 /**
- * Course objects settings handler callback.
- */
-function course_settings_objects_form() {
-  $form = array();
-
-  $form['course_object_custom_fields'] = array(
-    '#title' => t('Custom course object fields'),
-    '#type' => 'textarea',
-    '#rows' => 5,
-    '#description' => t('Enter a key|value format to enable custom fields on course objects.'),
-    '#default_value' => variable_get('course_object_custom_fields', ''),
-    '#element_validate' => array('course_check_keyval'),
-  );
-
-  return system_settings_form($form);
-}
-
-/**
  * Appearance settings form callback.
  */
 function course_settings_appearance_form() {
@@ -108,33 +90,6 @@ function course_check_keyval($element, &$form_state) {
       form_error($element, t('Please ensure all custom object fields are in the format key|value.'));
     }
   }
-}
-
-/**
- * Get an array of custom course object fields.
- *
- * @return array
- *   An array of custom course object fields, in the format key => value.
- */
-function course_object_custom_fields() {
-  $fields = array();
-
-  $list = explode("\n", variable_get('course_object_custom_fields', ''));
-  $list = array_map('trim', $list);
-  $list = array_filter($list, 'strlen');
-  foreach ($list as $opt) {
-    // Sanitize the user input with a permissive filter.
-    $opt = content_filter_xss($opt);
-    if (strpos($opt, '|') !== FALSE) {
-      list($key, $value) = explode('|', $opt);
-      $fields[$key] = (isset($value) && $value !== '') ? $value : $key;
-    }
-    else {
-      $fields[$key] = $opt;
-    }
-  }
-
-  return $fields;
 }
 
 /**
