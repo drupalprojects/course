@@ -42,7 +42,7 @@ function course_settings_overview($form, &$form_state) {
       $package_set[$package_key] = TRUE;
     }
   }
-  $form['course_extensions']['course_extensions_table'] = array('#value' => theme('table', array('header' => $header, 'rows' => $rows)));
+  $form['course_extensions']['course_extensions_table'] = array('#markup' => theme('table', array('header' => $header, 'rows' => $rows)));
 
   return $form;
 }

@@ -59,13 +59,5 @@ function course_webform_webform_submission_insert($node, $submission) {
 function course_webform_settings() {
   $form = array();
 
-  $form['course_webform_settings_test'] = array(
-    '#title' => t('Test'),
-    '#type' => 'textarea',
-    '#rows' => 5,
-    '#description' => t('Test.'),
-    '#default_value' => variable_get('course_webform_settings_test', ''),
-  );
-
   return system_settings_form($form);
 }

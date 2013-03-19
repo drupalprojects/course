@@ -102,7 +102,7 @@ function course_menu() {
       'access arguments' => array('administer course'),
       'page callback' => 'drupal_get_form',
       'page arguments' => array($handler_info['callback']),
-      'type' => $item_type,
+      'type' => MENU_LOCAL_TASK,
     );
     // Append file info to $items, if specified.
     $file_info = array();
@@ -287,7 +287,7 @@ function course_course_handlers() {
         'file' => $settings,
       ),
       'objects' => array(
-        'name' => t('Course objects'),
+        'name' => t('Objects'),
         'description' => t('Course object settings.'),
         'callback' => 'course_settings_objects_form',
         'file' => $settings,
