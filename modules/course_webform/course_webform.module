@@ -26,6 +26,7 @@ function course_webform_course_handlers() {
         'description' => t('A webform to be used in a course workflow.'),
       ),
     ),
+    /*
     'settings' => array(
       'webform' => array(
         'name' => t('Webform'),
@@ -33,6 +34,7 @@ function course_webform_course_handlers() {
         'callback' => 'course_webform_settings',
       ),
     ),
+    */
     'context' => array(
       'webform' => array(
         'callback' => 'course_webform_context',

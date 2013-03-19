@@ -286,12 +286,6 @@ function course_course_handlers() {
         'callback' => 'course_settings_appearance_form',
         'file' => $settings,
       ),
-      'objects' => array(
-        'name' => t('Objects'),
-        'description' => t('Course object settings.'),
-        'callback' => 'course_settings_objects_form',
-        'file' => $settings,
-      ),
       'user_types' => array(
         'name' => t('User types'),
         'description' => t('Configure course user types.'),
