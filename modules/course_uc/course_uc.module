@@ -32,7 +32,7 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'uc_cart_view_form') {
     if (variable_get('course_uc_restrict_qty', 1)) {
       foreach ($form['items'] as $key => &$item) {
-        if (isset($item['nid'])) {
+        if (is_numeric($key) && isset($item['nid'])) {
           $node = node_load($item['nid']['#value']);
           if (course_node_is_course($node)) {
             $item['qty']['#disabled'] = TRUE;
