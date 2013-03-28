@@ -2141,6 +2141,11 @@ function course_init() {
       }
     }
   }
+
+  if (arg(0) == 'node' && arg(2) == 'course-enrollments') {
+    // Hack until #1902104 is fixed.
+    $_SESSION['vbo_course'] = arg(1);
+  }
 }
 
 /**
@@ -2193,11 +2198,6 @@ function course_course_credit_check_completion($course_node) {
         drupal_goto("node/{$course_node->nid}/course-user-type", array('query' => drupal_get_destination()));
       }
     }
-  }
-
-  if (arg(0) == 'node' && arg(2) == 'course-enrollments') {
-    // Hack until #1902104 is fixed.
-    $_SESSION['vbo_course'] = arg(1);
   }
 }
 
