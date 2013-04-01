@@ -1123,6 +1123,8 @@ abstract class CourseObjectNode extends CourseObject {
     $options = array_intersect_key(node_type_get_names(), $this->getNodeTypes());
     $defaults['node_type'] = key($options);
 
+    $defaults['use_node_title'] = 0;
+
     return $defaults;
   }
 
@@ -1160,6 +1162,13 @@ abstract class CourseObjectNode extends CourseObject {
       '#autocomplete_path' => 'course/autocomplete/node/' . implode(',', $this->getNodeTypes()),
       '#type' => 'textfield',
       '#description' => t('Use an existing node instead of creating a new one.'),
+    );
+
+    $form['node']['use_node_title'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Use node title'),
+      '#description' => t('Use the referenced node title as the course object title.'),
+      '#default_value' => $config['use_node_title'],
     );
 
     $form['node']['private'] = array(
@@ -1308,6 +1317,19 @@ abstract class CourseObjectNode extends CourseObject {
 
   function getCloneAbility() {
     return t('%object will be cloned as a node. Results may vary.', array('%object' => $this->getTitle()));
+  }
+
+  /**
+   * Get the object title, or return this object's node's title if the option
+   * is set.
+   */
+  function getTitle() {
+    if ($this->getOption('use_node_title') && $this->node) {
+      return $this->node->title;
+    }
+    else {
+      return parent::getTitle();
+    }
   }
 
 }
