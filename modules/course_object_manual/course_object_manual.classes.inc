@@ -18,16 +18,16 @@ class CourseObjectManual extends CourseObject {
     $config = $this->getOptions();
     if (!$this->getFulfillment()->getId()) {
       // User has not been given a status yet.
-      return $config['incomplete_msg'];
+      return check_plain(t($config['incomplete_msg']));
     }
 
     if ($this->getFulfillment()->isComplete()) {
       // Complete. User given passed status.
-      return $config['complete_msg'];
+      return check_plain(t($config['complete_msg']));
     }
     else {
       // User given a status but it wasn't complete. This means they failed.
-      return $config['failed_msg'];
+      return check_plain(t($config['failed_msg']));
     }
   }
 
