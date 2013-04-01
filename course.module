@@ -882,14 +882,24 @@ function course_node_delete($node) {
   if (course_node_is_course($node)) {
     // Clean up course specific settings and enrollments when a course is
     // deleted.
-    // TODO Please review the conversion of this statement to the D7 database API syntax.
-    /* db_query("DELETE FROM {course_node} WHERE nid = %d", $node->nid) */
     db_delete('course_node')
       ->condition('nid', $node->nid)
       ->execute();
-    // TODO Please review the conversion of this statement to the D7 database API syntax.
-    /* db_query("DELETE FROM {course_enrollment} WHERE nid = %d", $node->nid) */
     db_delete('course_enrollment')
+      ->condition('nid', $node->nid)
+      ->execute();
+    $query = db_select('course_outline', 'co');
+    $query->join('course_outline_fulfillment', 'cof', 'co.coid = cof.coid');
+    $result = $query
+      ->fields('co')
+      ->condition('co.nid', $node->nid)
+      ->execute();
+    while ($row = $result->fetch()) {
+      db_delete('course_outline_fulfillment')
+        ->condition('coid', $row->coid)
+        ->execute();
+    }
+    db_delete('course_outline')
       ->condition('nid', $node->nid)
       ->execute();
   }
