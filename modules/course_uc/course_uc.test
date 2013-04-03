@@ -22,6 +22,7 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $modules[] = 'uc_store';
     $modules[] = 'uc_order';
     $modules[] = 'uc_product';
+    $modules[] = 'uc_cart';
     $modules[] = 'course_uc';
     return $modules;
   }
@@ -66,6 +67,44 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $this->assertTrue($result['success'], 'User granted access to enroll into course.');
     $result = course_take_course_access($courseNode);
     $this->assertTrue($result['success'], 'User granted access to take course.');
+  }
+
+  function testRestrictQty() {
+    global $user;
+    module_load_include('inc', 'uc_product', 'uc_product.admin');
+
+    // Mark our course_test content type as a product.
+    $form = array();
+    $form_state = array();
+    $form_state['values']['name'] = 'course_test';
+    $form_state['values']['description'] = 'course_test';
+    $form_state['values']['pcid'] = 'course_test';
+    $form['pcid']['#type'] = '';
+    uc_product_class_form_submit($form, $form_state);
+
+    // Create a product node.
+    $courseNode = $this->createCourseNode();
+    $courseNode->sell_price = 5;
+    node_save($courseNode);
+
+    // Try to add a course to cart twice
+    $account = $this->drupalCreateUser();
+    $this->drupalLogin($account);
+    $this->drupalGet("node/$courseNode->nid");
+    $this->drupalPost(NULL, array(), t('Add to cart'));
+    $this->drupalGet("node/$courseNode->nid");
+    $this->drupalPost(NULL, array(), t('Add to cart'));
+    $this->assertText(t('This course is already in your'), 'Saw dupe shopping cart message.');
+
+    // Now check out.
+    $order = uc_order_new($account->uid);
+    uc_order_product_save($order->order_id, $courseNode);
+    uc_order_update_status($order->order_id, 'pending');
+    uc_order_update_status($order->order_id, 'completed');
+
+    // Try to re-enroll in a course.
+    $this->drupalGet("node/$courseNode->nid");
+    $this->assertNoRaw(t('Add to cart'), 'Did not see add to cart button.');
   }
 
 }

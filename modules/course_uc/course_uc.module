@@ -159,7 +159,7 @@ function course_uc_uc_add_to_cart($nid, $qty, $data) {
         return array(
           array(
             'success' => FALSE,
-            'message' => "You've already purchased this course.",
+            'message' => t('You have already purchased this course.'),
             'silent' => FALSE,
           ),
         );
@@ -168,7 +168,7 @@ function course_uc_uc_add_to_cart($nid, $qty, $data) {
         return array(
           array(
             'success' => FALSE,
-            'message' => t("This course is already in your !cart.", array('!cart' => l('shopping cart', 'cart'))),
+            'message' => t('This course is already in your !cart.', array('!cart' => l('shopping cart', 'cart'))),
             'silent' => FALSE,
           ),
         );
