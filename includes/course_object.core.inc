@@ -1136,9 +1136,6 @@ abstract class CourseObjectNode extends CourseObject {
     if (!$this->getInstanceId()) {
       $types = drupal_map_assoc($this->getNodeTypes());
       $options = array_intersect_key(node_type_get_names(), $types);
-      if (count($options) > 1) {
-        array_unshift($options, '- select -');
-      }
       $form['node_type'] = array(
         '#title' => t('Create node'),
         '#type' => 'select',
