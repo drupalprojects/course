@@ -1200,10 +1200,11 @@ function course_field_attach_form($entity_type, $entity, &$form, &$form_state, $
   }
 
   $form['course']['outline'] = array(
-    '#title' => t('Available outline displays'),
+    '#title' => t('Outline display'),
     '#type' => 'select',
     '#options' => $outlines,
     '#default_value' => variable_get('default_lms_' . $entity->type, NULL),
+    '#description' => t('This controls the presentation of the course objects.'),
   );
 
   // This is a fake field. It stores the aggregate credit from course_credit.
@@ -1218,7 +1219,7 @@ function course_field_attach_form($entity_type, $entity, &$form, &$form_state, $
   $form['course']['duration'] = array(
     '#title' => t('Duration'),
     '#type' => 'textfield',
-    '#description' => t('Length of time in seconds that a user can remain in the course. Leave blank for unlimited. For a better experience, install the !link module.', array('!link' => l('Time period', 'http://drupal.org/project/timeperiod'))),
+    '#description' => t('Length of time in seconds that a user can remain in the course. Leave blank for unlimited.<br/>For a better experience, install the !link module.', array('!link' => l('Time period', 'http://drupal.org/project/timeperiod'))),
   );
 
   if (module_exists('timeperiod')) {
