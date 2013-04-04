@@ -1186,7 +1186,6 @@ function course_field_attach_form($entity_type, $entity, &$form, &$form_state, $
 
   $form['course']['#tree'] = TRUE;
   $form['course']['#type'] = 'fieldset';
-  $form['course']['#group'] = 'additional_settings';
   $form['course']['#title'] = t('Course settings');
   // Course outline display handler.
   $outlines = array();
