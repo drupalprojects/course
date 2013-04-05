@@ -1801,38 +1801,52 @@ function course_get_types() {
 }
 
 /**
- * Implements hook_token_list().
+ * Implements hook_token_info().
  */
-function course_token_list($type = 'all') {
-  $tokens = array();
+function course_token_info() {
+  $info = array();
 
-  if ($type == 'node') {
-    module_load_install('course');
-    $schema = course_schema();
-    foreach ($schema['course_node']['fields'] as $key => $value) {
-      $tokens['course']["course-$key"] = $value['description'];
-    }
+  $info['types']['course'] = array(
+    'name' => t('Course'),
+    'description' => t('Course'),
+    'needs-data' => 'node',
+  );
+
+  module_load_install('course');
+  $schema = course_schema();
+  foreach ($schema['course_node']['fields'] as $key => $value) {
+    $info['tokens']['course'][$key] = array(
+      'name' => $value['description'],
+      'description' => $value['description'],
+    );
   }
 
-  return $tokens;
+  $info['tokens']['node']['course'] = array(
+    'name' => t('Course'),
+    'description' => t('The course of the node.'),
+    'type' => 'course',
+  );
+
+  return $info;
 }
 
 /**
- * Implements hook_token_values().
+ * Implements hook_tokens().
  */
-function course_token_values($type, $object = NULL, $options = array()) {
-  $values = array();
+function course_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  $replacements = array();
 
-  if ($type == 'node') {
-    $sql = 'SELECT * FROM {course_node} WHERE nid = %d';
-    if ($course = db_query('SELECT * FROM {course_node} WHERE nid = :nid', array(':nid' => $object->nid))->fetch()) {
-      foreach ($course as $key => $value) {
-        $values["course-$key"] = $value;
-      }
+  $course_tokens = token_find_with_prefix($tokens, 'course');
+
+  if ($type == 'node' && !empty($data['node'])) {
+    $node = $data['node'];
+
+    foreach ($course_tokens as $name => $original) {
+      $replacements[$original] = $node->course[$name];
     }
   }
 
-  return $values;
+  return $replacements;
 }
 
 /**
