@@ -1217,9 +1217,11 @@ abstract class CourseObjectNode extends CourseObject {
   public function getWarnings() {
     $warnings = parent::getWarnings();
     if ($this->getOption('private')) {
-      $settings = variable_get('content_access_settings', array());
+      $type_name = $this->getComponent();
+      $acl_var_name = 'content_access_' . $type_name;
+      $settings = variable_get($acl_var_name, array());
 
-      if (!$settings['per_node'][$this->getComponent()]) {
+      if (!isset($settings['per_node']) || !$settings['per_node']) {
         $warnings[] = t('%t is set to Private, but the content type %c does not have access control lists enabled. Users will not be able to acces this content. Please visit !l to set up content access settings.', array(
           '%t' => $this->getTitle(),
           '%c' => $this->getComponent(),
@@ -1268,9 +1270,9 @@ abstract class CourseObjectNode extends CourseObject {
     parent::save();
     if ($this->hasNodePrivacySupport() && $this->getOption('private')) {
       // Ensure that per-node access is enabled.
-      $global_settings = content_access_get_settings();
-      $global_settings['per_node'][$this->node->type] = 1;
-      content_access_set_settings($global_settings);
+      $type_settings = content_access_get_settings('all', $this->node->type);
+      $type_settings['per_node'] = 1;
+      content_access_set_settings($type_settings, $this->node->type);
 
       // Remove "view" permissions to everyone on this node.
       $settings = content_access_get_per_node_settings($this->node);
