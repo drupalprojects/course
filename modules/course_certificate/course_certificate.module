@@ -43,33 +43,6 @@ function course_certificate_access_certificate($node, $user) {
 }
 
 /**
- * Implements hook_token_list().
- */
-function course_certificate_token_list($type = 'all') {
-  if ($type == 'certificate') {
-    $tokens = array();
-    $tokens['certificate']["certificate-date_completed"] = t('Date of course completion');
-    $tokens['certificate']['certificate-number'] = t('Generated certificate number');
-    return $tokens;
-  }
-}
-
-/**
- * Implements hook_token_values().
- */
-function course_certificate_token_values($type, $object = NULL, $options = array()) {
-  if ($type == 'certificate') {
-    $values = array();
-    $sql = 'SELECT * FROM {course_report} WHERE nid = %d AND uid = %d';
-    if ($report = db_query('SELECT * FROM {course_report} WHERE nid = :nid AND uid = :uid', array(':nid' => $object['node']->nid, ':uid' => $object['user']->uid))->fetch()) {
-      $values['certificate-date_completed'] = date(variable_get('course_report_certificate_time_format', 'F jS, Y'), $report->date_completed);
-    }
-    $values['certificate-number'] = REQUEST_TIME . '-' . $object['node']->nid;
-    return $values;
-  }
-}
-
-/**
  * Implements hook_course_handlers().
  */
 function course_certificate_course_handlers() {
