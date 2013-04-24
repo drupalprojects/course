@@ -2754,7 +2754,7 @@ function course_cron() {
         // This fulfillment used private content.
         $user = user_load($row->uid);
         $courseObject = course_get_course_object_by_id($row->coid, $user);
-        if (!$courseObject->access('take')) {
+        if (!$courseObject->access('take', $user)) {
           // User has no access to take this course object. Revoke access.
           $courseObject->revoke();
         }
