@@ -1872,7 +1872,7 @@ function course_tokens($type, $tokens, array $data = array(), array $options = a
     }
   }
 
-  if ($data['node'] && $data['user']) {
+  if (!empty($data['node']) && !empty($data['user'])) {
     // Node and user context, we can lookup the user's records.
     $report = course_report_load($data['node'], $data['user']);
     $report->data = unserialize($report->data);
