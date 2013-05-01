@@ -28,7 +28,7 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
       }
     }
 
-    $blockers = course_enroll_access($node, $user, TRUE);
+    $blockers = course_enroll_access($node, $user, TRUE, TRUE);
     foreach ($blockers as $key => $blocker) {
       if (!$blocker['success'] && $key != 'course_must_purchase') {
         $form['actions']['submit']['#access'] = FALSE;
