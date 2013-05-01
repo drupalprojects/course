@@ -48,9 +48,10 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     uc_product_class_form_submit($form, $form_state);
 
     // Create a product node.
-    $courseNode = $this->createCourseNode();
-    $courseNode->sell_price = 5;
-    node_save($courseNode);
+    $courseNode = $this->createCourseNode(array(
+      'sell_price' => 5,
+      'unique_hash' => uniqid(),
+    ));
 
     $result = course_enroll_access($courseNode);
     $this->assertFalse($result['success'], 'User prevented from enrolling into paid course.');
@@ -83,8 +84,10 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     uc_product_class_form_submit($form, $form_state);
 
     // Create a product node.
-    $courseNode = $this->createCourseNode();
-    $courseNode->sell_price = 5;
+    $courseNode = $this->createCourseNode(array(
+      'sell_price' => 5,
+      'unique_hash' => uniqid(),
+    ));
     node_save($courseNode);
 
     // Try to add a course to cart twice
