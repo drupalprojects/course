@@ -89,6 +89,7 @@ function course_uc_node_insert($node) {
     $newObject->setOption('required', TRUE);
     $newObject->setOption('enabled', TRUE);
     $newObject->setOption('hidden', TRUE);
+    $newObject->setOption('weight', -9999);
     $newObject->save();
   }
 }
