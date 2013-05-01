@@ -976,6 +976,9 @@ function course_render_button($node) {
     // User can self-enroll and take the course. Show the button.
     return course_take_course_button_html($node);
   }
+  else {
+    return $can_enroll['message'];
+  }
 }
 
 /**
