@@ -1875,19 +1875,20 @@ function course_tokens($type, $tokens, array $data = array(), array $options = a
     }
   }
 
-  if (!empty($data['node']) && !empty($data['user'])) {
+  if (!empty($data['node']) && course_node_is_course($data['node']) && !empty($data['user'])) {
     // Node and user context, we can lookup the user's records.
-    $report = course_report_load($data['node'], $data['user']);
-    $report->data = unserialize($report->data);
-    $report_tokens = token_find_with_prefix($tokens, 'course-report');
-    foreach ($report_tokens as $name => $original) {
-      // Handle date formats
-      if ((strpos($name, 'date_completed') === 0 || strpos($name, 'updated') === 0) && strpos($name, ':') !== FALSE) {
-        $name_parsed = explode(':', $name, 3);
-        $replacements[$original] = format_date($report->$name_parsed[0], $name_parsed[1], $name_parsed[1] == 'custom' && count($name_parsed) == 3 ? $name_parsed[2] : '');
-      }
-      else {
-        $replacements[$original] = $report->$name;
+    if ($report = course_report_load($data['node'], $data['user'])) {
+      $report->data = unserialize($report->data);
+      $report_tokens = token_find_with_prefix($tokens, 'course-report');
+      foreach ($report_tokens as $name => $original) {
+        // Handle date formats
+        if ((strpos($name, 'date_completed') === 0 || strpos($name, 'updated') === 0) && strpos($name, ':') !== FALSE) {
+          $name_parsed = explode(':', $name, 3);
+          $replacements[$original] = format_date($report->$name_parsed[0], $name_parsed[1], $name_parsed[1] == 'custom' && count($name_parsed) == 3 ? $name_parsed[2] : '');
+        }
+        else {
+          $replacements[$original] = $report->$name;
+        }
       }
     }
   }
