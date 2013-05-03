@@ -1881,7 +1881,14 @@ function course_tokens($type, $tokens, array $data = array(), array $options = a
     $report->data = unserialize($report->data);
     $report_tokens = token_find_with_prefix($tokens, 'course-report');
     foreach ($report_tokens as $name => $original) {
-      $replacements[$original] = $report->$name;
+      // Handle date formats
+      if ((strpos($name, 'date_completed') === 0 || strpos($name, 'updated') === 0) && strpos($name, ':') !== FALSE) {
+        $name_parsed = explode(':', $name, 3);
+        $replacements[$original] = format_date($report->$name_parsed[0], $name_parsed[1], $name_parsed[1] == 'custom' && count($name_parsed) == 3 ? $name_parsed[2] : '');
+      }
+      else {
+        $replacements[$original] = $report->$name;
+      }
     }
   }
 
