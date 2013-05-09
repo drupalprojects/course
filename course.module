@@ -2723,7 +2723,6 @@ function course_services_resources() {
   $resources = array();
 
   $resources += _course_report_resource();
-  $resources += _course_credit_resource();
   $resources += _course_enrollment_resource();
 
   return $resources;
