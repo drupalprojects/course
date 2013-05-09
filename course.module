@@ -2717,8 +2717,8 @@ function course_date_api_tables() {
  * Implements hook_services_resources().
  */
 function course_services_resources() {
-  require_once DRUPAL_ROOT . '/' . 'services/course_report_resource.inc';
-  require_once DRUPAL_ROOT . '/' . 'services/course_enrollment_resource.inc';
+  require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/services/course_report_resource.inc';
+  require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/services/course_enrollment_resource.inc';
 
   $resources = array();
 
