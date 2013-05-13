@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Install, update and uninstall functions for the course_certificate module.
@@ -26,9 +27,9 @@ function course_certificate_update_6101() {
     $modulefield = ($idfield == 'snid') ? 'requirement_type' : 'module';
     // Find courses that had certificate checked, but no course object.
     $sql = "SELECT * FROM {course_node} cn
-      INNER JOIN {course_outline} co ON (cn.nid = co.nid AND co.%s = 'course_certificate')
-      where cn.certificate and co.%s is null";
-    $result = db_query($sql, $modulefield, $idfield);
+      INNER JOIN {course_outline} co ON (cn.nid = co.nid AND co.$modulefield = 'course_certificate')
+      where cn.certificate and co.$idfield is null";
+    $result = db_query($sql);
     while ($row = $result->fetch()) {
       $object = array(
         'module' => 'course_certificate',
@@ -39,15 +40,12 @@ function course_certificate_update_6101() {
         'hidden' => 0,
         'title' => 'Certificate',
         'weight' => 999,
-        'uuid' => function_exists('uuid_uuid') ? uuid_uuid() : uuid_generate(),
+        'uuid' => uuid_generate(),
       );
       drupal_write_record('course_outline', $object);
     }
     db_drop_field('course_node', 'certificate');
   }
 
-  // hook_update_N() no longer returns a $ret array. Instead, return
-  // nothing or a translated string indicating the update ran successfully.
-  // See http://drupal.org/node/224333#update_sql.
-  return t('TODO Add a descriptive string here to show in the UI.') /* $ret */;
+  return t('Created new certificate objects.');
 }
