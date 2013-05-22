@@ -2842,25 +2842,35 @@ function course_entity_info() {
   return array(
     'course_enrollment' => array(
       'label' => t('Course enrollment'),
-      // Not yet.
-      //'controller class' => 'CourseEnrollment',
       'base table' => 'course_enrollment',
       'load hook' => 'course_enrollment_load',
       'uri callback' => 'course_enrollment_uri',
-      'fieldable' => FALSE,
+      'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'eid',
       ),
+      'bundle keys' => array(
+        'bundle' => 'enrollment_type',
+      ),
       'label callback' => 'course_enrollment_label',
+      'bundles' => array(
+        'enrollment' => array(
+          'label' => 'Enrollment',
+          'admin' => array(
+            'path' => 'admin/config/course/manage/%bundle_key',
+            'real path' => 'admin/config/course/manage/enrollment',
+            'bundle argument' => 4,
+            'access arguments' => array('administer course'),
+          ),
+        ),
+      ),
     ),
     'course_report' => array(
       'label' => t('Course report'),
-      // Not yet.
-      //'controller class' => 'CourseReport',
       'base table' => 'course_report',
       'load hook' => 'course_report_load',
       'uri callback' => 'course_report_uri',
-      'fieldable' => FALSE,
+      'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'crid',
       ),
