@@ -1226,7 +1226,7 @@ abstract class CourseObjectNode extends CourseObject {
           '%t' => $this->getTitle(),
           '%c' => $this->getComponent(),
           '!l' => l('Access control', "admin/content/node-type/{$this->getComponent()}/access"),
-          ));
+        ));
       }
     }
     return $warnings;

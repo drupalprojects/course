@@ -332,7 +332,7 @@ function course_uc_course_handlers() {
 /**
  * Implements hook_course_access().
  *
- * Can the user self-enroll in this course? No, they have to pay for it.
+ * Block the user from enrolling in a paid course.
  */
 function course_uc_course_access($op, $node, $user) {
   if ($op == 'enroll') {
@@ -355,6 +355,8 @@ function course_uc_course_access($op, $node, $user) {
 
 /**
  * Implements hook_default_rules_configuration().
+ * 
+ * Define the rule that enrolls users into purchased courses.
  */
 function course_uc_default_rules_configuration() {
   $configs = array();

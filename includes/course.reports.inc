@@ -94,8 +94,8 @@ function theme_course_report($variables) {
   $rows[] = $row;
 
   $out = theme('table', array('header' => NULL, 'rows' => $rows, 'attributes' => array(
-  'id' => 'course-object-reports',
-)));
+      'id' => 'course-object-reports',
+  )));
 
   return $out;
 }

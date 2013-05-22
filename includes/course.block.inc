@@ -6,7 +6,7 @@
  */
 
 /**
- * Course block callback: outline view.
+ * Course block callback: define outline view block.
  */
 function _course_block_outline_view() {
   if ($node = course_get_context()) {

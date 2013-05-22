@@ -274,7 +274,7 @@ function course_signup_course_handlers() {
 /**
  * Track attendance.
  *
- * @todo, find a better way? looking at you, @see signup_mark_attended_action
+ * @todo, find a better way? looking at you, @see signup_mark_attended_action 
  */
 function course_signup_watchdog($watchdog) {
   if (strpos($watchdog['message'], 'Marked signup') !== FALSE) {

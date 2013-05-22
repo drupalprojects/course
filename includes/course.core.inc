@@ -4,6 +4,13 @@
  * @file course.core.inc
  * File for main Course class.
  */
+
+/**
+ * Master class for anything Course related.
+ * 
+ * Anything implementing CourseHandler is expected to have a table and a
+ * serialized field for storing options defined by other modules.
+ */
 class CourseHandler {
 
   // Could be 'outline', 'course_object', 'settings'...
@@ -39,7 +46,7 @@ class CourseHandler {
   }
 
   /**
-   * Stub. Get the summary of an object's options.
+   * Get the summary of an object's options.
    *
    * @return array
    *   An associative array of summary keys and values.
@@ -68,7 +75,7 @@ class CourseHandler {
   }
 
   /**
-   * Get an option stored in this CourseObject.
+   * Get an handler option's value.
    *
    * @return mixed
    */
@@ -145,7 +152,6 @@ class CourseHandler {
       if (array_key_exists($key, $Arr1) && is_array($Value)) {
         $Arr1[$key] = $this->optionsMerge($Arr1[$key], $Arr2[$key]);
       }
-
       else {
         $Arr1[$key] = $Value;
       }
@@ -155,7 +161,7 @@ class CourseHandler {
   }
 
   /**
-   * Handlers need to declare their defaults if they have a configuration form.
+   * Handlers can declare their defaults if they have a configuration form.
    */
   protected function optionsDefinition() {
     $options = array();
@@ -167,24 +173,24 @@ class CourseHandler {
    * Handlers can declare a form.
    */
   public function optionsForm(&$form, &$form_state) {
-
+    
   }
 
   /**
    * Validate?
    */
   public function optionsValidate(&$form, &$form_state) {
-
+    
   }
 
   /**
    * Save data somewhere.
    *
-   * This can be overridden. For example, values stored in courseobject sessions
+   * This can be overridden. For example, values stored in CourseObject sessions
    * need to have priority over those in the database.
    */
   public function optionsSubmit(&$form, &$form_state) {
-
+    
   }
 
   /**

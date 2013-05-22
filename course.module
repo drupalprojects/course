@@ -164,7 +164,6 @@ function course_menu() {
     'file' => 'includes/course.outline.inc',
   );
 
-
   // Display the 'Take course' menu item as a tab or link, depending.
   $items['node/%course/takecourse'] = array(
     'title' => 'Take course',
@@ -883,25 +882,25 @@ function course_node_delete($node) {
     // Clean up course specific settings and enrollments when a course is
     // deleted.
     db_delete('course_node')
-        ->condition('nid', $node->nid)
-        ->execute();
+      ->condition('nid', $node->nid)
+      ->execute();
     db_delete('course_enrollment')
-        ->condition('nid', $node->nid)
-        ->execute();
+      ->condition('nid', $node->nid)
+      ->execute();
     $query = db_select('course_outline', 'co');
     $query->join('course_outline_fulfillment', 'cof', 'co.coid = cof.coid');
     $result = $query
-        ->fields('co')
-        ->condition('co.nid', $node->nid)
-        ->execute();
+      ->fields('co')
+      ->condition('co.nid', $node->nid)
+      ->execute();
     while ($row = $result->fetch()) {
       db_delete('course_outline_fulfillment')
-          ->condition('coid', $row->coid)
-          ->execute();
+        ->condition('coid', $row->coid)
+        ->execute();
     }
     db_delete('course_outline')
-        ->condition('nid', $node->nid)
-        ->execute();
+      ->condition('nid', $node->nid)
+      ->execute();
   }
 }
 
@@ -1007,7 +1006,7 @@ function course_take_course_button_html(&$node) {
  * @param integer $status
  *   The enrollment status. {course_enrollment}.status.
  */
-function course_enroll($node, $account = NULL, $from = NULL, $code = NULL, $status = 1) {
+function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1) {
   if (!$account) {
     global $user;
     $account = $user;
@@ -1075,14 +1074,14 @@ function course_unenroll($node, $user) {
     $course->unenroll();
 
     db_delete('course_report')
-        ->condition('nid', $node->nid)
-        ->condition('uid', $user->uid)
-        ->execute();
+      ->condition('nid', $node->nid)
+      ->condition('uid', $user->uid)
+      ->execute();
 
     db_delete('course_enrollment')
-        ->condition('nid', $node->nid)
-        ->condition('uid', $user->uid)
-        ->execute();
+      ->condition('nid', $node->nid)
+      ->condition('uid', $user->uid)
+      ->execute();
 
     // Find all course objects in this course and delete the fulfillment.
     $coids = array();
@@ -1345,14 +1344,14 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
       '#options' => $options,
       '#default_value' => variable_get("course_start_date_{$form['#node_type']->type}", 0),
       '#prefix' => '<h3>' . t('Enduring course dates') . '</h3>',
-        ) + $dependent;
+      ) + $dependent;
     $form['course']['course_expiration_date'] = array(
       '#title' => t('Field to use for enduring-course expiration date'),
       '#description' => t('Select the field to use for enduring-course expiration date.'),
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_expiration_date_{$form['#node_type']->type}", 0),
-        ) + $dependent;
+      ) + $dependent;
     // Live course dates.
     $form['course']['course_live_from_date'] = array(
       '#title' => t('Field to use for live-course start date'),
@@ -1361,14 +1360,14 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
       '#options' => $options,
       '#default_value' => variable_get("course_live_from_date_{$form['#node_type']->type}", 0),
       '#prefix' => '<h3>' . t('Live course dates') . '</h3>',
-        ) + $dependent;
+      ) + $dependent;
     $form['course']['course_live_to_date'] = array(
       '#title' => t('Field to use for live-course end date'),
       '#description' => t('Select the field to use for live-course end date.'),
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_live_to_date_{$form['#node_type']->type}", 0),
-        ) + $dependent;
+      ) + $dependent;
   }
 }
 
@@ -2164,6 +2163,9 @@ function course_edit_enrollment_action_validate($form, $form_state) {
 
 /**
  * Implements hook_init().
+ *
+ * Detect and set course context. Adds javascript for course objects that
+ * require polling. Hack for #1902104.
  */
 function course_init() {
   course_context();
@@ -2206,9 +2208,9 @@ function course_init() {
     if ($course && $active = $course->getActive()) {
       if ($active->hasPolling()) {
         drupal_add_js(
-            array(
+          array(
           'courseAjaxNavPath' => url('node/' . $courseNode->nid . '/course-object/' . $course->getActive()->getId() . '/ajax/nav'),
-            ), array('type' => 'setting'
+          ), array('type' => 'setting'
           , 'scope' => JS_DEFAULT));
       }
     }
@@ -2221,7 +2223,7 @@ function course_init() {
 }
 
 /**
- * Course context handler callback.
+ * Course content handler callback.
  */
 function course_context() {
   if (arg(0) == 'node') {
@@ -2275,6 +2277,8 @@ function course_course_credit_check_completion($course_node) {
 
 /**
  * Allow the user to set their per-course user type.
+ *
+ * @todo removed in course 7.x-1.0. Moved to entity based system.
  */
 function course_user_type_form($form, $form_state, $node) {
   $form = array();
@@ -2299,6 +2303,7 @@ function course_user_type_form($form, $form_state, $node) {
 
 /**
  * Save the user's type in the course.
+ * @todo removed in course 7.x-1.0. Moved to entity based system.
  */
 function course_user_type_form_submit(&$form, $form_state) {
   global $user;
@@ -2453,9 +2458,6 @@ function course_report_save($entry) {
   }
 
   // Load user so we can serialize it.
-  // TODO Convert "user_load" to "user_load_multiple" if "$entry->uid" is other than a uid.
-  // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
-  // Example: array_shift(user_load_multiple(array(), $entry->uid))
   $account = user_load($entry->uid);
 
   $sql = "SELECT * FROM {course_report} WHERE nid = %d AND uid = %d";
@@ -2490,15 +2492,17 @@ function course_report_save($entry) {
 
 /**
  * Implements hook_user_delete().
+ *
+ * Clean up course reports and fulfillments for a deleted user.
  */
 function course_user_delete($account) {
   db_delete('course_report')
-      ->condition('uid', $account->uid)
-      ->execute();
+    ->condition('uid', $account->uid)
+    ->execute();
 
   db_delete('course_outline_fulfillment')
-      ->condition('uid', $account->uid)
-      ->execute();
+    ->condition('uid', $account->uid)
+    ->execute();
 
   $result = db_query("SELECT * FROM {course_enrollment} WHERE uid = :uid", array(':uid' => $account->uid));
   while ($enrollment = $result->fetch()) {
@@ -2510,7 +2514,7 @@ function course_user_delete($account) {
 /**
  * Implements hook_views_bulk_operations_object_info().
  *
- * Expose information about the course report object to VBO.
+ * Expose information about the course report and enrollment objects to VBO.
  */
 function course_views_bulk_operations_object_info() {
   return array(
@@ -2573,7 +2577,7 @@ function course_theme() {
  * Delete a course object.
  *
  * @param array $mixed
- *   An array representing a course object (containing 'coid').
+ *   An array representing a stored course object (containing 'coid').
  */
 function course_outline_delete_object($mixed) {
   if (is_object($mixed)) {
@@ -2583,14 +2587,14 @@ function course_outline_delete_object($mixed) {
   // TODO Please review the conversion of this statement to the D7 database API syntax.
   /* db_query($sql, $mixed['coid']) */
   db_delete('course_outline')
-      ->condition('coid', $mixed['coid'])
-      ->execute();
+    ->condition('coid', $mixed['coid'])
+    ->execute();
   $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid = %d";
   // TODO Please review the conversion of this statement to the D7 database API syntax.
   /* db_query($sql, $mixed['coid']) */
   db_delete('course_outline_fulfillment')
-      ->condition('coid', $mixed['coid'])
-      ->execute();
+    ->condition('coid', $mixed['coid'])
+    ->execute();
 }
 
 /**
@@ -2759,9 +2763,9 @@ function course_object_autocomplete_node($types, $string) {
   $values = explode(',', $types);
   $query = db_select('node', 'n');
   $query->condition('n.type', $values, 'in')
-      ->condition('n.title', "%$string%", 'like')
-      ->fields('n', array('nid', 'title'))
-      ->range(0, 10);
+    ->condition('n.title', "%$string%", 'like')
+    ->fields('n', array('nid', 'title'))
+    ->range(0, 10);
   $result = $query->execute();
   while ($node = $result->fetch()) {
     $matches[$node->title . " [nid: $node->nid]"] = '<span class="autocomplete_title">' . check_plain($node->title) . '</span>';
@@ -2811,6 +2815,8 @@ function course_cron() {
 
 /**
  * Implements hook_course_admin_paths().
+ *
+ * Expose the course object configuration as an administrative path.
  */
 function course_admin_paths() {
   return array(
@@ -2820,6 +2826,8 @@ function course_admin_paths() {
 
 /**
  * Implements hook_ctools_plugin_type().
+ *
+ * Expose the course object access plugins to ctools.
  */
 function course_ctools_plugin_type() {
   return array(
@@ -2889,10 +2897,10 @@ function course_course_enroll($node, $user, $from) {
   if (!course_report_load($node, $user)) {
     // If we don't have a course report record already, save a new one.
     $entry = (object) array(
-          'nid' => $node->nid,
-          'uid' => $user->uid,
-          'section_name' => 'Enrolled',
-          'complete' => 0,
+        'nid' => $node->nid,
+        'uid' => $user->uid,
+        'section_name' => 'Enrolled',
+        'complete' => 0,
     );
     course_report_save($entry);
   }
