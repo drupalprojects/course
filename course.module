@@ -177,6 +177,16 @@ function course_menu() {
     'type' => variable_get('course_takecourse_tab_display', 1) ? MENU_LOCAL_TASK : MENU_CALLBACK,
   );
 
+  $items['node/%course/enroll'] = array(
+    'title' => 'Enroll',
+    'description' => 'Enroll into a course.',
+    'page callback' => 'course_enrollment_page',
+    'page arguments' => array(1),
+    'access callback' => 'course_take_course_menu_access',
+    'access arguments' => array(1),
+    'type' => variable_get('course_takecourse_tab_display', 1) ? MENU_LOCAL_TASK : MENU_CALLBACK,
+  );
+
   // Display the 'Course settings' menu item as a tab or link, depending.
   $items['node/%course/coursesettings'] = array(
     'title' => 'Course settings',
@@ -1165,7 +1175,7 @@ function course_enrollment_load($nid, $uid = NULL) {
 }
 
 /**
- * Load multiple enrollments.
+ * Load multiple enrollments from enrollment IDs.
  */
 function course_enrollment_load_multiple(array $eids) {
   $enrollments = array();
@@ -2563,6 +2573,19 @@ function course_report_load($mixed, $user = NULL) {
 }
 
 /**
+ * Load multiple course reports by ID.
+ */
+function course_report_load_multiple(array $crids) {
+  $course_reports = array();
+  $sql = "SELECT * FROM {course_report} WHERE crid in (:crids)";
+  $result = db_query($sql, $crids);
+  while ($row = $result->fetch()) {
+    $course_reports[$row->crid] = $row;
+  }
+  return $course_reports;
+}
+
+/**
  * Implements hook_theme().
  */
 function course_theme() {
@@ -2959,3 +2982,31 @@ function course_rules_invoke_event_by_args($event_name, $args) {
     rules_invoke_event_by_args($event_name, $args);
   }
 }
+
+/**
+ * Edit form for a course enrollment.
+ */
+function course_enrollment_page($course_node) {
+  global $user;
+  $form_state = form_state_defaults();
+  if (!($enrollment = course_enrollment_load($course_node->nid, $user->uid))) {
+    $op = 'add';
+    $entity = new stdClass;
+    $entity->nid = $course_node;
+    $entity->uid = $user->uid;
+  }
+  else {
+    $op = 'edit';
+  }
+  $form = entity_ui_get_form('course_enrollment', $entity, $op);
+  field_attach_form('course_enrollment', $entity, $form, $form_state);
+  return drupal_render($form);
+}
+
+/**
+ *
+ */
+function course_enrollment_form($form) {
+  return $form;
+}
+
