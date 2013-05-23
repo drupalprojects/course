@@ -291,6 +291,18 @@ function course_course_handlers() {
         'callback' => 'course_user_type_settings_form',
         'file' => $settings,
       ),
+      'course_enrollment' => array(
+        'name' => t('Enrollments'),
+        'description' => t('Configure course user types.'),
+        'callback' => 'course_user_type_settings_form',
+        'file' => $settings,
+      ),
+      'course_report' => array(
+        'name' => t('Course report'),
+        'description' => t('Configure course user types.'),
+        'callback' => 'course_user_type_settings_form',
+        'file' => $settings,
+      ),
     ),
   );
 }
@@ -2854,12 +2866,11 @@ function course_entity_info() {
       ),
       'label callback' => 'course_enrollment_label',
       'bundles' => array(
-        'enrollment' => array(
+        'course_enrollment' => array(
           'label' => 'Enrollment',
           'admin' => array(
-            'path' => 'admin/config/course/manage/%bundle_key',
-            'real path' => 'admin/config/course/manage/enrollment',
-            'bundle argument' => 4,
+            'path' => 'admin/config/course/course_enrollment',
+            'bundle argument' => 3,
             'access arguments' => array('administer course'),
           ),
         ),
@@ -2875,6 +2886,16 @@ function course_entity_info() {
         'id' => 'crid',
       ),
       'label callback' => 'course_report_label',
+      'bundles' => array(
+        'course_report' => array(
+          'label' => 'Course report',
+          'admin' => array(
+            'path' => 'admin/config/course/course_report',
+            'bundle argument' => 3,
+            'access arguments' => array('administer course'),
+          ),
+        ),
+      ),
     ),
   );
 }
