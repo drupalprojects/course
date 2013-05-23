@@ -96,12 +96,14 @@ function course_check_keyval($element, &$form_state) {
  * Settings form for course enrollments.
  */
 function course_enrollment_settings_form($form) {
-
+  $form['header']['#markup'] = t('This would be where enrollment settings go.');
+  return $form;
 }
 
 /**
  * Settings form for course reporting.
  */
 function course_report_settings_form($form) {
-
+  $form['header']['#markup'] = t('This would be where reporting settings go.');
+  return $form;
 }

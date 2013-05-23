@@ -1150,16 +1150,32 @@ function course_enrollment_load($nid, $uid = NULL) {
   }
 
   if (!$uid) {
-    $sql = "SELECT * FROM {course_enrollment} WHERE eid = %d";
-    return db_query("SELECT * FROM {course_enrollment} WHERE eid = :eid", array(':eid' => $nid))->fetch();
+    $enrollments = course_enrollment_load_multiple(array($nid));
+    return $enrollments[$nid];
   }
 
   if (is_object($uid)) {
     $uid = $uid->uid;
   }
 
-  $sql = "SELECT * FROM {course_enrollment} WHERE nid = %d AND uid = %d";
-  return db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $nid, ':uid' => $uid))->fetch();
+  $enrollment = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $nid, ':uid' => $uid))->fetch();
+  $enrollments[$enrollment->eid] = $enrollment;
+  field_attach_load('course_enrollment', $enrollments);
+  return $enrollments[$enrollment->eid];
+}
+
+/**
+ * Load multiple enrollments.
+ */
+function course_enrollment_load_multiple(array $eids) {
+  $enrollments = array();
+  $sql = "SELECT * FROM {course_enrollment} WHERE eid IN (:eids)";
+  $result = db_query($sql, array(':eids' => $eids));
+  while ($row = $result->fetch()) {
+    $enrollments[$row->eid] = $row;
+  }
+  field_attach_load('course_enrollment', $enrollments);
+  return $enrollments;
 }
 
 /**
@@ -1468,14 +1484,17 @@ function course_take_course($node) {
  */
 function course_enrollment_save($enrollment) {
   if ($enrollment->nid && $enrollment->uid) {
+    field_attach_presave('course_enrollment', $enrollment);
     if (db_query('SELECT 1 FROM {course_enrollment} WHERE nid = :nid AND uid = :uid', array(':nid' => $enrollment->nid, ':uid' => $enrollment->uid))->fetchField()) {
       drupal_write_record('course_enrollment', $enrollment, array('nid', 'uid'));
+      field_attach_update('course_enrollment', $enrollment);
     }
     else {
       if (!isset($enrollment->created) || $enrollment->created == 0) {
         $enrollment->created = REQUEST_TIME;
       }
       drupal_write_record('course_enrollment', $enrollment);
+      field_attach_insert('course_enrollment', $enrollment);
     }
   }
   else {
