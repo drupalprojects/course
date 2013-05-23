@@ -93,76 +93,15 @@ function course_check_keyval($element, &$form_state) {
 }
 
 /**
- * Form for configuring user types.
- *
- * @todo move to entities or something, to store information about the user's
- * enrollment. maybe registration?
+ * Settings form for course enrollments.
  */
-function course_user_type_settings_form() {
-  $form = array();
+function course_enrollment_settings_form($form) {
 
-  $form['header'] = array(
-    '#value' => t('User types allow a user to select their type only for the enrollment duration of taking the course. For example, other modules may implement a mapping from the user type to course credit or a certificate while leaving a global profile field unchanged.'),
-  );
-
-  $form['course_user_types_enabled'] = array(
-    '#title' => t('Use course enrollment user types'),
-    '#type' => 'checkbox',
-    '#validate' => 'course_user_type_settings_form_validate',
-    '#default_value' => variable_get('course_user_types_enabled', ''),
-  );
-
-  $form['course_user_types_field'] = array(
-    '#title' => t('Profile field to pull types from'),
-    '#type' => 'select',
-    '#default_value' => variable_get('course_user_types_field', ''),
-    '#options' => course_cck_kv_fields(),
-  );
-
-  $form['course_user_types'] = array(
-    '#title' => t('Additional user types'),
-    '#type' => 'textarea',
-    '#rows' => 5,
-    '#validate' => 'course_user_type_settings_form_validate',
-    '#default_value' => variable_get('course_user_types', ''),
-    '#description' => t('Input course enrollment user types in the format "key|value", one per line.'),
-  );
-
-  return system_settings_form($form);
 }
 
 /**
- * Validate the user input for enrollment types.
+ * Settings form for course reporting.
  */
-function course_user_type_settings_form_validate(&$form, &$form_state) {
-  $lines = explode("\n", trim($form_state['values']['course_user_types']));
-  foreach ($lines as $line) {
-    if (empty($line)) {
-      return;
-    }
-    $kv = explode('|', $line);
-    if (count($kv) != 2) {
-      form_set_error('course_user_types', t('Each user type must be in key|value format.'));
-    }
-  }
-}
+function course_report_settings_form($form) {
 
-/**
- * Get an array of field options that can be used as course enrollment types.
- */
-function course_cck_kv_fields() {
-  $field_options = array();
-
-  $field_options[] = '- none -';
-
-  if (module_exists('content')) {
-    foreach (content_fields() as $key => $field) {
-      // If field isn't a profile field with allowed values, do not allow it to be selectable. It wouldn't work anyways.
-      if (optionwidgets_options($field)) {
-        $field_options[$key] = $field['widget']['label'];
-      }
-    }
-  }
-
-  return $field_options;
 }
