@@ -1179,23 +1179,6 @@ function course_enrollment_load_multiple(array $eids) {
 }
 
 /**
- * Implements hook_enable().
- *
- * Insert course as product and add admin theme to course settings.
- */
-function course_enable() {
-  // Add course settings to admin theme.
-  $paths = variable_get('admin_theme_path', '');
-  if (strpos($paths, 'coursesettings') === FALSE) {
-    $paths .= "\n*/coursesettings";
-    variable_set('admin_theme_path', $paths);
-  }
-
-  // Flush autoload caches.
-  //autoload_flush_caches();
-}
-
-/**
  * Implements hook_form_alter().
  *
  * Course node settings form.
