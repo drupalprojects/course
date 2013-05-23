@@ -27,7 +27,7 @@ class CourseObjectBook extends CourseObjectNode {
   }
 
   function optionsForm(&$form, &$form_state) {
-    $config = $this->optionsDefinition();
+    $config = $this->getOptions();
     parent::optionsForm($form, $form_state);
     $form['book_tracking'] = array(
       '#title' => t('Completion criteria'),
