@@ -1168,10 +1168,13 @@ function course_enrollment_load($nid, $uid = NULL) {
     $uid = $uid->uid;
   }
 
-  $enrollment = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $nid, ':uid' => $uid))->fetch();
-  $enrollments[$enrollment->eid] = $enrollment;
-  field_attach_load('course_enrollment', $enrollments);
-  return $enrollments[$enrollment->eid];
+  if ($enrollment = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $nid, ':uid' => $uid))->fetch()) {
+    $enrollments[$enrollment->eid] = $enrollment;
+    field_attach_load('course_enrollment', $enrollments);
+    return $enrollments[$enrollment->eid];
+  }
+
+  return FALSE;
 }
 
 /**
@@ -2881,7 +2884,7 @@ function course_entity_info() {
         'id' => 'eid',
       ),
       'bundle keys' => array(
-        'bundle' => 'enrollment_type',
+        'bundle' => 'type',
       ),
       'label callback' => 'course_enrollment_label',
       'bundles' => array(
@@ -2959,10 +2962,15 @@ function course_course_enroll($node, $user, $from) {
 /**
  * Enrollment entity label callback.
  */
-function course_enrollment_label($enrollment) {
-  $node = node_load($enrollment->nid);
-  $account = user_load($enrollment->uid);
-  return t("@username's enrollment in @title", array('@username' => $account->name, '@title' => $node->title));
+function course_enrollment_label($enrollment, $entity_type) {
+  if ($enrollment) {
+    $node = node_load($enrollment->nid);
+    $account = user_load($enrollment->uid);
+    return t("@username's enrollment in @title", array('@username' => $account->name, '@title' => $node->title));
+  }
+  else {
+    return t('Enrollment');
+  }
 }
 
 /**
@@ -2984,29 +2992,52 @@ function course_rules_invoke_event_by_args($event_name, $args) {
 }
 
 /**
- * Edit form for a course enrollment.
+ * Add/edit page for a course enrollment.
  */
 function course_enrollment_page($course_node) {
   global $user;
   $form_state = form_state_defaults();
-  if (!($enrollment = course_enrollment_load($course_node->nid, $user->uid))) {
+  if (!($entity = course_enrollment_load($course_node->nid, $user->uid))) {
     $op = 'add';
     $entity = new stdClass;
-    $entity->nid = $course_node;
+    $entity->nid = $course_node->nid;
     $entity->uid = $user->uid;
   }
   else {
     $op = 'edit';
   }
-  $form = entity_ui_get_form('course_enrollment', $entity, $op);
+  $form = entity_ui_get_form('course_enrollment', $entity, $op, $form_state);
   field_attach_form('course_enrollment', $entity, $form, $form_state);
-  return drupal_render($form);
-}
-
-/**
- *
- */
-function course_enrollment_form($form) {
   return $form;
 }
 
+/**
+ * Form for adding/editing enrollment.
+ */
+function course_enrollment_form($form) {
+  dpm(func_get_args());
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Enroll'),
+    '#weight' => 100,
+  );
+  return $form;
+}
+
+/**
+ * Form submit for adding/editing enrollment.
+ */
+function course_enrollment_form_validate($form, &$form_state) {
+  $course_enrollment = (object) $form_state['course_enrollment'];
+  field_attach_form_validate('course_enrollment', $course_enrollment, $form, $form_state);
+}
+
+/**
+ * Form submit for adding/editing enrollment.
+ */
+function course_enrollment_form_submit($form, &$form_state) {
+  $course_enrollment = (object) $form_state['course_enrollment'];
+  $course_enrollment->type = 'course_enrollment';
+  field_attach_submit('course_enrollment', $course_enrollment, $form, $form_state);
+  course_enrollment_save($course_enrollment);
+}
