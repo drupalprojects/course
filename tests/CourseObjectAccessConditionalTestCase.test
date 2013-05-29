@@ -20,6 +20,7 @@ class CourseObjectAccessConditionalTestCase extends CourseTestCase {
    * Test the time based trigger for object access.
    */
   function testTimeAfterStart() {
+    global $user;
     $courseNode = $this->createCourseNode();
     $this->createCourseObject($courseNode);
     $this->createCourseObject($courseNode);
@@ -41,7 +42,7 @@ class CourseObjectAccessConditionalTestCase extends CourseTestCase {
     $hidden['plugins']['access']['conditional']['conditional_hidden'] = 1;
     $co2->addOptions($set);
 
-    course_enroll($courseNode);
+    course_enroll($courseNode, $user);
     $this->assertTrue($co1->access('take'), 'Check that user can access first (depended on) object.');
     // Mark first object as complete.
     $co1->getFulfillment()->setComplete(1);
@@ -61,6 +62,7 @@ class CourseObjectAccessConditionalTestCase extends CourseTestCase {
    * Test the completion based trigger for object access.
    */
   function testTimeAfterCompletion() {
+    global $user;
     $courseNode = $this->createCourseNode();
     $this->createCourseObject($courseNode);
     $this->createCourseObject($courseNode);
@@ -82,7 +84,7 @@ class CourseObjectAccessConditionalTestCase extends CourseTestCase {
     $hidden['plugins']['access']['conditional']['conditional_hidden'] = 1;
     $co2->addOptions($set);
 
-    course_enroll($courseNode);
+    course_enroll($courseNode, $user);
     $this->assertTrue($co1->access('take'), 'Check that user can access first (depended on) object.');
     // Mark first object as complete.
     $co1->getFulfillment()->setComplete(1);

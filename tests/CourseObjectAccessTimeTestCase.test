@@ -66,11 +66,12 @@ class CourseObjectAccessTimeTestCase extends CourseTestCase {
    * Check that user cannot access course object outside of duration period.
    */
   public function testCourseObjectDuration() {
+    global $user;
     $now = REQUEST_TIME;
     $courseNode = $this->createCourseNode();
     $options = array();
 
-    course_enroll($courseNode);
+    course_enroll($courseNode, $user);
     $o3 = $this->createCourseObject($courseNode);
 
     // Start the course object 5 minutes ago.
