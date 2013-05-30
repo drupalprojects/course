@@ -987,6 +987,8 @@ class CourseObjectFulfillment extends CourseHandler {
    *
    * @param bool $complete
    *   Set to 0 to un-complete, 1 or omit to complete.
+   *
+   * @return CourseObjectFulfillment
    */
   function setComplete($complete = 1) {
     if (!$this->getOption('date_completed')) {
@@ -1000,6 +1002,8 @@ class CourseObjectFulfillment extends CourseHandler {
    * Set this fulfillment's grade.
    *
    * @param float $grade
+   *
+   * @return CourseObjectFulfillment
    */
   function setGrade($grade) {
     return $this->setOption('grade_result', $grade);

@@ -2014,7 +2014,7 @@ function course_edit_enrollment_action($object, $context) {
         // Fail user
         $fulfillment->setOption('message', "Fulfillment failed via bulk action.");
         $fulfillment->setComplete(FALSE);
-        $fulfillment->setOption('failed', TRUE);
+        $fulfillment->setGrade(0);
       }
 
       $fulfillment->save();

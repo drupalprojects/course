@@ -91,9 +91,8 @@ function course_schema() {
       ),
       'grade_result' => array(
         'type' => 'int',
-        'not null' => TRUE,
+        'not null' => FALSE,
         'unsigned' => TRUE,
-        'default' => 0,
         'description' => 'Course grade received.',
       ),
       'section' => array(
@@ -910,4 +909,17 @@ function course_update_7000() {
 function course_update_7001() {
   db_update('course_node')->expression('duration', 'duration*86400')->execute();
   return t('Migrated old duration values.');
+}
+
+/**
+ * Change grade_result field to NULL to allow for empty grades.
+ */
+function course_update_7002() {
+  db_change_field('course_outline_fulfillment', 'grade_result', 'grade_result', array(
+    'type' => 'int',
+    'not null' => FALSE,
+    'unsigned' => TRUE,
+    'description' => 'Course grade received.',
+  ));
+  return t('Changed grade_result field to NULL to allow for empty grades.');
 }
