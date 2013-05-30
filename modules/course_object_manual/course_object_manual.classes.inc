@@ -16,17 +16,16 @@ class CourseObjectManual extends CourseObject {
   public function getStatus() {
     $grade = $this->getFulfillment()->getGrade();
     $config = $this->getOptions();
-    if (!$this->getFulfillment()->getId()) {
-      // User has not been given a status yet.
-      return check_plain(t($config['incomplete_msg']));
-    }
-
     if ($this->getFulfillment()->isComplete()) {
-      // Complete. User given passed status.
+      // User has a completed fulfillment (passed).
       return check_plain(t($config['complete_msg']));
     }
+    elseif ($this->getFulfillment()->getGrade() == '') {
+      // User has a fulfillment but no grade (incomplete).
+      return check_plain(t($config['incomplete_msg']));
+    }
     else {
-      // User given a status but it wasn't complete. This means they failed.
+      // User has a grade but not complete (failed).
       return check_plain(t($config['failed_msg']));
     }
   }

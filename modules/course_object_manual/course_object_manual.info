@@ -3,6 +3,5 @@ description = Allows a course admin to add an arbitrary step which must be compl
 package = Course objects
 core = 7.x
 dependencies[] = course
-
-
 files[] = course_object_manual.classes.inc
+files[] = course_object_manual.test
