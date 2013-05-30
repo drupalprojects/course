@@ -18,7 +18,7 @@ function course_menu() {
   $items = array();
 
   // Base configuration.
-  $items['admin/config/course'] = array(
+  $items['admin/course'] = array(
     'title' => 'Course',
     'description' => 'Configure courses.',
     'page callback' => 'drupal_get_form',
@@ -28,7 +28,7 @@ function course_menu() {
   );
 
   // Default tab for settings.
-  $items['admin/config/course/overview'] = array(
+  $items['admin/course/overview'] = array(
     'title' => 'Overview',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
@@ -83,10 +83,10 @@ function course_menu() {
     $package_info = $handlers[$packages[$package_key]];
 
     // Define a path for the handler's specified package.
-    $package_router = "admin/config/course/{$package_key}";
+    $package_router = "admin/course/{$package_key}";
 
     // Define a path for the handler.
-    $handler_router = "admin/config/course/{$package_key}/{$module_handler_key}";
+    $handler_router = "admin/course/{$package_key}/{$module_handler_key}";
 
     // Add the handler item, either as the default page content
     // (MENU_NORMAL_ITEM will work with the MENU_DEFAULT_LOCAL_TASK below)
@@ -2891,9 +2891,12 @@ function course_entity_info() {
         'course_enrollment' => array(
           'label' => 'Enrollment',
           'admin' => array(
-            'path' => 'admin/config/course/course_enrollment',
-            'bundle argument' => 3,
+            'path' => 'admin/course/course_enrollment',
+            'bundle argument' => 2,
             'access arguments' => array('administer course'),
+          ),
+          'admin ui' => array(
+            'path' => 'admin/course/course_enrollment',
           ),
         ),
       ),
@@ -2912,8 +2915,8 @@ function course_entity_info() {
         'course_report' => array(
           'label' => 'Course report',
           'admin' => array(
-            'path' => 'admin/config/course/course_report',
-            'bundle argument' => 3,
+            'path' => 'admin/course/course_report',
+            'bundle argument' => 2,
             'access arguments' => array('administer course'),
           ),
         ),
@@ -2996,26 +2999,19 @@ function course_rules_invoke_event_by_args($event_name, $args) {
  */
 function course_enrollment_page($course_node) {
   global $user;
-  $form_state = form_state_defaults();
   if (!($entity = course_enrollment_load($course_node->nid, $user->uid))) {
-    $op = 'add';
     $entity = new stdClass;
     $entity->nid = $course_node->nid;
     $entity->uid = $user->uid;
   }
-  else {
-    $op = 'edit';
-  }
-  $form = entity_ui_get_form('course_enrollment', $entity, $op, $form_state);
-  field_attach_form('course_enrollment', $entity, $form, $form_state);
-  return $form;
+  return drupal_get_form('course_enrollment_form', $entity);
 }
 
 /**
  * Form for adding/editing enrollment.
  */
-function course_enrollment_form($form) {
-  dpm(func_get_args());
+function course_enrollment_form($form, &$form_state, $entity) {
+  field_attach_form('course_enrollment', $entity, $form, $form_state);
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Enroll'),
@@ -3027,17 +3023,15 @@ function course_enrollment_form($form) {
 /**
  * Form submit for adding/editing enrollment.
  */
-function course_enrollment_form_validate($form, &$form_state) {
-  $course_enrollment = (object) $form_state['course_enrollment'];
-  field_attach_form_validate('course_enrollment', $course_enrollment, $form, $form_state);
-}
-
-/**
- * Form submit for adding/editing enrollment.
- */
 function course_enrollment_form_submit($form, &$form_state) {
-  $course_enrollment = (object) $form_state['course_enrollment'];
+  $course_enrollment = (object) $form_state['values'];
   $course_enrollment->type = 'course_enrollment';
   field_attach_submit('course_enrollment', $course_enrollment, $form, $form_state);
-  course_enrollment_save($course_enrollment);
+
+  global $user;
+  $course_enrollment->nid = rand(1,100);
+  $course_enrollment->uid = rand(1,100);
+  drupal_write_record('course_enrollment', $course_enrollment);
+  field_attach_insert('course_enrollment', $course_enrollment);
+  module_invoke_all('entity_insert', 'course_enrollment', $course_enrollment);
 }

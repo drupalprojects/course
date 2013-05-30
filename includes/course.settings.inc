@@ -37,7 +37,7 @@ function course_settings_overview($form, &$form_state) {
       $rows[] = array(
         $package_info['name'],
         $package_info['description'],
-        l(t('Edit'), "admin/config/course/{$package_key}", array('query' => drupal_get_destination())),
+        l(t('Edit'), "admin/course/{$package_key}", array('query' => drupal_get_destination())),
       );
       $package_set[$package_key] = TRUE;
     }
