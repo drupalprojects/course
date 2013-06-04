@@ -79,8 +79,11 @@ function course_outline_overview_form($form, &$form_state) {
   if (!empty($_SESSION['course'][$node->nid]['editing'])) {
     $objects = $_SESSION['course'][$node->nid]['editing'];
   }
-  else {
+  else if (!empty($node->course['objects'])) {
     $objects = $node->course['objects'];
+  }
+  else {
+    $objects = array();
   }
 
   // Sort list of objects we pulled from session or DB by weight for proper
