@@ -12,22 +12,33 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
 
     if (course_node_is_course($node)) {
       $course = course_get_course($node, $user);
+      // Viewing a course product.
+      if (course_enrollment_check($node->nid, $user->uid) || (!($node->sell_price > 0) && variable_get('course_access_bypass_checkout', 1))) {
+        // User already enrolled, or course is free and bypass is enabled.
+        $form['actions']['submit']['#access'] = FALSE;
+      }
     }
     else {
+      // Viewing a product that is part of another course.
       $courseNode = course_get_context('course_uc', 'payment', $node->nid);
       $course = course_get_course($courseNode, $user);
-    }
 
-    if ($course) {
-      foreach ($course->getObjects() as $idx => $courseObject) {
-        if ($courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
-          if ($courseObject->getFulfillment()->isComplete()) {
-            $form['#access'] = FALSE;
+      if ($course) {
+        foreach ($course->getObjects() as $idx => $courseObject) {
+          if ($courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
+            if ($courseObject->getFulfillment()->isComplete()) {
+              // User already purchased.
+              $form['actions']['submit']['#access'] = FALSE;
+            }
           }
         }
       }
     }
 
+
+    // If there are any other blockers (like date based access) then do not
+    // display the add to cart button as it would be a method to enroll,
+    // bypassing the restrictions.
     $blockers = course_enroll_access($node, $user, TRUE, TRUE);
     foreach ($blockers as $key => $blocker) {
       if (!$blocker['success'] && $key != 'course_must_purchase') {
@@ -336,26 +347,52 @@ function course_uc_course_handlers() {
  */
 function course_uc_course_access($op, $node, $user) {
   if ($op == 'enroll') {
+    $must_purchase = FALSE;
     $course = course_get_course($node, $user);
-    foreach ($course->getObjects() as $idx => $courseObject) {
-      if ($idx == 0) {
-        // Completely block access if it is the first object.
-        if ($courseObject->getComponent() == 'payment' && !$courseObject->getFulfillment()->isComplete()) {
-          return array('course_must_purchase' => array(
-              'success' => FALSE,
-              'header' => 'Payment required',
-              'message' => 'You must first purchase this course.',
-            ),
-          );
+    if ($node->sell_price > 0 || !variable_get('course_access_bypass_checkout', 1)) {
+      // Course has a price, or bypass checkout is disabled.
+      if (!course_enrollment_check($node->nid, $user->uid)) {
+        // User is not enrolled so force purchase.
+        $must_purchase = TRUE;
+      }
+
+      // Now we have to check that even if the course has a price, that the
+      // payment object is first (to block enrollments). If the course is $0 and
+      // there are no payment objects, we assume the enrollment is blocked.
+      foreach ($course->getObjects() as $idx => $courseObject) {
+        $is_payment = ($courseObject->getComponent() == 'payment');
+        $first_object = ($idx == 0);
+        $complete = $courseObject->getFulfillment()->isComplete();
+        $is_this_course = ($courseObject->getInstanceId() == $node->nid);
+        if ($is_payment && !$complete) {
+          // We only want to block enrollment if the payment object linked to
+          // this course is the first object.
+          if ($first_object) {
+            $must_purchase = TRUE;
+          }
+          else {
+            // Set back to false because the user should still be able to
+            // enroll.
+            $must_purchase = FALSE;
+          }
         }
       }
+    }
+
+    if ($must_purchase) {
+      return array('course_must_purchase' => array(
+          'success' => FALSE,
+          'header' => 'Payment required',
+          'message' => 'You must first purchase this course.',
+        ),
+      );
     }
   }
 }
 
 /**
  * Implements hook_default_rules_configuration().
- * 
+ *
  * Define the rule that enrolls users into purchased courses.
  */
 function course_uc_default_rules_configuration() {

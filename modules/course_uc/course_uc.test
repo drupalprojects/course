@@ -36,16 +36,7 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
   function testUbercartEnrollment() {
     global $user;
 
-    module_load_include('inc', 'uc_product', 'uc_product.admin');
-
-    // Mark our course_test content type as a product.
-    $form = array();
-    $form_state = array();
-    $form_state['values']['name'] = 'course_test';
-    $form_state['values']['description'] = 'course_test';
-    $form_state['values']['pcid'] = 'course_test';
-    $form['pcid']['#type'] = '';
-    uc_product_class_form_submit($form, $form_state);
+    $this->setCourseTestToProduct();
 
     // Create a product node.
     $courseNode = $this->createCourseNode(array(
@@ -70,10 +61,8 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $this->assertTrue($result['success'], 'User granted access to take course.');
   }
 
-  function testRestrictQty() {
-    global $user;
+  private function setCourseTestToProduct() {
     module_load_include('inc', 'uc_product', 'uc_product.admin');
-
     // Mark our course_test content type as a product.
     $form = array();
     $form_state = array();
@@ -82,13 +71,16 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $form_state['values']['pcid'] = 'course_test';
     $form['pcid']['#type'] = '';
     uc_product_class_form_submit($form, $form_state);
+  }
+
+  public function testRestrictQty() {
+    $this->setCourseTestToProduct();
 
     // Create a product node.
     $courseNode = $this->createCourseNode(array(
       'sell_price' => 5,
       'unique_hash' => uniqid(),
     ));
-    node_save($courseNode);
 
     // Try to add a course to cart twice
     $account = $this->drupalCreateUser();
@@ -108,6 +100,29 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     // Try to re-enroll in a course.
     $this->drupalGet("node/$courseNode->nid");
     $this->assertNoRaw(t('Add to cart'), 'Did not see add to cart button.');
+  }
+
+  public function testBypassFreeCourses() {
+    $this->setCourseTestToProduct();
+
+    // Create a product node.
+    $courseNode = $this->createCourseNode(array(
+      'sell_price' => 0,
+      'unique_hash' => uniqid(),
+    ));
+
+    $account = $this->drupalCreateUser();
+    $this->drupalLogin($account);
+
+
+    // Default behavior is that add to cart does not show up on a $0 course.
+    $this->drupalGet("node/$courseNode->nid");
+    $this->assertNoRaw(t('Add to cart'));
+
+    // Turn bypass off and check that the add to cart button shows.
+    variable_set('course_access_bypass_checkout', 0);
+    $this->drupalGet("node/$courseNode->nid");
+    $this->assertRaw(t('Add to cart'));
   }
 
 }
