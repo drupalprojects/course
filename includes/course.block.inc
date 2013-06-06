@@ -51,7 +51,7 @@ function _course_block_navigation_view() {
   global $user;
   $node = course_get_context();
   if ($node) {
-    $course = course_get_course($node, $user);
+    $course = course_get_course($node, $user, TRUE);
     $links = $course->getNavigation();
 
     // Strip array keys so theme_item_list() works properly.
