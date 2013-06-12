@@ -51,6 +51,9 @@ class CourseObjectQuizTestCase extends CourseTestCase {
       'correct_answer' => 1,
     ), t('Save'));
 
+    // Enroll the user in the course
+    course_enroll($courseNode, $this->quiz_admin);
+
     // Fail the quiz.
     $this->drupalGet("node/{$quizNode->nid}/take");
     $this->assertFalse($co1->getFulfillment()->isComplete(), 'Check that quiz fulfillment is not complete after fail.');

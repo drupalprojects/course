@@ -46,18 +46,22 @@ class CourseObjectWebformTestCase extends CourseTestCase {
     $this->drupalPost(NULL, array(
       'add[name]' => 'test',
       'add[type]' => 'textfield',
-    ), 'Add');
+      ), 'Add');
     $this->drupalPost(NULL, array(), 'Save component');
+
+    // Enroll the user in the course
+    course_enroll($courseNode, $this->webform_admin);
 
     // Take the webform.
     $this->drupalGet("node/{$webformNode->nid}");
     $this->assertFalse($co1->getFulfillment()->isComplete(), 'Check that webform is not completed yet.');
     $this->drupalPost(NULL, array(
       'submitted[test]' => 1,
-    ), 'Submit');
+      ), 'Submit');
 
     // Reload because something happened in the DB.
     $co1 = course_get_course_object_by_id($co1->getId(), $this->webform_admin);
     $this->assertTrue($co1->getFulfillment()->isComplete(), 'Check that webform is completed.');
   }
+
 }

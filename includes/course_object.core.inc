@@ -1039,8 +1039,10 @@ class CourseObjectFulfillment extends CourseHandler {
    * Track course after saving fulfillment.
    */
   public function save() {
-    parent::save();
-    $this->getCourseObject()->getCourse()->track();
+    if (course_enrollment_check($this->getCourseObject()->getCourseNid(), $this->getCourseObject()->getCourse()->getUser()->uid)) {
+      parent::save();
+      $this->getCourseObject()->getCourse()->track();
+    }
   }
 
 }

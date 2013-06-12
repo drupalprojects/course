@@ -19,6 +19,7 @@ files[] = tests/CourseGradeTestCase.test
 files[] = tests/CourseObjectAccessConditionalTestCase.test
 files[] = tests/CourseObjectAccessTestCase.test
 files[] = tests/CourseObjectAccessTimeTestCase.test
+files[] = tests/CourseObjectFulfillmentTestCase.test
 files[] = tests/CourseObjectNodeTestCase.test
 files[] = tests/CourseObjectTestCase.test
 files[] = tests/CourseOutlineUiTestCase.test
