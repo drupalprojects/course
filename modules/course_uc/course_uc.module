@@ -349,7 +349,7 @@ function course_uc_course_access($op, $node, $user) {
   if ($op == 'enroll') {
     $must_purchase = FALSE;
     $course = course_get_course($node, $user);
-    if ($node->sell_price > 0 || !variable_get('course_access_bypass_checkout', 1)) {
+    if (!empty($node->sell_price) && ($node->sell_price > 0 || !variable_get('course_access_bypass_checkout', 1))) {
       // Course has a price, or bypass checkout is disabled.
       if (!course_enrollment_check($node->nid, $user->uid)) {
         // User is not enrolled so force purchase.
