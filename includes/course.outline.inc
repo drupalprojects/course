@@ -564,19 +564,20 @@ function course_outline_show_complete_links($course_node) {
 
     $items = array();
     foreach ($requirements_outstanding as $req) {
-      $status_css = $req->complete ? 'complete' : 'incomplete';
-      $status_img = $req->complete ? 'ok' : ($req->required ? 'error' : 'warning');
+      $status_css = $req->isComplete() ? 'complete' : 'incomplete';
+      $status_img = $req->isComplete() ? 'ok' : ($req->getCourseObject()->isRequired() ? 'error' : 'warning');
       $status_optional = ($status_img == 'warning') ? ' (optional)' : '';
-      $grade = $req->graded ? ' - ' . t('Your grade: %grade_result%, Pass grade: %passing_grade%', array(
-          '%grade_result' => $req->grade_result,
-          '%passing_grade' => $req->passing_grade,
+      $options = $req->getCourseObject()->getOptions();
+      $grade = $req->getCourseObject()->isGraded() ? ' - ' . t('Your grade: %grade_result%, Pass grade: %passing_grade%', array(
+          '%grade_result' => $req->getGrade(),
+          '%passing_grade' => $options['passing_grade'],
         )) : '';
       $items[] = array(
         array(
           'data' => theme('image', array('path' => "misc/watchdog-{$status_img}.png", 'width' => '', 'height' => '', 'alt' => $status_css)),
           'width' => 20,
         ),
-        $req->title . $status_optional . $grade,
+        $req->getCourseObject()->getTitle() . $status_optional . $grade,
       );
     }
     $reqs_txt = theme('table', array('header' => NULL, 'rows' => $items));
