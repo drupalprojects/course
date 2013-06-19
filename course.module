@@ -156,7 +156,7 @@ function course_menu() {
 
   // Landing page for course completion.
   $items['node/%course/course-complete'] = array(
-    'title' => 'Course completion',
+    'title' => 'Course complete',
     'access callback' => TRUE,
     'page arguments' => array(1),
     'page callback' => 'course_outline_show_complete_links',

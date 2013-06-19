@@ -535,23 +535,16 @@ function course_outline_show_complete_links($course_node) {
   $report = course_report_load($course_node, $account);
   $txt_out = '';
   if ($report->complete) {
-    $txt_out .= '<p>' . t('Thank you for participating in this activity.') . '</p>';
+    $txt_out .= '<p>' . t('Thank you for participating in this course.') . '</p>';
     $links = array(
       'course' => array(t('Return to course'), "node/$course_node->nid", t('Return to the course to view course details and material.')),
     );
     // Allow modules to add links to the course completion landing page, such as
     // post-course actions.
     drupal_alter('course_outline_completion_links', $links, $course_node, $account);
-    foreach ($links as $link) {
-      $element = array(
-        '#title' => l($link[0], $link[1]),
-        '#description' => $link[2],
-        '#children' => '',
-      );
-      $txt_out .= theme('form_element', array('element' => $element));
-    }
   }
   else {
+    drupal_set_title(t('Remaining requirements'));
     $course = course_get_course($course_node, $account);
     $objects = $course->getObjects();
     $requirements_outstanding = array();
@@ -582,18 +575,25 @@ function course_outline_show_complete_links($course_node) {
     }
     $reqs_txt = theme('table', array('header' => NULL, 'rows' => $items));
 
-    $txt_out .= '<p>' . t('You must complete the remaining requirements to proceed.') . '</p>';
-    $txt_out .= $reqs_txt . '<div class="homelink"><p>' . l($course_out_return_array['course_outline_link_text'], $course_out_return_array['course_outline_link']) . '</p></div>';
+    $txt_out .= '<p>' . t('You must complete the remaining requirements to complete this course.') . '</p>';
+    $txt_out .= $reqs_txt;
 
     $links = array(
       'course' => array(t('Return to course'), "node/$course_node->nid/takecourse", t('Return to the course to view course details and material.')),
     );
+
     // Allow modules to alter remaining requirement links on the course
     // completion landing page.
     drupal_alter('course_outline_incomplete_links', $links, $course_node, $account);
-    foreach ($links as $link) {
-      $txt_out .= theme('form_element', array('#description' => $link[2]), l($link[0], $link[1]));
-    }
+  }
+
+  foreach ($links as $link) {
+    $element = array(
+      '#title' => l($link[0], $link[1]),
+      '#description' => $link[2],
+      '#children' => '',
+    );
+    $txt_out .= theme('form_element', array('element' => $element));
   }
 
   return $txt_out;
