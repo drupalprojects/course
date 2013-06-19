@@ -2,6 +2,7 @@ name = Course test module
 core = 7.x
 dependencies[] = acl
 dependencies[] = content_access
+dependencies[] = course
 dependencies[] = entity
 dependencies[] = entity_token
 dependencies[] = rules

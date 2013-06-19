@@ -9,6 +9,10 @@ class CourseObjectTest extends CourseObject {
     return 3;
   }
 
+  public function take() {
+    return t('I am a test course object with the title !title', array('!title' => $this->getOption('title')));
+  }
+
 }
 
 /**
@@ -16,7 +20,7 @@ class CourseObjectTest extends CourseObject {
  */
 class CourseObjectGradedTest extends CourseObject {
 
-  function isGraded() {
+  public function isGraded() {
     return TRUE;
   }
 

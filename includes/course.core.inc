@@ -7,7 +7,7 @@
 
 /**
  * Master class for anything Course related.
- * 
+ *
  * Anything implementing CourseHandler is expected to have a table and a
  * serialized field for storing options defined by other modules.
  */
@@ -173,14 +173,14 @@ class CourseHandler {
    * Handlers can declare a form.
    */
   public function optionsForm(&$form, &$form_state) {
-    
+
   }
 
   /**
    * Validate?
    */
   public function optionsValidate(&$form, &$form_state) {
-    
+
   }
 
   /**
@@ -190,7 +190,7 @@ class CourseHandler {
    * need to have priority over those in the database.
    */
   public function optionsSubmit(&$form, &$form_state) {
-    
+
   }
 
   /**

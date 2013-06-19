@@ -24,6 +24,7 @@ files[] = tests/CourseObjectNodeTestCase.test
 files[] = tests/CourseObjectTestCase.test
 files[] = tests/CourseOutlineUiTestCase.test
 files[] = tests/CourseTestCase.test
+files[] = tests/CourseWorkflowTestCase.test
 files[] = views/handlers/course_views_handler_relationship_ce_cr.inc
 files[] = views/handlers/course_views_handler_relationship_ce_sl.inc
 files[] = views/handlers/views_handler_filter_course.inc
