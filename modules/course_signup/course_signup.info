@@ -4,6 +4,7 @@ package = Course
 core = 7.x
 dependencies[] = course
 dependencies[] = signup
+configure = admin/config/course/signup
 
 
 files[] = course_signup.classes.inc

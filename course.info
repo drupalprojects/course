@@ -7,6 +7,7 @@ dependencies[] = views
 dependencies[] = views_bulk_operations
 php = 5
 package = Course
+configure = admin/config/course
 files[] = includes/course.core.inc
 files[] = includes/course_object.core.inc
 files[] = plugins/course/access/conditional.inc
