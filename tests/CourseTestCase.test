@@ -24,7 +24,7 @@ class CourseTestCase extends DrupalWebTestCase {
       'course' => array(
         'outline' => 'course',
       ),
-      ), + $extra);
+      ) + $extra);
 
     return $node;
   }
