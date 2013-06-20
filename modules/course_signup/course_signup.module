@@ -6,7 +6,7 @@
 function course_signup_admin($form, &$form_state) {
   $form = array();
 
-  $form['signup_intro']['#value'] = t("Course uses Signup's built-in functionality to allow learners to register for courses and for administrators to manage attendance.");
+  $form['signup_intro']['#markup'] = t("Course uses Signup's built-in functionality to allow learners to register for courses and for administrators to manage attendance.");
 
   $form['course_signup_bypass_checkout'] = array(
     '#title' => t('Bypass registration and checkout for free courses.'),
