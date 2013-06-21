@@ -1578,7 +1578,7 @@ function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) 
  *
  * @return CourseObject|FALSE
  */
-function course_get_course_object($module, $object_type = NULL, $instance = NULL, $account = NULL, $course = NULL) {
+function course_get_course_object($module, $object_type = NULL, $instance = NULL, stdClass $account = NULL, Course $course = NULL) {
   $available = course_get_handlers('object');
 
   $fulfillment = FALSE;
