@@ -981,7 +981,7 @@ function course_render_button($node) {
     return course_take_course_button_html($node);
   }
   else {
-    return $can_enroll['message'];
+    return $access['message'];
   }
 }
 
