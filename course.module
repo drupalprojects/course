@@ -969,9 +969,14 @@ function course_save_objects(array $objects, Course $course = NULL) {
 function course_render_button($node) {
   global $user;
 
-  $can_enroll = course_take_course_access($node, $user);
+  $access = course_enroll_access($node, $user);
+  $enrollment = course_enrollment_load($node->nid, $user->uid);
+  if (!$access['success'] && (!empty($enrollment) && $enrollment->status)) {
+    // User cannot enroll, but maybe they can take.
+    $access = course_take_course_access($node, $user);
+  }
 
-  if ($can_enroll['success']) {
+  if ($access['success']) {
     // User can self-enroll and take the course. Show the button.
     return course_take_course_button_html($node);
   }
@@ -1405,7 +1410,8 @@ function course_take_course($node) {
   $result = course_enroll_access($node);
   $enrollment = course_enrollment_load($node, $user);
   // Check enroll access or if user is already enrolled.
-  if ($result['success'] || ($enrollment && $enrollment->status)) {
+  if (!$result['success'] && (!empty($enrollment) && $enrollment->status)) {
+    // If user cannot enroll, but already is enrolled.
     $result = course_take_course_access($node);
   }
   if ($result['success'] === TRUE) {
