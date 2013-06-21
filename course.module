@@ -969,7 +969,7 @@ function course_save_objects(array $objects, Course $course = NULL) {
 function course_render_button($node) {
   global $user;
 
-  $can_enroll = course_enroll_access($node, $user);
+  $can_enroll = course_take_course_access($node, $user);
 
   if ($can_enroll['success']) {
     // User can self-enroll and take the course. Show the button.
