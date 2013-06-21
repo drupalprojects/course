@@ -589,7 +589,7 @@ function course_outline_show_complete_links($course_node) {
 
   foreach ($links as $link) {
     $element = array(
-      '#title' => l($link[0], $link[1]),
+      '#title' => l($link[0], $link[1], array('html' => TRUE)),
       '#description' => $link[2],
       '#children' => '',
     );
