@@ -3,7 +3,12 @@
 class CourseObjectBook extends CourseObjectNode {
 
   function getNodeTypes() {
-    return array('book');
+    if (user_access('administer book outlines')) {
+      return array_keys(node_type_get_names());
+    }
+    else {
+      return variable_get('book_allowed_types', array('book'));
+    }
   }
 
   /**
@@ -11,7 +16,7 @@ class CourseObjectBook extends CourseObjectNode {
    */
   public function create() {
     $node = new stdClass;
-    $node->type = $this->getComponent();
+    $node->type = $this->getOption('node_type');
     $node->title = $this->getTitle();
     $node->uid = $this->user->uid;
     $node->book['bid'] = 'new';
@@ -21,6 +26,7 @@ class CourseObjectBook extends CourseObjectNode {
 
   function optionsDefinition() {
     $defaults = parent::optionsDefinition();
+    $defaults['node_type'] = variable_get('course_book_default_node_type', 'book');
     $defaults['book_tracking'] = 'all';
     $defaults['outline_list_item_type'] = 'active_tree';
     return $defaults;

@@ -44,10 +44,6 @@ class CourseObjectBookTestCase extends CourseTestCase {
     // Enroll the user in the course
     course_enroll($courseNode, $this->book_admin);
 
-    // Get the book
-    $bookNode = node_load($co1->getInstanceId());
-    $this->assertTrue($bookNode->type == 'book', 'book node is a book.');
-
     // Add some more book pages.
     $bp1 = $this->drupalCreateNode(array(
       'type' => 'book',

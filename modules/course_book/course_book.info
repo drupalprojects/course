@@ -4,6 +4,7 @@ package = Course objects
 core = 7.x
 dependencies[] = book
 dependencies[] = course
+configure = admin/config/course/book
 
 
 files[] = course_book.classes.inc
