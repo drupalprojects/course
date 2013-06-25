@@ -1316,6 +1316,7 @@ abstract class CourseObjectNode extends CourseObject {
   function thaw($ice) {
     $this->node = $ice->node;
     unset($this->node->nid);
+    unset($this->node->vid);
     node_save($this->node);
     return $this->node->nid;
   }

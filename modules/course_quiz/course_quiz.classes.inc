@@ -139,6 +139,7 @@ class CourseObjectQuiz extends CourseObjectNode {
   function thaw($ice) {
     $this->node = $ice->node;
     unset($this->node->nid);
+    unset($this->node->vid);
     $this->node->auto_created = TRUE;
     node_save($this->node);
     return $this->node->nid;
