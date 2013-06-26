@@ -475,6 +475,9 @@ function course_update_6122() {
   $result = db_query($sql);
   while ($row = $result->fetch()) {
     $row->data = unserialize($row->data);
+    if (!is_array($row->data)) {
+      $row->data = array();
+    }
     $row->data['passing_grade'] = $row->passing_grade;
     $row->data = serialize($row->data);
     // TODO Please review the conversion of this statement to the D7 database API syntax.
@@ -568,7 +571,7 @@ function course_update_6126() {
   $delete = array();
 
   while ($row = $result->fetch()) {
-    if ($sfids[$row->snid][$row->uid]) {
+    if (!empty($sfids[$row->snid][$row->uid])) {
       $delete[] = $sfids[$row->snid][$row->uid];
     }
     $sfids[$row->snid][$row->uid] = $row->sfid;
