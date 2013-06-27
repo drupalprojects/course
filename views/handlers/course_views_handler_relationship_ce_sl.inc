@@ -19,7 +19,7 @@ class course_views_handler_relationship_ce_sl extends views_handler_relationship
       'extra' => array(
         array(
           'field' => 'nid',
-          'value' => (!empty($this->relationship) ? $this->relationship : 'signup_log') . '.nid',
+          'value' => 'nid',
           'numeric' => TRUE,
         ),
       ),
