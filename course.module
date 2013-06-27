@@ -2806,7 +2806,7 @@ function course_cron() {
     $result = db_query($sql, array(':modules' => $modules));
     while ($row = $result->fetch()) {
       $extra = unserialize($row->data);
-      if ($extra['private']) {
+      if (!empty($extra['private'])) {
         // This fulfillment used private content.
         $user = user_load($row->uid);
         $courseObject = course_get_course_object_by_id($row->coid, $user);
