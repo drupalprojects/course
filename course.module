@@ -1407,19 +1407,17 @@ function course_take_course($node) {
   global $user;
   drupal_set_title($node->title);
 
-  $result = course_enroll_access($node);
+  $enroll_access = course_enroll_access($node);
   $enrollment = course_enrollment_load($node, $user);
-  // Check enroll access or if user is already enrolled.
-  if (!$result['success'] && (!empty($enrollment) && $enrollment->status)) {
-    // If user cannot enroll, but already is enrolled.
-    $result = course_take_course_access($node);
+
+  if ($enroll_access['success'] === TRUE && empty($enrollment->eid)) {
+    // User can enroll in this course and user is not enrolled. Enroll the user.
+    $enrollment = course_enroll($node, $user);
   }
-  if ($result['success'] === TRUE) {
-    if (empty($enrollment->eid)) {
-      // User has access to take this course, but they haven't been enrolled. So
-      // enroll them now.
-      $enrollment = course_enroll($node, $user);
-    }
+
+  $take_access = course_take_course_access($node);
+  if ($take_access['success']) {
+    // User has access to take this course.
     if (empty($enrollment->timestamp)) {
       // If user hasn't started course, mark start of enrollment.
       $enrollment->timestamp = REQUEST_TIME;
@@ -1456,10 +1454,10 @@ function course_take_course($node) {
   else {
     drupal_add_http_header('Status', '403 Forbidden');
     drupal_set_title(t('Access denied'));
-    if (empty($result['message'])) {
+    if (empty($take_access['message'])) {
       return t('Sorry, you do not have access to take this course. (No message provided by module).');
     }
-    return "<h2>" . $result['header'] . "</h2>" . $result['message'];
+    return "<h2>" . $take_access['header'] . "</h2>" . $take_access['message'];
   }
 }
 
@@ -2380,6 +2378,7 @@ function course_course_access($op, $node, $user) {
           'message' => t('You do not have permission to enroll into this course'),
       ));
     }
+
     if (!empty($node->course['open']) && REQUEST_TIME < $node->course['open']) {
       return array(array(
           'success' => FALSE,
@@ -2417,6 +2416,7 @@ function course_course_access($op, $node, $user) {
           'message' => t('You do not have permission to take this course.')
       ));
     }
+
     $sql = "SELECT * FROM {course_enrollment} WHERE nid = %d AND uid = %d";
     if ($row = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid))->fetch()) {
       if ($row->enroll_end > 0 && REQUEST_TIME > $row->enroll_end) {
@@ -2426,6 +2426,13 @@ function course_course_access($op, $node, $user) {
             'message' => t('Sorry, your enrollment has expired for this course.'),
         ));
       }
+    }
+    else {
+      return array(array(
+          'success' => FALSE,
+          'header' => t('Not enrolled.'),
+          'message' => t('Sorry, you must first enroll in this course.'),
+      ));
     }
 
     if (isset($node->course['close']) && $node->course['close']) {
