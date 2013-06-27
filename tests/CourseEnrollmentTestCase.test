@@ -27,9 +27,11 @@ class CourseEnrollmentTestCase extends CourseTestCase {
     $this->assertTrue($result['success'], 'Check that the user is allowed to self enroll into this course.');
 
     $result = course_take_course_access($courseNode);
-    $this->assertTrue($result['success'], 'Check that the user can take the course.');
+    $this->assertFalse($result['success'], 'Check that the user cannot enroll in the course.');
 
     course_enroll($courseNode, $user);
+    $result = course_take_course_access($courseNode, $user, TRUE);
+    $this->assertTrue($result['success'], 'Check that the user can take the course.');
     $enroll = course_enrollment_load($courseNode, $user);
     $this->assertTrue($enroll->eid > 0, 'Enrollment was created.');
     $this->assertTrue($enroll->created > 0, 'Enrollment has a creation timestamp.');
