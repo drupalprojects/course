@@ -146,7 +146,7 @@ function course_menu() {
   // Landing page for course completion.
   $items['node/%course/course-outline'] = array(
     'title' => 'Course outline',
-    'access callback' => array('node_access'),
+    'access callback' => 'node_access',
     'access arguments' => array('update', 1),
     'page arguments' => array('course_outline_overview_form'),
     'page callback' => 'drupal_get_form',
