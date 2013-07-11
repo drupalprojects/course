@@ -491,8 +491,6 @@ function course_update_6122() {
   }
 
   $deletes = array(
-    array('course_node', 'transcript'),
-    array('course_node', 'catalog'),
     array('course_node', 'outline_custom_titles'),
     array('course_outline', 'graded'),
     array('course_outline', 'passing_grade'),
