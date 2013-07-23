@@ -12,15 +12,14 @@ class course_views_handler_relationship_ce_sl extends views_handler_relationship
     // Figure out what base table this relationship brings to the party.
     $join = new views_join_course();
     $join->definition = array(
-      'table' => 'course_enrollment',
+      'table' => 'signup_log',
       'field' => 'uid',
-      'left_table' => !empty($this->relationship) ? $this->relationship : 'signup_log',
+      'left_table' => !empty($this->relationship) ? $this->relationship : 'course_enrollment',
       'left_field' => 'uid',
       'extra' => array(
         array(
           'field' => 'nid',
           'value' => 'nid',
-          'numeric' => TRUE,
         ),
       ),
     );

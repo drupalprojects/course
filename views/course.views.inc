@@ -76,16 +76,6 @@ function course_views_data() {
     ),
   );
 
-  $data['signup_log']['course_enrollment'] = array(
-    'title' => 'Course enrollment',
-    'relationship' => array(
-      'base' => 'course_enrollment',
-      'handler' => 'course_views_handler_relationship_ce_sl',
-      'label' => t('Enrollment'),
-      'help' => 'Create a relationship from the signup log to the course enrollment data.',
-    ),
-  );
-
   $data['course_enrollment']['nid'] = array(
     'title' => 'Node ID of enrollment',
     'field' => array(
@@ -454,9 +444,6 @@ function course_views_handlers() {
         'parent' => 'views_handler_filter_boolean_operator',
       ),
       'course_views_handler_relationship_ce_cr' => array(
-        'parent' => 'views_handler_relationship',
-      ),
-      'course_views_handler_relationship_ce_sl' => array(
         'parent' => 'views_handler_relationship',
       ),
     ),
