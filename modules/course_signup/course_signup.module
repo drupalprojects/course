@@ -274,7 +274,7 @@ function course_signup_course_handlers() {
 /**
  * Track attendance.
  *
- * @todo, find a better way? looking at you, @see signup_mark_attended_action 
+ * @todo, find a better way? looking at you, @see signup_mark_attended_action
  */
 function course_signup_watchdog($watchdog) {
   if (strpos($watchdog['message'], 'Marked signup') !== FALSE) {
@@ -302,5 +302,57 @@ function course_signup_migrate_enrollments() {
       $row->signup_time = $row->timestamp;
       drupal_write_record('signup_log', $row);
     }
+  }
+}
+
+/**
+ * Get a signup from a course enrollment.
+ */
+function course_signup_get_signup_from_enrollment($enrollment) {
+  $signup = db_query("SELECT * FROM {signup_log} WHERE nid = :nid AND uid = :uid", array(
+    ':nid' => $enrollment->nid,
+    ':uid' => $enrollment->uid,
+  ));
+  return $signup->fetch();
+}
+
+/**
+ * Implements hook_action_info().
+ */
+function course_signup_action_info() {
+  $actions = array();
+
+  $actions['course_signup_mark_attended_action'] = array(
+    'type' => 'course_enrollment',
+    'label' => t('Mark user attended'),
+    'configurable' => FALSE,
+    'vbo_configurable' => FALSE,
+  );
+
+  $actions['course_signup_mark_not_attended_action'] = array(
+    'type' => 'course_enrollment',
+    'label' => t('Mark user not attended'),
+    'configurable' => FALSE,
+    'vbo_configurable' => FALSE,
+  );
+
+  return $actions;
+}
+
+/**
+ * Action to mark a signup attended from an enrollment.
+ */
+function course_signup_mark_attended_action(&$enrollment, $context) {
+  if ($signup = course_signup_get_signup_from_enrollment($enrollment)) {
+    signup_mark_attended_action($signup);
+  }
+}
+
+/**
+ * Action to mark a signup not attended from an enrollment.
+ */
+function course_signup_mark_not_attended_action(&$enrollment, $context) {
+  if ($signup = course_signup_get_signup_from_enrollment($enrollment)) {
+    signup_mark_not_attended_action($signup);
   }
 }
