@@ -10,6 +10,7 @@ class CourseObjectWebform extends CourseObjectNode {
     $webform->type = 'webform';
     $webform->title = $this->getTitle();
     $webform->uid = $this->user->uid;
+    node_object_prepare($webform);
     node_save($webform);
     $this->setNode($webform);
   }

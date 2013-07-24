@@ -12,6 +12,7 @@ class CourseObjectScorm extends CourseObjectNode {
     $scorm_node->type = $this->getComponent();
     $scorm_node->title = $this->getTitle();
     $scorm_node->uid = $this->user->uid;
+    node_object_prepare($scorm_node);
     node_save($scorm_node);
     $this->setNode($scorm_node);
   }

@@ -11,13 +11,7 @@ class CourseObjectQuiz extends CourseObjectNode {
     $quiz->type = 'quiz';
     $quiz->title = $this->getTitle();
     $quiz->uid = $this->user->uid;
-    $quiz->quiz_always = TRUE;
-    $quiz->quiz_open = $quiz->quiz_close = array(
-      'month' => date('m'),
-      'day' => date('d'),
-      'year' => date('Y'),
-    );
-    $quiz = (object) array_merge(_quiz_get_node_defaults(), (array) $quiz);
+    node_object_prepare($quiz);
     node_save($quiz);
     $this->setNode($quiz);
   }

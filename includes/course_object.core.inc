@@ -1099,6 +1099,7 @@ abstract class CourseObjectNode extends CourseObject {
     $node->type = $this->getOption('node_type');
     $node->title = $this->getTitle();
     $node->uid = $this->user->uid;
+    node_object_prepare($node);
     node_save($node);
     $this->setNode($node);
   }

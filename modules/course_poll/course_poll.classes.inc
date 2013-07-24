@@ -36,6 +36,7 @@ class CourseObjectPoll extends CourseObjectNode {
     $poll->uid = $this->user->uid;
     $poll->active = 1;
     $poll->runtime = 0;
+    node_object_prepare($poll);
     node_save($poll);
     $this->setNode($poll);
   }
