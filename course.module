@@ -750,6 +750,7 @@ function course_take_course_access($node, $account = NULL, $flush = FALSE) {
     $courses[$node->nid]['success'] = TRUE;
     // Allow modules to determine if this course should be restricted.
     $hooks = module_invoke_all('course_access', 'take', $node, $account);
+    uasort($hooks, 'drupal_sort_weight');
     foreach ($hooks as $key => $hook) {
       if (!$hook) {
         // Ok. Old style blocker. But look for messages.
@@ -981,7 +982,7 @@ function course_render_button($node) {
     return course_take_course_button_html($node);
   }
   else {
-    return $access['message'];
+    return "<h2>" . $access['header'] . "</h2>" . $access['message'];
   }
 }
 
@@ -2349,6 +2350,7 @@ function course_enroll_access($node, $user = NULL, $flush = FALSE, $all = FALSE)
     }
     // Allow modules to set self-enrollment access for a user.
     $hooks = module_invoke_all('course_access', 'enroll', $node, $user);
+    uasort($hooks, 'drupal_sort_weight');
     if ($all) {
       return $hooks;
     }
@@ -2413,7 +2415,8 @@ function course_course_access($op, $node, $user) {
       return array(array(
           'success' => FALSE,
           'header' => t('Access denied'),
-          'message' => t('You do not have permission to take this course.')
+          'message' => t('You do not have permission to take this course.'),
+          'weight' => 300,
       ));
     }
 
@@ -2432,6 +2435,7 @@ function course_course_access($op, $node, $user) {
           'success' => FALSE,
           'header' => t('Not enrolled.'),
           'message' => t('Sorry, you must first enroll in this course.'),
+          'weight' => 200,
       ));
     }
 

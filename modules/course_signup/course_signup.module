@@ -239,6 +239,7 @@ function course_signup_course_access($op, $node, $user) {
           'header' => t('Signup required'),
           'success' => FALSE,
           'message' => t('You must be signed up for this course to enroll.'),
+          'weight' => 100,
         );
       }
 
