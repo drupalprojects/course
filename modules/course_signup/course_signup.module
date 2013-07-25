@@ -235,7 +235,7 @@ function course_signup_course_access($op, $node, $user) {
       // This node is signup-enabled.
       if (!db_query('SELECT 1 FROM {signup_log} WHERE nid = :nid AND uid = :uid', array(':nid' => $node->nid, ':uid' => $user->uid))->fetchField()) {
         // Block enrollments until the user is signed up.
-        $hooks[] = array(
+        $hooks['course_signup'] = array(
           'header' => t('Signup required'),
           'success' => FALSE,
           'message' => t('You must be signed up for this course to enroll.'),
@@ -355,5 +355,25 @@ function course_signup_mark_attended_action(&$enrollment, $context) {
 function course_signup_mark_not_attended_action(&$enrollment, $context) {
   if ($signup = course_signup_get_signup_from_enrollment($enrollment)) {
     signup_mark_not_attended_action($signup);
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function course_signup_form_alter(&$form, &$form_state, $form_id) {
+  if (in_array($form_id, array('signup_form'))) {
+    global $user;
+    $node = node_load(arg(1));
+
+    $blockers = course_enroll_access($node, $user, FALSE, TRUE);
+    $block = FALSE;
+    foreach ($blockers as $key => $blocker) {
+      if ($key != 'course_signup' && !$blocker['success']) {
+        $block = TRUE;
+        $form['#access'] = FALSE;
+        break;
+      }
+    }
   }
 }
