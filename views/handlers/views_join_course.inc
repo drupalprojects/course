@@ -20,7 +20,7 @@ class views_join_course extends views_join {
    * @param $view_query
    *   The source query, implementation of views_plugin_query.
    */
-  function build_join(SelectQueryInterface $select_query, $table, $view_query) {
+  function build_join($select_query, $table, $view_query) {
     if (empty($this->definition['table formula'])) {
       $right_table = $this->table;
     }
