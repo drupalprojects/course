@@ -360,6 +360,9 @@ function course_signup_mark_not_attended_action(&$enrollment, $context) {
  */
 function course_signup_form_alter(&$form, &$form_state, $form_id) {
   if (in_array($form_id, array('signup_form'))) {
-    $form['#access'] = FALSE;
+    $node = node_load(arg(1));
+    if (course_node_is_course($node)) {
+      $form['#access'] = FALSE;
+    }
   }
 }
