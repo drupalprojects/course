@@ -231,17 +231,14 @@ function course_signup_course_access($op, $node, $user) {
       $hooks[] = $check;
     }
 
-    if (!empty($node->signup)) {
-      // This node is signup-enabled.
-      if (!db_query('SELECT 1 FROM {signup_log} WHERE nid = :nid AND uid = :uid', array(':nid' => $node->nid, ':uid' => $user->uid))->fetchField()) {
-        // Block enrollments until the user is signed up.
-        $hooks['course_signup'] = array(
-          'header' => t('Signup required'),
-          'success' => FALSE,
-          'message' => t('You must be signed up for this course to enroll.'),
-          'weight' => 100,
-        );
-      }
+    if (!empty($node->signup) && empty($node->signup_status)) {
+      // This node is signup-enabled and closed.
+      $hooks['course_signup'] = array(
+        'header' => t(''),
+        'success' => FALSE,
+        'message' => t(''),
+        'weight' => 100,
+      );
 
       return $hooks;
     }
