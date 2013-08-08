@@ -990,8 +990,7 @@ function course_render_button($node) {
  * Generate a button for taking the course.
  */
 function course_take_course_button_html(&$node) {
-  // @todo make course button themable
-  $link = l(t('Take course'), "node/{$node->nid}/takecourse");
+  $link = l(t('Take course'), "node/{$node->nid}/takecourse", array('attributes' => array('class' => array('course-take-course-link'))));
   return $link;
 }
 
@@ -1763,6 +1762,10 @@ function course_field_extra_fields() {
         $extra[$entity_type][$bundle]['form']['course'] = array(
           'label' => t('Course'),
           'description' => t('Course form elements.'),
+          'weight' => 0,
+        );
+        $extra[$entity_type][$bundle]['display']['course'] = array(
+          'label' => t('Take course link'),
           'weight' => 0,
         );
       }
