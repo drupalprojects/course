@@ -2412,6 +2412,19 @@ function course_course_access($op, $node, $user) {
           )),
       ));
     }
+
+    if (user_is_anonymous()) {
+      return array(array(
+          'success' => FALSE,
+          'header' => '',
+          'message' => t('Please !login or !register to take this course.', array(
+            '!login' => l(t('login'), 'user/login'),
+            '!register' => l(t('register'), 'user/register'),
+          )),
+
+        'weight' => 300,
+      ));
+    }
   }
   if ($op == 'take') {
     if (!node_access('view', $node)) {
