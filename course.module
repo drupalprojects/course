@@ -1148,7 +1148,7 @@ function course_enrollment_load($nid, $uid = NULL) {
     $nid = $nid->nid;
   }
 
-  if (!$uid) {
+  if (is_null($uid)) {
     $sql = "SELECT * FROM {course_enrollment} WHERE eid = %d";
     return db_query("SELECT * FROM {course_enrollment} WHERE eid = :eid", array(':eid' => $nid))->fetch();
   }
