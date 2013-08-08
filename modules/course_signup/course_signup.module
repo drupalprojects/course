@@ -360,17 +360,6 @@ function course_signup_mark_not_attended_action(&$enrollment, $context) {
  */
 function course_signup_form_alter(&$form, &$form_state, $form_id) {
   if (in_array($form_id, array('signup_form'))) {
-    global $user;
-    $node = node_load(arg(1));
-
-    $blockers = course_enroll_access($node, $user, FALSE, TRUE);
-    $block = FALSE;
-    foreach ($blockers as $key => $blocker) {
-      if ($key != 'course_signup' && !$blocker['success']) {
-        $block = TRUE;
-        $form['#access'] = FALSE;
-        break;
-      }
-    }
+    $form['#access'] = FALSE;
   }
 }
