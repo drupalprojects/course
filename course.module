@@ -2590,6 +2590,13 @@ function course_theme() {
         'body' => NULL,
       ),
     ),
+    'course_outline' => array(
+      'file' => 'includes/course.theme.inc',
+      'variables' => array(
+        'node' => NULL,
+        'items' => NULL,
+      ),
+    ),
   );
 }
 
