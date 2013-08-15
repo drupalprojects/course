@@ -544,6 +544,9 @@ class Course extends CourseHandler {
     if ($next && $next->access('take')) {
       $links['next'] = l('Next', $next->getUrl(), array('html' => TRUE));
     }
+    elseif (!$next && $this->getTracker()->getOption('complete')) {
+      $links['next'] = l('Next', 'node/' . $this->getOption('nid') . '/course-complete', array('html' => TRUE));
+    }
 
     // Ask course objects if they want to override the navigation.
     if ($active = $this->getActive()) {
