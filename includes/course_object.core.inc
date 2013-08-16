@@ -290,7 +290,6 @@ abstract class CourseObject extends CourseHandler {
         '#title' => t('Also delete related object instance(s)'),
         '#type' => 'checkbox',
         '#default_value' => $config['delete_instance'],
-        '#process' => array('ctools_dependent_process'),
         '#dependency' => array('edit-delete' => array(1)),
       );
 

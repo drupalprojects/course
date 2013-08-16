@@ -125,7 +125,6 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
     );
 
     $conditional_dependent = array(
-      '#process' => array('ctools_dependent_process'),
       '#dependency' => array('edit-plugins-access-conditional-conditional-type' => array('completed', 'started')),
     );
 

@@ -266,7 +266,6 @@ function _course_outline_object_form($courseObject = NULL) {
 
   $rform['dummy'] = array(
     '#type' => 'checkbox',
-    '#process' => array('ctools_dependent_process'),
     '#dependency' => array('dummy' => 1),
   );
 

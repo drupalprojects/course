@@ -1315,7 +1315,6 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
   // Ctools dependency.
   ctools_include('dependent');
   $dependent = array(
-    '#process' => array('ctools_dependent_process'),
     '#dependency' => array('edit-course-use' => array(1)),
   );
 
