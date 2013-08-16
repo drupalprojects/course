@@ -1232,7 +1232,7 @@ abstract class CourseObjectNode extends CourseObject {
         $warnings[] = t('%t is set to Private, but the content type %c does not have access control lists enabled. Users will not be able to acces this content. Please visit !l to set up content access settings.', array(
           '%t' => $this->getTitle(),
           '%c' => $this->getComponent(),
-          '!l' => l('Access control', "admin/content/node-type/{$this->getComponent()}/access"),
+          '!l' => l('Access control', "admin/structure/types/manage/{$this->getComponent()}/access"),
         ));
       }
     }
