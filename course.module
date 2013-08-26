@@ -2609,6 +2609,14 @@ function course_theme() {
         'items' => NULL,
       ),
     ),
+    'course_outline_item' => array(
+      'file' => 'includes/course.theme.inc',
+      'variables' => array(
+        'step' => NULL,
+        'img' => NULL,
+        'object' => NULL,
+      ),
+    ),
   );
 }
 
