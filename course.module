@@ -2376,7 +2376,7 @@ function course_enroll_access($node, $user = NULL, $flush = FALSE, $all = FALSE)
 function course_course_access($op, $node, $user) {
   if ($op == 'enroll') {
     if (!node_access('view', $node)) {
-      return array(array(
+      return array('course_denied' => array(
           'success' => FALSE,
           'header' => t('Access denied'),
           'message' => t('You do not have permission to enroll into this course'),
@@ -2384,7 +2384,7 @@ function course_course_access($op, $node, $user) {
     }
 
     if (!empty($node->course['open']) && REQUEST_TIME < $node->course['open']) {
-      return array(array(
+      return array('course_notopen' => array(
           'success' => FALSE,
           'header' => t('Course not open'),
           'message' => t('This course opens on %date.', array(
@@ -2394,7 +2394,7 @@ function course_course_access($op, $node, $user) {
     }
 
     if (!empty($node->course['close']) && REQUEST_TIME > $node->course['close']) {
-      return array(array(
+      return array('course_closed' => array(
           'success' => FALSE,
           'header' => t('Course closed'),
           'message' => t('This course closed on %date and is no longer available for enrollments.', array(
