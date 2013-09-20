@@ -14,7 +14,10 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
       $course = course_get_course($node, $user);
       // Viewing a course product.
       if ($node->sell_price > 0 && !course_uc_check_purchased($user->uid, $node->uid) && !course_uc_payment_is_first($course)) {
-        // Has a price, not purchased, not the first object. Show cart button.
+        // Has a price, not purchased, not the first object.
+        if (arg(2) != 'takecourse') {
+          $form['actions']['submit']['#access'] = FALSE;
+        }
       }
       else if (course_enrollment_check($node->nid, $user->uid) || (!($node->sell_price > 0) && variable_get('course_access_bypass_checkout', 1))) {
         // User already enrolled, or course is free and bypass is enabled.
