@@ -402,7 +402,7 @@ function course_uc_course_access($op, $node, $user) {
       return array('course_must_purchase' => array(
           'success' => FALSE,
           'header' => 'Payment required',
-          'message' => 'You must first purchase this course.',
+          'message' => 'You must purchase this course.',
         ),
       );
     }

@@ -13,12 +13,18 @@ class CourseObjectUbercart extends CourseObjectNode {
     return 'content';
   }
 
+  /**
+   * Display the add to cart button, or a message that it was already purchased.
+   *
+   * Implementing classes should override me if a custom display is desired.
+   */
   function take() {
     if ($this->getFulfillment()->isComplete()) {
       return "You've already purchased this activity.";
     }
     else {
-      $atc = drupal_render(drupal_get_form('uc_product_add_to_cart_form', $this->node));
+      $node_view = node_view($this->node);
+      $atc = t('You must purchase this course before proceeding.') . drupal_render($node_view['display_price']) . drupal_render($node_view['add_to_cart']);
       if (!$atc) {
         // The add to cart form was hidden?
         return "Something isn't right...";
