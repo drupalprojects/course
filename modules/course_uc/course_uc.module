@@ -13,7 +13,10 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
     if (course_node_is_course($node)) {
       $course = course_get_course($node, $user);
       // Viewing a course product.
-      if (course_enrollment_check($node->nid, $user->uid) || (!($node->sell_price > 0) && variable_get('course_access_bypass_checkout', 1))) {
+      if ($node->sell_price > 0 && !course_uc_check_purchased($user->uid, $node->uid) && !course_uc_payment_is_first($course)) {
+        // Has a price, not purchased, not the first object. Show cart button.
+      }
+      else if (course_enrollment_check($node->nid, $user->uid) || (!($node->sell_price > 0) && variable_get('course_access_bypass_checkout', 1))) {
         // User already enrolled, or course is free and bypass is enabled.
         $form['actions']['submit']['#access'] = FALSE;
       }
@@ -158,12 +161,28 @@ function course_uc_init() {
  * Satisfy payment requirement when manually enrolled.
  */
 function course_uc_course_enroll($node, $user) {
-  $course = course_get_course($node, $user);
-  foreach ($course->getObjects() as $idx => $courseObject) {
-    if ($idx == 0 && $courseObject->getComponent() == 'payment') {
+  $course = course_get_course($node);
+  if (course_uc_payment_is_first($course)) {
+    foreach ($course->getObjects() as $courseObject) {
       $courseObject->getFulfillment()->setComplete(TRUE)->save();
+      break;
     }
   }
+}
+
+/**
+ * Check if the payment object in a course is the first object.
+ *
+ * @return bool
+ */
+function course_uc_payment_is_first($course) {
+  foreach ($course->getObjects() as $idx => $courseObject) {
+    if ($idx == 0 && $courseObject->getComponent() == 'payment') {
+      return TRUE;
+    }
+  }
+
+  return FALSE;
 }
 
 /**

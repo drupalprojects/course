@@ -114,7 +114,6 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $account = $this->drupalCreateUser();
     $this->drupalLogin($account);
 
-
     // Default behavior is that add to cart does not show up on a $0 course.
     $this->drupalGet("node/$courseNode->nid");
     $this->assertNoRaw(t('Add to cart'));
@@ -124,5 +123,4 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $this->drupalGet("node/$courseNode->nid");
     $this->assertRaw(t('Add to cart'));
   }
-
 }
