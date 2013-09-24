@@ -15,7 +15,7 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
       // Viewing a course product.
       if ($node->sell_price > 0 && !course_uc_check_purchased($user->uid, $node->uid) && !course_uc_payment_is_first($course)) {
         // Has a price, not purchased, not the first object.
-        if (arg(2) != 'takecourse') {
+        if (arg(2) != 'course-object') {
           $form['actions']['submit']['#access'] = FALSE;
         }
       }
