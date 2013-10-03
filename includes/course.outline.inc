@@ -435,9 +435,6 @@ function course_outline_list($node) {
     $step['status'] = '';
 
     if (!$courseObject->access('see')) {
-      if ($status = $courseObject->getStatus()) {
-        drupal_set_message(filter_xss($status), 'info');
-      }
       continue;
     }
     if ($courseObject->access('take')) {
@@ -550,17 +547,12 @@ function course_outline_show_complete_links($course_node) {
       $status_css = $req->isComplete() ? 'complete' : 'incomplete';
       $status_img = $req->isComplete() ? 'ok' : ($req->getCourseObject()->isRequired() ? 'error' : 'warning');
       $status_optional = ($status_img == 'warning') ? ' (optional)' : '';
-      $options = $req->getCourseObject()->getOptions();
-      $grade = $req->getCourseObject()->isGraded() ? ' - ' . t('Your grade: %grade_result%, Pass grade: %passing_grade%', array(
-          '%grade_result' => $req->getGrade(),
-          '%passing_grade' => $options['passing_grade'],
-        )) : '';
       $items[] = array(
         array(
           'data' => theme('image', array('path' => "misc/watchdog-{$status_img}.png", 'width' => '', 'height' => '', 'alt' => $status_css)),
           'width' => 20,
         ),
-        $req->getCourseObject()->getTitle() . $status_optional . $grade,
+        $req->getCourseObject()->getTitle() . $status_optional . '<br/>' . $req->getCourseObject()->getStatus(),
       );
     }
     $reqs_txt = theme('table', array('header' => NULL, 'rows' => $items));

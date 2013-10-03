@@ -147,4 +147,15 @@ class CourseObjectQuiz extends CourseObjectNode {
     return $summary;
   }
 
+  /**
+   * Get the status of this quiz for the requirements list.
+   */
+  function getStatus() {
+    $grade = $this->isGraded() ? t('Your grade: %grade_result%<br/>Pass grade: %passing_grade%', array(
+        '%grade_result' => $this->getFulfillment()->getOption('grade_result'),
+        '%passing_grade' => $this->getOption('passing_grade'),
+      )) : '';
+    return $grade;
+  }
+
 }
