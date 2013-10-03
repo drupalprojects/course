@@ -297,33 +297,38 @@ function course_uc_enroll_user_in_ordered_courses($order) {
 }
 
 /**
- * Implements hook_token_list().
+ * Implements hook_token_info().
  */
-function course_uc_token_list($type = 'all') {
+function course_uc_token_info() {
   $tokens = array();
 
-  if ($type == 'order') {
-    $tokens['order']['course-products-header'] = t('Text to show if there are course products in the cart.');
-    $tokens['order']['course-products'] = t('A link to the course products.');
-  }
+  $tokens['course-products-header'] = array(
+    'name' => t('Course products header'),
+    'description' => t('Text to show if there are course products in the cart.'),
+  );
 
-  return $tokens;
+  $tokens['course-products'] = array(
+    'name' => t('Course products links'),
+    'description' => t('A link to the course products.'),
+  );
+
+  return array('tokens' => array('uc_order' => $tokens));
 }
 
 /**
  * Implements hook_token_values().
  */
-function course_uc_token_values($type, $object = NULL, $options = array()) {
-  $values = array();
+function course_uc_tokens($type, $tokens, array $data = array(), array $options = array()) {
 
-  if ($type == 'order') {
+  if ($type == 'uc_order') {
+    $object = $data['uc_order'];
+
     foreach ($object->products as $product) {
       $node = node_load($product->nid);
       if (course_node_is_course($node)) {
         $line = $node->title . ' - ' . l('View course page', "node/{$node->nid}");
-        // @todo should we be using a menu access callback like this? Why not
-        // use course_take_course_access() instead?
-        if (course_node_is_course($node) && course_take_course_menu_access($node)) {
+        $result = course_take_course_access($node, NULL, TRUE);
+        if (course_node_is_course($node) && $result['success']) {
           $line .= ' or ' . l('Take course now', "node/{$node->nid}/takecourse");
         }
         $courses[] = $line;
@@ -333,12 +338,23 @@ function course_uc_token_values($type, $object = NULL, $options = array()) {
     }
     if ($show_header) {
       $values['course-products-header'] = t("Here are the courses you have purchased:");
+      $values['course-products'] = theme('item_list', array('items' => $courses));
     }
-    $values['course-products'] = theme('item_list', array('items' => $courses));
-    $values['all-products'] = theme('item_list', array('items' => $items));
+
+  $replacements = array();
+  foreach ($tokens as $name => $original) {
+    switch ($name) {
+      case 'course-products-header':
+        $replacements[$original] = $values['course-products-header'];
+        break;
+      case 'course-products':
+        $replacements[$original] = $values['course-products'];
+        break;
+    }
   }
 
-  return $values;
+  return $replacements;
+  }
 }
 
 /**
