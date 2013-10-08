@@ -990,7 +990,7 @@ function course_render_button($node) {
  * Generate a button for taking the course.
  */
 function course_take_course_button_html(&$node) {
-  $link = l(t('Take course'), "node/{$node->nid}/takecourse", array('attributes' => array('class' => array('course-take-course-link'))));
+  $link = '<div class="course-take-course-link-wrapper">' . l(t('Take course'), "node/{$node->nid}/takecourse", array('attributes' => array('class' => array('course-take-course-link')))) . '</div>';
   return $link;
 }
 
