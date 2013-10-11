@@ -1828,7 +1828,6 @@ function course_token_info() {
   $info['types']['course-report'] = array(
     'name' => t('Course report'),
     'description' => t('Course report entry'),
-    'needs-data' => 'node',
   );
 
   // Tokens
@@ -1843,12 +1842,6 @@ function course_token_info() {
     'name' => t('Course'),
     'description' => t('The course of the node.'),
     'type' => 'course',
-  );
-
-  $info['tokens']['node']['course-report'] = array(
-    'name' => t('Course report'),
-    'description' => t('The course report if passed a user'),
-    'type' => 'course-report',
   );
 
   foreach ($schema['course_report']['fields'] as $key => $value) {
@@ -1885,15 +1878,14 @@ function course_tokens($type, $tokens, array $data = array(), array $options = a
     // Node and user context, we can lookup the user's records.
     if ($report = course_report_load($data['node'], $data['user'])) {
       $report->data = unserialize($report->data);
-      $report_tokens = token_find_with_prefix($tokens, 'course-report');
-      foreach ($report_tokens as $name => $original) {
+      foreach ($tokens as $name => $original) {
         // Handle date formats
         if ((strpos($name, 'date_completed') === 0 || strpos($name, 'updated') === 0) && strpos($name, ':') !== FALSE) {
           $name_parsed = explode(':', $name, 3);
-          $replacements[$original] = format_date($report->$name_parsed[0], $name_parsed[1], $name_parsed[1] == 'custom' && count($name_parsed) == 3 ? $name_parsed[2] : '');
+          $replacements[$tokens[$name]] = format_date($report->$name_parsed[0], $name_parsed[1], $name_parsed[1] == 'custom' && count($name_parsed) == 3 ? $name_parsed[2] : '');
         }
         else {
-          $replacements[$original] = $report->$name;
+          $replacements[$tokens[$name]] = $report->$name;
         }
       }
     }
