@@ -1864,17 +1864,17 @@ function course_token_info() {
 function course_tokens($type, $tokens, array $data = array(), array $options = array()) {
   $replacements = array();
 
-  $course_tokens = token_find_with_prefix($tokens, 'course');
 
   if ($type == 'node' && !empty($data['node'])) {
+    $course_tokens = token_find_with_prefix($tokens, 'course');
     $node = $data['node'];
 
     foreach ($course_tokens as $name => $original) {
-      $replacements[$original] = $node->course[$name];
+      $replacements[$course_tokens[$name]] = $node->course[$name];
     }
   }
 
-  if (!empty($data['node']) && course_node_is_course($data['node']) && !empty($data['user'])) {
+  if ($type == 'course-report' && !empty($data['node']) && course_node_is_course($data['node']) && !empty($data['user'])) {
     // Node and user context, we can lookup the user's records.
     if ($report = course_report_load($data['node'], $data['user'])) {
       $report->data = unserialize($report->data);
