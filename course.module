@@ -1865,7 +1865,7 @@ function course_tokens($type, $tokens, array $data = array(), array $options = a
   $replacements = array();
 
 
-  if ($type == 'node' && !empty($data['node'])) {
+  if ($type == 'node' && !empty($data['node']) && course_node_is_course($data['node'])) {
     $course_tokens = token_find_with_prefix($tokens, 'course');
     $node = $data['node'];
 
