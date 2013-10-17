@@ -2412,8 +2412,7 @@ function course_course_access($op, $node, $user) {
             '!login' => l(t('login'), 'user/login'),
             '!register' => l(t('register'), 'user/register'),
           )),
-
-        'weight' => 300,
+          'weight' => 300,
       ));
     }
   }
@@ -2881,8 +2880,7 @@ function course_entity_info() {
   return array(
     'course_enrollment' => array(
       'label' => t('Course enrollment'),
-      // Not yet.
-      //'controller class' => 'CourseEnrollment',
+      'controller class' => 'EntityAPIController',
       'base table' => 'course_enrollment',
       'load hook' => 'course_enrollment_load',
       'uri callback' => 'course_enrollment_uri',
@@ -2891,11 +2889,11 @@ function course_entity_info() {
         'id' => 'eid',
       ),
       'label callback' => 'course_enrollment_label',
+      'views controller class' => 'EntityDefaultViewsController',
     ),
     'course_report' => array(
       'label' => t('Course report'),
-      // Not yet.
-      //'controller class' => 'CourseReport',
+      'controller class' => 'EntityAPIController',
       'base table' => 'course_report',
       'load hook' => 'course_report_load',
       'uri callback' => 'course_report_uri',
@@ -2904,8 +2902,81 @@ function course_entity_info() {
         'id' => 'crid',
       ),
       'label callback' => 'course_report_label',
+      'views controller class' => 'EntityDefaultViewsController',
+    ),
+    'course_object' => array(
+      'label' => t('Course object'),
+      'controller class' => 'EntityAPIController',
+      'base table' => 'course_outline',
+      'load hook' => 'course_object_load',
+      'uri callback' => 'course_object_uri',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'coid',
+      ),
+      'label callback' => 'course_object_label',
+      'views controller class' => 'EntityDefaultViewsController',
+    ),
+    'course_object_fulfillment' => array(
+      'label' => t('Course object fulfillment'),
+      'controller class' => 'EntityAPIController',
+      'base table' => 'course_outline_fulfillment',
+      'load hook' => 'course_object_fulfillment_load',
+      'uri callback' => 'course_object_fulfillment_uri',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'cofid',
+      ),
+      'label callback' => 'course_object_fulfillment_label',
+      'views controller class' => 'EntityDefaultViewsController',
+    ),
+    'course' => array(
+      'label' => t('Course'),
+      'controller class' => 'EntityAPIController',
+      'base table' => 'course_node',
+      'load hook' => 'course_load',
+      'uri callback' => 'course_uri',
+      'fieldable' => FALSE,
+      'entity keys' => array(
+        'id' => 'nid',
+      ),
+      'label callback' => 'course_label',
+      'views controller class' => 'EntityDefaultViewsController',
     ),
   );
+}
+
+/**
+ * Implements hook_entity_property_info_alter().
+ *
+ * Define our special schema fields and relationships.
+ */
+function course_entity_property_info_alter(&$info) {
+  $info['course']['properties']['close']['type'] = 'date';
+  $info['course']['properties']['nid']['type'] = 'node';
+  $info['course']['properties']['open']['type'] = 'date';
+
+  $info['course_enrollment']['properties']['created']['type'] = 'date';
+  $info['course_enrollment']['properties']['enroll_end']['type'] = 'date';
+  $info['course_enrollment']['properties']['nid']['type'] = 'node';
+  $info['course_enrollment']['properties']['timestamp']['type'] = 'date';
+  $info['course_enrollment']['properties']['uid']['type'] = 'user';
+
+  $info['course_object']['properties']['duration']['type'] = 'duration';
+  $info['course_object']['properties']['enabled']['type'] = 'boolean';
+  $info['course_object']['properties']['hidden']['type'] = 'boolean';
+  $info['course_object']['properties']['nid']['type'] = 'node';
+  $info['course_object']['properties']['required']['type'] = 'boolean';
+
+  $info['course_object_fulfillment']['properties']['coid']['type'] = 'course_outline';
+  $info['course_object_fulfillment']['properties']['complete']['type'] = 'boolean';
+  $info['course_object_fulfillment']['properties']['date_completed']['type'] = 'date';
+  $info['course_object_fulfillment']['properties']['date_started']['type'] = 'date';
+  $info['course_object_fulfillment']['properties']['uid']['type'] = 'user';
+
+  $info['course_report']['properties']['date_completed']['type'] = 'date';
+  $info['course_report']['properties']['nid']['type'] = 'node';
+  $info['course_report']['properties']['uid']['type'] = 'user';
 }
 
 /**
