@@ -9,11 +9,7 @@ class CourseObjectQuiz extends CourseObjectNode {
     $quiz = new stdClass;
     $quiz->auto_created = TRUE;
     $quiz->type = 'quiz';
-    $quiz->title = $this->getTitle();
-    $quiz->uid = $this->user->uid;
-    node_object_prepare($quiz);
-    node_save($quiz);
-    $this->setNode($quiz);
+    parent::create($quiz);
   }
 
   /**

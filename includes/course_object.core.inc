@@ -1093,11 +1093,21 @@ abstract class CourseObjectNode extends CourseObject {
     }
   }
 
-  public function create() {
-    $node = new stdClass;
-    $node->type = $this->getOption('node_type');
+  /**
+   * Create a node and set it as this course object's node.
+   *
+   * @param stdClass $node
+   *   A node to be processed for creation, or none to create a generic node. If
+   *   a node is provided, it must have at least a type.
+   */
+  public function create($node = NULL) {
+    if (!$node) {
+      $node = new stdClass;
+      $node->type = $this->getOption('node_type');
+    }
     $node->title = $this->getTitle();
     $node->uid = $this->user->uid;
+    $node->language = LANGUAGE_NONE;
     node_object_prepare($node);
     node_save($node);
     $this->setNode($node);
