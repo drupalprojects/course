@@ -1436,14 +1436,14 @@ function course_take_course($node) {
     foreach ($handlers as $module => $outline_handlers) {
       if ($outline_handlers) {
         foreach ($outline_handlers as $key2 => $outline_handler) {
-          if ($key == $key2) {
+          if ($key == $key2 && !empty($outline_handler['callback'])) {
             $callback = $outline_handler['callback'];
           }
         }
       }
     }
 
-    if (function_exists($callback)) {
+    if (!empty($callback) && function_exists($callback)) {
       $outline = $callback($node, $user);
     }
     else {
