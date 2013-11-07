@@ -985,19 +985,11 @@ function course_render_button($node) {
 
   if ($access['success']) {
     // User can self-enroll and take the course. Show the button.
-    return course_take_course_button_html($node);
+    return theme('course_take_course_button', array('node' => $node));
   }
   else {
     return "<h2>" . $access['header'] . "</h2>" . $access['message'];
   }
-}
-
-/**
- * Generate a button for taking the course.
- */
-function course_take_course_button_html(&$node) {
-  $link = '<div class="course-take-course-link-wrapper">' . l(t('Take course'), "node/{$node->nid}/takecourse", array('attributes' => array('class' => array('course-take-course-link')))) . '</div>';
-  return $link;
 }
 
 /**
@@ -2625,6 +2617,12 @@ function course_theme() {
         'step' => NULL,
         'img' => NULL,
         'object' => NULL,
+      ),
+    ),
+    'course_take_course_button' => array(
+      'file' => 'includes/course.theme.inc',
+      'variables' => array(
+        'node' => NULL,
       ),
     ),
   );
