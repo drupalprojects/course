@@ -38,7 +38,6 @@ Getting started
             them
           + course_poll - Poll requirement
           + course_quiz - Graded Quiz object
-          + course_scorm - Exposes CCK Scorm Field as Course objects
           + course_webform - Webform submission requirement
     2. Set up the "Course outline" block at admin/build/blocks
     3. Go to Create content -> Course
