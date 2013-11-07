@@ -58,6 +58,9 @@ function course_quiz_quiz_finished($quiz, $score, $session_data) {
  */
 function course_quiz_quiz_scored($quiz, $score, $rid) {
   if ($score['is_evaluated']) {
-    course_quiz_quiz_finished($quiz, $score, $rid);
+    $session_data = array(
+      'result_id' => $rid,
+    );
+    course_quiz_quiz_finished($quiz, $score, $session_data);
   }
 }
