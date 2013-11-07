@@ -275,7 +275,7 @@ function course_signup_course_handlers() {
  * @todo, find a better way? looking at you, @see signup_mark_attended_action
  */
 function course_signup_watchdog($watchdog) {
-  if (strpos($watchdog['message'], 'Marked signup') !== FALSE) {
+  if (preg_match('/Marked signup @signup_id attended./', $watchdog['message'])) {
     $sid = reset($watchdog['variables']);
     $signup = signup_load_signup($sid);
     $account = user_load($signup->uid);
