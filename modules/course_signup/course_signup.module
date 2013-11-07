@@ -24,7 +24,7 @@ function course_signup_admin($form, &$form_state) {
 function course_signup_menu() {
   $items = array();
 
-  $items['admin/config/course/signup'] = array(
+  $items['admin/course/signup'] = array(
     'access arguments' => array('administer courses'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_signup_admin'),

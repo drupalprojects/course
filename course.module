@@ -18,7 +18,7 @@ function course_menu() {
   $items = array();
 
   // Base configuration.
-  $items['admin/config/course'] = array(
+  $items['admin/course'] = array(
     'title' => 'Course',
     'description' => 'Configure courses.',
     'page callback' => 'drupal_get_form',
@@ -28,7 +28,7 @@ function course_menu() {
   );
 
   // Default tab for settings.
-  $items['admin/config/course/overview'] = array(
+  $items['admin/course/overview'] = array(
     'title' => 'Overview',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
@@ -83,10 +83,10 @@ function course_menu() {
     $package_info = $handlers[$packages[$package_key]];
 
     // Define a path for the handler's specified package.
-    $package_router = "admin/config/course/{$package_key}";
+    $package_router = "admin/course/{$package_key}";
 
     // Define a path for the handler.
-    $handler_router = "admin/config/course/{$package_key}/{$module_handler_key}";
+    $handler_router = "admin/course/{$package_key}/{$module_handler_key}";
 
     // Add the handler item, either as the default page content
     // (MENU_NORMAL_ITEM will work with the MENU_DEFAULT_LOCAL_TASK below)
@@ -285,10 +285,16 @@ function course_course_handlers() {
         'callback' => 'course_settings_appearance_form',
         'file' => $settings,
       ),
-      'user_types' => array(
-        'name' => t('User types'),
-        'description' => t('Configure course user types.'),
-        'callback' => 'course_user_type_settings_form',
+      'course_enrollment' => array(
+        'name' => t('Enrollments'),
+        'description' => t('Configure enrollments.'),
+        'callback' => 'course_enrollment_settings_form',
+        'file' => $settings,
+      ),
+      'course_report' => array(
+        'name' => t('Course report'),
+        'description' => t('Configure course reporting.'),
+        'callback' => 'course_report_settings_form',
         'file' => $settings,
       ),
     ),
@@ -1149,33 +1155,33 @@ function course_enrollment_load($nid, $uid = NULL) {
   }
 
   if (is_null($uid)) {
-    $sql = "SELECT * FROM {course_enrollment} WHERE eid = %d";
-    return db_query("SELECT * FROM {course_enrollment} WHERE eid = :eid", array(':eid' => $nid))->fetch();
+    $enrollments = course_enrollment_load_multiple(array($nid));
+    return $enrollments[$nid];
   }
 
   if (is_object($uid)) {
     $uid = $uid->uid;
   }
 
-  $sql = "SELECT * FROM {course_enrollment} WHERE nid = %d AND uid = %d";
-  return db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $nid, ':uid' => $uid))->fetch();
+  if ($enrollment = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $nid, ':uid' => $uid))->fetch()) {
+    $enrollments[$enrollment->eid] = $enrollment;
+    return $enrollments[$enrollment->eid];
+  }
+
+  return FALSE;
 }
 
 /**
- * Implements hook_enable().
- *
- * Insert course as product and add admin theme to course settings.
+ * Load multiple enrollments from enrollment IDs.
  */
-function course_enable() {
-  // Add course settings to admin theme.
-  $paths = variable_get('admin_theme_path', '');
-  if (strpos($paths, 'coursesettings') === FALSE) {
-    $paths .= "\n*/coursesettings";
-    variable_set('admin_theme_path', $paths);
+function course_enrollment_load_multiple(array $eids) {
+  $enrollments = array();
+  $sql = "SELECT * FROM {course_enrollment} WHERE eid IN (:eids)";
+  $result = db_query($sql, array(':eids' => $eids));
+  while ($row = $result->fetch()) {
+    $enrollments[$row->eid] = $row;
   }
-
-  // Flush autoload caches.
-  //autoload_flush_caches();
+  return $enrollments;
 }
 
 /**
@@ -2578,6 +2584,19 @@ function course_report_load($mixed, $user = NULL) {
 }
 
 /**
+ * Load multiple course reports by ID.
+ */
+function course_report_load_multiple(array $crids) {
+  $course_reports = array();
+  $sql = "SELECT * FROM {course_report} WHERE crid in (:crids)";
+  $result = db_query($sql, $crids);
+  while ($row = $result->fetch()) {
+    $course_reports[$row->crid] = $row;
+  }
+  return $course_reports;
+}
+
+/**
  * Implements hook_theme().
  */
 function course_theme() {
@@ -3019,10 +3038,15 @@ function course_course_enroll($node, $user, $from) {
 /**
  * Enrollment entity label callback.
  */
-function course_enrollment_label($enrollment) {
-  $node = node_load($enrollment->nid);
-  $account = user_load($enrollment->uid);
-  return t("@username's enrollment in @title", array('@username' => $account->name, '@title' => $node->title));
+function course_enrollment_label($enrollment, $entity_type) {
+  if ($enrollment) {
+    $node = node_load($enrollment->nid);
+    $account = user_load($enrollment->uid);
+    return t("@username's enrollment in @title", array('@username' => $account->name, '@title' => $node->title));
+  }
+  else {
+    return t('Enrollment');
+  }
 }
 
 /**
