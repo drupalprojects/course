@@ -155,25 +155,23 @@ class CourseObjectQuiz extends CourseObjectNode {
   }
 
   /**
-   * If this question is part of a quiz in a course, what instance do we look
-   * for?
+   * If this question is part of a quiz in a course, what quizzes do we belong
+   * to?
    */
-  public static function getNodeContexts($node) {
+  public static function getObjectInstances($node) {
     $quizzes = array($node->nid);
 
     // Finding quizzes this question already belongs to.
     $sql = 'SELECT n.nid, r.parent_vid AS vid, n.title FROM {quiz_node_relationship} r
-                JOIN {node} n ON n.nid = r.parent_nid
-                WHERE r.child_vid = :child_vid
-                ORDER BY r.parent_vid DESC';
+            JOIN {node} n ON n.nid = r.parent_nid
+            WHERE r.child_vid = :child_vid
+            ORDER BY r.parent_vid DESC';
     $res = db_query($sql, array(':child_vid' => $node->vid));
     while ($row = $res->fetch()) {
       $quizzes[] = $row->nid;
     }
 
-    return array(
-      'object_type' => 'quiz',
-      'instance' => $quizzes,
-    );
+    return $quizzes;
   }
+
 }

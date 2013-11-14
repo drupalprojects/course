@@ -120,14 +120,13 @@ class CourseObjectBook extends CourseObjectNode {
   }
 
   /**
-   * If this book page is part of a book in a course, what instance do we look
-   * for?
+   * If this book page is part of a book in a course, what parent books do we
+   * belong to?
    */
-  public static function getNodeContexts($node) {
-    return array(
-      'object_type' => 'book',
-      'instance' => array($node->nid, $node->book['bid']),
-    );
+  public static function getObjectInstances($node) {
+    if (!empty($node->book['bid'])) {
+      return array($node->book['bid']);
+    }
   }
 
 }

@@ -1351,19 +1351,8 @@ abstract class CourseObjectNode extends CourseObject {
   /**
    * Find other instances (node IDs) that are related to this instance.
    */
-  public static function getNodeInstances($node) {
-    foreach ($handlers as $module => $object) {
-      foreach ($object as $key => $info) {
-        if (is_subclass_of($info['class'], 'CourseObjectNode')) {
-          // This module provides an object of type CourseObjectNode.
-          $modules[] = $module;
-        }
-      }
-    }
-
-    $sql = "SELECT nid FROM {course_outline} WHERE instance = :nid AND module in (:modules)";
-    $result = db_query($sql, $nid, $modules);
-
+  public static function getObjectInstances($node) {
+    return array($node->nid);
   }
 
 }
