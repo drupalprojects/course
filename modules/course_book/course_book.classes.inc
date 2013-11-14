@@ -119,4 +119,15 @@ class CourseObjectBook extends CourseObjectNode {
     return t('%title will only clone the first page.', array('%title' => $this->getTitle()));
   }
 
+  /**
+   * If this book page is part of a book in a course, what instance do we look
+   * for?
+   */
+  public static function getNodeContexts($node) {
+    return array(
+      'object_type' => 'book',
+      'instance' => array($node->nid, $node->book['bid']),
+    );
+  }
+
 }
