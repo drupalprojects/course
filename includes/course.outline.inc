@@ -472,6 +472,12 @@ function course_outline_list($node) {
       $step['status'] = implode('<br/>', $courseObject->getAccessMessages());
     }
 
+    if ($courseObject->isRequired()) {
+      $step['class'][] = 'required';
+    }
+
+    $step['class'][] = drupal_html_class($courseObject->getComponent() . '_' . $courseObject->getModule());
+
     $img = theme('image', array('path' => $step['image']));
 
     $data = theme('course_outline_item', array('step' => $step, 'img' => $img, 'object' => $courseObject));
