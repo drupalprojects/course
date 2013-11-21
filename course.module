@@ -194,7 +194,7 @@ function course_menu() {
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'course_object_reports_page',
     'page arguments' => array(1),
-    'access arguments' => array('access course reports'),
+    'access arguments' => array('access all course reports'),
     'file' => 'includes/course.reports.inc',
   );
 
