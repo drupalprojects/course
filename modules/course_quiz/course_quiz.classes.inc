@@ -84,11 +84,16 @@ class CourseObjectQuiz extends CourseObjectNode {
   }
 
   public function getReports() {
-    return array(
-      'results' => array(
-        'title' => t('Results'),
-      ),
+    $reports = array();
+    $reports['results'] = array(
+      'title' => t('Results'),
     );
+    if (module_exists('quiz_stats')) {
+      $reports['statistics'] = array(
+        'title' => t('Statistics'),
+      );
+    }
+    return $reports;
   }
 
   public function getReport($key) {
@@ -98,6 +103,12 @@ class CourseObjectQuiz extends CourseObjectNode {
         return array(
           'title' => t('Quiz results'),
           'content' => drupal_render(drupal_get_form('quiz_results_manage_results_form', $this->node)),
+        );
+      case 'statistics':
+        module_load_include('inc', 'quiz_stats', 'quiz_stats.admin');
+        return array(
+          'title' => t('Quiz statistics'),
+          'content' => quiz_stats_get_adv_stats($this->node->vid),
         );
     }
   }
