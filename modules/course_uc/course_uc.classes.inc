@@ -57,7 +57,7 @@ class CourseObjectUbercart extends CourseObjectNode {
   /**
    * Don't create new products.
    */
-  public function create() {
+  public function create($node = NULL) {
     if (!$this->getInstanceId()) {
       $this->setOption('instance', $this->getCourseNid());
     }

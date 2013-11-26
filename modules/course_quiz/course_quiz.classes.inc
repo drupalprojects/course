@@ -5,7 +5,7 @@ class CourseObjectQuiz extends CourseObjectNode {
   /**
    * Create the quiz node and set it as this object's instance.
    */
-  function create() {
+  function create($node = NULL) {
     $quiz = new stdClass;
     $quiz->auto_created = TRUE;
     $quiz->type = 'quiz';

@@ -9,7 +9,7 @@ class CourseObjectSignup extends CourseObjectNode {
     return TRUE;
   }
 
-  public function create() {
+  public function create($node = NULL) {
     if (!$this->getOption('instance')) {
       $this->setOption('instance', $this->getCourseNid());
     }

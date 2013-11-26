@@ -5,7 +5,7 @@
  */
 class CourseObjectWebform extends CourseObjectNode {
 
-  public function create() {
+  public function create($node = NULL) {
     $webform = new stdClass;
     $webform->type = 'webform';
     $webform->title = $this->getTitle();

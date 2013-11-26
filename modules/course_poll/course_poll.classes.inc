@@ -17,7 +17,7 @@ class CourseObjectPoll extends CourseObjectNode {
     return drupal_render($this->node->content);
   }
 
-  public function create() {
+  public function create($node = NULL) {
     $poll = new stdClass;
     $poll->choice = array(
       array(
