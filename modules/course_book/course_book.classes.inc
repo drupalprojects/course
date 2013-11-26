@@ -14,7 +14,7 @@ class CourseObjectBook extends CourseObjectNode {
   /**
    * Make the book.
    */
-  public function create() {
+  public function create($node = NULL) {
     $node = new stdClass;
     $node->type = $this->getOption('node_type');
     $node->title = $this->getTitle();
