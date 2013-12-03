@@ -988,7 +988,7 @@ function course_render_button($node) {
     return theme('course_take_course_button', array('node' => $node));
   }
   else {
-    return "<h2>" . $access['header'] . "</h2>" . $access['message'];
+    return '<div class="course-restriction">' . "<h2>" . $access['header'] . "</h2>" . '<div class="course-restriction-message">' . $access['message'] . '</div></div>';
   }
 }
 
