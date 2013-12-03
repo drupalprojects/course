@@ -366,3 +366,12 @@ function course_signup_form_alter(&$form, &$form_state, $form_id) {
     }
   }
 }
+
+/**
+ * Implements hook_signup_suppress().
+ */
+function course_signup_signup_suppress($node) {
+  if (course_node_is_course($node) && user_is_anonymous()) {
+    return TRUE;
+  }
+}
