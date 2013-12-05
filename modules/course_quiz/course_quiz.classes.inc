@@ -166,10 +166,12 @@ class CourseObjectQuiz extends CourseObjectNode {
   }
 
   /**
+   * Course node context handler callback.
+   *
    * If this question is part of a quiz in a course, what quizzes do we belong
    * to?
    */
-  public static function getObjectInstances($node) {
+  public static function getNodeInstances($node) {
     $quizzes = array($node->nid);
 
     // Finding quizzes this question already belongs to.

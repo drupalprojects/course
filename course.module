@@ -2173,22 +2173,12 @@ function course_init() {
   if (!$courseNode = course_get_context()) {
     // Set course context for all modules that define course context handlers.
     // @see hook_course_handlers().
-    $modules = course_get_handlers('context');
+    $modules = course_get_handlers('object');
     foreach ($modules as $module => $handlers) {
       if (is_array($handlers)) {
         foreach ($handlers as $handler) {
-          $callback = $handler['callback'];
-
-          // Calculate and include the file for each callback, if specified.
-          if (isset($handler['file'])) {
-            $file_path = isset($handler['file path']) ? $handler['file path'] : drupal_get_path('module', $module);
-            $include_file = $file_path . '/' . $handler['file'];
-            include_once DRUPAL_ROOT . '/' . $include_file;
-          }
-
           // We expect query parameters suitable for course_determine_context().
-          if (function_exists($callback)) {
-            $params = $callback();
+          if ($params = call_user_func(array($handler['class'], 'context'))) {
             if (is_array($params) && isset($params['object_type']) && isset($params['instance'])) {
               if ($courseNode = course_determine_context($module, $params['object_type'], $params['instance'])) {
                 course_set_context($courseNode);

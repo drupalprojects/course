@@ -1,20 +1,6 @@
 <?php
 
 /**
- * Course context handler callback.
- */
-function course_content_context() {
-  $node = node_load(arg(1));
-
-  if (isset($node->nid)) {
-    return array(
-      'object_type' => $node->type,
-      'instance' => $node->nid,
-    );
-  }
-}
-
-/**
  * Implements hook_course_handlers().
  */
 function course_content_course_handlers() {
@@ -32,13 +18,6 @@ function course_content_course_handlers() {
       );
     }
   }
-
-  // Set context handler.
-  $handlers['context'] = array(
-    'content' => array(
-      'callback' => 'course_content_context',
-    ),
-  );
 
   // Return the handlers array.
   return $handlers;

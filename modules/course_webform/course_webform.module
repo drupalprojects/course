@@ -1,20 +1,6 @@
 <?php
 
 /**
- * Course context handler callback.
- */
-function course_webform_context() {
-  $node = node_load(arg(1));
-
-  if (isset($node->nid) && $node->type == 'webform') {
-    return array(
-      'object_type' => 'webform',
-      'instance' => $node->nid,
-    );
-  }
-}
-
-/**
  * Implements hook_course_handlers().
  */
 function course_webform_course_handlers() {
@@ -24,20 +10,6 @@ function course_webform_course_handlers() {
         'name' => t('Webform'),
         'class' => 'CourseObjectWebform',
         'description' => t('A webform to be used in a course workflow.'),
-      ),
-    ),
-    /*
-    'settings' => array(
-      'webform' => array(
-        'name' => t('Webform'),
-        'description' => t('Course webform configurations.'),
-        'callback' => 'course_webform_settings',
-      ),
-    ),
-    */
-    'context' => array(
-      'webform' => array(
-        'callback' => 'course_webform_context',
       ),
     ),
   );

@@ -1,20 +1,6 @@
 <?php
 
 /**
- * Course context handler callback.
- */
-function course_quiz_context() {
-  $node = node_load(arg(1));
-
-  if (isset($node->nid) && $node->type == 'quiz') {
-    return array(
-      'object_type' => 'quiz',
-      'instance' => $node->nid,
-    );
-  }
-}
-
-/**
  * Implements hook_course_handlers().
  */
 function course_quiz_course_handlers() {
@@ -24,11 +10,6 @@ function course_quiz_course_handlers() {
         'name' => t('Quiz'),
         'class' => 'CourseObjectQuiz',
         'description' => t('A Quiz course object.'),
-      ),
-    ),
-    'context' => array(
-      'quiz' => array(
-        'callback' => 'course_quiz_context',
       ),
     ),
   );

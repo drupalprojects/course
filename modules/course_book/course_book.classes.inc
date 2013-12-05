@@ -2,6 +2,15 @@
 
 class CourseObjectBook extends CourseObjectNode {
 
+  /**
+   * Course node context handler callback.
+   */
+  public static function getNodeInstances($node) {
+    if (!empty($node->book['bid'])) {
+      return array($node->book['bid']);
+    }
+  }
+
   function getNodeTypes() {
     if (user_access('administer book outlines')) {
       return array_keys(node_type_get_names());
