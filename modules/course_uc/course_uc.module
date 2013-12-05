@@ -134,6 +134,25 @@ function course_uc_init() {
     // Turn off content profile on registration for ubercart account creations.
     $conf['content_profile_profile']['registration_use'] = 0;
   }
+
+  global $user;
+  $cart = uc_cart_get_contents();
+  foreach ($cart as $node) {
+    if (course_node_is_course($node)) {
+      $results = course_enroll_access($node, $user, FALSE, TRUE);
+      if (count($results) > 1) {
+        // There's always going to be one blocker, the purchase blocker.
+        unset($results['course_must_purchase']);
+        $result = reset($results);
+        db_query("DELETE FROM {uc_cart_products} WHERE nid = :nid and cart_id = :uid", array(':nid' => $node->nid, ':uid' => $user->uid));
+        uc_cart_get_contents(NULL, 'rebuild');
+        drupal_set_message(t('The activity "!title" was removed from your cart. !message', array(
+          '!title' => l($node->title, "node/$node->nid"),
+          '!message' => $result['message'],
+          )), 'warning');
+      }
+    }
+  }
 }
 
 /**
@@ -396,10 +415,12 @@ function course_uc_course_access($op, $node, $user) {
     }
 
     if ($must_purchase) {
+      // Run this blocker last, so we can still display date-based ones etc.
       return array('course_must_purchase' => array(
           'success' => FALSE,
           'header' => 'Payment required',
           'message' => 'You must purchase this course.',
+          'weight' => 1000,
         ),
       );
     }
