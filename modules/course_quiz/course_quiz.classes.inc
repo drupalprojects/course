@@ -172,7 +172,7 @@ class CourseObjectQuiz extends CourseObjectNode {
    * to?
    */
   public static function getNodeInstances($node) {
-    $quizzes = array($node->nid);
+    $quizzes = array();
 
     // Finding quizzes this question already belongs to.
     $sql = 'SELECT n.nid, r.parent_vid AS vid, n.title FROM {quiz_node_relationship} r

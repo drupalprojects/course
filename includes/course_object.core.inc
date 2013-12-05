@@ -1076,7 +1076,8 @@ abstract class CourseObjectNode extends CourseObject {
     $node = node_load(arg(1));
 
     // This node might not be in a course, so let's check for related nodes.
-    if ($instances = static::getNodeInstances($node)) {
+    $instances = static::getNodeInstances($node);
+    if (!empty($instances)) {
       $node = node_load($instances[0]);
     }
 
@@ -1096,7 +1097,7 @@ abstract class CourseObjectNode extends CourseObject {
    * IDs should be returned.
    */
   public static function getNodeInstances($node) {
-    return array($node->nid);
+    return array();
   }
 
   public function hasNodePrivacySupport() {
