@@ -1463,14 +1463,17 @@ function course_take_course($node) {
  */
 function course_enrollment_save($enrollment) {
   if ($enrollment->nid && $enrollment->uid) {
+    drupal_alter('course_enrollment', $enrollment);
     if (db_query('SELECT 1 FROM {course_enrollment} WHERE nid = :nid AND uid = :uid', array(':nid' => $enrollment->nid, ':uid' => $enrollment->uid))->fetchField()) {
       drupal_write_record('course_enrollment', $enrollment, array('nid', 'uid'));
+      module_invoke_all('course_enrollment_update', $enrollment);
     }
     else {
       if (!isset($enrollment->created) || $enrollment->created == 0) {
         $enrollment->created = REQUEST_TIME;
       }
       drupal_write_record('course_enrollment', $enrollment);
+      module_invoke_all('course_enrollment_update', $enrollment);
     }
   }
   else {
