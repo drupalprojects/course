@@ -1473,7 +1473,7 @@ function course_enrollment_save($enrollment) {
         $enrollment->created = REQUEST_TIME;
       }
       drupal_write_record('course_enrollment', $enrollment);
-      module_invoke_all('course_enrollment_update', $enrollment);
+      module_invoke_all('course_enrollment_insert', $enrollment);
     }
   }
   else {
