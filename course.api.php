@@ -13,7 +13,7 @@
  *
  * So for example
  *
- * hook_course_report_presave($course_report)
+ * hook_course_report_presave(&$course_report)
  * hook_course_object_fulfillment_insert($course_object_fulfillment)
  *
  * Enjoy :)
