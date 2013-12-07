@@ -3,7 +3,7 @@
 require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
 
 /**
- * Tests for Course enrollment
+ * Tests for Course context
  */
 class CourseContextTestCase extends CourseTestCase {
 
