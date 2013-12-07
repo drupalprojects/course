@@ -1019,6 +1019,7 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
     }
 
     // Notify modules about a course enrollment.
+    // @todo is this deprecated by hook_course_enrollment_insert()?
     module_invoke_all('course_enroll', $node, $account, $from, $code, $status);
     return $enrollment;
   }
@@ -1069,6 +1070,7 @@ function course_unenroll($node, $user) {
     }
 
     // Notify other modules after course unenrollment.
+    // @todo is this deprecated by hook_course_enrollment_delete()?
     module_invoke_all('course_unenroll', $node, $user);
     $watchdog_variables = array(
       '!uid' => $user->uid,
