@@ -366,12 +366,7 @@ class CourseReport extends CourseHandler {
 
     $this->setOption('nid', $this->course->getNode()->nid);
     $this->setOption('uid', $this->course->getUser()->uid);
-    // @todo is this deprecated by (entityapi's) hook_course_report_presave()?
-    module_invoke_all('course_report_presave', $this);
-    $op = $this->getOption($this->primaryKey) ? 'update' : 'insert';
     $this->save();
-    // @todo is this deprecated by (entityapi's) hook_course_report_insert/up()?
-    module_invoke_all("course_report_$op", $this);
   }
 
 }
