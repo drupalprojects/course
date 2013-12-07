@@ -260,8 +260,9 @@ class CourseHandler {
     }
 
     $keys = $this->getId() ? array($this->primaryKey) : array();
-    drupal_write_record($this->table, $options, $keys);
-    $this->setOptions($options);
+    $options = (object) $options;
+    entity_save($this->handlerType, $options);
+    $this->setOptions((array) $options);
     return $this;
   }
 

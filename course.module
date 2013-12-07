@@ -1434,16 +1434,15 @@ function course_take_course($node) {
 function course_enrollment_save($enrollment) {
   if ($enrollment->nid && $enrollment->uid) {
     drupal_alter('course_enrollment', $enrollment);
-    if (db_query('SELECT 1 FROM {course_enrollment} WHERE nid = :nid AND uid = :uid', array(':nid' => $enrollment->nid, ':uid' => $enrollment->uid))->fetchField()) {
-      drupal_write_record('course_enrollment', $enrollment, array('nid', 'uid'));
-      module_invoke_all('course_enrollment_update', $enrollment);
+    if ($eid = db_query('SELECT eid FROM {course_enrollment} WHERE nid = :nid AND uid = :uid', array(':nid' => $enrollment->nid, ':uid' => $enrollment->uid))->fetchField()) {
+      $enrollment->eid = $eid;
+      entity_save('course_enrollment', $enrollment);
     }
     else {
       if (!isset($enrollment->created) || $enrollment->created == 0) {
         $enrollment->created = REQUEST_TIME;
       }
-      drupal_write_record('course_enrollment', $enrollment);
-      module_invoke_all('course_enrollment_insert', $enrollment);
+      entity_save('course_enrollment', $enrollment);
     }
   }
   else {
@@ -2464,14 +2463,10 @@ function course_report_save($entry) {
 
   // Hello CE credit!
   if ($old) {
-    drupal_write_record('course_report', $entry, array('nid', 'uid'));
-  }
-  else {
-    drupal_write_record('course_report', $entry);
+    $entry->crid = $old->crid;
   }
 
-  // Notify modules that a course report has been saved.
-  module_invoke_all('course_report_saved', $entry, $account, $old);
+  entity_save('course_report', $entry);
 }
 
 /**
