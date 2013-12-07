@@ -4,9 +4,19 @@
  * @file
  * Hooks provided by Course module.
  *
- * @todo until we finish cleaning up all files and submodules, grep through
- * everything for 'drupal_alter', 'module_invoke_all', 'module_invoke', and
- * 'module_implements'.
+ * These entity types provided by Course also have entity API hooks.
+ *
+ * course_report
+ * course_object
+ * course_object_fulfillment
+ * course_enrollment
+ *
+ * So for example
+ *
+ * hook_course_report_presave($course_report)
+ * hook_course_object_fulfillment_insert($course_object_fulfillment)
+ *
+ * Enjoy :)
  */
 
 /**
@@ -199,77 +209,3 @@ function hook_course_access($op, $node, $user) {
     return $hooks;
   }
 }
-
-/**
- * Notify modules about a course enrollment.
- *
- * @param object $node
- *   The course node.
- * @param object $user
- *   The enrolling user.
- * @param string $from
- *   The type of enrollment, if applicable. {course_enrollment}.enrollmenttype.
- * @param string $code
- *   The access code used to enroll. {course_enrollment}.code.
- * @param integer $status
- *   The enrollment status. {course_enrollment}.status.
- *
- * @see course_enroll()
- */
-function hook_course_enroll($node, $user, $from, $code, $status) {
-  // @todo add example.
-}
-
-/**
- * Notify other modules after course unenrollment.
- *
- * @param object $node
- *   The course node.
- * @param object $user.
- *   The unenrolled user.
- *
- * @see course_unenroll()
- */
-function hook_course_unenroll($node, $user) {
-  // @todo add example.
-}
-
-/**
- * Allow modules to alter course reports before saving.
- *
- * @param stdClass $entry
- *   By reference. The object parameter from course_report_save().
- * @param stdClass $account
- *   The fully loaded report user.
- * @param stdClass $old
- *   The currently saved version of the user's report for a course.
- *
- * @see course_report_save()
- */
-function hook_course_report_alter(&$entry, $account, $old) {
-  // @see course_relationships_course_report_alter()
-}
-
-/**
- * Notify modules that a course report has been saved.
- *
- * @param stdClass $entry
- *   By reference. The object parameter from course_report_save(), now including
- *   the 'crid': course report record ID from drupal_write_record().
- * @param stdClass $account
- *   The fully loaded report user.
- * @param stdClass $old
- *   The former saved version of the user's report for a course.
- *
- * @see course_report_save()
- */
-function hook_course_report_saved($entry, $account, $old) {
-  // Example: Do something completely unnecesary.
-  if ($entry->crid == 1000000) {
-    drupal_set_message(t('Congratulations %name, you have just saved the one millionth course report!', array('%name' => theme('username', array('account' => $account)))));
-  }
-}
-
-/**
- * @}
- */
