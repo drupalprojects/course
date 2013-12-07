@@ -37,23 +37,6 @@ function course_book_menu() {
 }
 
 /**
- * Course context handler callback.
- */
-function course_book_context() {
-  $node = node_load(arg(1));
-  if ($node) {
-    $bid = !empty($node->book['bid']) ? $node->book['bid'] : $node->nid;
-
-    if ($bid) {
-      return array(
-        'object_type' => 'book',
-        'instance' => $bid,
-      );
-    }
-  }
-}
-
-/**
  * Implements hook_course_handlers().
  */
 function course_book_course_handlers() {
@@ -63,11 +46,6 @@ function course_book_course_handlers() {
         'name' => t('Book'),
         'description' => t('A book course object.'),
         'class' => 'CourseObjectBook',
-      ),
-    ),
-    'context' => array(
-      'book' => array(
-        'callback' => 'course_book_context',
       ),
     ),
   );

@@ -2,6 +2,15 @@
 
 class CourseObjectBook extends CourseObjectNode {
 
+  /**
+   * Course node context handler callback.
+   */
+  public static function getNodeInstances($node) {
+    if (!empty($node->book['bid'])) {
+      return array($node->book['bid']);
+    }
+  }
+
   function getNodeTypes() {
     if (user_access('administer book outlines')) {
       return array_keys(node_type_get_names());
@@ -117,6 +126,16 @@ class CourseObjectBook extends CourseObjectNode {
 
   public function getCloneAbility() {
     return t('%title will only clone the first page.', array('%title' => $this->getTitle()));
+  }
+
+  /**
+   * If this book page is part of a book in a course, what parent books do we
+   * belong to?
+   */
+  public static function getObjectInstances($node) {
+    if (!empty($node->book['bid'])) {
+      return array($node->book['bid']);
+    }
   }
 
 }

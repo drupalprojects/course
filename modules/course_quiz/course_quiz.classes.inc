@@ -165,4 +165,26 @@ class CourseObjectQuiz extends CourseObjectNode {
     return $grade;
   }
 
+  /**
+   * Course node context handler callback.
+   *
+   * If this question is part of a quiz in a course, what quizzes do we belong
+   * to?
+   */
+  public static function getNodeInstances($node) {
+    $quizzes = array();
+
+    // Finding quizzes this question already belongs to.
+    $sql = 'SELECT n.nid, r.parent_vid AS vid, n.title FROM {quiz_node_relationship} r
+            JOIN {node} n ON n.nid = r.parent_nid
+            WHERE r.child_vid = :child_vid
+            ORDER BY r.parent_vid DESC';
+    $res = db_query($sql, array(':child_vid' => $node->vid));
+    while ($row = $res->fetch()) {
+      $quizzes[] = $row->nid;
+    }
+
+    return $quizzes;
+  }
+
 }

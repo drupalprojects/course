@@ -934,6 +934,15 @@ abstract class CourseObject extends CourseHandler {
     return FALSE;
   }
 
+  /**
+   * Set the context of which course this course object belongs to.
+   *
+   * The return parameters should be compliant with course_determine_context().
+   */
+  public static function context() {
+
+  }
+
 }
 
 /**
@@ -1057,6 +1066,39 @@ abstract class CourseObjectNode extends CourseObject {
     // Pass configuration to parent.
     parent::__construct($object, $user, $course);
     $this->node = node_load($this->getInstanceId());
+  }
+
+  /**
+   * Course context handler callback.
+   */
+  public static function context() {
+    // Get node from URL.
+    if ($node = node_load(arg(1))) {
+
+      // This node might not be in a course, so let's check for related nodes.
+      $instances = static::getNodeInstances($node);
+      if (!empty($instances)) {
+        $node = node_load($instances[0]);
+      }
+
+      if (isset($node->nid)) {
+        return array(
+          'object_type' => $node->type,
+          'instance' => $node->nid,
+        );
+      }
+    }
+  }
+
+  /**
+   * When passed a node, this method should return the "parent" nodes that are
+   * contained in a course outline.
+   *
+   * For example, if the passed node was a question in a quiz, all the quiz node
+   * IDs should be returned.
+   */
+  public static function getNodeInstances($node) {
+    return array();
   }
 
   public function hasNodePrivacySupport() {

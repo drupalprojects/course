@@ -177,17 +177,6 @@ function course_menu() {
     'type' => variable_get('course_takecourse_tab_display', 1) ? MENU_LOCAL_TASK : MENU_CALLBACK,
   );
 
-  // Display the 'Course settings' menu item as a tab or link, depending.
-  $items['node/%course/coursesettings'] = array(
-    'title' => 'Course settings',
-    'description' => 'Course settings.',
-    'page callback' => 'course_edit_course',
-    'page arguments' => array(1),
-    'access callback' => 'course_settings_menu_access',
-    'access arguments' => array(1),
-    'type' => MENU_CALLBACK,
-  );
-
   // Reports page listing each course object.
   $items['node/%course/course-reports/objects'] = array(
     'title' => 'Course objects',
@@ -701,25 +690,6 @@ function course_take_course_menu_access($node) {
     // Allow modules to restrict menu access to the take course tab.
     $hooks = module_invoke_all('course_has_takecourse', $node, $user);
     $courses[$node->nid] = !in_array(FALSE, $hooks);
-  }
-
-  return $courses[$node->nid];
-}
-
-/**
- * Menu access callback to determine if the course settings should tab should
- * display on the course node.
- *
- * This differs from course_settings_access() as it only returns a boolean.
- */
-function course_settings_menu_access($node) {
-  global $user;
-  $courses = &drupal_static(__FUNCTION__, array());
-
-  if (!isset($courses[$node->nid])) {
-    // Allow modules to restrict menu access to the course setting tab.
-    $hooks = module_invoke_all('course_has_settings', $node, $user);
-    $courses[$node->nid] = !in_array(FALSE, $hooks) && course_settings_access($node);
   }
 
   return $courses[$node->nid];
@@ -2173,22 +2143,12 @@ function course_init() {
   if (!$courseNode = course_get_context()) {
     // Set course context for all modules that define course context handlers.
     // @see hook_course_handlers().
-    $modules = course_get_handlers('context');
+    $modules = course_get_handlers('object');
     foreach ($modules as $module => $handlers) {
       if (is_array($handlers)) {
         foreach ($handlers as $handler) {
-          $callback = $handler['callback'];
-
-          // Calculate and include the file for each callback, if specified.
-          if (isset($handler['file'])) {
-            $file_path = isset($handler['file path']) ? $handler['file path'] : drupal_get_path('module', $module);
-            $include_file = $file_path . '/' . $handler['file'];
-            include_once DRUPAL_ROOT . '/' . $include_file;
-          }
-
           // We expect query parameters suitable for course_determine_context().
-          if (function_exists($callback)) {
-            $params = $callback();
+          if ($params = call_user_func(array($handler['class'], 'context'))) {
             if (is_array($params) && isset($params['object_type']) && isset($params['instance'])) {
               if ($courseNode = course_determine_context($module, $params['object_type'], $params['instance'])) {
                 course_set_context($courseNode);

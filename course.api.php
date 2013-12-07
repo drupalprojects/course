@@ -68,11 +68,6 @@ function hook_course_handlers() {
         'callback' => 'custom_outline',
       ),
     ),
-    'context' => array(
-      'custom' => array(
-        'callback' => 'custom_course_context',
-      ),
-    ),
     'settings' => array(
       'custom' => array(
         'name' => t('Custom'),
@@ -126,7 +121,7 @@ function hook_course_handlers_alter(&$handlers, $module) {
  *
  * @see course_outline_show_complete_links()
  */
-function hook_course_outline_completion_links(&$links, $course_node, $account) {
+function hook_course_outline_completion_links_alter(&$links, $course_node, $account) {
   // Example: add a link.
   $links[] = array(t('Go home!'), '<front>', t('If you got this far, you
     deserve a link back home'));
@@ -145,7 +140,7 @@ function hook_course_outline_completion_links(&$links, $course_node, $account) {
  *
  * @see course_outline_show_complete_links()
  */
-function hook_course_outline_incomplete_links(&$links, $course_node, $account) {
+function hook_course_outline_incomplete_links_alter(&$links, $course_node, $account) {
   // Example: change the default link.
   $links['course'] = array(t("Let's try that again"), "node/$course_node->nid/takecourse", t('Looks like you missed something.'));
 }
@@ -162,25 +157,6 @@ function hook_course_outline_incomplete_links(&$links, $course_node, $account) {
  *   Any hook returning FALSE will restrict access to the take course tab.
  */
 function hook_course_has_takecourse($node, $user) {
-  // @todo add example.
-}
-
-/**
- * Allow modules to restrict menu access to the course setting tab.
- *
- * @param object $node
- *   The course node.
- * @param object $user
- *   The user to check access.
- *
- * @return boolean
- *   Any hook returning FALSE will restrict access to the course settings tab.
- *
- * @see course_settings_menu_access()
- *
- * @todo why would we want this hook? Modules can already use hook_menu_alter().
- */
-function hook_course_has_settings($node, $user) {
   // @todo add example.
 }
 
@@ -222,20 +198,6 @@ function hook_course_access($op, $node, $user) {
 
     return $hooks;
   }
-}
-
-/**
- * Allow modules to provide the course button.
- *
- * @param object $node
- *   The course node.
- *
- * @see course_take_course_button_html()
- */
-function hook_course_button($node) {
-  // Example: change the button text, and add a custom class.
-  $link = l(t('Take Me'), "node/{$node->nid}/takecourse");
-  return '<div class="action-link my-custom-class">' . $link . '</div>';
 }
 
 /**
