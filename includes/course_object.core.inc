@@ -1035,12 +1035,7 @@ class CourseObjectFulfillment extends CourseHandler {
   }
 
   public function delete() {
-    $sql = "DELETE FROM {course_outline_fulfillment} WHERE cofid = %d";
-    // TODO Please review the conversion of this statement to the D7 database API syntax.
-    /* db_query($sql, $this->getId()) */
-    db_delete('course_outline_fulfillment')
-      ->condition('cofid', $this->getId())
-      ->execute();
+    entity_delete('course_object_fulfillment', $this->getId());
   }
 
   /**
