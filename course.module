@@ -2589,15 +2589,12 @@ function course_outline_delete_object($mixed) {
   if (is_object($mixed)) {
     $mixed = (array) $mixed;
   }
-  $sql = "DELETE FROM {course_outline} WHERE coid = %d";
-  // TODO Please review the conversion of this statement to the D7 database API syntax.
-  /* db_query($sql, $mixed['coid']) */
-  db_delete('course_outline')
-    ->condition('coid', $mixed['coid'])
-    ->execute();
+
+  // Delete the object.
+  entity_delete('course_object', $mixed['coid']);
+
+  // Delete the object's fulfillments.
   $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid = %d";
-  // TODO Please review the conversion of this statement to the D7 database API syntax.
-  /* db_query($sql, $mixed['coid']) */
   db_delete('course_outline_fulfillment')
     ->condition('coid', $mixed['coid'])
     ->execute();
