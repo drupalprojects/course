@@ -1217,6 +1217,7 @@ abstract class CourseObjectNode extends CourseObject {
       '#autocomplete_path' => 'course/autocomplete/node/' . implode(',', $this->getNodeTypes()),
       '#type' => 'textfield',
       '#description' => t('Use an existing node instead of creating a new one.'),
+      '#default_value' => $this->node->nid ? "{$this->node->title} [nid: {$this->node->nid}]" : NULL,
     );
 
     $form['node']['use_node_title'] = array(
