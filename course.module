@@ -1009,13 +1009,10 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
       // User is not enrolled yet.
       watchdog('course_enroll', 'Enrolling user !uid into !nid', $watchdog_variables);
       course_enrollment_save($enrollment);
-      $op = 'insert';
-      course_rules_invoke_event_by_args("course_enrollment_$op", array('node' => $node, 'user' => $account, 'course_enrollment' => $enrollment));
     }
     else {
       watchdog('course_enroll', 'Re-enrolling user !uid into !nid', $watchdog_variables);
       // figure out if there's any harm in updating enrollment here.
-      $op = 'update';
     }
 
     // Notify modules about a course enrollment.
@@ -3014,13 +3011,4 @@ function course_report_label($enrollment) {
   $node = node_load($enrollment->nid);
   $account = user_load($enrollment->uid);
   return t("@username's course report for @title", array('@username' => $account->name, '@title' => $node->title));
-}
-
-/**
- * Trigger a rules event if rules is enabled.
- */
-function course_rules_invoke_event_by_args($event_name, $args) {
-  if (module_exists('rules')) {
-    rules_invoke_event_by_args($event_name, $args);
-  }
 }
