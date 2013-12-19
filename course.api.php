@@ -34,13 +34,6 @@
  *     - description: A string to display more information to administrators.
  *     - class: (optional) A class name which will override the default
  *       CourseObject class.
- *   - context: An asociative array of context handlers, keyed by type:
- *     - callback: A function name that will set course context for special
- *       cases not already covered by Course module.
- *     - file: (optional) A string to locate the callback file. This should be
- *       specified if not located in the implementing module's .module file.
- *     - file path: (optional) The path to the directory containing the file
- *       specified in 'file'. Defaults to the implementing module path.
  *   - outline: An asociative array of outline handlers, keyed by type:
  *     - name: A string to reference this type on administrative forms.
  *     - description: A string to display more information to administrators.
@@ -133,7 +126,7 @@ function hook_course_handlers_alter(&$handlers, $module) {
  */
 function hook_course_outline_completion_links_alter(&$links, $course_node, $account) {
   // Example: add a link.
-  $links[] = array(t('Go home!'), '<front>', t('If you got this far, you
+  $links['gohome'] = array(t('Go home!'), '<front>', t('If you got this far, you
     deserve a link back home'));
 }
 
@@ -167,7 +160,10 @@ function hook_course_outline_incomplete_links_alter(&$links, $course_node, $acco
  *   Any hook returning FALSE will restrict access to the take course tab.
  */
 function hook_course_has_takecourse($node, $user) {
-  // @todo add example.
+  if ($node->type == 'imported_course') {
+    // Users cannot take imported courses.
+    return FALSE;
+  }
 }
 
 /**
@@ -208,4 +204,26 @@ function hook_course_access($op, $node, $user) {
 
     return $hooks;
   }
+
+  if ($op == 'enroll') {
+    // Same usage as $op == 'take'.
+  }
+}
+
+/**
+ * Allow modules to be notified about a new course enrollment.
+ *
+ * @deprecated - use hook_course_enrollment_[insert|update]($enrollment)
+ */
+function hook_course_enroll($node, $user) {
+  drupal_set_message("User enrolled into course.");
+}
+
+/**
+ * Allow modules to be notified about an unenrollment.
+ *
+ * @deprecated - use hook_course_enrollment_delete($enrollment)
+ */
+function hook_course_unenroll($node, $user) {
+  drupal_set_message("User unenrolled from course.");
 }
