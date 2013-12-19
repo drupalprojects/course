@@ -1007,17 +1007,11 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
     );
     if (!course_enrollment_check($node->nid, $account->uid)) {
       // User is not enrolled yet.
-      watchdog('course_enroll', 'Enrolling user !uid into !nid', $watchdog_variables);
+      watchdog('course_enroll', 'Enrolling user !uid into !nid.', $watchdog_variables);
       course_enrollment_save($enrollment);
-    }
-    else {
-      watchdog('course_enroll', 'Re-enrolling user !uid into !nid', $watchdog_variables);
-      // figure out if there's any harm in updating enrollment here.
+      module_invoke_all('course_enroll', $node, $account, $from, $code, $status);
     }
 
-    // Notify modules about a course enrollment.
-    // @todo is this deprecated by hook_course_enrollment_insert()?
-    module_invoke_all('course_enroll', $node, $account, $from, $code, $status);
     return $enrollment;
   }
   else {
@@ -2049,9 +2043,9 @@ function course_edit_enrollment_action_form($a1, $context) {
   $form['enroll_end'] = array(
     '#title' => t('Extend course enrollment until'),
     '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
-    '#date_format' => 'm/d/Y H:i',
+    '#date_format' => 'Y-m-d H:i',
     '#description' => t('The date when the user will not be able to access the course.'),
-    '#default_value' => $enroll->enroll_end ? date('Y-m-d H:i:s', $enroll->enroll_end) : '',
+    '#default_value' => !empty($enroll->enroll_end) ? format_date($enroll->enroll_end, 'custom', 'Y-m-d H:i') : NULL,
   );
 
 
@@ -2070,9 +2064,9 @@ function course_edit_enrollment_action_form($a1, $context) {
   $form['date_completed'] = array(
     '#title' => t('Set completion date to'),
     '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
-    '#date_format' => 'm/d/Y H:i',
+    '#date_format' => 'Y-m-d H:i',
     '#description' => t('The date of completion.'),
-    '#default_value' => !empty($course_report->date_completed) ? date('Y-m-d H:i:s', $course_report->date_completed) : NULL,
+    '#default_value' => !empty($course_report->date_completed) ? format_date($course_report->date_completed, 'custom', 'Y-m-d H:i') : NULL,
   );
 
   $form['course_objects'] = array(
@@ -2333,7 +2327,7 @@ function course_course_access($op, $node, $user) {
           'success' => FALSE,
           'header' => t('Course not open'),
           'message' => t('This course opens on %date.', array(
-            '%date' => format_date($node->course['open'], 'custom', 'F, jS Y'),
+            '%date' => format_date($node->course['open'], 'long'),
           )),
       ));
     }
@@ -2343,7 +2337,7 @@ function course_course_access($op, $node, $user) {
           'success' => FALSE,
           'header' => t('Course closed'),
           'message' => t('This course closed on %date and is no longer available for enrollments.', array(
-            '%date' => format_date($node->course['close'], 'custom', 'F, jS Y'),
+            '%date' => format_date($node->course['close'], 'long'),
           )),
       ));
     }
@@ -2352,7 +2346,7 @@ function course_course_access($op, $node, $user) {
       return array('course_live_started' => array(
           'success' => FALSE,
           'message' => t('This live activity started on %date and is no longer available for enrollments.', array(
-            '%date' => date('F, jS Y', $node->course['live_from_date']),
+            '%date' => format_date($node->course['live_from_date'], 'long'),
           )),
       ));
     }

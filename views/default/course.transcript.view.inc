@@ -83,7 +83,7 @@ $handler->display->display_options['fields']['timestamp']['table'] = 'course_enr
 $handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
 $handler->display->display_options['fields']['timestamp']['relationship'] = 'course_enrollment';
 $handler->display->display_options['fields']['timestamp']['label'] = 'Date enrolled';
-$handler->display->display_options['fields']['timestamp']['date_format'] = 'custom';
+$handler->display->display_options['fields']['timestamp']['date_format'] = 'short';
 $handler->display->display_options['fields']['timestamp']['custom_date_format'] = 'm/d/Y';
 /* Field: Course report: Section_name */
 $handler->display->display_options['fields']['section_name']['id'] = 'section_name';
@@ -95,7 +95,7 @@ $handler->display->display_options['fields']['date_completed']['id'] = 'date_com
 $handler->display->display_options['fields']['date_completed']['table'] = 'course_report';
 $handler->display->display_options['fields']['date_completed']['field'] = 'date_completed';
 $handler->display->display_options['fields']['date_completed']['label'] = 'Date completed';
-$handler->display->display_options['fields']['date_completed']['date_format'] = 'custom';
+$handler->display->display_options['fields']['date_completed']['date_format'] = 'short';
 $handler->display->display_options['fields']['date_completed']['custom_date_format'] = 'm/d/Y';
 /* Contextual filter: User: Uid */
 $handler->display->display_options['arguments']['uid']['id'] = 'uid';
@@ -142,7 +142,7 @@ $handler->display->display_options['fields']['timestamp']['table'] = 'course_enr
 $handler->display->display_options['fields']['timestamp']['field'] = 'timestamp';
 $handler->display->display_options['fields']['timestamp']['relationship'] = 'course_enrollment';
 $handler->display->display_options['fields']['timestamp']['label'] = 'Date enrolled';
-$handler->display->display_options['fields']['timestamp']['date_format'] = 'custom';
+$handler->display->display_options['fields']['timestamp']['date_format'] = 'short';
 $handler->display->display_options['fields']['timestamp']['custom_date_format'] = 'd/m/Y';
 /* Field: Course report: Section_name */
 $handler->display->display_options['fields']['section_name']['id'] = 'section_name';
