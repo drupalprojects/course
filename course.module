@@ -1051,8 +1051,9 @@ function course_unenroll($node, $user) {
     }
 
     if (count($coids)) {
-      $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid IN (:coids) AND uid = :uid";
-      db_query($sql, array(':coids' => $coids, ':uid' => $user->uid));
+      $sql = "SELECT cofid FROM {course_outline_fulfillment} WHERE coid IN (:coids) AND uid = :uid";
+      $cofid = db_query($sql, array(':coids' => $coids, ':uid' => $user->uid))->fetchAllKeyed(0, 0);
+      entity_delete_multiple('course_object_fulfillment', $cofid);
     }
 
     // Notify other modules after course unenrollment.
