@@ -25,7 +25,7 @@ function course_book_admin($form, &$form_state) {
 function course_book_menu() {
   $items = array();
 
-  $items['admin/config/course/book'] = array(
+  $items['admin/course/book'] = array(
     'access arguments' => array('administer courses'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('course_book_admin'),
