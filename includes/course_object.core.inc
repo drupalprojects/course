@@ -1068,7 +1068,7 @@ abstract class CourseObjectNode extends CourseObject {
    */
   public static function context() {
     // Get node from URL.
-    if ($node = node_load(arg(1))) {
+    if (arg(0) == 'node' && $node = node_load(arg(1))) {
 
       // This node might not be in a course, so let's check for related nodes.
       $instances = static::getNodeInstances($node);
