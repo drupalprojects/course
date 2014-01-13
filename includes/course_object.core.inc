@@ -1184,28 +1184,40 @@ abstract class CourseObjectNode extends CourseObject {
   public function optionsForm(&$form, &$form_state) {
     parent::optionsForm($form, $form_state);
 
-    $config = $this->getOptions();
-
-    if (!$this->getInstanceId()) {
-      $types = drupal_map_assoc($this->getNodeTypes());
-      $options = array_intersect_key(node_type_get_names(), $types);
-      $form['node_type'] = array(
-        '#title' => t('Create node'),
-        '#type' => 'select',
-        '#options' => $options,
-        '#description' => t('Selecting a node type will automatically create this node and link it to this course object.'),
-        '#default_value' => $config['node_type'],
-      );
-      if (count($options) > 1) {
-        $form['node_type']['#required'] = TRUE;
-      }
-    }
-
     $form['node'] = array(
       '#type' => 'fieldset',
       '#title' => t('Node'),
       '#description' => ('Settings for node-based objects.'),
     );
+
+    $config = $this->getOptions();
+
+    if (!$this->getInstanceId()) {
+      $types = drupal_map_assoc($this->getNodeTypes());
+      $options = array_intersect_key(node_type_get_names(), $types);
+
+      $form['node']['use_existing_node'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Use an existing node'),
+        '#default_value' => 0,
+      );
+
+      $form['node']['node_type'] = array(
+        '#title' => t('Create node'),
+        '#type' => 'select',
+        '#options' => $options,
+        '#description' => t('Selecting a node type will automatically create this node and link it to this course object.'),
+        '#default_value' => $config['node_type'],
+        '#states' => array(
+          'visible' => array(
+            ':input[name="use_existing_node"]' => array('checked' => FALSE),
+          ),
+        ),
+      );
+      if (count($options) > 1) {
+        $form['node']['node_type']['#required'] = TRUE;
+      }
+    }
 
     $form['node']['instance'] = array(
       '#title' => t('Existing node'),
@@ -1213,6 +1225,11 @@ abstract class CourseObjectNode extends CourseObject {
       '#type' => 'textfield',
       '#description' => t('Use an existing node instead of creating a new one.'),
       '#default_value' => $this->node->nid ? check_plain($this->node->title) . " [nid: {$this->node->nid}]" : NULL,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="use_existing_node"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
     $form['node']['use_node_title'] = array(

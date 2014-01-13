@@ -12,8 +12,8 @@ class CourseObjectContent extends CourseObjectNode {
   function optionsForm(&$form, &$form_state) {
     parent::optionsForm($form, $form_state);
     if (!$this->getInstanceId()) {
-      $desc = $form['node_type']['#options'][$this->getComponent()];
-      $form['node_type']['#options'] = array($this->getComponent() => $desc);
+      $desc = $form['node']['node_type']['#options'][$this->getComponent()];
+      $form['node']['node_type']['#options'] = array($this->getComponent() => $desc);
     }
   }
 
