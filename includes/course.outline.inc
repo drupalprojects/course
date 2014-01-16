@@ -113,7 +113,7 @@ function course_outline_overview_form($form, &$form_state) {
         $object_counts[$courseObject->getModule()][$courseObject->getComponent()] = 1;
       }
       else {
-        $object_counts[$courseObject->getModule()][$courseObject->getComponent()]++;
+        $object_counts[$courseObject->getModule()][$courseObject->getComponent()] ++;
       }
 
       // Don't allow user to change type of object.
@@ -426,10 +426,9 @@ function course_outline_list($node) {
 
   // Iterate over objects.
   $workflow = array();
-  $prev_req = NULL;
+  $prev_obj = NULL;
   foreach ($course->getObjects() as $key => $courseObject) {
     $step = array();
-    $step['class'] = array('not-started');
     $step['id'] = 'course-object-' . $courseObject->getId();
     $step['image'] = 'misc/menu-collapsed.png';
     $step['status'] = '';
@@ -440,35 +439,27 @@ function course_outline_list($node) {
     if ($courseObject->access('take')) {
       // User can take this course object.
       $step['link'] = $courseObject->getUrl();
-
-      if (!$prev_req || $prev_req->getFulfillment()->isComplete()) {
-        $step['status'] = t('Begin');
-        $step['class'] = array('begin');
-      }
+      $step['class'][] = 'accessible';
+      $step['status'] = t('Not started');
 
       // Step is complete.
       if ($courseObject->getFulfillment()->isComplete()) {
-        $step['class'] = array('completed');
+        $step['class'][] = 'completed';
         $step['status'] = t('Complete');
         $step['image'] = 'misc/watchdog-ok.png';
       }
       elseif ($courseObject->getFulfillment()->getId()) {
-        $step['status'] = t('Continue');
-        $step['class'] = array('continue');
+        $step['status'] = t('In progress');
+        $step['class'][] = 'in-progress';
         $step['image'] = 'misc/menu-collapsed.png';
-        if ($course->getActive() === $courseObject) {
-          $step['status'] = $courseObject->getStatus();
-          if (!$step['status'] && $courseObject->getCourse()->getActive()->getId() == $courseObject->getId()) {
-            $step['status'] = t('In progress');
-            $step['class'] = array('in-progress');
-            $step['image'] = 'misc/watchdog-warning.png';
-          }
-        }
+      }
+      if ($course->getActive() === $courseObject) {
+        $step['class'][] = 'active';
       }
     }
     else {
       // User cannot access this step yet.
-      $step['class'] = array('not-started');
+      $step['class'] = array('not-accessible');
       $step['status'] = implode('<br/>', $courseObject->getAccessMessages());
     }
 
@@ -495,10 +486,10 @@ function course_outline_list($node) {
     $workflow[] = $item;
 
     // We have to clone it, otherwise $courseObject becomes the next object.
-    $prev_req = clone $courseObject;
+    $prev_obj = clone $courseObject;
   }
 
-  if ($prev_req && $prev_req->getFulfillment()->isComplete()) {
+  if ($prev_obj && $prev_obj->getFulfillment()->isComplete()) {
     $workflow[] = array(
       'data' => $img . ' ' . l(t('Complete'), "node/$node->nid/course-complete", array('html' => TRUE)),
       'id' => 'complete',
