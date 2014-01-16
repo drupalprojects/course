@@ -54,8 +54,13 @@ function _course_block_navigation_view() {
     $course = course_get_course($node, $user, TRUE);
     $links = $course->getNavigation();
 
-    // Strip array keys so theme_item_list() works properly.
-    $items = array_values($links);
+    $items = array();
+    foreach($links as $key => $value) {
+      $items[] = array(
+        'class' => array('course-nav-' . $key),
+        'data' => $value,
+      );
+    }
 
     // Add javascript poller to update the next step button.
     drupal_add_js(drupal_get_path('module', 'course') . '/js/nav.js', array('cache' => FALSE, 'preprocess' => FALSE));
