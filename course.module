@@ -964,10 +964,7 @@ function course_render_button($node) {
 
 /**
  * Enrolls a user in a course.
- *
- * Timestamp is by design 0, so a user may purchase a course but start taking
- * it later.
- *
+ * 
  * @param object $node
  *   By reference. The course node.
  * @param object $user
@@ -992,6 +989,7 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
       'enrollmenttype' => $from,
       'status' => $status,
       'code' => $code,
+      'timestamp' => REQUEST_TIME,
     );
 
     if (isset($node->course['duration']) && $node->course['duration'] > 0) {
