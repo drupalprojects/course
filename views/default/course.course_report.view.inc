@@ -161,7 +161,7 @@ $handler->display->display_options['menu']['title'] = 'Overview';
 $handler->display->display_options['menu']['weight'] = '-1';
 $handler->display->display_options['tab_options']['type'] = 'tab';
 $handler->display->display_options['tab_options']['title'] = 'Course reports';
-$handler->display->display_options['tab_options']['weight'] = '0';
+$handler->display->display_options['tab_options']['weight'] = '1';
 
 /* Display: Global course report */
 $handler = $view->new_display('page', 'Global course report', 'page_2');

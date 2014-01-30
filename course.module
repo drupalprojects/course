@@ -126,7 +126,6 @@ function course_menu() {
       $items[$handler_router] = array(
         'title' => $handler_info['name'],
         'type' => MENU_DEFAULT_LOCAL_TASK,
-        'weight' => -10,
       );
       // Flag MENU_DEFAULT_LOCAL_TASK as set for this module.
       $default_set[$package_key] = TRUE;
@@ -204,6 +203,7 @@ function course_menu() {
     'page arguments' => array(3),
     'access callback' => 'course_access_object',
     'access arguments' => array(1, 3),
+    'weight' => 2,
   );
 
   // Course object edit
@@ -964,7 +964,7 @@ function course_render_button($node) {
 
 /**
  * Enrolls a user in a course.
- * 
+ *
  * @param object $node
  *   By reference. The course node.
  * @param object $user
