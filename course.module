@@ -2756,6 +2756,7 @@ function course_user_type_get_options() {
  * Helper function for autocompletion of node titles.
  */
 function course_object_autocomplete_node($types, $string) {
+  $matches = array();
   $values = explode(',', $types);
   $query = db_select('node', 'n');
   $query->condition('n.type', $values, 'in')
