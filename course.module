@@ -2054,7 +2054,7 @@ function course_edit_enrollment_action_form($a1, $context) {
     '#options' => array(
       '' => '',
       1 => t('Complete'),
-      0 => t('Incomplete'),
+      0 => t('Incomplete'),timesta
     ),
     '#description' => t("This will change a user's course completion. Set to incomplete this to re-evaluate all requirements. Course will never be automatically un-completed once they have been marked completed."),
     '#default_value' => !empty($course_report->complete) ? $course_report->complete : NULL,
