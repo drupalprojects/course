@@ -122,7 +122,7 @@ function course_outline_overview_form($form, &$form_state) {
         '#value' => $courseObject->getOption('object_type'),
       );
       if (empty($handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')])) {
-        $show_object_name = t('Missing CourseObject handler for <br/><i>@m/@t</i>', array('@m' => $courseObject->getOption('module'), '@t' => $courseObject->getOption('module')));
+        $show_object_name = t('Missing CourseObject handler for <br/><i>@m/@t</i>', array('@m' => $courseObject->getOption('module'), '@t' => $courseObject->getOption('object_type')));
       }
       else {
         $show_object_name = $handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')]['name'] . '<br/><small><i>' . ucwords(str_replace('_', ' ', $courseObject->getOption('module'))) . '</i></small>';
