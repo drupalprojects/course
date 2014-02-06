@@ -261,9 +261,14 @@ class CourseHandler {
 
     $keys = $this->getId() ? array($this->primaryKey) : array();
     $options = (object) $options;
-    entity_save($this->handlerType, $options);
+    $ret = entity_save($this->handlerType, $options);
     $this->setOptions((array) $options);
-    field_attach_update($this->handlerType, $options);
+    if ($ret == SAVED_NEW) {
+      field_attach_insert($this->handlerType, $options);
+    }
+    if ($ret == SAVED_UPDATED) {
+      field_attach_update($this->handlerType, $options);
+    }
     return $this;
   }
 
