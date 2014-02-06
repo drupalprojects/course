@@ -107,3 +107,11 @@ function course_report_settings_form($form) {
   $form['header']['#markup'] = t('This would be where reporting settings go.');
   return $form;
 }
+
+/**
+ * Settings form for course objects.
+ */
+function course_object_settings_form($form) {
+  $form['header']['#markup'] = t('This would be where object settings go.');
+  return $form;
+}

@@ -274,16 +274,22 @@ function course_course_handlers() {
         'callback' => 'course_settings_appearance_form',
         'file' => $settings,
       ),
-      'course_enrollment' => array(
-        'name' => t('Enrollments'),
+      'enrollment' => array(
+        'name' => t('Enrollment'),
         'description' => t('Configure enrollments.'),
         'callback' => 'course_enrollment_settings_form',
         'file' => $settings,
       ),
-      'course_report' => array(
-        'name' => t('Course report'),
+      'report' => array(
+        'name' => t('Reports'),
         'description' => t('Configure course reporting.'),
         'callback' => 'course_report_settings_form',
+        'file' => $settings,
+      ),
+      'object' => array(
+        'name' => t('Objects'),
+        'description' => t('Configure course objects.'),
+        'callback' => 'course_object_settings_form',
         'file' => $settings,
       ),
     ),
@@ -2869,12 +2875,21 @@ function course_entity_info() {
       'base table' => 'course_outline',
       'load hook' => 'course_object_load',
       'uri callback' => 'course_object_uri',
-      'fieldable' => FALSE,
+      'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'coid',
       ),
       'label callback' => 'course_object_label',
       'views controller class' => 'EntityDefaultViewsController',
+      'bundles' => array(
+        'course_object' => array(
+          'label' => 'Course objects',
+          'admin' => array(
+            'path' => 'admin/course/object',
+            'access arguments' => array('administer course'),
+          ),
+        ),
+      ),
     ),
     'course_object_fulfillment' => array(
       'label' => t('Course object fulfillment'),
