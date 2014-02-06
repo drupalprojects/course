@@ -14,7 +14,7 @@
 class CourseHandler {
 
   // Could be 'outline', 'course_object', 'settings'...
-  public $handlerType = NULL;
+  public $entity_type = NULL;
   // For objects that store things in the database, this is the field where all
   // non-schema fields will be serialized to.
   public $table = NULL;
@@ -261,13 +261,13 @@ class CourseHandler {
 
     $keys = $this->getId() ? array($this->primaryKey) : array();
     $options = (object) $options;
-    $ret = entity_save($this->handlerType, $options);
+    $ret = entity_save($this->entity_type, $options);
     $this->setOptions((array) $options);
     if ($ret == SAVED_NEW) {
-      field_attach_insert($this->handlerType, $options);
+      field_attach_insert($this->entity_type, $options);
     }
     if ($ret == SAVED_UPDATED) {
-      field_attach_update($this->handlerType, $options);
+      field_attach_update($this->entity_type, $options);
     }
     return $this;
   }
@@ -287,7 +287,7 @@ class CourseReport extends CourseHandler {
    */
   public function __construct($course) {
     $this->primaryKey = 'crid';
-    $this->handlerType = 'course_report';
+    $this->entity_type = 'course_report';
     $this->serializedField = 'data';
     $this->table = 'course_report';
 
@@ -403,7 +403,7 @@ class Course extends CourseHandler {
    */
   public function __construct($node, $user = NULL) {
     $this->primaryKey = 'nid';
-    $this->handlerType = 'course';
+    $this->entity_type = 'course';
     $this->table = 'course_node';
 
     if (is_object($node)) {
@@ -633,7 +633,7 @@ abstract class CourseObjectAccess extends CourseHandler {
   private $courseObject;
 
   function __construct($config = array()) {
-    $this->handlerType = 'course_access';
+    $this->entity_type = 'course_access';
     parent::__construct($config);
   }
 

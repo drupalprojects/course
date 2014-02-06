@@ -33,7 +33,7 @@ abstract class CourseObject extends CourseHandler {
     $config = (array) $config;
 
     $this->serializedField = 'data';
-    $this->handlerType = 'course_object';
+    $this->entity_type = 'course_object';
     $this->primaryKey = 'coid';
     $this->table = 'course_outline';
 
@@ -967,7 +967,7 @@ class CourseObjectFulfillment extends CourseHandler {
    */
   function __construct(CourseObject $courseObject, $user) {
     // Set storage.
-    $this->handlerType = 'course_object_fulfillment';
+    $this->entity_type = 'course_object_fulfillment';
     $this->table = 'course_outline_fulfillment';
     $this->primaryKey = 'cofid';
     $this->serializedField = 'info';
