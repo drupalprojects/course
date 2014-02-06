@@ -263,6 +263,7 @@ class CourseHandler {
     $options = (object) $options;
     entity_save($this->handlerType, $options);
     $this->setOptions((array) $options);
+    field_attach_update($this->handlerType, $options);
     return $this;
   }
 

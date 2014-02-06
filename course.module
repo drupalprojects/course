@@ -275,7 +275,7 @@ function course_course_handlers() {
         'file' => $settings,
       ),
       'enrollment' => array(
-        'name' => t('Enrollment'),
+        'name' => t('Enrollments'),
         'description' => t('Configure enrollments.'),
         'callback' => 'course_enrollment_settings_form',
         'file' => $settings,
@@ -489,6 +489,7 @@ function course_object_options($node, $js, $courseObject) {
 function course_object_options_form($form, &$form_state, $courseObject) {
   $form = array();
   $courseObject->optionsForm($form, $form_state);
+  field_attach_form('course_object', $courseObject->getOptions(), $form, $form_state);
   return $form;
 }
 
@@ -2889,6 +2890,9 @@ function course_entity_info() {
             'access arguments' => array('administer course'),
           ),
         ),
+      ),
+      'admin ui' => array(
+        'controller class' => 'EntityDefaultUIController',
       ),
     ),
     'course_object_fulfillment' => array(
