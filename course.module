@@ -489,7 +489,7 @@ function course_object_options($node, $js, $courseObject) {
 function course_object_options_form($form, &$form_state, $courseObject) {
   $form = array();
   $courseObject->optionsForm($form, $form_state);
-  field_attach_form('course_object', $courseObject->getOptions(), $form, $form_state);
+  field_attach_form('course_object', (object) $courseObject->getOptions(), $form, $form_state);
   return $form;
 }
 
