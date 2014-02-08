@@ -2321,26 +2321,6 @@ function course_course_access($op, $node, $user) {
       ));
     }
 
-    if (!empty($node->course['open']) && REQUEST_TIME < $node->course['open']) {
-      return array('course_notopen' => array(
-          'success' => FALSE,
-          'header' => t('Course not open'),
-          'message' => t('This course opens on %date.', array(
-            '%date' => format_date($node->course['open'], 'long'),
-          )),
-      ));
-    }
-
-    if (!empty($node->course['close']) && REQUEST_TIME > $node->course['close']) {
-      return array('course_closed' => array(
-          'success' => FALSE,
-          'header' => t('Course closed'),
-          'message' => t('This course closed on %date and is no longer available for enrollments.', array(
-            '%date' => format_date($node->course['close'], 'long'),
-          )),
-      ));
-    }
-
     if (!empty($node->course['live_from_date']) && REQUEST_TIME > $node->course['live_from_date']) {
       return array('course_live_started' => array(
           'success' => FALSE,
@@ -2390,17 +2370,30 @@ function course_course_access($op, $node, $user) {
           'weight' => 200,
       ));
     }
-
-    if (isset($node->course['close']) && $node->course['close']) {
-      if (REQUEST_TIME > $node->course['close']) {
-        return array(array(
-            'success' => FALSE,
-            'header' => t('Course expired'),
-            'message' => t('Sorry, this course is expired.'),
-        ));
-      }
-    }
   }
+
+  // Both enroll and take course blockers.
+  if (!empty($node->course['open']) && REQUEST_TIME < $node->course['open']) {
+    return array('course_notopen' => array(
+        'success' => FALSE,
+        'header' => t('Course not open'),
+        'message' => t('This course opens on %date.', array(
+          '%date' => format_date($node->course['open'], 'long'),
+        )),
+    ));
+  }
+
+  if (!empty($node->course['close']) && REQUEST_TIME > $node->course['close']) {
+    return array('course_closed' => array(
+        'success' => FALSE,
+        'header' => t('Course closed'),
+        'message' => t('This course closed on %date.', array(
+          '%date' => format_date($node->course['close'], 'long'),
+        )),
+    ));
+  }
+
+
 }
 
 /**
