@@ -124,7 +124,7 @@ function course_menu() {
       // this here so the first handler settings form always displays as the
       // default page content at the module router item path.
       $items[$handler_router] = array(
-        'title' => $handler_info['name'],
+        'title' => t('Settings'),
         'type' => MENU_DEFAULT_LOCAL_TASK,
       );
       // Flag MENU_DEFAULT_LOCAL_TASK as set for this module.
@@ -2850,12 +2850,24 @@ function course_entity_info() {
       'base table' => 'course_enrollment',
       'load hook' => 'course_enrollment_load',
       'uri callback' => 'course_enrollment_uri',
-      'fieldable' => FALSE,
+      'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'eid',
       ),
       'label callback' => 'course_enrollment_label',
       'views controller class' => 'EntityDefaultViewsController',
+      'bundles' => array(
+        'course_enrollment' => array(
+          'label' => 'Course enrollment',
+          'admin' => array(
+            'path' => 'admin/course/enrollment',
+            'access arguments' => array('administer course'),
+          ),
+        ),
+      ),
+      'admin ui' => array(
+        'controller class' => 'EntityDefaultUIController',
+      ),
     ),
     'course_report' => array(
       'label' => t('Course report'),
@@ -2863,12 +2875,24 @@ function course_entity_info() {
       'base table' => 'course_report',
       'load hook' => 'course_report_load',
       'uri callback' => 'course_report_uri',
-      'fieldable' => FALSE,
+      'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'crid',
       ),
       'label callback' => 'course_report_label',
       'views controller class' => 'EntityDefaultViewsController',
+      'bundles' => array(
+        'course_report' => array(
+          'label' => 'Course report',
+          'admin' => array(
+            'path' => 'admin/course/report',
+            'access arguments' => array('administer course'),
+          ),
+        ),
+      ),
+      'admin ui' => array(
+        'controller class' => 'EntityDefaultUIController',
+      ),
     ),
     'course_object' => array(
       'label' => t('Course object'),
