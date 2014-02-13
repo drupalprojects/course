@@ -164,9 +164,16 @@ class CourseHandler {
    * Handlers can declare their defaults if they have a configuration form.
    */
   protected function optionsDefinition() {
-    $options = array();
-
-    return $options;
+    $fields = field_info_instances($this->entity_type);
+    if (!empty($fields)) {
+      $defaults = array_flip(array_keys($fields[$this->entity_type]));
+      // Not working
+      //foreach ($defaults as $field => &$default) {
+      //  $default = field_get_default_value($this->entity_type, (object) $this->config, $fields[$this->entity_type][$field], $fields[$this->entity_type][$field]);
+      //}
+      return $defaults;
+    }
+    return array();
   }
 
   /**
@@ -263,12 +270,6 @@ class CourseHandler {
     $options = (object) $options;
     $ret = entity_save($this->entity_type, $options);
     $this->setOptions((array) $options);
-    if ($ret == SAVED_NEW) {
-      field_attach_insert($this->entity_type, $options);
-    }
-    if ($ret == SAVED_UPDATED) {
-      field_attach_update($this->entity_type, $options);
-    }
     return $this;
   }
 
