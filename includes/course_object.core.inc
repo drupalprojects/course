@@ -329,6 +329,7 @@ abstract class CourseObject extends CourseHandler {
         '#type' => 'fieldset',
         '#tree' => TRUE,
         '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
       );
 
       // Initialize access class.
