@@ -1500,8 +1500,8 @@ function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) 
     return _course_get_course_object_by_uniqid($coid, $account, $course);
   }
 
-  $result = db_query('SELECT * FROM {course_outline} WHERE coid = :coid', array(':coid' => $coid));
-  if ($row = $result->fetch()) {
+  $entity = entity_load('course_object', array($coid));
+  if ($row = $entity[$coid]) {
     $object_definition = array();
     if (!empty($available[$row->module][$row->object_type])) {
       $object_definition = $available[$row->module][$row->object_type];
