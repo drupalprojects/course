@@ -206,7 +206,9 @@ class CourseHandler {
    */
   protected function getDatabaseFields() {
     $schema = drupal_get_schema($this->table);
-    return array_keys($schema['fields']);
+    $fields = field_info_instances($this->entity_type);
+    $fields = $fields[$this->entity_type];
+    return array_keys($fields + $schema['fields']);
   }
 
   /**
