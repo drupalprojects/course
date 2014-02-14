@@ -226,8 +226,6 @@ abstract class CourseObject extends CourseHandler {
       'instance' => NULL,
     );
 
-    // todo, need to add stuff from field api so it will save
-
     return $defaults;
   }
 
