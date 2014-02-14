@@ -3040,3 +3040,27 @@ function course_report_label($enrollment) {
   $account = user_load($enrollment->uid);
   return t("@username's course report for @title", array('@username' => $account->name, '@title' => $node->title));
 }
+
+/**
+ * Implements hook_form_FORMID_alter().
+ *
+ * Adds a checkbox for controlling field view access to fields added to
+ * profiles.
+ */
+function course_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
+  if ($form['instance']['entity_type']['#value'] == 'course_enrollment') {
+    $form['field']['settings']['course_enrollment'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Show this field on enrollment.'),
+      '#default_value' => !empty($form['#field']['settings']['course_enrollment']),
+      '#description' => t('If checked, this field will be presented when starting a course.'),
+    );
+  }
+  else {
+    // Add the value to the form so it isn't lost.
+    $form['field']['settings']['course_enrollment'] = array(
+      '#type' => 'value',
+      '#value' => !empty($form['#field']['settings']['course_enrollment']),
+    );
+  }
+}
