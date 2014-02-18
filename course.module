@@ -4,6 +4,7 @@
  * @file course.module
  * Core functionality for Courses.
  */
+
 // Course outline functions
 require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/includes/course.outline.inc';
 // Course exporting functions
@@ -2413,8 +2414,6 @@ function course_course_access($op, $node, $user) {
         )),
     ));
   }
-
-
 }
 
 /**
@@ -3105,4 +3104,19 @@ function course_field_access($op, $field, $entity_type, $profile = NULL, $accoun
   if ($entity_type == 'course_enrollment' && $op == 'edit' && empty($field['settings']['course_enrollment_user_field'])) {
     return FALSE;
   }
+}
+
+/**
+ * Implements hook_course_credit_map_options().
+ */
+function course_course_credit_map_options() {
+  $instances = field_info_instances('course_enrollment', 'course_enrollment');
+  foreach ($instances as $field_name => $instance_info) {
+    $field_info = field_info_field($field_name);
+    if ($options = list_allowed_values($field_info)) {
+      $ret['course_enrollment']['mappers'][$field_name]['title'] = $instance_info['label'];
+      $ret['course_enrollment']['mappers'][$field_name]['options'] = $options;
+    }
+  }
+  return $ret;
 }
