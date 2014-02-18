@@ -996,7 +996,6 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
       'enrollmenttype' => $from,
       'status' => $status,
       'code' => $code,
-      'timestamp' => REQUEST_TIME,
     );
 
     if (isset($node->course['duration']) && $node->course['duration'] > 0) {
@@ -1379,6 +1378,21 @@ function course_take_course($node) {
   if ($take_access['success']) {
     // User has access to take this course.
     if (empty($enrollment->timestamp)) {
+      // First time starting this course. Check for enrollment fields.
+      $instances = field_info_instances('course_enrollment', 'course_enrollment');
+      foreach ($instances as $field_name => $instance) {
+        $field = field_info_field($field_name);
+        if ($field['settings']['course_enrollment_user_field']) {
+          // At least one field must be shown when enrolling. Display the user
+          // enrollment form.
+          $entities = entity_load('course_enrollment', array($enrollment->eid));
+          $course_enrollment = $entities[$enrollment->eid];
+          $form_state = form_state_defaults();
+          $form = entity_ui_get_form('course_enrollment', $course_enrollment, 'edit', $form_state);
+          return $form;
+        }
+      }
+
       // If user hasn't started course, mark start of enrollment.
       $enrollment->timestamp = REQUEST_TIME;
       course_enrollment_save($enrollment);
@@ -2865,9 +2879,6 @@ function course_entity_info() {
           ),
         ),
       ),
-      'admin ui' => array(
-        'controller class' => 'EntityDefaultUIController',
-      ),
     ),
     'course_report' => array(
       'label' => t('Course report'),
@@ -3049,10 +3060,10 @@ function course_report_label($enrollment) {
  */
 function course_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
   if ($form['instance']['entity_type']['#value'] == 'course_enrollment') {
-    $form['field']['settings']['course_enrollment'] = array(
+    $form['field']['settings']['course_enrollment_user_field'] = array(
       '#type' => 'checkbox',
       '#title' => t('Show this field on enrollment.'),
-      '#default_value' => !empty($form['#field']['settings']['course_enrollment']),
+      '#default_value' => !empty($form['#field']['settings']['course_enrollment_user_field']),
       '#description' => t('If checked, this field will be presented when starting a course.'),
     );
   }
@@ -3062,5 +3073,43 @@ function course_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
       '#type' => 'value',
       '#value' => !empty($form['#field']['settings']['course_enrollment']),
     );
+  }
+}
+
+/**
+ * Course enrollment edit form.
+ */
+function course_enrollment_form($form, &$form_state, $course_enrollment) {
+  field_attach_form('course_enrollment', $course_enrollment, $form, $form_state);
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save'),
+    '#weight' => 999,
+  );
+
+  $form['#submit'][] = 'course_enrollment_form_submit';
+  return $form;
+}
+
+/**
+ * Course enrollment submit handler.
+ */
+function course_enrollment_form_submit($form, &$form_state) {
+  $course_enrollment = $form_state['course_enrollment'];
+  field_attach_submit('course_enrollment', $course_enrollment, $form, $form_state);
+  $course_enrollment->timestamp = REQUEST_TIME;
+  entity_save('course_enrollment', $course_enrollment);
+}
+
+/**
+ * Implements hook_field_access().
+ *
+ * Don't show the user fields that weren't marked as enrollment fields.
+ */
+function course_field_access($op, $field, $entity_type, $profile = NULL, $account = NULL) {
+  if ($entity_type == 'course_enrollment' && $op == 'edit' && empty($field['settings']['course_enrollment_user_field'])) {
+    return FALSE;
   }
 }
