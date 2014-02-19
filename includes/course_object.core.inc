@@ -318,7 +318,8 @@ abstract class CourseObject extends CourseHandler {
     // Bring in access plugin configuration.
     $form['plugins']['#tree'] = TRUE;
     $form['plugins']['#weight'] = 998;
-    $form['plugins']['access']['#title'] = t('Access plugins');
+    $form['plugins']['access']['#title'] = t('Access');
+    $form['plugins']['access']['#description'] = t('By default, all required objects appearing before this object in the course outline must be completed before the user may access this object. Conditional access allows for additional conditions to be applied.');
     $form['plugins']['access']['#type'] = 'fieldset';
     foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
       $form['plugins']['access']['#tree'] = TRUE;

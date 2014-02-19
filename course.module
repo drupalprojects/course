@@ -501,7 +501,6 @@ function course_object_options_form($form, &$form_state, $courseObject) {
  */
 function course_object_options_form_validate(&$form, &$form_state) {
   if ($form_state['values']['uniqid']) {
-    $nid = $form_state['values']['nid'];
     // Get course object from session/database.
     $courseObject = course_object_load($form_state['values']['uniqid']);
     $courseObject->setId($form_state['values']['uniqid']);
@@ -516,7 +515,6 @@ function course_object_options_form_validate(&$form, &$form_state) {
  */
 function course_object_options_form_submit(&$form, &$form_state) {
   if ($form_state['values']['uniqid']) {
-    $nid = $form_state['values']['nid'];
     // Get course object from session/database.
     $courseObject = course_object_load($form_state['values']['uniqid']);
     $course = $courseObject->getCourse();
@@ -2893,9 +2891,6 @@ function course_entity_info() {
           ),
         ),
       ),
-      'admin ui' => array(
-        'controller class' => 'EntityDefaultUIController',
-      ),
     ),
     'course_object' => array(
       'label' => t('Course object'),
@@ -2917,9 +2912,6 @@ function course_entity_info() {
             'access arguments' => array('administer course'),
           ),
         ),
-      ),
-      'admin ui' => array(
-        'controller class' => 'EntityDefaultUIController',
       ),
     ),
     'course_object_fulfillment' => array(
@@ -3130,7 +3122,7 @@ function course_course_credit_map($node, $account, $mappings) {
   $enrollment = course_enrollment_load($node, $account);
   $entity = entity_load_single('course_enrollment', $enrollment->eid);
   foreach ((array) $mappings['course_enrollment'] as $field => $values) {
-    foreach ($entity->{$field}[LANGUAGE_NONE] as $idx => $item) {
+    foreach ($entity->{$field}[LANGUAGE_NONE] as $item) {
       if (in_array($item['value'], $values)) {
         return TRUE;
       }
