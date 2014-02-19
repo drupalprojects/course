@@ -96,7 +96,8 @@ function course_check_keyval($element, &$form_state) {
  * Settings form for course enrollments.
  */
 function course_enrollment_settings_form($form) {
-  $form['header']['#markup'] = t('This would be where enrollment settings go.');
+  $form['header']['#markup'] = '<p>' . t('Here, you can manage the settings related to course enrollments.') . '</p>';
+  $form['header']['#markup'] .= '<p>' . t('Fields added to the enrollment entity can optionally be displayed in a form to the user before enrollment.') . '</p>';
   return $form;
 }
 
@@ -104,7 +105,8 @@ function course_enrollment_settings_form($form) {
  * Settings form for course reporting.
  */
 function course_report_settings_form($form) {
-  $form['header']['#markup'] = t('This would be where reporting settings go.');
+  $form['header']['#markup'] = '<p>' . t('Here, you can manage the settings related to course progress and completion.') . '</p>';
+  $form['header']['#markup'] .= '<p>' . t('Fields may be added to the course progress tracker entity for future functionality.') . '</p>';
   return $form;
 }
 
@@ -112,6 +114,7 @@ function course_report_settings_form($form) {
  * Settings form for course objects.
  */
 function course_object_settings_form($form) {
-  $form['header']['#markup'] = t('This would be where object settings go.');
+  $form['header']['#markup'] = '<p>' . t('Here, you can manage the settings related to course objects.') . '</p>';
+  $form['header']['#markup'] .= '<p>' . t('Fields added to the course object entity are included on the course object editing form, and may be used in course object theme hooks.') . '</p>';
   return $form;
 }
