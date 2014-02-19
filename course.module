@@ -3129,9 +3129,9 @@ function course_course_credit_map_options() {
 function course_course_credit_map($node, $account, $mappings) {
   $enrollment = course_enrollment_load($node, $account);
   $entity = entity_load_single('course_enrollment', $enrollment->eid);
-  foreach ($mappings['course_enrollment'] as $field => $values) {
-    foreach ($entity->{$field}[LANGUAGE_NONE] as $item) {
-      if (in_array($item[0]['value'], $values)) {
+  foreach ((array) $mappings['course_enrollment'] as $field => $values) {
+    foreach ($entity->{$field}[LANGUAGE_NONE] as $idx => $item) {
+      if (in_array($item['value'], $values)) {
         return TRUE;
       }
     }
