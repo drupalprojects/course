@@ -1266,12 +1266,6 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
     '#description' => t('This content type will have %course functionality.', array('%course' => 'Course')),
   );
 
-  // Ctools dependency.
-  ctools_include('dependent');
-  $dependent = array(
-    '#dependency' => array('edit-course-use' => array(1)),
-  );
-
   // Configurable date fields.
   if (module_exists('date')) {
     $options = array();
@@ -1294,38 +1288,50 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
         }
       }
     }
-    // Enduring course dates.
-    $form['course']['course_start_date'] = array(
+    $date_settings_fs = array(
+      '#type' => 'fieldset',
+      '#title' => t('Date Settings Fieldset'),
+      '#title_display' => 'invisible',
+      '#collapsible' => FALSE,
+      '#collapsed' => FALSE,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="course_use"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+    $date_settings_fs['course_start_date'] = array(
       '#title' => t('Field to use for enduring-course start date'),
       '#description' => t('Select the field to use for enduring-course start date.'),
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_start_date_{$form['#node_type']->type}", 0),
       '#prefix' => '<h3>' . t('Enduring course dates') . '</h3>',
-      ) + $dependent;
-    $form['course']['course_expiration_date'] = array(
+    );
+    $date_settings_fs['course_expiration_date'] = array(
       '#title' => t('Field to use for enduring-course expiration date'),
       '#description' => t('Select the field to use for enduring-course expiration date.'),
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_expiration_date_{$form['#node_type']->type}", 0),
-      ) + $dependent;
+      );
     // Live course dates.
-    $form['course']['course_live_from_date'] = array(
+    $date_settings_fs['course_live_from_date'] = array(
       '#title' => t('Field to use for live-course start date'),
       '#description' => t('Select the field to use for live-course start date.'),
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_live_from_date_{$form['#node_type']->type}", 0),
       '#prefix' => '<h3>' . t('Live course dates') . '</h3>',
-      ) + $dependent;
-    $form['course']['course_live_to_date'] = array(
+      );
+    $date_settings_fs['course_live_to_date'] = array(
       '#title' => t('Field to use for live-course end date'),
       '#description' => t('Select the field to use for live-course end date.'),
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_live_to_date_{$form['#node_type']->type}", 0),
-      ) + $dependent;
+      );
+    $form['course']['date_settings_fs'] = $date_settings_fs;
   }
 }
 
