@@ -35,8 +35,10 @@ class CourseHandler {
           $data = $value;
         }
 
-        foreach ($data as $key2 => $value2) {
-          $this->setOption($key2, $value2);
+        if (is_array($data)) {
+          foreach ($data as $key2 => $value2) {
+            $this->setOption($key2, $value2);
+          }
         }
       }
       else {
