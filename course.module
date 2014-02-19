@@ -1515,8 +1515,8 @@ function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) 
     return _course_get_course_object_by_uniqid($coid, $account, $course);
   }
 
-  $entity = entity_load('course_object', array($coid));
-  if ($row = $entity[$coid]) {
+
+  if ($row = entity_load_single('course_object', $coid)) {
     $object_definition = array();
     if (!empty($available[$row->module][$row->object_type])) {
       $object_definition = $available[$row->module][$row->object_type];

@@ -26,16 +26,21 @@ class CourseHandler {
 
   function __construct($config = array()) {
     foreach ($config as $key => $value) {
-      if ($key === $this->serializedField && !is_array($value)) {
-        $data = unserialize($value);
-        if (is_array($data)) {
-          foreach ($data as $key2 => $value2) {
-            $this->setOption($key2, $value2);
-          }
+      if ($key === $this->serializedField) {
+        // This is the serialized/array storage.
+        if (!is_array($value)) {
+          $data = unserialize($value);
+        }
+        else {
+          $data = $value;
+        }
+
+        foreach ($data as $key2 => $value2) {
+          $this->setOption($key2, $value2);
         }
       }
       else {
-        $this->setOptions((array) $config);
+        $this->setOption($key, $value);
       }
     }
   }
