@@ -1319,7 +1319,7 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_expiration_date_{$form['#node_type']->type}", 0),
-      );
+    );
     // Live course dates.
     $date_settings_fs['course_live_from_date'] = array(
       '#title' => t('Field to use for live-course start date'),
@@ -1328,14 +1328,14 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
       '#options' => $options,
       '#default_value' => variable_get("course_live_from_date_{$form['#node_type']->type}", 0),
       '#prefix' => '<h3>' . t('Live course dates') . '</h3>',
-      );
+    );
     $date_settings_fs['course_live_to_date'] = array(
       '#title' => t('Field to use for live-course end date'),
       '#description' => t('Select the field to use for live-course end date.'),
       '#type' => 'select',
       '#options' => $options,
       '#default_value' => variable_get("course_live_to_date_{$form['#node_type']->type}", 0),
-      );
+    );
     $form['course']['date_settings_fs'] = $date_settings_fs;
   }
 }
@@ -2860,6 +2860,7 @@ function course_entity_info() {
           ),
         ),
       ),
+      'access callback' => 'course_access',
     ),
     'course_report' => array(
       'label' => t('Course report'),
@@ -2882,6 +2883,7 @@ function course_entity_info() {
           ),
         ),
       ),
+      'access callback' => 'course_access',
     ),
     'course_object' => array(
       'label' => t('Course object'),
@@ -2904,6 +2906,7 @@ function course_entity_info() {
           ),
         ),
       ),
+      'access callback' => 'course_access',
     ),
     'course_object_fulfillment' => array(
       'label' => t('Course object fulfillment'),
@@ -2917,6 +2920,7 @@ function course_entity_info() {
       ),
       'label callback' => 'course_object_fulfillment_label',
       'views controller class' => 'EntityDefaultViewsController',
+      'access callback' => 'course_access',
     ),
     'course' => array(
       'label' => t('Course'),
@@ -2930,6 +2934,7 @@ function course_entity_info() {
       ),
       'label callback' => 'course_label',
       'views controller class' => 'EntityDefaultViewsController',
+      'access callback' => 'course_access',
     ),
   );
 }
@@ -3119,4 +3124,11 @@ function course_course_credit_map($node, $account, $mappings) {
       }
     }
   }
+}
+
+/**
+ * Entity API access callback.
+ */
+function course_access($op, $entity, $account = NULL, $entity_type) {
+  return user_access('administer course');
 }
