@@ -102,7 +102,8 @@ function course_book_override_outline_list_item(&$item, CourseObject $courseObje
           $links = $courseObject->access('take');
 
           // Get the top level item in the tree (the book item).
-          $book_tree = reset(course_book_items($bid, $links));
+          $book_items = course_book_items($bid, $links);
+          $book_tree = reset($book_items);
           if ($book_tree['children']) {
             // Add a fully expanded list of children below the existing course
             // book outline item.
