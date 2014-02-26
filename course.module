@@ -4,7 +4,6 @@
  * @file course.module
  * Core functionality for Courses.
  */
-
 // Course outline functions
 require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/includes/course.outline.inc';
 // Course exporting functions
@@ -718,7 +717,7 @@ function course_take_course_access($node, $account = NULL, $flush = FALSE, $all 
 
   if (!$account) {
     global $user;
-    $account = user;
+    $account = $user;
   }
 
   if (!isset($courses[$node->nid]) || $flush || $all) {
@@ -726,7 +725,7 @@ function course_take_course_access($node, $account = NULL, $flush = FALSE, $all 
       $courses = array();
     }
     // Allow modules to determine if this course should be restricted.
-    $hooks = module_invoke_all('course_access', 'take', $node, $user);
+    $hooks = module_invoke_all('course_access', 'take', $node, $account);
     uasort($hooks, 'drupal_sort_weight');
     if ($all) {
       return $hooks;
@@ -758,7 +757,24 @@ function course_node_view($node, $view_mode = 'full') {
     // Render take course button.
     $show = variable_get('course_take_course_button_show', array('full' => 'full'));
     if (($view_mode == 'teaser' && !empty($show['teaser'])) || ($view_mode == 'full' && !empty($show['full']))) {
-      $node->content['course']['#markup'] = course_render_button($node);
+      global $user;
+      $access = course_enroll_access($node, $user);
+      $enrollment = course_enrollment_load($node->nid, $user->uid);
+      if (!$access['success'] && (!empty($enrollment) && $enrollment->status)) {
+        // User cannot enroll, but maybe they can take.
+        $access = course_take_course_access($node, $user);
+      }
+
+      if (!$access['success']) {
+        $node->content['course_messages']['#markup'] = '<div class="course-restriction">' . "<h2>" . $access['header'] . "</h2>" . '<div class="course-restriction-message">' . $access['message'] . '</div></div>';
+      }
+      else {
+        // Render take course button.
+        $show = variable_get('course_take_course_button_show', array('full' => 'full'));
+        if (($view_mode == 'teaser' && !empty($show['teaser'])) || ($view_mode == 'full' && !empty($show['full']))) {
+          $node->content['course']['#markup'] = theme('course_take_course_button', array('node' => $node));
+        }
+      }
     }
   }
 }
@@ -929,28 +945,6 @@ function course_save_objects(array $objects, Course $course = NULL) {
       // Save the object, creating new instances, if applicable.
       $prepareObject->save();
     }
-  }
-}
-
-/**
- * Check the permissions of showing the take course button, and return the HTML.
- */
-function course_render_button($node) {
-  global $user;
-
-  $access = course_enroll_access($node, $user);
-  $enrollment = course_enrollment_load($node->nid, $user->uid);
-  if (!$access['success'] && (!empty($enrollment) && $enrollment->status)) {
-    // User cannot enroll, but maybe they can take.
-    $access = course_take_course_access($node, $user);
-  }
-
-  if ($access['success']) {
-    // User can self-enroll and take the course. Show the button.
-    return theme('course_take_course_button', array('node' => $node));
-  }
-  else {
-    return '<div class="course-restriction">' . "<h2>" . $access['header'] . "</h2>" . '<div class="course-restriction-message">' . $access['message'] . '</div></div>';
   }
 }
 
@@ -1735,6 +1729,10 @@ function course_field_extra_fields() {
           'label' => t('Take course link'),
           'weight' => 0,
         );
+        $extra[$entity_type][$bundle]['display']['course_messages'] = array(
+          'label' => t('Course messages'),
+          'weight' => 0,
+        );
       }
     }
   }
@@ -2196,9 +2194,6 @@ function course_context() {
  * Implements hook_ctools_plugin_directory().
  */
 function course_ctools_plugin_directory($owner, $plugin_type) {
-  if ($owner == 'ctools' && $plugin_type == 'content_types') {
-    return 'plugins/content_types';
-  }
   if ($owner == 'course') {
     return "plugins/course/$plugin_type";
   }
@@ -2364,7 +2359,6 @@ function course_course_access($op, $node, $user) {
       ));
     }
 
-    $sql = "SELECT * FROM {course_enrollment} WHERE nid = %d AND uid = %d";
     if ($row = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid))->fetch()) {
       if ($row->enroll_end > 0 && REQUEST_TIME > $row->enroll_end) {
         return array(array(
