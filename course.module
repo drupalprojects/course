@@ -713,48 +713,34 @@ function course_take_course_menu_access($node) {
  *     take this course.
  *   - message: String. If success is FALSE, a message to display to the user.
  */
-function course_take_course_access($node, $account = NULL, $flush = FALSE) {
-  if (!$account) {
-    global $user;
-    $account = $user;
-  }
-
+function course_take_course_access($node, $account = NULL, $flush = FALSE, $all = FALSE) {
   $courses = &drupal_static(__FUNCTION__, array());
 
-  // Don't let anonymous users see /takecourse. Also keeps from being indexed.
-  if (arg(2) == 'takecourse' && !user_is_logged_in() && $_SERVER['SCRIPT_NAME'] != '/cron.php') {
-    drupal_set_message(t('You must login or register before taking this course.'));
-    // TODO drupal_get_destination() needs to be an array of keys and values instead of a string.
-    drupal_goto('user/login', array('query' => drupal_get_destination()));
+  if (!$account) {
+    global $user;
+    $account = user;
   }
 
-  if (!isset($courses[$node->nid]) || $flush) {
-    $courses[$node->nid]['success'] = TRUE;
+  if (!isset($courses[$node->nid]) || $flush || $all) {
+    if ($flush) {
+      $courses = array();
+    }
     // Allow modules to determine if this course should be restricted.
-    $hooks = module_invoke_all('course_access', 'take', $node, $account);
+    $hooks = module_invoke_all('course_access', 'take', $node, $user);
     uasort($hooks, 'drupal_sort_weight');
+    if ($all) {
+      return $hooks;
+    }
+    $courses[$node->nid]['success'] = TRUE;
     foreach ($hooks as $key => $hook) {
-      if (!$hook) {
-        // Ok. Old style blocker. But look for messages.
-        $courses[$node->nid] = FALSE;
-      }
       if (is_array($hook) && !$hook['success']) {
-        // New style blocker, return immediately.
         $courses[$node->nid] = $hook;
         return $hook;
       }
     }
   }
 
-  if (is_array($courses[$node->nid])) {
-    return $courses[$node->nid];
-  }
-  else {
-    return array(
-      'success' => $courses[$node->nid],
-      'message' => "Old style blocker",
-    );
-  }
+  return $courses[$node->nid];
 }
 
 /**
