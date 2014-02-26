@@ -2343,7 +2343,7 @@ function course_course_access($op, $node, $user) {
     }
 
     if (user_is_anonymous()) {
-      return array(array(
+      return array('course_noanon' => array(
           'success' => FALSE,
           'header' => '',
           'message' => t('Please !login or !register to take this course.', array(
