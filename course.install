@@ -518,13 +518,15 @@ function course_update_6122() {
 function course_update_6124() {
   $ret = array();
 
-  db_add_field('course_outline_fulfillment', 'date_started', array(
-    'type' => 'int',
-    'not null' => FALSE,
-    'unsigned' => TRUE,
-    'default' => NULL,
-    'description' => 'Date object was started.',
-  ));
+  if (!db_field_exists('course_outline_fulfillment', 'date_started')) {
+    db_add_field('course_outline_fulfillment', 'date_started', array(
+      'type' => 'int',
+      'not null' => FALSE,
+      'unsigned' => TRUE,
+      'default' => NULL,
+      'description' => 'Date object was started.',
+    ));
+  }
 
   db_add_field('course_outline', 'duration', array(
     'type' => 'int',
