@@ -182,7 +182,8 @@ function course_menu() {
     'type' => MENU_LOCAL_TASK,
     'page callback' => 'course_object_reports_page',
     'page arguments' => array(1),
-    'access arguments' => array('access all course reports'),
+    'access callback' => '_course_reports_access',
+    'access arguments' => array(1),
     'file' => 'includes/course.reports.inc',
   );
 
@@ -3112,4 +3113,11 @@ function course_course_credit_map($node, $account, $mappings) {
  */
 function course_access($op, $entity, $account = NULL, $entity_type) {
   return user_access('administer course');
+}
+
+/**
+ * Access callback for course objects menu tab.
+ */
+function _course_reports_access($node) {
+  return node_access('update', $node) || user_access('access all course reports');
 }
