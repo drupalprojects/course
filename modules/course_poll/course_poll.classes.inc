@@ -6,15 +6,7 @@
 class CourseObjectPoll extends CourseObjectNode {
 
   function getTakeType() {
-    return 'content';
-  }
-
-  /**
-   * Take or view the results of a poll. Wrapper for poll_view().
-   */
-  function take() {
-    poll_view($this->node, 'full');
-    return drupal_render($this->node->content);
+    return 'redirect';
   }
 
   public function create($node = NULL) {
