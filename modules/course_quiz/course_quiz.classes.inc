@@ -16,7 +16,12 @@ class CourseObjectQuiz extends CourseObjectNode {
    * The take URL of the quiz is /take.
    */
   function getTakeUrl() {
-    return url("node/{$this->node->nid}/take");
+    if ($this->getOption('quiz_goto') == "view") {
+      return url("node/{$this->node->nid}");
+    }
+    else {
+      return url("node/{$this->node->nid}/take");
+    }
   }
 
   /**
@@ -47,6 +52,7 @@ class CourseObjectQuiz extends CourseObjectNode {
   public function optionsDefinition() {
     $options = parent::optionsDefinition();
 
+    $options['quiz_goto'] = 'view';
     $options['passing_grade'] = 75;
 
     return $options;
@@ -58,6 +64,17 @@ class CourseObjectQuiz extends CourseObjectNode {
   public function optionsForm(&$form, &$form_state) {
     parent::optionsForm($form, $form_state);
     $defaults = $this->getOptions();
+
+    $form['node']['quiz_goto'] = array(
+      '#type' => 'select',
+      '#title' => t('Quiz entry point'),
+      '#options' => array(
+        'view' => t('View Quiz'),
+        'take' => t('Take Quiz'),
+      ),
+      '#default_value' => $defaults['quiz_goto'],
+      '#description' => t('Selecting "Take Quiz" will launch the user directly into taking the quiz, without viewing the quiz body.'),
+    );
 
     $form['grading']['passing_grade'] = array(
       '#title' => t('Passing grade'),
