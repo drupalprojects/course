@@ -3,7 +3,7 @@
 require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
 
 /**
- * Tests for Course enrollment
+ * Tests for Course grade.
  */
 class CourseGradeTestCase extends CourseTestCase {
 
@@ -26,7 +26,7 @@ class CourseGradeTestCase extends CourseTestCase {
     $co1 = $this->createCourseObject($courseNode, TRUE);
 
     // Reload the course from DB.
-    $course = course_get_course($courseNode);
+    $course = course_get_course($courseNode, $this->student_user);
     $courseObjects = $course->getObjects();
     $co1 = $courseObjects[0];
 
@@ -57,13 +57,13 @@ class CourseGradeTestCase extends CourseTestCase {
     $this->createCourseObject($courseNode);
 
     // Reload the course from DB.
-    $course = course_get_course($courseNode, NULL, TRUE);
+    $course = course_get_course($courseNode, $this->student_user, TRUE);
     $courseObjects = $course->getObjects();
     $co1 = $courseObjects[0];
     $co2 = $courseObjects[1];
 
     // Set object 1 to be included in the course grade.
-    $co1->setOption('grade_include', TRUE);
+    $co1->setOption('grade_include', TRUE)->save();
 
     // Set object 2 to require a course grade of 80.
     $co2->addOptions(array(
@@ -74,17 +74,20 @@ class CourseGradeTestCase extends CourseTestCase {
           ),
         ),
       ),
-    ));
+    ))->save();
+
+    // Enroll the user.
+    course_enroll($courseNode, $this->student_user);
 
     // Complete but don't hit the grade requirement.
-    $co1->getFulfillment()->setOption('grade_result', 79)->setComplete(1);
+    $co1->getFulfillment()->setOption('grade_result', 79)->setComplete(1)->save();
     $course->getTracker()->track();
-    $this->assertFalse($co2->access('take'), 'User cannot take course object with lower grade.');
+    $this->assertFalse($co2->access('take', $this->student_user), 'User cannot take course object with lower grade.');
 
     // Hit the grade requirement.
-    $co1->getFulfillment()->setOption('grade_result', 80)->setComplete(1);
+    $co1->getFulfillment()->setOption('grade_result', 80)->setComplete(1)->save();
     $course->getTracker()->track();
-    $this->assertTrue($co2->access('take'), 'User can take course object with required grade.');
+    $this->assertTrue($co2->access('take', $this->student_user), 'User can take course object with required grade.');
   }
 
 }
