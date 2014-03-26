@@ -1444,6 +1444,22 @@ function course_enrollment_save($enrollment) {
 }
 
 /**
+ * Implements hook_course_enrollment_insert().
+ */
+function course_course_enrollment_insert($enrollment) {
+  course_course_enrollment_update($enrollment);
+}
+
+/**
+ * Implements hook_course_enrollment_update().
+ */
+function course_course_enrollment_update($enrollment) {
+  $node = node_load($enrollment->nid);
+  $account = node_load($enrollment->uid);
+  course_get_course($node, $account)->getTracker()->track();
+}
+
+/**
  * Get a course object by its unique identifier (sessioned course object).
  *
  * @param string $uniqid
