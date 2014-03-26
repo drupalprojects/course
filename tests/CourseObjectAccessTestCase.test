@@ -33,8 +33,11 @@ class CourseObjectAccessTestCase extends CourseTestCase {
 
     $co = $course->getObjects();
 
-    // Student should not be able to access the first object.
+    // Student should not be able to access any objects.
     $this->assertFalse($co[0]->access('take', $user), 'Check that object 1 is not accessible.');
+    $this->assertFalse($co[1]->access('take', $user), 'Check that object 2 is not accessible.');
+    $this->assertFalse($co[2]->access('take', $user), 'Check that object 3 is not accessible.');
+    $this->assertFalse($co[3]->access('take', $user), 'Check that object 4 is not accessible.');
 
     // (until they are enrolled)
     course_enroll($courseNode, $user);

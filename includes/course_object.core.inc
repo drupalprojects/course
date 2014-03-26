@@ -126,14 +126,15 @@ abstract class CourseObject extends CourseHandler {
         // the global course.
         $course = clone $this->getCourse();
         $course->setActive($this->getId());
-
-
         $courseObjects = $course->getObjects();
-        if ($courseObjects && $courseObjects[0]->getId() == $this->getId()) {
-          // This is the first course object. The learner should be able to
-          // access it. Also, check for enrollment. Since there are no other
-          // checks (as in previous object completions) we do have to check this.
-          $access = course_enrollment_check($this->getCourseNid(), $account->uid);
+
+        // Deny object access to non-enrolled users.
+        if (!course_enrollment_check($this->getCourseNid(), $account->uid)) {
+          return FALSE;
+        }
+        else if ($courseObjects[0]->getId() == $this->getId()) {
+          // User is enrolled. Grant access if first object.
+          $access = TRUE;
         }
 
         if ($course->getPrev() && !$course->getPrev()->isRequired()) {
