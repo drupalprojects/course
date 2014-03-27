@@ -767,7 +767,7 @@ function course_node_view($node, $view_mode = 'full') {
       }
 
       if (!$access['success']) {
-        $node->content['course_messages']['#markup'] = '<div class="course-restriction">' . "<h2>" . $access['header'] . "</h2>" . '<div class="course-restriction-message">' . $access['message'] . '</div></div>';
+        $node->content['course_messages']['#markup'] = '<div class="course-restriction">' . "<h4>" . $access['header'] . "</h4>" . '<div class="course-restriction-message">' . $access['message'] . '</div></div>';
       }
       else {
         // Render take course button.
