@@ -3095,6 +3095,7 @@ function course_field_access($op, $field, $entity_type, $profile = NULL, $accoun
  * Implements hook_course_credit_map_options().
  */
 function course_course_credit_map_options() {
+  $ret = array();
   $instances = field_info_instances('course_enrollment', 'course_enrollment');
   foreach ($instances as $field_name => $instance_info) {
     $field_info = field_info_field($field_name);
