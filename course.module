@@ -1089,8 +1089,8 @@ function course_enrollment_load($nid, $uid = NULL) {
   }
 
   if (is_null($uid)) {
-    $enrollments = course_enrollment_load_multiple(array($nid));
-    return $enrollments[$nid];
+    $eid = $nid;
+    return course_enrollment_load($eid);
   }
 
   if (is_object($uid)) {
@@ -1098,8 +1098,7 @@ function course_enrollment_load($nid, $uid = NULL) {
   }
 
   if ($enrollment = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $nid, ':uid' => $uid))->fetch()) {
-    $enrollments[$enrollment->eid] = $enrollment;
-    return $enrollments[$enrollment->eid];
+    return entity_load_single('course_enrollment', $enrollment->eid);
   }
 
   return FALSE;
@@ -1109,13 +1108,7 @@ function course_enrollment_load($nid, $uid = NULL) {
  * Load multiple enrollments from enrollment IDs.
  */
 function course_enrollment_load_multiple(array $eids) {
-  $enrollments = array();
-  $sql = "SELECT * FROM {course_enrollment} WHERE eid IN (:eids)";
-  $result = db_query($sql, array(':eids' => $eids));
-  while ($row = $result->fetch()) {
-    $enrollments[$row->eid] = $row;
-  }
-  return $enrollments;
+  return entity_load('course_enrollment', $eids);
 }
 
 /**
@@ -2537,13 +2530,7 @@ function course_report_load($mixed, $user = NULL) {
  * Load multiple course reports by ID.
  */
 function course_report_load_multiple(array $crids) {
-  $course_reports = array();
-  $sql = "SELECT * FROM {course_report} WHERE crid in (:crids)";
-  $result = db_query($sql, $crids);
-  while ($row = $result->fetch()) {
-    $course_reports[$row->crid] = $row;
-  }
-  return $course_reports;
+  return entity_load('course_report', $crids);
 }
 
 /**
@@ -2840,7 +2827,6 @@ function course_entity_info() {
       'label' => t('Course enrollment'),
       'controller class' => 'EntityAPIController',
       'base table' => 'course_enrollment',
-      'load hook' => 'course_enrollment_load',
       'uri callback' => 'course_enrollment_uri',
       'fieldable' => TRUE,
       'entity keys' => array(
@@ -2863,7 +2849,6 @@ function course_entity_info() {
       'label' => t('Course report'),
       'controller class' => 'EntityAPIController',
       'base table' => 'course_report',
-      'load hook' => 'course_report_load',
       'uri callback' => 'course_report_uri',
       'fieldable' => TRUE,
       'entity keys' => array(
@@ -2886,7 +2871,6 @@ function course_entity_info() {
       'label' => t('Course object'),
       'controller class' => 'EntityAPIController',
       'base table' => 'course_outline',
-      'load hook' => 'course_object_load',
       'uri callback' => 'course_object_uri',
       'fieldable' => TRUE,
       'entity keys' => array(
@@ -2909,7 +2893,6 @@ function course_entity_info() {
       'label' => t('Course object fulfillment'),
       'controller class' => 'EntityAPIController',
       'base table' => 'course_outline_fulfillment',
-      'load hook' => 'course_object_fulfillment_load',
       'uri callback' => 'course_object_fulfillment_uri',
       'fieldable' => FALSE,
       'entity keys' => array(
@@ -2923,7 +2906,6 @@ function course_entity_info() {
       'label' => t('Course'),
       'controller class' => 'EntityAPIController',
       'base table' => 'course_node',
-      'load hook' => 'course_load',
       'uri callback' => 'course_uri',
       'fieldable' => FALSE,
       'entity keys' => array(
