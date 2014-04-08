@@ -726,8 +726,9 @@ function course_take_course_access($node, $account = NULL, $flush = FALSE, $all 
       $courses = array();
     }
     // Allow modules to determine if this course should be restricted.
-    $hooks = module_invoke_all('course_access', 'take', $node, $account);
-    drupal_alter('course_access', $hooks, 'take');
+    $op = 'take';
+    $hooks = module_invoke_all('course_access', $op, $node, $account);
+    drupal_alter('course_access', $hooks, $op);
     uasort($hooks, 'drupal_sort_weight');
     if ($all) {
       return $hooks;
@@ -2307,8 +2308,9 @@ function course_enroll_access($node, $user = NULL, $flush = FALSE, $all = FALSE)
       $courses = array();
     }
     // Allow modules to set self-enrollment access for a user.
-    $hooks = module_invoke_all('course_access', 'enroll', $node, $user);
-    drupal_alter('course_access', $hooks, 'enroll');
+    $op = 'enroll';
+    $hooks = module_invoke_all('course_access', $op, $node, $user);
+    drupal_alter('course_access', $hooks, $op);
     uasort($hooks, 'drupal_sort_weight');
     if ($all) {
       return $hooks;
