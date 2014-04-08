@@ -227,3 +227,16 @@ function hook_course_enroll($node, $user) {
 function hook_course_unenroll($node, $user) {
   drupal_set_message("User unenrolled from course.");
 }
+
+/**
+ * Implements hook_course_access_alter().
+ */
+function hook_course_access_alter(&$hooks, $op) {
+  if ($op == 'enroll') {
+    $hooks['wait_a_minute'] = array(
+      'message' => t('You cannot take this course.'),
+      'weight' => 5,
+      'success' => FALSE,
+    );
+  }
+}
