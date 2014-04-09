@@ -1092,7 +1092,7 @@ function course_enrollment_load($nid, $uid = NULL) {
 
   if (is_null($uid)) {
     $eid = $nid;
-    return course_enrollment_load($eid);
+    return entity_load_single('course_enrollment', $eid);
   }
 
   if (is_object($uid)) {
