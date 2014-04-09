@@ -550,16 +550,16 @@ class Course extends CourseHandler {
     $links = array();
 
     if ($prev) {
-      $links['prev'] = l('Previous', $prev->getUrl(), array('html' => TRUE));
+      $links['prev'] = l(t('Previous'), $prev->getUrl(), array('html' => TRUE));
     }
 
-    $links['back'] = l('Back to course', $this->getUrl());
+    $links['back'] = l(t('Back to course'), $this->getUrl());
 
     if ($next && $next->access('take')) {
-      $links['next'] = l('Next', $next->getUrl(), array('html' => TRUE));
+      $links['next'] = l(t('Next'), $next->getUrl(), array('html' => TRUE));
     }
     elseif (!$next && $this->getTracker()->getOption('complete')) {
-      $links['next'] = l('Next', 'node/' . $this->getOption('nid') . '/course-complete', array('html' => TRUE));
+      $links['next'] = l(t('Next'), 'node/' . $this->getOption('nid') . '/course-complete', array('html' => TRUE));
     }
 
     // Ask course objects if they want to override the navigation.
