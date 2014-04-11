@@ -231,7 +231,7 @@ function hook_course_unenroll($node, $user) {
 /**
  * Implements hook_course_access_alter().
  */
-function hook_course_access_alter(&$hooks, $op) {
+function hook_course_access_alter(&$hooks, $op, $node, $account) {
   if ($op == 'enroll') {
     $hooks['wait_a_minute'] = array(
       'message' => t('You cannot take this course.'),
