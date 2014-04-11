@@ -2310,7 +2310,7 @@ function course_enroll_access($node, $user = NULL, $flush = FALSE, $all = FALSE)
     // Allow modules to set self-enrollment access for a user.
     $op = 'enroll';
     $hooks = module_invoke_all('course_access', $op, $node, $user);
-    drupal_alter('course_access', $hooks, $op, $node, $account);
+    drupal_alter('course_access', $hooks, $op, $node, $user);
     uasort($hooks, 'drupal_sort_weight');
     if ($all) {
       return $hooks;
