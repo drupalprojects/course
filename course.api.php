@@ -122,7 +122,7 @@ function hook_course_handlers_alter(&$handlers, $module) {
  * @param object $account
  *   The user who just took the course.
  *
- * @see course_outline_show_complete_links()
+ * @see course_completion_page()
  */
 function hook_course_outline_completion_links_alter(&$links, $course_node, $account) {
   // Example: add a link.
@@ -141,7 +141,7 @@ function hook_course_outline_completion_links_alter(&$links, $course_node, $acco
  * @param object $account
  *   The user who just took the course.
  *
- * @see course_outline_show_complete_links()
+ * @see course_completion_page()
  */
 function hook_course_outline_incomplete_links_alter(&$links, $course_node, $account) {
   // Example: change the default link.

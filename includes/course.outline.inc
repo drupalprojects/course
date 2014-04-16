@@ -507,20 +507,31 @@ function course_outline_list($node) {
  *
  * @param stdClass $course_node A course node.
  *
- * @return string HTML for the landing page.
- *
- * @todo change the name of this function (since it's more than just completion
- * links).
+ * @return render array for the completion landing page.
  */
-function course_outline_show_complete_links($course_node) {
+function course_completion_page($course_node) {
   global $user;
   $account = $user;
+
+  // User's course record.
   $report = course_report_load($course_node, $account);
-  $txt_out = '';
+
+  // Render array.
+  $page = array();
+
   if ($report->complete) {
-    $txt_out .= '<p>' . t('Thank you for participating in this course.') . '</p>';
+    $page['course_completion_header'] = array(
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#markup' => t('Thank you for participating in this course.'),
+    );
+
     $links = array(
-      'course' => array(t('Return to course'), "node/$course_node->nid", t('Return to the course to view course details and material.')),
+      'course' => array(
+        t('Return to course'),
+        "node/$course_node->nid",
+        t('Return to the course to view course details and material.'),
+      ),
     );
     // Allow modules to add links to the course completion landing page, such as
     // post-course actions.
@@ -528,6 +539,13 @@ function course_outline_show_complete_links($course_node) {
   }
   else {
     drupal_set_title(t('Remaining requirements'));
+
+    $page['course_completion_header'] = array(
+      '#prefix' => '<p>',
+      '#suffix' => '</p>',
+      '#markup' => t('You must complete the remaining requirements to complete this course.'),
+    );
+
     $course = course_get_course($course_node, $account);
     $objects = $course->getObjects();
     $requirements_outstanding = array();
@@ -551,13 +569,18 @@ function course_outline_show_complete_links($course_node) {
         $req->getCourseObject()->getTitle() . $status_optional . '<br/>' . $req->getCourseObject()->getStatus(),
       );
     }
-    $reqs_txt = theme('table', array('header' => NULL, 'rows' => $items));
 
-    $txt_out .= '<p>' . t('You must complete the remaining requirements to complete this course.') . '</p>';
-    $txt_out .= $reqs_txt;
+    $page['course_completion_requirements'] = array(
+      '#theme' => 'table',
+      '#header' => NULL,
+      '#rows' => $items,
+    );
 
     $links = array(
-      'course' => array(t('Return to course'), "node/$course_node->nid/takecourse", t('Return to the course to view course details and material.')),
+      'course' => array(t('Return to course'),
+        "node/$course_node->nid/takecourse",
+        t('Return to the course to view course details and material.'),
+      ),
     );
 
     // Allow modules to alter remaining requirement links on the course
@@ -565,16 +588,17 @@ function course_outline_show_complete_links($course_node) {
     drupal_alter('course_outline_incomplete_links', $links, $course_node, $account);
   }
 
-  foreach ($links as $link) {
+  foreach ($links as $key => $link) {
     $element = array(
       '#title' => l($link[0], $link[1], array('html' => TRUE)),
       '#description' => $link[2],
       '#children' => '',
+      '#theme' => 'form_element',
     );
-    $txt_out .= theme('form_element', array('element' => $element));
+    $page['course_links'][$key] = $element;
   }
 
-  return $txt_out;
+  return $page;
 }
 
 /**
