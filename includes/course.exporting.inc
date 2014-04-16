@@ -5,9 +5,9 @@
  *
  * Display warning messages if there are objects which might not properly clone.
  */
-function course_clone_node_alter(&$node, $original_node, $method) {
-  if ($method == 'prepopulate') {
-    $course = course_get_course($original_node);
+function course_clone_node_alter(&$node, $context) {
+  if ($context['method'] == 'prepopulate') {
+    $course = course_get_course($context['original_node']);
     course_clone_warning_messages($course);
   }
 }
@@ -26,7 +26,7 @@ function course_clone_warning_messages($course) {
     }
   }
   if ($messages) {
-    drupal_set_message(filter_xss_admin(theme('item_list', array('items' => $messages, 'title' => t('Cloning issues'))), 'warning'));
+    drupal_set_message(filter_xss_admin(theme('item_list', array('items' => $messages, 'title' => t('Cloning issues')))), 'warning');
   }
 }
 
