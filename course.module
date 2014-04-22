@@ -2387,12 +2387,13 @@ function course_course_access($op, $node, $user) {
     }
 
     if (user_is_anonymous()) {
+      $options = array('query' => drupal_get_destination());
       return array('course_noanon' => array(
           'success' => FALSE,
           'header' => '',
           'message' => t('Please !login or !register to take this course.', array(
-            '!login' => l(t('login'), 'user/login'),
-            '!register' => l(t('register'), 'user/register'),
+            '!login' => l(t('login'), 'user/login', $options),
+            '!register' => l(t('register'), 'user/register', $options),
           )),
           'weight' => 300,
       ));
