@@ -65,7 +65,7 @@ class CourseObjectQuiz extends CourseObjectNode {
     parent::optionsForm($form, $form_state);
     $defaults = $this->getOptions();
 
-    $form['node']['quiz_goto'] = array(
+    $form['quiz_goto'] = array(
       '#type' => 'select',
       '#title' => t('Quiz entry point'),
       '#options' => array(

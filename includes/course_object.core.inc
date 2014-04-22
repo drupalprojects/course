@@ -240,7 +240,7 @@ abstract class CourseObject extends CourseHandler {
 
     $config = $this->getOptions();
 
-    $form['header']['#value'] = t("<h2>Settings for %t</h2>", array('%t' => $this->getTitle()));
+    $form['header']['#markup'] = t("<h2>Settings for %t</h2>", array('%t' => $this->getTitle()));
 
     $form['uniqid'] = array(
       '#type' => 'hidden',
@@ -252,46 +252,85 @@ abstract class CourseObject extends CourseHandler {
       '#value' => arg(1),
     );
 
+    $form['course_tabs']['#type'] = 'vertical_tabs';
+
     $form['title'] = array(
-      '#title' => t('Title'),
-      '#type' => 'textfield',
-      '#size' => 100,
-      '#default_value' => check_plain($config['title']),
+      '#title' => t('Title & description'),
+      '#type' => 'fieldset',
+      '#group' => 'course_tabs',
+      '#weight' => 0,
     );
 
-    $form['enabled'] = array(
+
+    $form['outline'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Settings'),
+      '#group' => 'course_tabs',
+      '#weight' => 1,
+    );
+
+    $form['plugins']['access'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Access',
+      '#group' => 'course_tabs',
+      '#weight' => 4,
+    );
+
+    $form['delete'] = array(
+      '#type' => 'fieldset',
+      '#title' => 'Delete',
+      '#group' => 'course_tabs',
+      '#weight' => 5,
+    );
+
+    $form['title']['title'] = array(
+      '#title' => t('Title'),
+      '#type' => 'textfield',
+      '#description' => t('The title of this course object as it will appear to users in the course outline.'),
+      '#size' => 100,
+      '#default_value' => check_plain($config['title']),
+      '#group' => 'description',
+    );
+
+    $form['outline']['enabled'] = array(
       '#title' => t('Enabled'),
       '#type' => 'checkbox',
+      '#description' => t('Enabled course objects will become part of the course. Uncheck this box if you are not using this course object.'),
       '#default_value' => $config['enabled'],
     );
 
-    $form['hidden'] = array(
+    $form['outline']['hidden'] = array(
       '#title' => t('Visible in outline'),
       '#type' => 'checkbox',
-      //'#description' => t('Hide this course object in the course outline. If this object is required, progress through the course will be blocked until this object is complete.'),
+      '#description' => t('Objects that are not visible will not be seen by the learner. Uncheck this box for course objects that you do not want the learner to see.'),
       '#default_value' => !$config['hidden'],
+      '#group' => 'course',
     );
 
-    $form['required'] = array(
+    $form['outline']['required'] = array(
       '#title' => t('Completion required'),
       '#type' => 'checkbox',
+      '#description' => t('Learners must complete required objects. Uncheck this box if this is an optional course object.'),
       '#default_value' => $config['required'],
     );
 
 
-    $form['delete'] = array(
+    $form['delete']['delete'] = array(
       '#title' => t('Delete'),
       '#type' => 'checkbox',
+      '#description' => t('Deleting course content is irreversible.'),
       '#default_value' => $config['delete'],
+      '#group' => 'delete',
     );
 
     // Only allow deletion of existing instances.
     if (!empty($config['instance'])) {
-      $form['delete_instance'] = array(
-        '#title' => t('Also delete related object instance(s)'),
+      $form['delete']['delete_instance'] = array(
+        '#title' => t('Also delete the referenced content.'),
         '#type' => 'checkbox',
         '#default_value' => $config['delete_instance'],
-        '#dependency' => array('edit-delete' => array(1)),
+        '#dependency' => array('edit-delete--2' => array(1)),
+        '#group' => 'delete',
       );
 
       // Check for multiple instances.
@@ -306,6 +345,7 @@ abstract class CourseObject extends CourseHandler {
         '#title' => t('Grading'),
         '#type' => 'fieldset',
         '#description' => t('Settings for graded objects.'),
+        '#group' => 'course_tabs',
       );
 
       $form['grading']['grade_include'] = array(
@@ -318,7 +358,6 @@ abstract class CourseObject extends CourseHandler {
 
     // Bring in access plugin configuration.
     $form['plugins']['#tree'] = TRUE;
-    $form['plugins']['#weight'] = 998;
     $form['plugins']['access']['#title'] = t('Access');
     $form['plugins']['access']['#description'] = t('By default, all required objects appearing before this object in the course outline must be completed before the user may access this object. Conditional access allows for additional conditions to be applied.');
     $form['plugins']['access']['#type'] = 'fieldset';
@@ -404,17 +443,13 @@ abstract class CourseObject extends CourseHandler {
     // Get options.
     $options = $this->getOptions();
 
-    // Get form for titles.
-    $form = array();
-    $this->optionsForm($form, $form_state);
-
     // Add course object core options to summary individually, because there are
     // options we don't want to display, and others that require special logic.
     $uniqid = $options['uniqid'];
 
     // Enabled.
     if ($options['enabled']) {
-      $summary['enabled'] = $form['enabled']['#title'];
+      $summary['enabled'] = t('Enabled');
     }
     else {
       $summary['enabled'] = '<span class="warning">' . t('Not enabled') . '</span>';
@@ -422,7 +457,7 @@ abstract class CourseObject extends CourseHandler {
 
     // Hidden.
     if (!$options['hidden']) {
-      $summary['hidden'] = $form['hidden']['#title'];
+      $summary['hidden'] = t('Visible in outline');
     }
     else {
       $summary['hidden'] = '<span class="warning">' . t('Not visible in outline') . '</span>';
@@ -430,7 +465,7 @@ abstract class CourseObject extends CourseHandler {
 
     // Required.
     if ($options['required']) {
-      $summary['required'] = $form['required']['#title'];
+      $summary['required'] = t('Completion required');
     }
     else {
       $summary['required'] = '<span class="warning">' . t('Completion not required') . '</span>';
@@ -714,6 +749,16 @@ abstract class CourseObject extends CourseHandler {
    */
   function getModule() {
     return $this->getOption('module');
+  }
+
+  /**
+   * Get the object component title for this course object.
+   *
+   * @return string
+   */
+  function getComponentName() {
+    $handlers = course_get_handlers('object');
+    return $handlers[$this->getModule()][$this->getComponent()]['name'];
   }
 
   /**
@@ -1189,8 +1234,10 @@ abstract class CourseObjectNode extends CourseObject {
 
     $form['node'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Node'),
-      '#description' => ('Settings for node-based objects.'),
+      '#title' => t('Content'),
+      '#description' => ('Settings for course object content.'),
+      '#group' => 'course_tabs',
+      '#weight' => 2,
     );
 
     $config = $this->getOptions();
@@ -1201,7 +1248,7 @@ abstract class CourseObjectNode extends CourseObject {
 
       $form['node']['use_existing_node'] = array(
         '#type' => 'checkbox',
-        '#title' => t('Use an existing node'),
+        '#title' => t('Use existing content'),
         '#default_value' => 0,
       );
 
@@ -1238,7 +1285,7 @@ abstract class CourseObjectNode extends CourseObject {
     $form['node']['use_node_title'] = array(
       '#type' => 'checkbox',
       '#title' => t('Use node title'),
-      '#description' => t('Use the referenced node title as the course object title.'),
+      '#description' => t("Use the referenced content's title as this course object's title."),
       '#default_value' => $config['use_node_title'],
     );
 

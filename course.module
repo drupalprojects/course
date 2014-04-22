@@ -491,6 +491,41 @@ function course_object_options_form($form, &$form_state, $courseObject) {
   $form = array();
   $courseObject->optionsForm($form, $form_state);
   field_attach_form('course_object', (object) $courseObject->getOptions(), $form, $form_state);
+  foreach (element_children($form) as $key) {
+    $element = $form[$key];
+    if ($element['#type'] == 'container') {
+      $form['title'][$key] = $element;
+      unset($form[$key]);
+    }
+  }
+
+  $form[$courseObject->getComponent()] = array(
+    '#title' => $courseObject->getComponentName(),
+    '#type' => 'fieldset',
+    '#group' => 'course_tabs',
+    '#description' => t('Configuration for !name course objects.', array('!name' => $courseObject->getComponentName())),
+  );
+
+  $form['#after_build'][] = 'course_object_options_form_after_build';
+  return $form;
+}
+
+function course_object_options_form_after_build($form, &$form_state) {
+  $courseObject = $form_state['build_info']['args'][0];
+  $fieldset_key = $courseObject->getComponent();
+
+  foreach (element_children($form) as $key) {
+    $element = $form[$key];
+    // @todo I want to catch all object-provided fields and group them into a
+    // fieldset. I should probably do this with an OO design change so that we
+    // know where the fields are coming from. Consider adding a
+    // CourseObject::objectOptionsForm which will separate object-specific
+    // behavior from Course-specific behavior.
+    if (!in_array($element['#type'], array('', 'hidden', 'submit', 'button')) && $element['#input']) {
+      $form[$fieldset_key][$key] = $element;
+      unset($form[$key]);
+    }
+  }
   return $form;
 }
 
