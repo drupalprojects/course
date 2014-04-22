@@ -161,7 +161,7 @@ function course_uc_init() {
  * Satisfy payment requirement when manually enrolled.
  */
 function course_uc_course_enroll($node, $user) {
-  $course = course_get_course($node);
+  $course = course_get_course($node, $user);
   if (course_uc_payment_is_first($course)) {
     foreach ($course->getObjects() as $courseObject) {
       $courseObject->getFulfillment()->setComplete(TRUE)->save();
