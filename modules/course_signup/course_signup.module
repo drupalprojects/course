@@ -241,6 +241,7 @@ function course_signup_course_access($op, $node, $user) {
     }
 
     if (!empty($node->signup) && empty($node->signup_status)) {
+      module_load_include('inc', 'signup', 'includes/date');
       $field = signup_date_field($node->type);
       $items = field_get_items('node', $node, $field['field_name']);
       if (!empty($items[0]['value'])) {
