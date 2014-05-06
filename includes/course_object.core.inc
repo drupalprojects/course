@@ -1284,7 +1284,7 @@ abstract class CourseObjectNode extends CourseObject {
 
     $form['node']['use_node_title'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Use node title'),
+      '#title' => t('Use existing title'),
       '#description' => t("Use the referenced content's title as this course object's title."),
       '#default_value' => $config['use_node_title'],
     );
