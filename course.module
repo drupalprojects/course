@@ -2983,7 +2983,7 @@ function course_entity_property_info_alter(&$info) {
   $info['course_object']['properties']['nid']['type'] = 'node';
   $info['course_object']['properties']['required']['type'] = 'boolean';
 
-  $info['course_object_fulfillment']['properties']['coid']['type'] = 'course_outline';
+  $info['course_object_fulfillment']['properties']['coid']['type'] = 'course_object';
   $info['course_object_fulfillment']['properties']['complete']['type'] = 'boolean';
   $info['course_object_fulfillment']['properties']['date_completed']['type'] = 'date';
   $info['course_object_fulfillment']['properties']['date_started']['type'] = 'date';
