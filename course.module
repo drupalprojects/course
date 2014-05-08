@@ -796,11 +796,14 @@ function course_node_view($node, $view_mode = 'full') {
     $show = variable_get('course_take_course_button_show', array('full' => 'full'));
     if (($view_mode == 'teaser' && !empty($show['teaser'])) || ($view_mode == 'full' && !empty($show['full']))) {
       global $user;
-      $access = course_enroll_access($node, $user);
       $enrollment = course_enrollment_load($node->nid, $user->uid);
-      if (!$access['success'] && (!empty($enrollment) && $enrollment->status)) {
-        // User cannot enroll, but maybe they can take.
+      if ((!empty($enrollment) && $enrollment->status)) {
+        // User is already in course. Check take access.
         $access = course_take_course_access($node, $user);
+      }
+      else {
+        // User not in course. Check enroll access.
+        $access = course_enroll_access($node, $user);
       }
 
       if (!$access['success']) {
@@ -2401,7 +2404,7 @@ function course_course_access($op, $node, $user) {
   }
   if ($op == 'take') {
     if (!node_access('view', $node)) {
-      return array(array(
+      return array('course_node_access' => array(
           'success' => FALSE,
           'header' => t('Access denied'),
           'message' => t('You do not have permission to take this course.'),
@@ -2411,7 +2414,7 @@ function course_course_access($op, $node, $user) {
 
     if ($row = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid))->fetch()) {
       if ($row->enroll_end > 0 && REQUEST_TIME > $row->enroll_end) {
-        return array(array(
+        return array('course_enrollment_expired' => array(
             'success' => FALSE,
             'header' => t('Enrollment expired'),
             'message' => t('Sorry, your enrollment has expired for this course.'),
@@ -2419,7 +2422,7 @@ function course_course_access($op, $node, $user) {
       }
     }
     else {
-      return array(array(
+      return array('course_not_enrolled' => array(
           'success' => FALSE,
           'header' => t('Not enrolled.'),
           'message' => t('Sorry, you must first enroll in this course.'),
