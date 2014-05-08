@@ -229,7 +229,7 @@ function course_schema() {
         'description' => 'Course outline display handler.',
       ),
       'credits' => array(
-        'type' => 'float',
+        'type' => 'numeric',
         'description' => 'Course credit.',
         'precision' => 6,
         'scale' => 2,
