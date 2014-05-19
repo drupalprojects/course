@@ -867,6 +867,9 @@ function course_node_update($node) {
       }
     }
 
+    // 'Credits' is a numeric field so we need to ensure that it is a number.
+    $record['credits'] = floatval($record['credits']);
+
     $existing = db_query('SELECT 1 FROM {course_node} WHERE nid = :nid', array(':nid' => $node->nid))->fetchField();
     $update = $existing ? array('nid') : array();
     drupal_write_record('course_node', $record, $update);
@@ -1186,14 +1189,16 @@ function course_field_attach_form($entity_type, $entity, &$form, &$form_state, $
     '#description' => t('This controls the presentation of the course objects.'),
   );
 
-  // This is a fake field. It stores the aggregate credit from course_credit.
-  // @todo...something
-  $form['course']['credits'] = array(
-    '#title' => t('Credit hours'),
-    '#type' => 'textfield',
-    '#size' => 4,
-    '#access' => FALSE,
-  );
+  // This is a simple credit hours field. If course_credit is enabled it used
+  // for storing the maximum credit of any credit instance.
+  if (!module_exists('course_credit')) {
+    $form['course']['credits'] = array(
+      '#title' => t('Credits'),
+      '#type' => 'textfield',
+      '#size' => 4,
+      '#description' => t('For more advanced crediting, use the !link module.', array('!link' => l('Course credit', 'http://drupal.org/project/course_credit'))),
+    );
+  }
 
   $form['course']['duration'] = array(
     '#title' => t('Duration'),
