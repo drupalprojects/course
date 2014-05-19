@@ -45,3 +45,14 @@ function course_quiz_quiz_scored($quiz, $score, $rid) {
     course_quiz_quiz_finished($quiz, $score, $session_data);
   }
 }
+
+/**
+ * What major version of Quiz are we running?
+ *
+ * @return int
+ *  4 or 5.
+ */
+function course_quiz_quiz_version() {
+   $schema_version = db_query("SELECT schema_version FROM {system} WHERE name = 'quiz'")->fetchField();
+   return ($schema_version >= 7500) ? 5 : 4;
+}

@@ -119,7 +119,7 @@ class CourseObjectQuiz extends CourseObjectNode {
       case 'results':
         return array(
           'title' => t('Quiz results'),
-          'content' => drupal_render(drupal_get_form('quiz_results_manage_results_form', $this->node)),
+          'content' => (course_quiz_quiz_version() == 5) ? views_embed_view('quiz_results', 'default', $this->node->nid) : drupal_render(drupal_get_form('quiz_results_manage_results_form', $this->node)),
         );
       case 'statistics':
         module_load_include('inc', 'quiz_stats', 'quiz_stats.admin');
