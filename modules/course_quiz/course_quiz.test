@@ -51,6 +51,9 @@ class CourseObjectQuizTestCase extends CourseTestCase {
       'correct_answer' => 1,
     ), t('Save'));
 
+    // Makes tests work against 7.x-4.x and 7.x-5.x. Node ID of the question is 3.
+    $answer_element = drupal_get_installed_schema_version('quiz') >= 7500 ? "question[3]" : "tries";
+
     // Enroll the user in the course
     course_enroll($courseNode, $this->quiz_admin);
 
@@ -58,7 +61,7 @@ class CourseObjectQuizTestCase extends CourseTestCase {
     $this->drupalGet("node/{$quizNode->nid}/take");
     $this->assertFalse($co1->getFulfillment()->isComplete(), 'Check that quiz fulfillment is not complete after fail.');
     $this->drupalPost(NULL, array(
-      'tries' => 0,
+      $answer_element => 0,
     ), t('Finish'));
 
     // Reload because something happened in the DB.
@@ -68,7 +71,7 @@ class CourseObjectQuizTestCase extends CourseTestCase {
     // Pass the quiz.
     $this->drupalGet("node/{$quizNode->nid}/take");
     $this->drupalPost(NULL, array(
-      'tries' => 1,
+      $answer_element => 1,
     ), t('Finish'));
 
     // Reload because something happened in the DB.
