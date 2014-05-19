@@ -93,7 +93,13 @@ class CourseObjectQuiz extends CourseObjectNode {
 
     if ($this->getInstanceId()) {
       if (!quiz_get_number_of_questions($this->node->vid)) {
-        $warnings[] = t('This Quiz does not have any questions. Please !link.', array('!link' => l('add questions', "node/{$this->getInstanceId()}/questions")));
+        if (course_quiz_quiz_version() >= 5) {
+          $link = l('add questions', "node/{$this->getInstanceId()}/quiz/questions");
+        }
+        else {
+          $link = l('add questions', "node/{$this->getInstanceId()}/questions");
+        }
+        $warnings[] = t('This Quiz does not have any questions. Please !link.', array('!link' => $link));
       }
     }
 
@@ -119,7 +125,7 @@ class CourseObjectQuiz extends CourseObjectNode {
       case 'results':
         return array(
           'title' => t('Quiz results'),
-          'content' => (course_quiz_quiz_version() == 5) ? views_embed_view('quiz_results', 'default', $this->node->nid) : drupal_render(drupal_get_form('quiz_results_manage_results_form', $this->node)),
+          'content' => (course_quiz_quiz_version() >= 5) ? views_embed_view('quiz_results', 'default', $this->node->nid) : drupal_render(drupal_get_form('quiz_results_manage_results_form', $this->node)),
         );
       case 'statistics':
         module_load_include('inc', 'quiz_stats', 'quiz_stats.admin');
@@ -166,7 +172,12 @@ class CourseObjectQuiz extends CourseObjectNode {
   function getOptionsSummary() {
     $summary = parent::getOptionsSummary();
     if ($this->getInstanceId()) {
-      $summary['questions'] = l('Edit questions', "node/{$this->getInstanceId()}/questions");
+      if (course_quiz_quiz_version() >= 5) {
+        $summary['questions'] = l('Edit questions', "node/{$this->getInstanceId()}/quiz/questions");
+      }
+      else {
+        $summary['questions'] = l('Edit questions', "node/{$this->getInstanceId()}/questions");
+      }
     }
     return $summary;
   }
