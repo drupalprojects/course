@@ -868,7 +868,7 @@ function course_node_update($node) {
     }
 
     // 'Credits' is a numeric field so we need to ensure that it is a number.
-    $record['credits'] = floatval($record['credits']);
+    $record['credits'] = isset($records['credits']) ? floatval($record['credits']) : 0;
 
     $existing = db_query('SELECT 1 FROM {course_node} WHERE nid = :nid', array(':nid' => $node->nid))->fetchField();
     $update = $existing ? array('nid') : array();
