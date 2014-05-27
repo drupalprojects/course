@@ -582,7 +582,7 @@ class Course extends CourseHandler {
   /**
    * Get the course objects in this course.
    *
-   * @return array
+   * @return CourseObject[]
    *   An array of course objects.
    */
   public function getObjects($flush = FALSE) {
