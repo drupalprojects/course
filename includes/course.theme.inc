@@ -29,7 +29,8 @@ function theme_course_outline_item($variables) {
     $output = $img . ' ' . l("{$object->getTitle()}<br/>", $step['link'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status'] . '</span>';
   }
 
-  return $output;
+  $co = entity_load_single('course_object', $object->getid());
+  return drupal_render(entity_view('course_object', array($co)));
 }
 
 /**

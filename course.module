@@ -1791,6 +1791,12 @@ function course_field_extra_fields() {
       }
     }
   }
+
+  $extra['course_object']['course_object']['display']['course_outline_link'] = array(
+    'label' => t('Link to the course object'),
+    'weight' => 0,
+  );
+
   return $extra;
 }
 
@@ -3167,4 +3173,27 @@ function course_access($op, $entity, $account = NULL, $entity_type) {
  */
 function _course_reports_access($node) {
   return node_access('update', $node) || user_access('access all course reports');
+}
+
+/**
+ * Implements hook_entity_view().
+ */
+function course_entity_view($entity, $type, $view_mode, $langcode) {
+  if ($type == 'course_object') {
+    $courseObject = course_get_course_object_by_id($entity->coid);
+    $fields = field_extra_fields_get_display($type, 'course_object', $view_mode);
+    $entity->content['course_outline_link'] = array(
+      '#markup' => l($courseObject->getTitle(), $courseObject->getUrl()),
+      '#weight' => $fields['course_outline_link']['weight'],
+    );
+  }
+}
+
+/**
+ * Generate URI from course object.
+ */
+function course_object_uri($entity) {
+  return array(
+    'path' => 'node/' . $entity->nid . 'course-object/' . $entity->coid,
+  );
 }
