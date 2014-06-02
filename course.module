@@ -3183,7 +3183,7 @@ function course_entity_view($entity, $type, $view_mode, $langcode) {
     $courseObject = course_get_course_object_by_id($entity->coid);
     $fields = field_extra_fields_get_display($type, 'course_object', $view_mode);
     $entity->content['course_outline_link'] = array(
-      '#markup' => l($courseObject->getTitle(), $courseObject->getUrl()),
+      '#markup' => $courseObject->access('take') ? l($courseObject->getTitle(), $courseObject->getUrl()) : $courseObject->getTitle(),
       '#weight' => $fields['course_outline_link']['weight'],
     );
   }
