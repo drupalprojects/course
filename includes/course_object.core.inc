@@ -870,7 +870,6 @@ abstract class CourseObject extends CourseHandler {
    *
    * For example, removing a user to an access control list.
    *
-   * @todo This isn't called anywhere useful, yet.
    * @see CourseObjectNode::revoke()
    */
   function revoke() {

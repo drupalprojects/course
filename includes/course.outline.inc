@@ -108,7 +108,7 @@ function course_outline_overview_form($form, &$form_state) {
       $rform = _course_outline_object_form($courseObject);
 
       // Keep track of how many of each course object we have.
-      // @todo probably some simpler way to do this effectively
+      // @kludge probably some simpler way to do this effectively
       if (!isset($object_counts[$courseObject->getModule()][$courseObject->getComponent()])) {
         $object_counts[$courseObject->getModule()][$courseObject->getComponent()] = 1;
       }
@@ -307,7 +307,7 @@ function theme_course_outline_overview_form(&$variables) {
 
     // Deletion handling.
     $nid = $object['nid']['#value'];
-    // @todo should we unify this, so we always use $courseObject->getOptions()
+    // @kludge should we unify this, so we always use $courseObject->getOptions()
     // instead of pulling from the session?
     if (!empty($_SESSION['course'][$nid]['editing'][$key]['delete'])) {
       $rows[$key]['class'] = array('deleted');

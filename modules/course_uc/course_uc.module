@@ -267,9 +267,6 @@ function course_uc_rules_action_info() {
 function course_uc_enroll_user_in_ordered_courses($order) {
   foreach ($order->products as $product) {
     $node = node_load($product->nid);
-    // TODO Convert "user_load" to "user_load_multiple" if "$order->uid" is other than a uid.
-    // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
-    // Example: array_shift(user_load_multiple(array(), $order->uid))
     $user = user_load($order->uid);
 
     if (course_node_is_course($node)) {

@@ -1,4 +1,4 @@
-// @todo the only interval ajax we have so far. consider comet for the future
+// @kludge the only interval ajax we have so far. consider comet for the future
 // and maybe use this as a fallback for servers that don't have node.js etc.
 
 (function ($) {

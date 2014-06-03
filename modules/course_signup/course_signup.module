@@ -116,9 +116,6 @@ function course_signup_signup_enroll($signup) {
   if ($signup->uid && $signup->nid && $signup->count_towards_limit && empty($signup->anon_mail)) {
     $node = node_load($signup->nid);
     if (course_node_is_course($node)) {
-      // TODO Convert "user_load" to "user_load_multiple" if "$signup->uid" is other than a uid.
-      // To return a single user object, wrap "user_load_multiple" with "array_shift" or equivalent.
-      // Example: array_shift(user_load_multiple(array(), $signup->uid))
       $user = user_load($signup->uid);
       course_enroll($node, $user, 'course_signup');
     }

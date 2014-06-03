@@ -42,8 +42,6 @@ function course_install() {
  * Implements hook_uninstall().
  */
 function course_uninstall() {
-  // TODO The drupal_(un)install_schema functions are called automatically in D7.
-  // drupal_uninstall_schema('course')
 }
 
 /**
@@ -452,7 +450,6 @@ function course_schema() {
 function course_update_6121() {
   $ret = array();
   $sql = "DELETE ce.* FROM {course_enrolment} ce LEFT JOIN {users} u ON (ce.uid = u.uid) WHERE u.uid IS NULL";
-  // TODO update_sql has been removed. Use the database API for any schema or data changes.
   $ret[] = array() /* update_sql($sql) */;
   $ret[] = array(
     'success' => TRUE,
@@ -480,8 +477,6 @@ function course_update_6122() {
     }
     $row->data['passing_grade'] = $row->passing_grade;
     $row->data = serialize($row->data);
-    // TODO Please review the conversion of this statement to the D7 database API syntax.
-    /* db_query("UPDATE {course_outline} SET data = '%s' WHERE snid = %d", $row->data, $row->snid) */
     db_update('course_outline')
       ->fields(array(
         'data' => $row->data,
@@ -579,7 +574,6 @@ function course_update_6126() {
 
   if ($delete) {
     $sql = "DELETE FROM {course_outline_fulfillment} WHERE sfid in (:sfids)";
-    // TODO Please convert this statement to the D7 database API syntax.
     db_query($sql, array(':sfids' => $delete));
   }
 

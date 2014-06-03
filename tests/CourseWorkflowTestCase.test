@@ -66,7 +66,7 @@ class CourseWorkflowTestCase extends CourseTestCase {
     $this->assertText(t('I am a test course object with the title !title', array('!title' => $co2->getOption('title'))));
 
     // Set the second object complete.
-    // @todo: the below two lines shouldn't be necessary, but something is
+    // @kludge: the below two lines shouldn't be necessary, but something is
     // happening with object sharing
     $course = course_get_course($courseNode, $this->learner, TRUE);
     $objects = $course->getObjects();
