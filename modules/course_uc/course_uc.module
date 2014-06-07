@@ -45,10 +45,12 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
     // If there are any other blockers (like date based access) then do not
     // display the add to cart button as it would be a method to enroll,
     // bypassing the restrictions.
-    $blockers = course_enroll_access($node, $user, TRUE, TRUE);
-    foreach ($blockers as $key => $blocker) {
-      if (!$blocker['success'] && $key != 'course_must_purchase') {
-        $form['actions']['submit']['#access'] = FALSE;
+    if (course_node_is_course($node)) {
+      $blockers = course_enroll_access($node, $user, TRUE, TRUE);
+      foreach ($blockers as $key => $blocker) {
+        if (!$blocker['success'] && $key != 'course_must_purchase') {
+          $form['actions']['submit']['#access'] = FALSE;
+        }
       }
     }
   }
