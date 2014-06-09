@@ -20,6 +20,7 @@ class CourseObjectBookTestCase extends CourseTestCase {
     $modules = parent::getModules();
     $modules[] = 'book';
     $modules[] = 'course_book';
+    $modules[] = 'node_access_book';
     return $modules;
   }
 
@@ -76,6 +77,70 @@ class CourseObjectBookTestCase extends CourseTestCase {
     // Reload course object
     $co1 = course_get_course_object_by_id($co1->getId(), $this->book_admin);
     $this->assertTrue($co1->getFulfillment()->isComplete(), 'Check that book object is now complete after visiting 3/3 pages.');
+  }
+
+  /**
+   * Books have special behavior when it comes to content access. All the
+   * sub pages should be protected.
+   */
+  function testBookCourseObjectContentAccess() {
+    $this->drupalLogin($this->book_admin);
+
+    // Create a course with 1 book.
+    $courseNode = $this->createCourseNode();
+    $co1 = course_get_course_object('course_book', 'book');
+    $co1->setCourse($courseNode->nid);
+    // Set to private.
+    $co1->setOption('private', 1);
+    $co1->save();
+
+    // Add some more book pages.
+    $bp1 = $this->drupalCreateNode(array(
+      'type' => 'book',
+      'book' => array(
+        'bid' => $co1->getInstanceId(),
+      ),
+    ));
+
+    $bp2 = $this->drupalCreateNode(array(
+      'type' => 'book',
+      'book' => array(
+        'bid' => $co1->getInstanceId(),
+      ),
+    ));
+
+    // Try to visit the protected pages.
+    $this->drupalLogin($this->student_user);
+    $this->drupalGet("node/$bp1->nid");
+    $this->assertResponse(403);
+    $this->drupalGet("node/$bp2->nid");
+    $this->assertResponse(403);
+
+    // Add a new page to the book, after it is already saved.
+    $this->drupalLogin($this->book_admin);
+    $bp3 = $this->drupalCreateNode(array(
+      'type' => 'book',
+      'book' => array(
+        'bid' => $co1->getInstanceId(),
+      ),
+    ));
+
+    // Check that the new book page also had it's ACL set up.
+    $this->drupalLogin($this->student_user);
+    $this->drupalGet("node/$bp3->nid");
+    $this->assertResponse(403);
+
+    // Enroll the user in the course and go to the first object.
+    course_enroll($courseNode, $this->student_user);
+    $this->drupalGet("node/{$courseNode->nid}/course-object/" . $co1->getId());
+
+    // Make sure user can access all the sub-pages now.
+    $this->drupalGet("node/$bp1->nid");
+    $this->assertResponse(200);
+    $this->drupalGet("node/$bp2->nid");
+    $this->assertResponse(200);
+    $this->drupalGet("node/$bp3->nid");
+    $this->assertResponse(200);
   }
 
 }

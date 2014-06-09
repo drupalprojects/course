@@ -244,3 +244,17 @@ function course_book_items_recurse($tree, $links, $exclude, $depth_limit) {
 
   return array_values($items);
 }
+
+/**
+ * Implements hook_node_insert().
+ *
+ * Resave the book course object associated with this book page.
+ *
+ * We need to do this so that proper hooks get run to set content access.
+ */
+function course_book_node_insert($node) {
+  global $user;
+  if ($courseObject = course_get_course_object('course_book', 'book', $node->book['bid'], $user)) {
+    $courseObject->save();
+  }
+}

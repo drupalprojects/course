@@ -68,6 +68,10 @@ class CourseObjectBook extends CourseObjectNode {
         '#default_value' => $config['outline_list_item_type'],
       );
     }
+
+    if (!module_exists('node_access_book')) {
+      $form['node']['private']['#description'] .= '<br/><span style="color: #d00">If using "private", you should install <a href="http://drupal.org/project/node_access_book">Node access book</a> to ensure that book sub-pages obey the content access on the book parent.';
+    }
   }
 
   /**
@@ -126,6 +130,36 @@ class CourseObjectBook extends CourseObjectNode {
 
   public function getCloneAbility() {
     return t('%title will only clone the first page.', array('%title' => $this->getTitle()));
+  }
+
+  /**
+   * Override of CourseObjectNode::save()
+   *
+   * We have to remove the stock "view" content access permissions on Books, if
+   * node_access_book is enabled. Otherwise, users outside of the course can
+   * still access child book pages of a private book parent.
+   */
+  public function save() {
+    // Take care of the parent book page.
+    parent::save();
+
+    if ($this->hasNodePrivacySupport() && $this->getOption('private') && module_exists('node_access_book')) {
+      // Remove "view" permissions on all the child pages.
+      $flat = array();
+      $tree = menu_tree_all_data($this->node->book['menu_name']);
+      _book_flatten_menu($tree, $flat);
+      foreach ($flat as $item) {
+        $nid = str_replace('node/', '', $item['link_path']);
+        $node = node_load($nid);
+
+        $settings = content_access_get_per_node_settings($node);
+        $settings['view'] = array();
+        content_access_save_per_node_settings($node, $settings);
+
+        // Resave node to update access.
+        node_save($node);
+      }
+    }
   }
 
 }
