@@ -1,12 +1,5 @@
 name = Course test module
 core = 7.x
-dependencies[] = acl
-dependencies[] = content_access
 dependencies[] = course
-dependencies[] = entity
-dependencies[] = entity_token
-dependencies[] = node_access_book
-dependencies[] = rules
 files[] = course_test.classes.inc
-test_dependencies[] = uuid
 hidden = TRUE
