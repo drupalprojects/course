@@ -2246,9 +2246,7 @@ function course_context() {
  * Implements hook_ctools_plugin_directory().
  */
 function course_ctools_plugin_directory($owner, $plugin_type) {
-  if ($owner == 'course') {
-    return "plugins/course/$plugin_type";
-  }
+  return "plugins/$plugin_type";
 }
 
 /**
@@ -2816,7 +2814,7 @@ function course_admin_paths() {
  */
 function course_ctools_plugin_type() {
   return array(
-    'access' => array(),
+    'course_object_access' => array(),
   );
 }
 

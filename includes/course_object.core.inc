@@ -177,7 +177,7 @@ abstract class CourseObject extends CourseHandler {
 
     // Plugin access.
 
-    foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
+    foreach (ctools_get_plugins('course', 'course_object_access') as $key => $plugin) {
       $class = ctools_plugin_get_class($plugin, 'handler');
       $accessPluginDefaults = array();
       if (isset($this->config['plugins']['access'][$key])) {
@@ -361,7 +361,7 @@ abstract class CourseObject extends CourseHandler {
     $form['plugins']['access']['#title'] = t('Access');
     $form['plugins']['access']['#description'] = t('By default, all required objects appearing before this object in the course outline must be completed before the user may access this object. Conditional access allows for additional conditions to be applied.');
     $form['plugins']['access']['#type'] = 'fieldset';
-    foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
+    foreach (ctools_get_plugins('course', 'course_object_access') as $key => $plugin) {
       $form['plugins']['access']['#tree'] = TRUE;
       $form['plugins']['access'][$key] = array(
         '#title' => $plugin['title'],
@@ -395,7 +395,7 @@ abstract class CourseObject extends CourseHandler {
   public function optionsValidate(&$form, &$form_state) {
     // Pass validation to plugins.
     ctools_include('plugins');
-    foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
+    foreach (ctools_get_plugins('course', 'course_object_access') as $key => $plugin) {
       $values = & $form_state['values']['plugins']['access'][$key];
       $class = ctools_plugin_get_class($plugin, 'handler');
       $instance = new $class($values);
@@ -423,7 +423,7 @@ abstract class CourseObject extends CourseHandler {
     }
 
     // Save plugin info.
-    foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
+    foreach (ctools_get_plugins('course', 'course_object_access') as $key => $plugin) {
       $_SESSION['course'][$nid]['editing'][$uniqid]['plugins']['access'][$key] = $form_state['values']['plugins']['access'][$key];
     }
 
@@ -505,7 +505,7 @@ abstract class CourseObject extends CourseHandler {
     $summary = $this->getOptionsSummary();
 
     // Get summaries from plugins, and merge into the summary.
-    foreach (ctools_get_plugins('course', 'access') as $key => $plugin) {
+    foreach (ctools_get_plugins('course', 'course_object_access') as $key => $plugin) {
       // @todo how do we get these?
     }
 
