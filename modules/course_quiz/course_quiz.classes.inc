@@ -154,7 +154,7 @@ class CourseObjectQuiz extends CourseObjectNode {
   }
 
   function getCloneAbility() {
-    return t('%object can only be partially cloned. It will be created with the same settings, but the without the questions', array('%object' => $this->getTitle()));
+    return t('%object can only be partially cloned. It will be created with the same settings, but without the questions.', array('%object' => $this->getTitle()));
   }
 
   /**
