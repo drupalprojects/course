@@ -212,21 +212,24 @@ function course_menu() {
     'title' => 'Course object settings',
     'page callback' => 'course_object_options',
     'page arguments' => array(1, 3, 4),
-    'access callback' => TRUE,
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 1),
   );
 
   // Course object edit
   $items['node/%course/course-object/%ctools_js/%course_object/restore'] = array(
     'page callback' => 'course_object_restore',
     'page arguments' => array(1, 3, 4),
-    'access callback' => TRUE,
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 1),
     'type' => MENU_CALLBACK,
   );
 
   // AHAH handler.
   $items['node/%course/course-outline/%ctools_js/more/%'] = array(
     'page callback' => 'course_outline_overview_js_more',
-    'access callback' => TRUE,
+    'access callback' => 'node_access',
+    'access arguments' => array('update', 1),
     'type' => MENU_CALLBACK,
     'page arguments' => array(1, 3, 5),
   );
