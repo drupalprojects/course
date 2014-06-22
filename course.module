@@ -496,7 +496,7 @@ function course_object_options_form($form, &$form_state, $courseObject) {
   field_attach_form('course_object', (object) $courseObject->getOptions(), $form, $form_state);
   foreach (element_children($form) as $key) {
     $element = $form[$key];
-    if ($element['#type'] == 'container') {
+    if (!empty($element['#type']) && $element['#type'] == 'container') {
       $form['title'][$key] = $element;
       unset($form[$key]);
     }
@@ -524,7 +524,7 @@ function course_object_options_form_after_build($form, &$form_state) {
     // know where the fields are coming from. Consider adding a
     // CourseObject::objectOptionsForm which will separate object-specific
     // behavior from Course-specific behavior.
-    if (!in_array($element['#type'], array('', 'hidden', 'submit', 'button')) && $element['#input']) {
+    if (!empty($element['#type']) && !in_array($element['#type'], array('', 'hidden', 'submit', 'button')) && !empty($element['#input'])) {
       $form[$fieldset_key][$key] = $element;
       unset($form[$key]);
     }
