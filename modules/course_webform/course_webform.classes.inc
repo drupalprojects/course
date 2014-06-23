@@ -55,9 +55,10 @@ class CourseObjectWebform extends CourseObjectNode {
           'content' => webform_results_analysis($this->node),
         );
       case 'download':
+        $out = drupal_get_form('webform_results_download_form', $this->node);
         return array(
           'title' => t('Webform results'),
-          'content' => drupal_render(drupal_get_form('webform_results_download_form', $this->node)),
+          'content' => drupal_render($out),
         );
     }
   }

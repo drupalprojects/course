@@ -53,9 +53,10 @@ class CourseObjectPoll extends CourseObjectNode {
           'content' => poll_view_results($this->node, NULL, NULL, NULL),
         );
       case 'all':
+        $out = poll_votes($this->node);
         return array(
           'title' => 'All votes',
-          'content' => drupal_render(poll_votes($this->node)),
+          'content' => drupal_render($out),
         );
     }
   }
