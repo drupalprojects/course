@@ -18,7 +18,9 @@ class CourseObjectBookTestCase extends CourseTestCase {
 
   function getModules() {
     $modules = parent::getModules();
+    $modules[] = 'acl';
     $modules[] = 'book';
+    $modules[] = 'content_access';
     $modules[] = 'course_book';
     $modules[] = 'node_access_book';
     return $modules;

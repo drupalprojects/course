@@ -254,7 +254,9 @@ function course_book_items_recurse($tree, $links, $exclude, $depth_limit) {
  */
 function course_book_node_insert($node) {
   global $user;
-  if ($courseObject = course_get_course_object('course_book', 'book', $node->book['bid'], $user)) {
-    $courseObject->save();
+  if (!empty($node->book['bid'])) {
+    if ($courseObject = course_get_course_object('course_book', 'book', $node->book['bid'], $user)) {
+      $courseObject->save();
+    }
   }
 }
