@@ -1363,7 +1363,7 @@ abstract class CourseObjectNode extends CourseObject {
         $acl_id = content_access_get_acl_id($this->node, 'view');
         acl_add_user($acl_id, $uid);
         acl_node_add_acl($this->node->nid, $acl_id, 1, 0, 0, content_access_get_settings('priority', $this->node->type));
-        node_save($this->node);
+        node_access_acquire_grants($this->node);
       }
     }
   }
@@ -1378,7 +1378,7 @@ abstract class CourseObjectNode extends CourseObject {
         module_load_include('inc', 'content_access', 'content_access.admin');
         $acl_id = content_access_get_acl_id($this->node, 'view');
         acl_remove_user($acl_id, $uid);
-        node_save($this->node);
+        node_access_acquire_grants($this->node);
       }
     }
   }
