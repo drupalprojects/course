@@ -2050,16 +2050,23 @@ function course_edit_enrollment_action($object, $context) {
 function course_edit_enrollment_action_form($a1, $context) {
   $form = array();
 
-  $node = node_load(arg(1));
-
-  if (!$node) {
-    return array();
+  $nids = array();
+  $enrollments = entity_load('course_enrollment', $context['selection']);
+  foreach ($enrollments as $enrollment) {
+    $nids[] = $enrollment->nid;
+    $uids[] = $enrollment->uid;
   }
 
-  $num_users = count($context['selection']);
+  if (count(array_unique($nids)) == 1) {
+    $node = node_load(reset($nids));
+  }
+
+  if (count(array_unique($nids)) == 1) {
+    $user = user_load(reset($uids));
+  }
 
   $form['header'] = array(
-    '#value' => format_plural($num_users, 'Use this form to edit course enrollment and completion data for 1 user', 'Use this form to edit course enrollment and completion data for @count users'),
+    '#value' => format_plural(count(array_unique($nids)), 'Use this form to edit course enrollment and completion data for 1 user', 'Use this form to edit course enrollment and completion data for @count users'),
   );
 
   // Check if this action is being performed on a single user, and set the
@@ -2067,29 +2074,13 @@ function course_edit_enrollment_action_form($a1, $context) {
   $account = NULL;
   $enroll = NULL;
   $course_report = NULL;
-  if ($num_users == 1) {
+  if (count(array_unique($nids)) == 1) {
     // Only one user, so let's prefill values.
     $selection = reset($context['selection']);
 
     $enroll = course_enrollment_load($selection);
     $account = user_load($enroll->uid);
     $course_report = course_report_load($node, $account);
-  }
-
-  // Get course objects, with or without a single user account information.
-  $course = course_get_course($node, $account);
-  $objects = $course->getObjects();
-
-  // Build a list of a single user's fulfillments.
-  $fulfillments = NULL;
-  if ($account) {
-    $fulfillments = array();
-    foreach ($objects as $courseObject) {
-      // Find required course objects the user has not yet completed.
-      //if ($courseObject->getOption('required') && !$courseObject->getOption('complete')) {
-      $fulfillments[$courseObject->getId()] = $courseObject->getFulfillment();
-      //}
-    }
   }
 
   $form['status'] = array(
@@ -2133,29 +2124,44 @@ function course_edit_enrollment_action_form($a1, $context) {
     '#default_value' => !empty($course_report->date_completed) ? format_date($course_report->date_completed, 'custom', 'Y-m-d H:i') : NULL,
   );
 
-  $form['course_objects'] = array(
-    '#title' => t('Set completion status'),
-    '#description' => t('Set the status of a course object to be applied to selected users.'),
-    '#type' => 'fieldset',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#tree' => TRUE,
-    '#prefix' => '<span id="course-objects-wrapper">',
-    '#suffix' => '</span>',
-  );
+  if (isset($node)) {
+    // Get course objects, with or without a single user account information.
+    $course = course_get_course($node, $account);
+    $objects = $course->getObjects();
 
-  foreach ($objects as $courseObject) {
-    $form['course_objects'][$courseObject->getId()] = array(
-      '#type' => 'select',
-      '#title' => check_plain($courseObject->getTitle()),
-      '#options' => array(
-        '' => '- no change - ',
-        1 => t('Complete'),
-        -1 => t('Incomplete'),
-        0 => t('Failed'),
-      ),
-      '#default_value' => $fulfillments ? $fulfillments[$courseObject->getId()]->isComplete() : NULL,
+    // Build a list of a single user's fulfillments.
+    $fulfillments = NULL;
+    if ($account) {
+      $fulfillments = array();
+      foreach ($objects as $courseObject) {
+        $fulfillments[$courseObject->getId()] = $courseObject->getFulfillment();
+      }
+    }
+
+    $form['course_objects'] = array(
+      '#title' => t('Set completion status'),
+      '#description' => t('Set the status of a course object to be applied to selected users.'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#tree' => TRUE,
+      '#prefix' => '<span id="course-objects-wrapper">',
+      '#suffix' => '</span>',
     );
+
+    foreach ($objects as $courseObject) {
+      $form['course_objects'][$courseObject->getId()] = array(
+        '#type' => 'select',
+        '#title' => check_plain($courseObject->getTitle()),
+        '#options' => array(
+          '' => '- no change - ',
+          1 => t('Complete'),
+          -1 => t('Incomplete'),
+          0 => t('Failed'),
+        ),
+        '#default_value' => $fulfillments ? $fulfillments[$courseObject->getId()]->isComplete() : NULL,
+      );
+    }
   }
 
   return $form;
