@@ -1962,7 +1962,7 @@ function course_add_enrollment_action($user, $context) {
  * Action to unenroll a user.
  */
 function course_remove_enrollment_action(&$enrollment, $context) {
-  $node = node_load($_SESSION['vbo_course']);
+  $node = node_load($enrollment->nid);
   $user = user_load($enrollment->uid);
   course_unenroll($node, $user);
 }
