@@ -1496,7 +1496,7 @@ function course_course_enrollment_insert($enrollment) {
  */
 function course_course_enrollment_update($enrollment) {
   $node = node_load($enrollment->nid);
-  $account = node_load($enrollment->uid);
+  $account = user_load($enrollment->uid);
   course_get_course($node, $account)->getTracker()->track();
 }
 
