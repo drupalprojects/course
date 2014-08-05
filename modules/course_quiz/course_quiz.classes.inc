@@ -123,10 +123,15 @@ class CourseObjectQuiz extends CourseObjectNode {
     module_load_include('inc', 'quiz', 'quiz.admin');
     switch ($key) {
       case 'results':
-        $out = drupal_get_form('quiz_results_manage_results_form', $this->node);
+        if (course_quiz_quiz_version() >= 5) {
+          $out = views_embed_view('quiz_results', 'default', $this->node->nid);
+        }
+        else {
+          $out = drupal_get_form('quiz_results_manage_results_form', $this->node);
+        }
         return array(
           'title' => t('Quiz results'),
-          'content' => (course_quiz_quiz_version() >= 5) ? views_embed_view('quiz_results', 'default', $this->node->nid) : drupal_render($out),
+          'content' =>  $out,
         );
       case 'statistics':
         module_load_include('inc', 'quiz_stats', 'quiz_stats.admin');
