@@ -102,7 +102,7 @@ function course_signup_signup_update($signup) {
  */
 function course_signup_signup_delete($signup) {
   $node = node_load($signup->nid);
-  $user = node_load($signup->uid);
+  $user = user_load($signup->uid);
   course_unenroll($node, $user);
 }
 
