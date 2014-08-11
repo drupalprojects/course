@@ -73,6 +73,10 @@ class CourseObjectSignup extends CourseObjectNode {
   }
 
   function getCloneAbility() {
+    return t('Attendance objects will be created as a reference to the new course.');
+  }
+
+  function freeze() {
     return TRUE;
   }
 
