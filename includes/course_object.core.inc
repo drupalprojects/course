@@ -1400,7 +1400,7 @@ abstract class CourseObjectNode extends CourseObject {
       content_access_save_per_node_settings($this->node, $settings);
 
       // Resave node to update access.
-      node_save($this->node);
+      node_access_acquire_grants($this->node);
     }
   }
 
