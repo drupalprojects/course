@@ -49,6 +49,9 @@ class CourseWorkflowTestCase extends CourseTestCase {
     $this->clickLink('Course object 1');
     $this->assertText(t('I am a test course object with the title !title', array('!title' => $co1->getOption('title'))));
 
+    // Refresh the course because we made browser calls above.
+    $course = course_get_course($courseNode, $this->learner, TRUE);
+
     $objects = $course->getObjects();
     // Set the first object complete.
     $objects[0]->getFulfillment()->setComplete(1)->save();
