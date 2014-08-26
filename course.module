@@ -2359,7 +2359,7 @@ function course_course_access($op, $node, $user) {
       ));
     }
 
-    if (user_is_anonymous()) {
+    if ($user->uid == 0) {
       $options = array('query' => drupal_get_destination());
       return array('course_noanon' => array(
           'success' => FALSE,
