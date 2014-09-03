@@ -49,7 +49,7 @@ class CourseObjectPoll extends CourseObjectNode {
     switch ($key) {
       case 'results':
         return array(
-          'title' => t('Poll results'),
+          'title' => $this->node->title,
           'content' => poll_view_results($this->node, NULL, NULL, NULL),
         );
       case 'all':
