@@ -58,17 +58,18 @@ function course_handle_clone($node) {
   if (isset($node->clone_from_original_nid) && $original = node_load($node->clone_from_original_nid)) {
     $node->course['objects'] = $original->course['objects'];
     switch ($node->course['clone_type']) {
-      case 'clone':
-        foreach ($node->course['objects'] as &$object_data) {
-          $courseObject = course_get_course_object_by_id($object_data->coid);
-          $object_data->freeze = $courseObject->freeze();
-        }
-        break;
       case 'reference':
         break;
       case 'new':
         foreach ($node->course['objects'] as $object_data) {
           unset($object_data->instance);
+        }
+        break;
+      case 'clone':
+      default:
+        foreach ($node->course['objects'] as &$object_data) {
+          $courseObject = course_get_course_object_by_id($object_data->coid);
+          $object_data->freeze = $courseObject->freeze();
         }
         break;
     }
