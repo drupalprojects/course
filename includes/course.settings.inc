@@ -6,45 +6,11 @@
  */
 
 /**
- * Menu callback: Define the Course settings form.
- *
- * @param array $settings
- *   (optional) The loaded settings handler.
+ * Menu callback: Define the Course settings page.
  */
-function course_settings_overview($form, &$form_state) {
-  // Course settings handler forms. This allows Course to ensure consistent
-  // placement of forms from modules that define settings handlers through
-  // hook_course_handlers().
-  $form['course_extensions'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Settings overview'),
-  );
-  $modules = course_get_handlers('settings');
-  $handlers = array();
-  foreach ($modules as $settings) {
-    if (is_array($settings)) {
-      $handlers += $settings;
-    }
-  }
-  $header = array(t('Package'), t('Description'), t('Operations'));
-  $rows = array();
-  foreach ($handlers as $handler_key => $handler_info) {
-    // Generate a list of each handler category.
-    $package_key = isset($handler_info['package']) ? $handler_info['package'] : $handler_key;
-    $package_info = $handlers[$package_key] ? $handlers[$package_key] : $handler_info;
-
-    if (!isset($package_set[$package_key])) {
-      $rows[] = array(
-        $package_info['name'],
-        $package_info['description'],
-        l(t('Edit'), "admin/course/{$package_key}", array('query' => drupal_get_destination())),
-      );
-      $package_set[$package_key] = TRUE;
-    }
-  }
-  $form['course_extensions']['course_extensions_table'] = array('#markup' => theme('table', array('header' => $header, 'rows' => $rows)));
-
-  return $form;
+function course_settings_overview() {
+  module_load_include('admin.inc', 'system', 'system');
+  return system_admin_menu_block_page();
 }
 
 /**
@@ -97,7 +63,7 @@ function course_check_keyval($element, &$form_state) {
  */
 function course_enrollment_settings_form($form) {
   $form['header']['#markup'] = '<p>' . t('Here, you can manage the settings related to course enrollments.') . '</p>';
-  $form['header']['#markup'] .= '<p>' . t('Fields added to the enrollment entity can optionally be displayed in a form to the user before enrollment.') . '</p>';
+  $form['header']['#markup'] .= '<p>' . t('Currently, there are not any settings.') . '</p>';
   return $form;
 }
 

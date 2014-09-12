@@ -21,8 +21,7 @@ function course_menu() {
   $items['admin/course'] = array(
     'title' => 'Course',
     'description' => 'Configure courses.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('course_settings_overview'),
+    'page callback' => 'course_settings_overview',
     'access arguments' => array('administer course'),
     'file' => 'includes/course.settings.inc',
   );
@@ -95,14 +94,14 @@ function course_menu() {
     // handler which defined the package.
     $item_router = !isset($default_set[$package_key]) ? $package_router : $handler_router;
     $item_title = !isset($default_set[$package_key]) ? $package_info['name'] : $handler_info['name'];
-    $item_type = !isset($default_set[$package_key]) ? MENU_NORMAL_ITEM : MENU_LOCAL_TASK;
+    $item_type = MENU_NORMAL_ITEM;
     $items[$item_router] = array(
       'title' => $item_title,
       'description' => $handler_info['description'],
       'access arguments' => array('administer course'),
       'page callback' => 'drupal_get_form',
       'page arguments' => array($handler_info['callback']),
-      'type' => MENU_LOCAL_TASK,
+      'type' => MENU_NORMAL_ITEM,
     );
     // Append file info to $items, if specified.
     $file_info = array();
@@ -125,22 +124,12 @@ function course_menu() {
       // default page content at the module router item path.
       $items[$handler_router] = array(
         'title' => t('Settings'),
-        'type' => MENU_DEFAULT_LOCAL_TASK,
+        'type' => MENU_NORMAL_ITEM,
       );
       // Flag MENU_DEFAULT_LOCAL_TASK as set for this module.
       $default_set[$package_key] = TRUE;
     }
   }
-
-  // Per course user type selection.
-  $items['node/%course/course-user-type'] = array(
-    'title' => 'Choose user type',
-    'description' => 'Allow the learner to choose their user type.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('course_user_type_form', 1),
-    'access callback' => 'user_is_logged_in',
-    'type' => MENU_CALLBACK,
-  );
 
   // Landing page for course completion.
   $items['node/%course/course-outline'] = array(
@@ -598,21 +587,6 @@ function course_object_take($courseObject) {
 }
 
 /**
- * Implements hook_menu_alter().
- *
- * Add a default reports tab if views isn't enabled.
- */
-function course_menu_alter(&$items) {
-  if (!module_exists('views')) {
-    $default = $items['node/%course/course-reports/objects'];
-    $items['node/%course/course-reports'] = $default;
-    $items['node/%course/course-reports']['title'] = 'Course reports';
-    $items['node/%course/course-reports']['type'] = MENU_LOCAL_TASK;
-    $items['node/%course/course-reports/objects']['type'] = MENU_DEFAULT_LOCAL_TASK;
-  }
-}
-
-/**
  * Implements hook_block_info().
  */
 function course_block_info() {
@@ -873,9 +847,15 @@ function course_node_update($node) {
     // 'Credits' is a numeric field so we need to ensure that it is a number.
     $record['credits'] = isset($records['credits']) ? floatval($record['credits']) : 0;
 
+    // Default the enrollment type if necessary.
+    if (empty($record['enrollment_type'])) {
+      $record['enrollment_type'] = variable_get('course_default_enrollment_type');
+    }
+
     $existing = db_query('SELECT 1 FROM {course_node} WHERE nid = :nid', array(':nid' => $node->nid))->fetchField();
     $update = $existing ? array('nid') : array();
     drupal_write_record('course_node', $record, $update);
+    $node->course = $record;
 
     // Support cloning.
     course_handle_clone($node);
@@ -1022,6 +1002,7 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
       'enrollmenttype' => $from,
       'status' => $status,
       'code' => $code,
+      'type' => $node->course['enrollment_type'],
     );
 
     if (isset($node->course['duration']) && $node->course['duration'] > 0) {
@@ -1190,6 +1171,18 @@ function course_field_attach_form($entity_type, $entity, &$form, &$form_state, $
     '#options' => $outlines,
     '#default_value' => variable_get('default_lms_' . $entity->type, NULL),
     '#description' => t('This controls the presentation of the course objects.'),
+  );
+
+  $enrollment_types = course_enrollment_types();
+  foreach ($enrollment_types as $enrollment_type => $type_info) {
+    $enrollment_type_options[$enrollment_type] = $type_info->label;
+  }
+  $form['course']['enrollment_type'] = array(
+    '#title' => t('Enrollment type'),
+    '#type' => 'select',
+    '#options' => $enrollment_type_options,
+    '#default_value' => isset($entity->course['enrollment_type']) ? $entity->course['enrollment_type'] : NULL,
+    '#description' => t("The enrollment type's fields, if required for enrollment, will be presented to the user before starting the course."),
   );
 
   // This is a simple credit hours field. If course_credit is enabled it used
@@ -1396,8 +1389,25 @@ function course_take_course($node) {
   $enroll_access = course_enroll_access($node);
   $enrollment = course_enrollment_load($node, $user);
 
-  if ($enroll_access['success'] === TRUE && empty($enrollment->eid)) {
-    // User can enroll in this course and user is not enrolled. Enroll the user.
+  if ($enroll_access['success'] === TRUE && empty($enrollment->timestamp)) {
+    // User can enroll in this course and user is not enrolled. Check for
+    // enrollment fields or enroll the user.
+    $instances = field_info_instances('course_enrollment', $node->course['enrollment_type']);
+    foreach ($instances as $field_name => $instance) {
+      $field = field_info_field($field_name);
+      if ($field['settings']['course_enrollment_user_field']) {
+        // At least one field must be shown when enrolling. Display the user
+        // enrollment form.
+        if (empty($enrollment->type)) {
+          $enrollment->nid = $node->nid;
+          $enrollment->uid = $user->uid;
+          $enrollment->type = $node->course['enrollment_type'];
+        }
+        $form = entity_ui_get_form('course_enrollment', $enrollment, 'edit');
+        return $form;
+      }
+    }
+
     $enrollment = course_enroll($node, $user);
   }
 
@@ -1405,20 +1415,6 @@ function course_take_course($node) {
   if ($take_access['success']) {
     // User has access to take this course.
     if (empty($enrollment->timestamp)) {
-      // First time starting this course. Check for enrollment fields.
-      $instances = field_info_instances('course_enrollment', 'course_enrollment');
-      foreach ($instances as $field_name => $instance) {
-        $field = field_info_field($field_name);
-        if ($field['settings']['course_enrollment_user_field']) {
-          // At least one field must be shown when enrolling. Display the user
-          // enrollment form.
-          $entities = entity_load('course_enrollment', array($enrollment->eid));
-          $course_enrollment = $entities[$enrollment->eid];
-          $form_state = form_state_defaults();
-          $form = entity_ui_get_form('course_enrollment', $course_enrollment, 'edit', $form_state);
-          return $form;
-        }
-      }
 
       // If user hasn't started course, mark start of enrollment.
       $enrollment->timestamp = REQUEST_TIME;
@@ -2359,7 +2355,7 @@ function course_course_access($op, $node, $user) {
       ));
     }
 
-    if ($user->uid == 0) {
+    if (user_is_anonymous()) {
       $options = array('query' => drupal_get_destination());
       return array('course_noanon' => array(
           'success' => FALSE,
@@ -2831,7 +2827,7 @@ function course_ctools_plugin_type() {
  * Implements hook_entity_info().
  */
 function course_entity_info() {
-  return array(
+  $entity_info = array(
     'course_enrollment' => array(
       'label' => t('Course enrollment'),
       'controller class' => 'EntityAPIController',
@@ -2840,19 +2836,38 @@ function course_entity_info() {
       'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'eid',
+        'bundle' => 'type',
       ),
       'label callback' => 'course_enrollment_label',
       'views controller class' => 'EntityDefaultViewsController',
-      'bundles' => array(
-        'course_enrollment' => array(
-          'label' => 'Course enrollment',
-          'admin' => array(
-            'path' => 'admin/course/enrollment',
-            'access arguments' => array('administer course'),
-          ),
-        ),
+      'bundles' => array(),
+      'bundle keys' => array(
+        'bundle' => 'type',
       ),
       'access callback' => 'course_access',
+    ),
+    'course_enrollment_type' => array(
+      'label' => t('Enrollment type'),
+      'plural label' => t('Enrollment types'),
+      'description' => t('Course enrollment types.'),
+      'controller class' => 'EntityAPIControllerExportable',
+      'base table' => 'course_enrollment_type',
+      'fieldable' => FALSE,
+      'entity class' => 'Entity',
+      'bundle of' => 'course_enrollment',
+      'exportable' => TRUE,
+      'entity keys' => array(
+        'id' => 'id',
+        'name' => 'type',
+        'label' => 'label',
+      ),
+      'access callback' => 'course_access',
+      'module' => 'course',
+      // Enable the entity API's admin UI.
+      'admin ui' => array(
+        'path' => 'admin/course/enrollment-types',
+        'controller class' => 'EntityDefaultUIController',
+      ),
     ),
     'course_report' => array(
       'label' => t('Course report'),
@@ -2925,6 +2940,26 @@ function course_entity_info() {
       'access callback' => 'course_access',
     ),
   );
+
+  // Populate our bundles.
+  $types = db_select('course_enrollment_type', 'cet')
+    ->fields('cet')
+    ->execute()
+    ->fetchAllAssoc('type');
+
+  foreach ($types as $type => $info) {
+    $entity_info['course_enrollment']['bundles'][$type] = array(
+      'label' => $info->label,
+      'admin' => array(
+        'path' => 'admin/course/enrollment-types/manage/%course_enrollment_type',
+        'real path' => 'admin/course/enrollment-types/manage/' . $type,
+        'bundle argument' => 4,
+        'access arguments' => array('administer course'),
+      ),
+    );
+  }
+
+  return $entity_info;
 }
 
 /**
@@ -3128,4 +3163,72 @@ function course_access($op, $entity, $account = NULL, $entity_type) {
  */
 function _course_reports_access($node) {
   return node_access('update', $node) || user_access('access all course reports');
+}
+
+function course_enrollment_type_form($form, &$form_state, $enrollment_type, $op = 'edit') {
+  if ($op == 'clone') {
+    $enrollment_type->label .= ' (cloned)';
+    $enrollment_type->type = '';
+  }
+
+  $form['label'] = array(
+    '#title' => t('Label'),
+    '#type' => 'textfield',
+    '#default_value' => isset($enrollment_type->label) ? $enrollment_type->label : '',
+    '#description' => t('The human-readable name of this enrollment type.'),
+    '#required' => TRUE,
+    '#size' => 30,
+  );
+  // Machine-readable type name.
+  $form['type'] = array(
+    '#type' => 'machine_name',
+    '#default_value' => isset($enrollment_type->type) ? $enrollment_type->type : '',
+    '#maxlength' => 32,
+    '#disabled' => !isset($enrollment_type->is_new) && $op != 'clone',
+    '#machine_name' => array(
+      'exists' => 'course_enrollment_types',
+      'source' => array('label'),
+    ),
+    '#description' => t('A unique machine-readable name for this enrollment type. It must only contain lowercase letters, numbers, and underscores.'),
+  );
+
+  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Save enrollment type'),
+    '#weight' => 40,
+  );
+
+  return $form;
+}
+
+/**
+ * Form API submit callback for the type form.
+ */
+function course_enrollment_type_form_submit(&$form, &$form_state) {
+  $enrollment_type = entity_ui_form_submit_build_entity($form, $form_state);
+  // Save and go back.
+  $enrollment_type->save();
+}
+
+function course_enrollment_type_load($type) {
+  return course_enrollment_types($type);
+}
+
+function course_enrollment_types($type_name = NULL) {
+  $types = entity_load_multiple_by_name('course_enrollment_type', isset($type_name) ? array($type_name) : FALSE);
+  return isset($type_name) ? reset($types) : $types;
+}
+
+/**
+ * Implements hook_forms().
+ */
+function course_forms($form_id, $args) {
+  $info = entity_get_info('course_enrollment');
+  // Translate bundle form ids to the base form id 'course_enrollment_form'.
+  foreach ($info['bundles'] as $bundle => $bundle_info) {
+    $forms['course_enrollment_edit_' . $bundle . '_form']['callback'] = 'course_enrollment_form';
+    $forms['course_enrollment_edit_' . $bundle . '_form']['wrapper callback'] = 'entity_ui_form_defaults';
+  }
+  return $forms;
 }
