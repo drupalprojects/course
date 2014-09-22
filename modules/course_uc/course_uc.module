@@ -204,7 +204,7 @@ function course_uc_uc_add_to_cart($nid, $qty, $data) {
           ),
         );
       }
-      if (course_uc_check_cart($nid)) {
+      if (course_uc_check_cart($nid, $user->uid, $data)) {
         return array(
           array(
             'success' => FALSE,
@@ -218,24 +218,34 @@ function course_uc_uc_add_to_cart($nid, $qty, $data) {
 }
 
 /**
- * Check if a user purchased a node previously.
+ * Check if a user purchased a course previously.
+ *
+ * Alias of course_enrollment_load().
  */
 function course_uc_check_purchased($uid, $nid) {
-  $sql = "SELECT 1 FROM {uc_orders} uco
-  LEFT JOIN {uc_order_products} ucop ON (uco.order_id = ucop.order_id)
-  WHERE uid = :uid AND nid = :nid AND uco.order_status = 'completed'";
-  $purchased = db_query($sql, array(':nid' => $nid, ':uid' => $uid))->fetchField();
-  return $purchased;
+  return course_enrollment_load($nid, $uid);
 }
 
 /**
- * Check if a node is in a user's cart.
+ * Check if a course is already in a user's cart.
+ *
+ * Note that we have to check if the user is purchasing the course for someone
+ * else.
  */
-function course_uc_check_cart($nid) {
+function course_uc_check_cart($nid, $uid, $data) {
   $cid = uc_cart_get_id();
   $contents = uc_cart_get_contents($cid);
+  $uid = isset($data['uid']) ? $data['uid'] : $uid;
   foreach ($contents as $item) {
-    if ($item->nid == $nid) {
+    // Check if user already has course in their cart, if the user already is
+    // purchasing this course for somebody else, or the requested user is
+    // already enrolled.
+
+    if (course_enrollment_load($nid, $uid)) {
+      return TRUE;
+    }
+
+    if ($item->nid == $nid && (!isset($item->data['uid']) || $item->data['uid'] == $uid)) {
       return TRUE;
     }
   }
