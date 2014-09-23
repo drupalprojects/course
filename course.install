@@ -1051,13 +1051,12 @@ function course_update_7130() {
   ));
 
   drupal_get_schema(NULL, TRUE);
-  entity_defaults_rebuild();
 
-  $enrollment_type = entity_create('course_enrollment_type', array(
+  $course_enrollment_type = array(
     'type' => 'course_enrollment',
     'label' => t('Course'),
-  ));
-  $enrollment_type->save();
+  );
+  drupal_write_record('course_enrollment_type', $course_enrollment_type);
 
   variable_set('course_default_enrollment_type', 'course_enrollment');
 
