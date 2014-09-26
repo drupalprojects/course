@@ -1005,11 +1005,6 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
       'type' => $node->course['enrollment_type'],
     );
 
-    if (isset($node->course['duration']) && $node->course['duration'] > 0) {
-      // Set enrollment end to now + the duration of the course.
-      $enrollment['enroll_end'] = REQUEST_TIME + $node->course['duration'];
-    }
-
     $enrollment = (object) $enrollment;
 
     $watchdog_variables = array(
@@ -1459,6 +1454,26 @@ function course_take_course($node) {
 }
 
 /**
+ * Implements hook_course_enrollment_presave().
+ */
+function course_course_enrollment_presave($enrollment) {
+  $node = node_load($enrollment->nid);
+
+  if (!isset($enrollment->status)) {
+    $enrollment->status = 1;
+  }
+
+  if (!isset($enrollment->enroll_end) && !empty($node->course['duration'])) {
+    // Set enrollment end to now + the duration of the course.
+    $enrollment->enroll_end = REQUEST_TIME + $node->course['duration'];
+  }
+
+  if (empty($enrollment->created)) {
+    $enrollment->created = REQUEST_TIME;
+  }
+}
+
+/**
  * Create or update an enrollment.
  */
 function course_enrollment_save($enrollment) {
@@ -1466,14 +1481,8 @@ function course_enrollment_save($enrollment) {
     drupal_alter('course_enrollment', $enrollment);
     if ($eid = db_query('SELECT eid FROM {course_enrollment} WHERE nid = :nid AND uid = :uid', array(':nid' => $enrollment->nid, ':uid' => $enrollment->uid))->fetchField()) {
       $enrollment->eid = $eid;
-      entity_save('course_enrollment', $enrollment);
     }
-    else {
-      if (!isset($enrollment->created) || $enrollment->created == 0) {
-        $enrollment->created = REQUEST_TIME;
-      }
-      entity_save('course_enrollment', $enrollment);
-    }
+    entity_save('course_enrollment', $enrollment);
   }
   else {
     return FALSE;
@@ -3100,10 +3109,16 @@ function course_enrollment_form($form, &$form_state, $course_enrollment) {
  * Course enrollment submit handler.
  */
 function course_enrollment_form_submit($form, &$form_state) {
-  $course_enrollment = $form_state['course_enrollment'];
-  field_attach_submit('course_enrollment', $course_enrollment, $form, $form_state);
-  $course_enrollment->timestamp = REQUEST_TIME;
-  entity_save('course_enrollment', $course_enrollment);
+  $enrollment = $form_state['course_enrollment'];
+  field_attach_submit('course_enrollment', $enrollment, $form, $form_state);
+  $enrollment->timestamp = REQUEST_TIME;
+  entity_save('course_enrollment', $enrollment);
+
+  // Legacy invocation of hook_course_enroll().
+  // @deprecated
+  $node = node_load($enrollment->nid);
+  $account = user_load($enrollment->uid);
+  module_invoke_all('course_enroll', $node, $account, 'self', NULL, 1);
 }
 
 /**
