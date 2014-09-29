@@ -1487,6 +1487,10 @@ function course_enrollment_save($enrollment) {
   else {
     return FALSE;
   }
+
+  if (empty($enrollment->type)) {
+    $enrollment->type = $node->course['enrollment_type'];
+  }
 }
 
 /**
