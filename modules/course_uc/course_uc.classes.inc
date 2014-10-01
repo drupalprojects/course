@@ -68,6 +68,10 @@ class CourseObjectUbercart extends CourseObjectNode {
   }
 
   function getCloneAbility() {
+    return t('Payment objects will be created as a reference to the new course');
+  }
+ 
+  public function freeze() {
     return TRUE;
   }
 
