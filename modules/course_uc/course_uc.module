@@ -195,7 +195,7 @@ function course_uc_uc_add_to_cart($nid, $qty, $data) {
     global $user;
     $node = node_load($nid);
     if (course_node_is_course($node)) {
-      if (course_uc_check_purchased($user->uid, $nid)) {
+      if (course_uc_check_purchased($user->uid, $nid, $data)) {
         return array(
           array(
             'success' => FALSE,
@@ -222,7 +222,8 @@ function course_uc_uc_add_to_cart($nid, $qty, $data) {
  *
  * Alias of course_enrollment_load().
  */
-function course_uc_check_purchased($uid, $nid) {
+function course_uc_check_purchased($uid, $nid, $data = array()) {
+  $uid = isset($data['uid']) ? $data['uid'] : $uid;
   return course_enrollment_load($nid, $uid);
 }
 
@@ -232,7 +233,7 @@ function course_uc_check_purchased($uid, $nid) {
  * Note that we have to check if the user is purchasing the course for someone
  * else.
  */
-function course_uc_check_cart($nid, $uid, $data) {
+function course_uc_check_cart($nid, $uid, $data = array()) {
   $cid = uc_cart_get_id();
   $contents = uc_cart_get_contents($cid);
   $uid = isset($data['uid']) ? $data['uid'] : $uid;
