@@ -1471,6 +1471,10 @@ function course_course_enrollment_presave($enrollment) {
   if (empty($enrollment->created)) {
     $enrollment->created = REQUEST_TIME;
   }
+
+  if (empty($enrollment->type)) {
+    $enrollment->type = $node->course['enrollment_type'];
+  }
 }
 
 /**
@@ -1486,10 +1490,6 @@ function course_enrollment_save($enrollment) {
   }
   else {
     return FALSE;
-  }
-
-  if (empty($enrollment->type)) {
-    $enrollment->type = $node->course['enrollment_type'];
   }
 }
 
