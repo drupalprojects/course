@@ -339,6 +339,7 @@ class CourseReport extends CourseHandler {
 
       if (!$prev) {
         $this->setOption('section_name', $courseObject->getTitle());
+        $this->setOption('coid', $courseObject->getId());
       }
 
       // Count required objects.
@@ -354,6 +355,7 @@ class CourseReport extends CourseHandler {
 
       if (!$courseObject->getFulfillment()->isComplete() && $prev && $prev->getFulfillment()->isComplete()) {
         $this->setOption('section_name', $courseObject->getTitle());
+        $this->setOption('coid', $courseObject->getId());
       }
 
       $prev = clone $courseObject;

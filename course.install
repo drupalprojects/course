@@ -129,6 +129,13 @@ function course_schema() {
         'description' => "Serialized snapshot data.",
         'size' => 'medium',
       ),
+      'coid' => array(
+        'type' => 'int',
+        'not null' => FALSE,
+        'unsigned' => TRUE,
+        'default' => 0,
+        'description' => 'Identifier for the course object.',
+      ),
     ),
     'primary key' => array('crid'),
     'unique keys' => array('uk' => array('nid', 'uid')),
@@ -1069,4 +1076,18 @@ function course_update_7130() {
     ->execute();
 
   return t('Created tables and updated data for course enrollment bundles.');
+}
+
+/**
+ * Add a coid column to the course report table.
+ */
+function course_update_7131() {
+  db_add_field('course_report', 'coid', array(
+    'type' => 'int',
+    'not null' => FALSE,
+    'unsigned' => TRUE,
+    'default' => 0,
+    'description' => 'Identifier for the course object.',
+  ));
+  return t('Added coid field to course_report table.');
 }
