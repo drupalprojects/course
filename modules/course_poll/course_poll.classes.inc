@@ -9,6 +9,12 @@ class CourseObjectPoll extends CourseObjectNode {
     return 'redirect';
   }
 
+  public function optionsDefinition() {
+    $options = parent::optionsDefinition();
+    $options['use_node_title'] = 1;
+    return $options;
+  }
+
   public function create($node = NULL) {
     $poll = new stdClass;
     $poll->choice = array(
