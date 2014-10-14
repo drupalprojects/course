@@ -107,7 +107,7 @@ class CourseObjectQuiz extends CourseObjectNode {
   }
 
   public function getReports() {
-    $reports = array();
+    $reports = parent::getReports();
     $reports['results'] = array(
       'title' => t('Results'),
     );
@@ -140,6 +140,7 @@ class CourseObjectQuiz extends CourseObjectNode {
           'content' => quiz_stats_get_adv_stats($this->node->vid),
         );
     }
+    return parent::getReport($key);
   }
 
   /**

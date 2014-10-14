@@ -48,11 +48,13 @@ class CourseObjectSignup extends CourseObjectNode {
   }
 
   public function getReports() {
-    return array(
+    $reports = parent::getReports();
+    $reports += array(
       'attendance' => array(
         'title' => t('Attendance'),
       ),
     );
+    return $reports;
   }
 
   public function getReport($key) {
@@ -66,6 +68,7 @@ class CourseObjectSignup extends CourseObjectNode {
           )) . signup_user_list_output($this->node),
         );
     }
+    return parent::getReport($key);
   }
 
   function getNodeTypes() {

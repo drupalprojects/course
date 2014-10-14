@@ -28,7 +28,8 @@ class CourseObjectWebform extends CourseObjectNode {
   }
 
   public function getReports() {
-    return array(
+    $reports = parent::getReports();
+    $reports += array(
       'submissions' => array(
         'title' => t('Submissions'),
       ),
@@ -39,6 +40,7 @@ class CourseObjectWebform extends CourseObjectNode {
         'title' => t('Download'),
       ),
     );
+    return $reports;
   }
 
   public function getReport($key) {
@@ -61,6 +63,7 @@ class CourseObjectWebform extends CourseObjectNode {
           'content' => drupal_render($out),
         );
     }
+    return parent::getReport($key);
   }
 
   function getNodeTypes() {

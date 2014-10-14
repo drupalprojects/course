@@ -40,7 +40,8 @@ class CourseObjectPoll extends CourseObjectNode {
   }
 
   public function getReports() {
-    return array(
+    $reports = parent::getReports();
+    $reports += array(
       'results' => array(
         'title' => 'Results',
       ),
@@ -48,6 +49,7 @@ class CourseObjectPoll extends CourseObjectNode {
         'title' => 'List votes',
       ),
     );
+    return $reports;
   }
 
   public function getReport($key) {
@@ -65,6 +67,7 @@ class CourseObjectPoll extends CourseObjectNode {
           'content' => drupal_render($out),
         );
     }
+    return parent::getReport($key);
   }
 
   /**

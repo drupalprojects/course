@@ -886,7 +886,11 @@ abstract class CourseObject extends CourseHandler {
    * @see CourseObjectQuiz::getReports()
    */
   function getReports() {
-    return array();
+    return array(
+      'default' => array(
+        'title' => 'Overview',
+      ),
+    );
   }
 
   /**
@@ -902,7 +906,12 @@ abstract class CourseObject extends CourseHandler {
    * @see CourseObjectQuiz::getReports()
    */
   function getReport($key) {
-    return array();
+    if ($key == 'default') {
+      return array(
+        'title' => 'Overview',
+        'content' => views_embed_view('course_object_report', 'default', $this->getCourseNid(), $this->getId()),
+      );
+    }
   }
 
   function freeze() {
