@@ -4,6 +4,7 @@ package = Course
 core = 7.x
 dependencies[] = course
 dependencies[] = rules
+dependencies[] = uc_cart
 dependencies[] = uc_order
 dependencies[] = uc_product
 files[] = course_uc.classes.inc
