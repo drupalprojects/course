@@ -99,7 +99,7 @@ function course_schema() {
       'grade_result' => array(
         'type' => 'int',
         'not null' => FALSE,
-        'unsigned' => TRUE,
+        'unsigned' => FALSE,
         'description' => 'Course grade received.',
       ),
       'section' => array(
@@ -429,10 +429,9 @@ function course_schema() {
       ),
       'grade_result' => array(
         'type' => 'int',
-        'not null' => TRUE,
+        'not null' => FALSE,
         'unsigned' => FALSE,
-        'default' => 0,
-        'description' => 'grade_result',
+        'description' => 'Object grade received.',
       ),
       'date_started' => array(
         'type' => 'int',
@@ -1090,4 +1089,24 @@ function course_update_7131() {
     'description' => 'Identifier for the course object.',
   ));
   return t('Added coid field to course_report table.');
+}
+
+/**
+ * Fix grade_result fields.
+ */
+function course_update_7132() {
+  // Fix grade_result columns.
+  db_change_field('course_report', 'grade_result', 'grade_result', array(
+    'type' => 'int',
+    'not null' => FALSE,
+    'unsigned' => FALSE,
+    'description' => 'Course grade received.',
+  ));
+  db_change_field('course_outline_fulfillment', 'grade_result', 'grade_result', array(
+    'type' => 'int',
+    'not null' => FALSE,
+    'unsigned' => FALSE,
+    'description' => 'Object grade received.',
+  ));
+  return t('Fixed grade_result fields.');
 }
