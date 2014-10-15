@@ -1390,7 +1390,7 @@ function course_take_course($node) {
     $instances = field_info_instances('course_enrollment', $node->course['enrollment_type']);
     foreach ($instances as $field_name => $instance) {
       $field = field_info_field($field_name);
-      if ($field['settings']['course_enrollment_user_field']) {
+      if ($instance['settings']['course_enrollment_user_field']) {
         // At least one field must be shown when enrolling. Display the user
         // enrollment form.
         if (empty($enrollment->type)) {
@@ -3131,9 +3131,12 @@ function course_enrollment_form_submit($form, &$form_state) {
  *
  * Don't show the user fields that weren't marked as enrollment fields.
  */
-function course_field_access($op, $field, $entity_type, $profile = NULL, $account = NULL) {
-  if ($entity_type == 'course_enrollment' && $op == 'edit' && empty($field['settings']['course_enrollment_user_field'])) {
-    return FALSE;
+function course_field_access($op, $field, $entity_type, $entity, $account) {
+  if ($entity_type == 'course_enrollment' && $op == 'edit') {
+    $instance = field_info_instance($entity_type, $field['field_name'], $entity->type);
+    if (empty($instance['settings']['course_enrollment_user_field'])) {
+      return FALSE;
+    }
   }
 }
 

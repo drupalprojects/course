@@ -59,4 +59,107 @@ class CourseEnrollmentTestCase extends CourseTestCase {
     $this->assertTrue($enroll->enroll_end > REQUEST_TIME, 'Duration end got set with course start.');
   }
 
+  /**
+   * Test course bundles.
+   */
+  function testCourseBundles() {
+
+    $enrollment_type = entity_create('course_enrollment_type', array(
+      'type' => 'type_A',
+      'label' => t('Bundle type A'),
+    ));
+    $enrollment_type->save();
+
+    $enrollment_type = entity_create('course_enrollment_type', array(
+      'type' => 'type_B',
+      'label' => t('Bundle type B'),
+    ));
+    $enrollment_type->save();
+
+    cache_clear_all();
+
+    // Add a field to type A and make it required for registration
+    // Create field A
+    $field = array(
+      'field_name' => 'enrollment_field_a',
+      'type' => 'text',
+    );
+    $instance = array(
+      'field_name' => 'enrollment_field_a',
+      'entity_type' => 'course_enrollment',
+      'bundle' => 'type_A',
+      'label' => 'Enrollment field A',
+      'widget' => array(
+        'active' => 1,
+        'module' => 'text',
+        'settings' => array(
+          'size' => 60,
+        ),
+        'type' => 'text_textfield',
+        'weight' => 1,
+      ),
+      'settings' => array(
+        'course_enrollment_user_field' => 1,
+      ),
+      'required' => 1,
+    );
+    field_create_field($field);
+    $instance_a = field_create_instance($instance);
+
+    // Add a field to type B and make it required for registration
+    // Create field B
+    $field = array(
+      'field_name' => 'enrollment_field_b',
+      'type' => 'text',
+    );
+    $instance = array(
+      'field_name' => 'enrollment_field_b',
+      'entity_type' => 'course_enrollment',
+      'bundle' => 'type_B',
+      'label' => 'Enrollment field B',
+      'widget' => array(
+        'active' => 1,
+        'module' => 'text',
+        'settings' => array(
+          'size' => 60,
+        ),
+        'type' => 'text_textfield',
+        'weight' => 1,
+      ),
+      'settings' => array(
+        'course_enrollment_user_field' => 1,
+      ),
+      'required' => 1,
+    );
+    field_create_field($field);
+    $instance_b = field_create_instance($instance);
+
+    $courseNodeA = $this->createCourseNode(array('course' => array('enrollment_type' => 'type_A')));
+    $courseNodeB = $this->createCourseNode(array('course' => array('enrollment_type' => 'type_B')));
+    $this->drupalLogin($this->student_user);
+
+    // Check if field shows up and user is not yet enrolled.
+    $this->drupalGet("node/$courseNodeA->nid/takecourse");
+    $this->assertFieldById('edit-enrollment-field-a-und-0-value');
+    $this->assertNoFieldById('edit-enrollment-field-b-und-0-value');
+    $enrollment = course_enrollment_load($courseNodeA, $this->student_user);
+    $this->assertFalse($enrollment);
+    $this->drupalPost(NULL, array(), t('Save'));
+    // Check that form API is working.
+    $this->assertText('field is required');
+    $this->drupalPost(NULL, array('enrollment_field_a[und][0][value]' => 'test 123'), t('Save'));
+
+    // Check that a different field is on course B
+    $this->drupalGet("node/$courseNodeB->nid/takecourse");
+    $this->assertFieldById('edit-enrollment-field-b-und-0-value');
+    $this->assertNoFieldById('edit-enrollment-field-a-und-0-value');
+
+    // Mark field B to not show on enrollment.
+    $instance_b['settings']['course_enrollment_user_field'] = 0;
+    field_update_instance($instance_b);
+    $this->drupalGet("node/$courseNodeB->nid/takecourse");
+    $this->assertNoFieldById('edit-enrollment-field-a-und-0-value');
+    $this->assertNoFieldById('edit-enrollment-field-b-und-0-value');
+  }
+
 }
