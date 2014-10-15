@@ -98,6 +98,58 @@ class CourseObjectAccessTestCase extends CourseTestCase {
   }
 
   /**
+   * Test an outline with skippable required objects.
+   */
+  function testCourseSkippableRequiredObjectsWorkflow() {
+    // Create a course with 4 objects.
+    $courseNode = $this->createCourseNode();
+    for ($i = 1; $i <= 4; $i++) {
+      $temp = $this->createCourseObject($courseNode);
+      $temp->setOption('weight', $i)->save();
+    }
+
+    // Use the student user.
+    $user = $this->student_user;
+    $course = course_get_course($courseNode, $user, TRUE);
+
+    $co = $course->getObjects();
+
+    course_enroll($courseNode, $user);
+
+    // Set all required, but make the second one skippable.
+    $co[0]->setOption('required', 1);
+    $co[1]->setOption('required', 1);
+    $co[1]->setOption('skippable', 1);
+    $co[2]->setOption('required', 1);
+    $co[3]->setOption('required', 1);
+
+    // We should not be able to bypass the first object.
+    $this->assertTrue($co[0]->access('take', $user), 'User can access first object.');
+    $this->assertFalse($co[1]->access('take', $user), 'User is blocked from second object.');
+    // Complete the first object.
+    $co[0]->getFulfillment()->setComplete(1)->save();
+    $this->assertTrue($co[1]->access('take', $user), 'User can access second object.');
+
+    // Now that the user can access the second object, because it is required,
+    // and skippable, they should be able to access the third object.
+    $this->assertTrue($co[2]->access('take', $user), 'User can access third object.');
+    // However because the third object is required, they cannot acess the
+    // fourth.
+    $this->assertFalse($co[3]->access('take', $user), 'User is blocked from fourth object.');
+
+    // Complete all the required, but not skippable objects.
+    $co[2]->getFulfillment()->setComplete(1)->save();
+    $co[3]->getFulfillment()->setComplete(1)->save();
+
+    // Even though all required, non-skippable objects were completed, the
+    // course is not complete. The skippable object must still be completed.
+    $this->assertFalse($course->getTracker()->getOption('complete'), 'Check that course is not complete.');
+
+    $co[1]->getFulfillment()->setComplete(1)->save();
+    $this->assertTrue($course->getTracker()->getOption('complete'), 'Check that course is complete.');
+  }
+
+  /**
    * Test hidden course objects do not show up in the course outline.
    */
   function testHiddenCourseObjects() {

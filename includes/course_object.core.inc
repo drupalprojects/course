@@ -137,7 +137,7 @@ abstract class CourseObject extends CourseHandler {
           $access = TRUE;
         }
 
-        if ($course->getPrev() && !$course->getPrev()->isRequired()) {
+        if ($course->getPrev() && (!$course->getPrev()->isRequired() || ($course->getPrev()->isRequired() && $course->getPrev()->isSkippable()))) {
           // Previous step was not required.
           $access = TRUE;
 
@@ -146,7 +146,7 @@ abstract class CourseObject extends CourseHandler {
           $check = FALSE;
           foreach ($objects as $object) {
             if ($check) {
-              if ($object->isRequired()) {
+              if ($object->isRequired() && !$object->isSkippable()) {
                 // Object is required.
                 if (!$object->getFulfillment()->isComplete()) {
                   // Found a required object that was not complete.
@@ -221,6 +221,7 @@ abstract class CourseObject extends CourseHandler {
       'enabled' => 1,
       'hidden' => 0,
       'required' => 1,
+      'skippable' => 0,
       'delete' => 0,
       'delete_instance' => 0,
       'grade_include' => 0,
@@ -311,10 +312,17 @@ abstract class CourseObject extends CourseHandler {
     $form['outline']['required'] = array(
       '#title' => t('Completion required'),
       '#type' => 'checkbox',
-      '#description' => t('Learners must complete required objects. Uncheck this box if this is an optional course object.'),
+      '#description' => t('Users must complete required objects. Uncheck this box if this is an optional course object.'),
       '#default_value' => $config['required'],
     );
 
+    $form['outline']['skippable'] = array(
+      '#title' => t('Skippable'),
+      '#type' => 'checkbox',
+      '#default_value' => $config['skippable'],
+      '#dependency' => array('edit-required' => array(1)),
+      '#description' => t('Users can proceed past this object but it will still be required for course completion.'),
+    );
 
     $form['delete']['delete'] = array(
       '#title' => t('Delete'),
@@ -467,6 +475,9 @@ abstract class CourseObject extends CourseHandler {
     // Required.
     if ($options['required']) {
       $summary['required'] = t('Completion required');
+      if ($options['skippable']) {
+        $summary['skippable'] = '<span class="warning">' . t('Skippable') . '</span>';
+      }
     }
     else {
       $summary['required'] = '<span class="warning">' . t('Completion not required') . '</span>';
@@ -644,6 +655,15 @@ abstract class CourseObject extends CourseHandler {
    */
   public function isRequired() {
     return (bool) $this->getOption('required');
+  }
+
+  /**
+   * If this course object is required, can be it skipped?
+   *
+   * @return bool
+   */
+  public function isSkippable() {
+    return (bool) $this->getOption('skippable');
   }
 
   /**
