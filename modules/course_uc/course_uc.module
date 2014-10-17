@@ -280,7 +280,13 @@ function course_uc_rules_action_info() {
 function course_uc_enroll_user_in_ordered_courses($order) {
   foreach ($order->products as $product) {
     $node = node_load($product->nid);
-    $user = user_load($order->uid);
+    if (empty($product->data['uid'])) {
+      $account = user_load($order->uid);
+    }
+    else {
+      $account = user_load($product->data['uid']);
+    }
+
 
     if (course_node_is_course($node)) {
       // This product is an actual course. They have to be enrolled.
