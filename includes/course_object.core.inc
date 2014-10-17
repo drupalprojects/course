@@ -1482,6 +1482,10 @@ abstract class CourseObjectNode extends CourseObject {
     }
   }
 
+  function getNode() {
+    return $this->node;
+  }
+
 }
 
 class CourseObjectBroken extends CourseObject {

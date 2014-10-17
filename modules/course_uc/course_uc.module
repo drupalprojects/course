@@ -348,19 +348,19 @@ function course_uc_tokens($type, $tokens, array $data = array(), array $options 
       $values['course-products'] = theme('item_list', array('items' => $courses));
     }
 
-  $replacements = array();
-  foreach ($tokens as $name => $original) {
-    switch ($name) {
-      case 'course-products-header':
-        $replacements[$original] = $values['course-products-header'];
-        break;
-      case 'course-products':
-        $replacements[$original] = $values['course-products'];
-        break;
+    $replacements = array();
+    foreach ($tokens as $name => $original) {
+      switch ($name) {
+        case 'course-products-header':
+          $replacements[$original] = $values['course-products-header'];
+          break;
+        case 'course-products':
+          $replacements[$original] = $values['course-products'];
+          break;
+      }
     }
-  }
 
-  return $replacements;
+    return $replacements;
   }
 }
 
@@ -392,47 +392,27 @@ function course_uc_course_handlers() {
  */
 function course_uc_course_access($op, $node, $user) {
   if ($op == 'enroll') {
-    $must_purchase = FALSE;
     $course = course_get_course($node, $user);
-    if (isset($node->sell_price) && ($node->sell_price > 0 || !variable_get('course_access_bypass_checkout', 1))) {
-      // Course has a price, or bypass checkout is disabled.
-      if (!course_enrollment_check($node->nid, $user->uid)) {
-        // User is not enrolled so force purchase.
-        $must_purchase = TRUE;
-      }
 
-      // Now we have to check that even if the course has a price, that the
-      // payment object is first (to block enrollments). If the course is $0 and
-      // there are no payment objects, we assume the enrollment is blocked.
-      foreach ($course->getObjects() as $idx => $courseObject) {
-        $is_payment = ($courseObject->getComponent() == 'payment');
-        $first_object = ($idx == 0);
-        $complete = $courseObject->getFulfillment()->isComplete();
-        $is_this_course = ($courseObject->getInstanceId() == $node->nid);
-        if ($is_payment && !$complete) {
-          // We only want to block enrollment if the payment object linked to
-          // this course is the first object.
-          if ($first_object) {
-            $must_purchase = TRUE;
-          }
-          else {
-            // Set back to false because the user should still be able to
-            // enroll.
-            $must_purchase = FALSE;
-          }
+    // Now we have to check that even if the course has a price, that the
+    // payment object is first (to block enrollments). If the course is $0 and
+    // there are no payment objects, we assume the enrollment is blocked.
+    foreach ($course->getObjects() as $idx => $courseObject) {
+      $first_object = ($idx == 0);
+      $is_payment = ($courseObject->getComponent() == 'payment');
+      $complete = $courseObject->getFulfillment()->isComplete();
+      if ($first_object && $is_payment && !$complete) {
+        // Force purchase.
+        if (!course_enrollment_check($node->nid, $user->uid)) {
+          return array('course_must_purchase' => array(
+              'success' => FALSE,
+              'header' => 'Payment required',
+              'message' => 'You must purchase this course.',
+              'weight' => 1000,
+            ),
+          );
         }
       }
-    }
-
-    if ($must_purchase) {
-      // Run this blocker last, so we can still display date-based ones etc.
-      return array('course_must_purchase' => array(
-          'success' => FALSE,
-          'header' => 'Payment required',
-          'message' => 'You must purchase this course.',
-          'weight' => 1000,
-        ),
-      );
     }
   }
 }
