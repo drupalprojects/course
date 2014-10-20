@@ -292,13 +292,13 @@ function course_uc_enroll_user_in_ordered_courses($order) {
       // This product is an actual course. They have to be enrolled.
       // This will also satisfy the first payment requirement.
       // @see course_uc_course_enroll()
-      course_enroll($node, $user, 'ubercart');
+      course_enroll($node, $account, 'ubercart');
     }
 
     if ($courseNode = course_determine_context('course_uc', 'payment', $node->nid)) {
       // This product is also a course object, other than the first one.
       // Satisfy it!
-      $course = course_get_course($courseNode, $user);
+      $course = course_get_course($courseNode, $account);
       foreach ($course->getObjects() as $idx => $courseObject) {
         if ($idx != 0 && $courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
           // Found the course object that matched the instance (product).
