@@ -1332,6 +1332,12 @@ abstract class CourseObjectNode extends CourseObject {
       $link = l(t("'%title' [node id %nid]", array('%title' => $node->title, '%nid' => $node->nid)), "node/$node->nid", array('attributes' => array('target' => '_blank', 'title' => t('Open in new window')), 'html' => TRUE));
       $form['node']['instance']['#description'] = t('Currently set to !link', array('!link' => $link));
     }
+
+    // Block deletion of self-referencing node instances.
+    if (!empty($config['instance']) && ($config['instance'] == $this->getCourseNid())) {
+      $form['delete']['delete_instance']['#disabled'] = TRUE;
+      $form['delete']['delete_instance']['#description'] = t('You cannot delete this instance, as it references this Course.');
+    }
   }
 
   /**
@@ -1486,6 +1492,15 @@ abstract class CourseObjectNode extends CourseObject {
     return $this->node;
   }
 
+  function getOptionsSummary() {
+    $summary = parent::getOptionsSummary();
+    if ($this->getOption('instance') == $this->getCourseNid()) {
+      // Don't show the edit instance link when the instance is
+      // self-referencing.
+      unset($summary['instance']);
+    }
+    return $summary;
+  }
 }
 
 class CourseObjectBroken extends CourseObject {
