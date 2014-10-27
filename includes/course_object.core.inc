@@ -1501,6 +1501,14 @@ abstract class CourseObjectNode extends CourseObject {
     }
     return $summary;
   }
+
+  /**
+   * When setting our instance ID, also set the node.
+   */
+  function setInstanceId($id) {
+    parent::setInstanceId($id);
+    $this->node = node_load($id);
+  }
 }
 
 class CourseObjectBroken extends CourseObject {
