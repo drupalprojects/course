@@ -123,4 +123,65 @@ class CourseObjectUbercartTestCase extends CourseTestCase {
     $this->drupalGet("node/$courseNode->nid");
     $this->assertRaw(t('Add to cart'));
   }
+
+  public function testDelayedPayment() {
+    $this->setCourseTestToProduct();
+
+    // Create a course with a delayed payment.
+    $courseNode = $this->createCourseNode();
+
+    $co1 = course_get_course_object('course_test', 'course_test_object');
+    $co1->setCourse($courseNode->nid);
+    $co1->save();
+
+    $co2 = course_get_course_object('course_uc', 'payment');
+    $co2->setCourse($courseNode->nid);
+    $co2->setOption('hidden', 0);
+    $co2->save();
+
+    $co3 = course_get_course_object('course_test', 'course_test_object');
+    $co3->setCourse($courseNode->nid);
+    $co3->save();
+
+    $courseNode->sell_price = 5;
+    node_save($courseNode);
+
+    // Check that user can enroll, but not get past the payment object.
+    $this->drupalLogin($this->student_user);
+    $result = course_enroll_access($courseNode, $this->student_user);
+    $this->assertTrue($result['success']);
+
+    // Enroll.
+    $this->drupalGet("node/{$courseNode->nid}/takecourse");
+    $this->assertText(t('Your enrollment in this course has been recorded.'));
+
+    // Access first object.
+    $this->drupalGet("node/{$courseNode->nid}/course-object/{$co1->getId()}");
+    $this->assertResponse(200, 'Test that 1st object is accessible.');
+    $co1 = course_get_course_object_by_id($co1->getId(), $this->student_user);
+    $co1->getFulfillment()->setComplete(1)->save();
+
+    // Access payment object.
+    $this->drupalGet("node/{$courseNode->nid}/course-object/{$co2->getId()}");
+    $this->assertText(t('You must purchase this course before proceeding.'));
+    $this->assertRaw(t('Add to cart'));
+
+    // Access third object.
+    $this->drupalGet("node/{$courseNode->nid}/course-object/{$co3->getId()}");
+    $this->assertResponse(403, 'Test that 3rd object is blocked.');
+
+    // Flush cache.
+    course_get_course($courseNode, $this->student_user, TRUE);
+
+    // Now check out.
+    $order = uc_order_new($this->student_user->uid);
+    uc_order_product_save($order->order_id, $courseNode);
+    uc_order_update_status($order->order_id, 'pending');
+    uc_order_update_status($order->order_id, 'completed');
+
+    // Access third object.
+    $this->drupalGet("node/{$courseNode->nid}/course-object/{$co3->getId()}");
+    $this->assertResponse(200, 'Test that 3rd object is accessible.');
+  }
+
 }

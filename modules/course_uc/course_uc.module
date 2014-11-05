@@ -224,7 +224,17 @@ function course_uc_uc_add_to_cart($nid, $qty, $data) {
  */
 function course_uc_check_purchased($uid, $nid, $data = array()) {
   $uid = isset($data['uid']) ? $data['uid'] : $uid;
-  return course_enrollment_load($nid, $uid);
+  $orders = entity_load('uc_order', FALSE, array('uid' => $uid));
+  foreach ($orders as $order) {
+    if ($order->order_status == 'complete') {
+      foreach ($order->products as $product) {
+        if ($product->nid == $nid) {
+          return TRUE;
+        }
+      }
+    }
+  }
+  return FALSE;
 }
 
 /**
@@ -279,6 +289,9 @@ function course_uc_rules_action_info() {
  */
 function course_uc_enroll_user_in_ordered_courses($order) {
   foreach ($order->products as $product) {
+    if (!is_array($product->data)) {
+      $product->data = unserialize($product->data);
+    }
     $node = node_load($product->nid);
     if (empty($product->data['uid'])) {
       $account = user_load($order->uid);

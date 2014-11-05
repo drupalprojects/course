@@ -1509,6 +1509,7 @@ abstract class CourseObjectNode extends CourseObject {
     parent::setInstanceId($id);
     $this->node = node_load($id);
   }
+
 }
 
 class CourseObjectBroken extends CourseObject {
