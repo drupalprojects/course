@@ -1362,7 +1362,7 @@ function course_form_node_type_form_alter(&$form, &$form_state) {
  */
 function course_iframe($url = NULL, $height = '600px', $class = NULL) {
   $style = 'border:none; margin:0; width:100%; height:' . $height . ';';
-  $iframe = '<iframe name="course-viewer" src="' . $url . '" style="' . $style . '" class="' . $class . '" scrolling="no" frameborder="0" onload="resizeFrame(this);"></iframe>';
+  $iframe = '<iframe id="course-viewer" src="' . $url . '" style="' . $style . '" class="' . $class . '" scrolling="no" frameborder="0" onload="resizeFrame(this);"></iframe>';
 
   // Add JS to resize parent frame. This assumes additional JS on the targeted iframe content.
   drupal_add_js(drupal_get_path('module', 'course') . '/js/resizeframe.js');
