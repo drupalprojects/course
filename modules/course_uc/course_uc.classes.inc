@@ -19,6 +19,10 @@ class CourseObjectUbercart extends CourseObjectNode {
    * Implementing classes should override me if a custom display is desired.
    */
   function take() {
+    if (!($this->node->sell_price > 0) && variable_get('course_access_bypass_checkout', 1)) {
+      $this->getFulfillment()->setComplete(1)->save();
+    }
+
     if ($this->getFulfillment()->isComplete()) {
       return "You've already purchased this activity.";
     }
@@ -70,7 +74,7 @@ class CourseObjectUbercart extends CourseObjectNode {
   function getCloneAbility() {
     return t('Payment objects will be created as a reference to the new course');
   }
- 
+
   public function freeze() {
     return TRUE;
   }
@@ -79,4 +83,5 @@ class CourseObjectUbercart extends CourseObjectNode {
     // Not creating a new product. Using this course.
     return $this->getCourseNid();
   }
+
 }
