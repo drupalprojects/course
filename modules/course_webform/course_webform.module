@@ -23,7 +23,10 @@ function course_webform_webform_submission_insert($node, $submission) {
 
   // Find the course object associated with this webform.
   if ($courseObject = course_get_course_object('course_webform', 'webform', arg(1), $user)) {
-    $courseObject->getFulfillment()->setComplete()->save();
+    $fulfillment = $courseObject->getFulfillment();
+    $sids = (array) $fulfillment->getOption('sids');
+    $sids[] = $submission->sid;
+    $fulfillment->setOption('sids', $sids)->setComplete()->save();
   }
 }
 
