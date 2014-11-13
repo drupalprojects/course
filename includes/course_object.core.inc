@@ -1370,24 +1370,6 @@ abstract class CourseObjectNode extends CourseObject {
     parent::optionsSubmit($form, $form_state);
   }
 
-  public function getWarnings() {
-    $warnings = parent::getWarnings();
-    if ($this->getOption('private')) {
-      $type_name = $this->getComponent();
-      $acl_var_name = 'content_access_' . $type_name;
-      $settings = variable_get($acl_var_name, array());
-
-      if (!isset($settings['per_node']) || !$settings['per_node']) {
-        $warnings[] = t('%t is set to Private, but the content type %c does not have access control lists enabled. Users will not be able to acces this content. Please visit !l to set up content access settings.', array(
-          '%t' => $this->getTitle(),
-          '%c' => $this->getComponent(),
-          '!l' => l('Access control', "admin/structure/types/manage/{$this->getComponent()}/access"),
-        ));
-      }
-    }
-    return $warnings;
-  }
-
   /**
    * Grant access to course content before going to it.
    */
