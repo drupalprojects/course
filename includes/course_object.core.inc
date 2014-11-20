@@ -493,6 +493,13 @@ abstract class CourseObject extends CourseHandler {
       $summary['instance'] = '<span class="warning">' . t('Save course to edit object') . '</span>';
     }
 
+    // Instance view link.
+    $viewUrl = $this->getViewUrl();
+    if (!empty($viewUrl)) {
+      $text = t('View instance');
+      $summary['instance_view'] = l($text, $viewUrl, array('external' => TRUE, 'query' => drupal_get_destination()));
+    }
+
     // Required.
     if (!empty($options['delete'])) {
       $dest = "node/{$options['nid']}/course-object/nojs/{$uniqid}/restore";
@@ -645,6 +652,15 @@ abstract class CourseObject extends CourseHandler {
    * @return string
    */
   public function getEditUrl() {
+
+  }
+
+  /**
+   * Get the URL to view this course object, if any.
+   *
+   * @return string
+   */
+  public function getViewUrl() {
 
   }
 
@@ -1204,6 +1220,12 @@ abstract class CourseObjectNode extends CourseObject {
   public function getEditUrl() {
     if ($this->getInstanceId()) {
       return url("node/{$this->node->nid}/edit");
+    }
+  }
+
+  public function getViewUrl() {
+    if ($this->getInstanceId()) {
+      return url("node/{$this->node->nid}");
     }
   }
 
