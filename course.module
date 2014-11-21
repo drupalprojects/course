@@ -2954,22 +2954,24 @@ function course_entity_info() {
     ),
   );
 
-  // Populate our bundles.
-  $types = db_select('course_enrollment_type', 'cet')
-    ->fields('cet')
-    ->execute()
-    ->fetchAllAssoc('type');
+  if (db_table_exists('course_enrollment_type')) {
+    // Populate our bundles.
+    $types = db_select('course_enrollment_type', 'cet')
+      ->fields('cet')
+      ->execute()
+      ->fetchAllAssoc('type');
 
-  foreach ($types as $type => $info) {
-    $entity_info['course_enrollment']['bundles'][$type] = array(
-      'label' => $info->label,
-      'admin' => array(
-        'path' => 'admin/course/enrollment-types/manage/%course_enrollment_type',
-        'real path' => 'admin/course/enrollment-types/manage/' . $type,
-        'bundle argument' => 4,
-        'access arguments' => array('administer course'),
-      ),
-    );
+    foreach ($types as $type => $info) {
+      $entity_info['course_enrollment']['bundles'][$type] = array(
+        'label' => $info->label,
+        'admin' => array(
+          'path' => 'admin/course/enrollment-types/manage/%course_enrollment_type',
+          'real path' => 'admin/course/enrollment-types/manage/' . $type,
+          'bundle argument' => 4,
+          'access arguments' => array('administer course'),
+        ),
+      );
+    }
   }
 
   return $entity_info;
