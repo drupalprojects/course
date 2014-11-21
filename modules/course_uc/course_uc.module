@@ -419,17 +419,20 @@ function course_uc_course_access($op, $node, $user) {
     foreach ($course->getObjects() as $idx => $courseObject) {
       $first_object = ($idx == 0);
       $is_payment = ($courseObject->getComponent() == 'payment');
-      $complete = $courseObject->getFulfillment()->isComplete();
-      if ($first_object && $is_payment && !$complete) {
-        // Force purchase.
-        if (!course_enrollment_check($node->nid, $user->uid)) {
-          return array('course_must_purchase' => array(
-              'success' => FALSE,
-              'header' => 'Payment required',
-              'message' => 'You must purchase this course.',
-              'weight' => 1000,
-            ),
-          );
+      if ($is_payment && $first_object) {
+        $product = node_load($courseObject->getInstanceId());
+        $complete = $courseObject->getFulfillment()->isComplete();
+        if ((!variable_get('course_access_bypass_checkout', 1) || $product->sell_price > 0) && !$complete) {
+          // Force purchase.
+          if (!course_enrollment_check($node->nid, $user->uid)) {
+            return array('course_must_purchase' => array(
+                'success' => FALSE,
+                'header' => 'Payment required',
+                'message' => 'You must purchase this course.',
+                'weight' => 1000,
+              ),
+            );
+          }
         }
       }
     }
