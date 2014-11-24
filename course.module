@@ -3251,6 +3251,7 @@ function course_enrollment_types($type_name = NULL) {
  */
 function course_forms($form_id, $args) {
   $info = entity_get_info('course_enrollment');
+  $forms = array();
   // Translate bundle form ids to the base form id 'course_enrollment_form'.
   foreach ($info['bundles'] as $bundle => $bundle_info) {
     $forms['course_enrollment_edit_' . $bundle . '_form']['callback'] = 'course_enrollment_form';
