@@ -22,7 +22,7 @@ function course_menu() {
     'title' => 'Course',
     'description' => 'Configure courses.',
     'page callback' => 'course_settings_overview',
-    'access arguments' => array('administer course'),
+    'access callback' => 'course_admin_access',
     'file' => 'includes/course.settings.inc',
   );
 
@@ -666,25 +666,26 @@ function course_load($nid = NULL, $vid = NULL, $reset = FALSE) {
  */
 function course_permission() {
   return array(
-    // Manage course settings
     'administer course' => array(
-      'title' => t('administer course'),
-      'description' => t('TODO Add a description for \'administer course\''),
+      'title' => t('Administer global course configuration'),
+      'description' => t('Allows changing all course configurations.'),
+      'restrict access' => TRUE,
     ),
-    // Take courses
     'access course' => array(
-      'title' => t('access course'),
-      'description' => t('TODO Add a description for \'access course\''),
+      'title' => t('Access course'),
+      'description' => t('Grants access to take courses.'),
     ),
-    // Can user get to the course reports area
-    'access course reports' => array(
-      'title' => t('access course reports'),
-      'description' => t('TODO Add a description for \'access course reports\''),
-    ),
-    // Can use view all course reports
     'access all course reports' => array(
-      'title' => t('access all course reports'),
-      'description' => t('TODO Add a description for \'access all course reports\''),
+      'title' => t('Access all course reports'),
+      'description' => t('Grants access to all course reports across all courses.'),
+    ),
+    'access course administration area' => array(
+      'title' => t('Access course administration area'),
+      'description' => t('Grants access to the course administration area, with no other permission.'),
+    ),
+    'administer course enrollment types' => array(
+      'title' => t('Administer course enrollment types'),
+      'description' => t('Manage course enrollment types, fields, and display settings.'),
     ),
   );
 }
@@ -2874,7 +2875,7 @@ function course_entity_info() {
         'name' => 'type',
         'label' => 'label',
       ),
-      'access callback' => 'course_access',
+      'access callback' => 'course_enrollment_type_access',
       'module' => 'course',
       // Enable the entity API's admin UI.
       'admin ui' => array(
@@ -3258,4 +3259,18 @@ function course_forms($form_id, $args) {
     $forms['course_enrollment_edit_' . $bundle . '_form']['wrapper callback'] = 'entity_ui_form_defaults';
   }
   return $forms;
+}
+
+/**
+ * Access callback for the entity API.
+ */
+function course_enrollment_type_access($op, $entity = NULL, $account = NULL, $entity_type = NULL) {
+  return user_access('administer course enrollment types', $account);
+}
+
+/**
+ * Can the user access the course administration pages?
+ */
+function course_admin_access() {
+  return user_access('administer course') || user_access('access course administration area');
 }
