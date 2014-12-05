@@ -26,7 +26,7 @@ class CourseObjectWebformTestCase extends CourseTestCase {
   function setUp() {
     parent::setUp();
 
-    $this->webform_admin = $this->drupalCreateUser(array('create webform content', 'edit any webform content'));
+    $this->webform_admin = $this->drupalCreateUser(array('create webform content', 'edit any webform content', 'edit webform components'));
   }
 
   function testWebformCourseObject() {
