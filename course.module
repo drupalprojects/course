@@ -2969,7 +2969,7 @@ function course_entity_info() {
           'path' => 'admin/course/enrollment-types/manage/%course_enrollment_type',
           'real path' => 'admin/course/enrollment-types/manage/' . $type,
           'bundle argument' => 4,
-          'access arguments' => array('administer course'),
+          'access arguments' => array('administer course enrollment types'),
         ),
       );
     }
