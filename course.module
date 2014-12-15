@@ -3080,7 +3080,7 @@ function course_report_label($enrollment) {
  */
 function course_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
   if ($form['instance']['entity_type']['#value'] == 'course_enrollment') {
-    $form['field']['settings']['course_enrollment_user_field'] = array(
+    $form['instance']['settings']['course_enrollment_user_field'] = array(
       '#type' => 'checkbox',
       '#title' => t('Show this field on enrollment.'),
       '#default_value' => !empty($form['#field']['settings']['course_enrollment_user_field']),
@@ -3089,7 +3089,7 @@ function course_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
   }
   else {
     // Add the value to the form so it isn't lost.
-    $form['field']['settings']['course_enrollment'] = array(
+    $form['instance']['settings']['course_enrollment'] = array(
       '#type' => 'value',
       '#value' => !empty($form['#field']['settings']['course_enrollment']),
     );
