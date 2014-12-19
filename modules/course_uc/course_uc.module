@@ -252,8 +252,10 @@ function course_uc_check_cart($nid, $uid, $data = array()) {
     // purchasing this course for somebody else, or the requested user is
     // already enrolled.
 
-    if (course_enrollment_load($nid, $uid)) {
-      return TRUE;
+    if ($enrollment = course_enrollment_load($nid, $uid)) {
+      if ($enrollment->status) {
+        return TRUE;
+      }
     }
 
     if ($item->nid == $nid && (!isset($item->data['uid']) || $item->data['uid'] == $uid)) {
