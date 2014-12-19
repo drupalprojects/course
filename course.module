@@ -715,47 +715,10 @@ function course_take_course_menu_access($node) {
 }
 
 /**
- * Determine if taking this course should be restricted.
- *
- * @param object $node
- *   By reference. The course node.
- *
- * @return boolean|array
- *   Either FALSE, or an array containing:
- *   - success: Boolean. Indicates whether or not the user has permission to
- *     take this course.
- *   - message: String. If success is FALSE, a message to display to the user.
+ * @deprecated
  */
 function course_take_course_access($node, $account = NULL, $flush = FALSE, $all = FALSE) {
-  $courses = &drupal_static(__FUNCTION__, array());
-
-  if (!$account) {
-    global $user;
-    $account = $user;
-  }
-
-  if (!isset($courses[$node->nid]) || $flush || $all) {
-    if ($flush) {
-      $courses = array();
-    }
-    // Allow modules to determine if this course should be restricted.
-    $op = 'take';
-    $hooks = module_invoke_all('course_access', $op, $node, $account);
-    drupal_alter('course_access', $hooks, $op, $node, $account);
-    uasort($hooks, 'drupal_sort_weight');
-    if ($all) {
-      return $hooks;
-    }
-    $courses[$node->nid]['success'] = TRUE;
-    foreach ($hooks as $key => $hook) {
-      if (is_array($hook) && !$hook['success']) {
-        $courses[$node->nid] = $hook;
-        return $hook;
-      }
-    }
-  }
-
-  return $courses[$node->nid];
+  return course_access_course('take', $node, $account, $flush, $all);
 }
 
 /**
@@ -1832,11 +1795,13 @@ function course_preprocess_page(&$variables) {
  * @return array
  */
 function course_get_types() {
-  $types = array();
+  $types = & drupal_static(__FUNCTION__, array());
 
-  foreach (node_type_get_types() as $type => $info) {
-    if (variable_get("course_use_$type", 0)) {
-      $types[] = $type;
+  if (!$types) {
+    foreach (node_type_get_types() as $type => $info) {
+      if (variable_get("course_use_$type", 0)) {
+        $types[] = $type;
+      }
     }
   }
 
@@ -2306,6 +2271,8 @@ function course_course_credit_check_completion($course_node) {
  *   A node.
  * @param object $user
  *   A user.
+ * @param bool $flush
+ *   Flag to flush the internal cache.
  * @param bool $all
  *   Return all values from implementations.
  *
@@ -2314,35 +2281,44 @@ function course_course_credit_check_completion($course_node) {
  *   has permission to self-enroll in this course, and 'message', a
  *   module-provided message that should be displayed to the user.
  */
-function course_enroll_access($node, $user = NULL, $flush = FALSE, $all = FALSE) {
+function course_access_course($op, $node, $account = NULL, $flush = FALSE, $all = FALSE) {
   $courses = &drupal_static(__FUNCTION__, array());
 
-  if (!$user) {
+  if (!$account) {
     global $user;
+    $account = $user;
   }
 
-  if (!isset($courses[$node->nid]) || $flush || $all) {
-    if ($flush) {
-      $courses = array();
-    }
+  if (!isset($courses[$node->nid][$op]) || $flush) {
     // Allow modules to set self-enrollment access for a user.
-    $op = 'enroll';
-    $hooks = module_invoke_all('course_access', $op, $node, $user);
-    drupal_alter('course_access', $hooks, $op, $node, $user);
+    $hooks = module_invoke_all('course_access', $op, $node, $account);
+    drupal_alter('course_access', $hooks, $op, $node, $account);
     uasort($hooks, 'drupal_sort_weight');
-    if ($all) {
-      return $hooks;
-    }
-    $courses[$node->nid]['success'] = TRUE;
-    foreach ($hooks as $key => $hook) {
+    $courses[$node->nid][$op] = $hooks;
+  }
+
+  if ($all) {
+    return $courses[$node->nid][$op];
+  }
+  else {
+    foreach ($courses[$node->nid][$op] as $key => $hook) {
       if (is_array($hook) && !$hook['success']) {
-        $courses[$node->nid] = $hook;
         return $hook;
       }
     }
-  }
 
-  return $courses[$node->nid];
+    // Add a default success hook in case no others are returned.
+    return array(
+        'success' => TRUE,
+    );
+  }
+}
+
+/**
+ * @deprecated
+ */
+function course_enroll_access($node, $account = NULL, $flush = FALSE, $all = FALSE) {
+  return course_access_course('enroll', $node, $account, $flush, $all);
 }
 
 /**
