@@ -1450,6 +1450,10 @@ function course_enrollment_save($enrollment) {
     if ($eid = db_query('SELECT eid FROM {course_enrollment} WHERE nid = :nid AND uid = :uid', array(':nid' => $enrollment->nid, ':uid' => $enrollment->uid))->fetchField()) {
       $enrollment->eid = $eid;
     }
+    if (!isset($enrollment->type)) {
+      $node = node_load($enrollment->nid);
+      $enrollment->type = $node->course['enrollment_type'];
+    }
     entity_save('course_enrollment', $enrollment);
   }
   else {
