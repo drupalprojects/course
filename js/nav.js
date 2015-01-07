@@ -14,15 +14,17 @@
 })(jQuery);
 
 function CourseFulfillmentCheck() {
-  var url = Drupal.settings.courseAjaxNavPath;
-  jQuery.getJSON(url, {}, function (response) {
-    if (response.complete) {
-      // Load up new nav buttons.
-      $('#course-nav').html(response.content);
-    }
-    else {
-      // Call again.
-      setTimeout('CourseFulfillmentCheck();', 2500);
-    }
-  });
+  (function ($) {
+    var url = Drupal.settings.courseAjaxNavPath;
+    jQuery.getJSON(url, {}, function (response) {
+      if (response.complete) {
+        // Load up new nav buttons.
+        $('#course-nav').html(response.content);
+      }
+      else {
+        // Call again.
+        setTimeout('CourseFulfillmentCheck();', 2500);
+      }
+    });
+  })(jQuery);
 }
