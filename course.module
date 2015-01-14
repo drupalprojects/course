@@ -2241,33 +2241,6 @@ function course_ctools_plugin_directory($owner, $plugin_type) {
 }
 
 /**
- * Implements course_credit_check_completion().
- *
- * Require the user to choose a user type before they claim credit.
- */
-function course_course_credit_check_completion($course_node) {
-  global $user;
-
-  // Check if course user types enabled, has user types, and there is actually valid credit for this course.
-  if (variable_get('course_user_types_enabled', 0) && count(course_user_type_get_options())) {
-    // Check for active credit types. No user checking at this point.
-    // @todo break out into function to get active credit types on a course.
-    $active = FALSE;
-    foreach ($course_node->course_credit as $type) {
-      if ($type->active) {
-        $active = TRUE;
-      }
-    }
-    if ($active) {
-      $enrollment = course_enrollment_load($course_node, $user);
-      if (!$enrollment->user_type && arg(2) == 'course-credit-app') {
-        drupal_goto("node/{$course_node->nid}/course-user-type", array('query' => drupal_get_destination()));
-      }
-    }
-  }
-}
-
-/**
  * Check whether or not a user can self-enroll in a course.
  *
  * This function should be called by any module providing means
