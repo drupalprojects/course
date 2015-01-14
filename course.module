@@ -982,6 +982,9 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
       module_invoke_all('course_enroll', $node, $account, $from, $code, $status);
     }
 
+    // Flush caches.
+    course_access_course('take', $node, $account, TRUE);
+
     return $enrollment;
   }
   else {
@@ -2313,7 +2316,7 @@ function course_access_course($op, $node, $account = NULL, $flush = FALSE, $all 
 
     // Add a default success hook in case no others are returned.
     return array(
-        'success' => TRUE,
+      'success' => TRUE,
     );
   }
 }
@@ -2331,6 +2334,8 @@ function course_enroll_access($node, $account = NULL, $flush = FALSE, $all = FAL
  * Block enrollments when a course has either not yet started or is expired.
  */
 function course_course_access($op, $node, $user) {
+  $enrollment = course_enrollment_load($node->nid, $user->uid);
+
   if ($op == 'enroll') {
     if (!node_access('view', $node)) {
       return array('course_denied' => array(
@@ -2362,6 +2367,7 @@ function course_course_access($op, $node, $user) {
       ));
     }
   }
+
   if ($op == 'take') {
     if (!node_access('view', $node)) {
       return array('course_node_access' => array(
@@ -2372,8 +2378,24 @@ function course_course_access($op, $node, $user) {
       ));
     }
 
-    if ($row = db_query("SELECT * FROM {course_enrollment} WHERE nid = :nid AND uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid))->fetch()) {
-      if ($row->enroll_end > 0 && REQUEST_TIME > $row->enroll_end) {
+
+    if ($enrollment) {
+
+      // Check if there are any required, unfilled fields on the enrollment.
+      $instances = field_info_instances('course_enrollment', $node->course['enrollment_type']);
+      foreach ($instances as $field_name => $instance) {
+        if ($instance['required'] && !field_get_items('course_enrollment', $enrollment, $field_name)) {
+          return array(
+            'course_enrollment' => array(
+              'success' => FALSE,
+              'header' => t(''),
+              'message' => theme('course_take_course_button', array('node' => $node)),
+            ),
+          );
+        }
+      }
+
+      if ($enrollment->enroll_end > 0 && REQUEST_TIME > $enrollment->enroll_end) {
         return array('course_enrollment_expired' => array(
             'success' => FALSE,
             'header' => t('Enrollment expired'),
@@ -3063,7 +3085,7 @@ function course_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
     $form['instance']['settings']['course_enrollment_user_field'] = array(
       '#type' => 'checkbox',
       '#title' => t('Show this field on enrollment.'),
-      '#default_value' => !empty($form['#field']['settings']['course_enrollment_user_field']),
+      '#default_value' => !empty($form['#instance']['settings']['course_enrollment_user_field']),
       '#description' => t('If checked, this field will be presented when starting a course.'),
     );
   }
@@ -3071,7 +3093,7 @@ function course_form_field_ui_field_edit_form_alter(&$form, &$form_state) {
     // Add the value to the form so it isn't lost.
     $form['instance']['settings']['course_enrollment'] = array(
       '#type' => 'value',
-      '#value' => !empty($form['#field']['settings']['course_enrollment']),
+      '#value' => !empty($form['#instance']['settings']['course_enrollment']),
     );
   }
 }
@@ -3115,7 +3137,7 @@ function course_enrollment_form_submit($form, &$form_state) {
  * Don't show the user fields that weren't marked as enrollment fields.
  */
 function course_field_access($op, $field, $entity_type, $entity, $account) {
-  if ($entity_type == 'course_enrollment' && $op == 'edit') {
+  if ($entity && $entity_type == 'course_enrollment' && $op == 'edit') {
     $instance = field_info_instance($entity_type, $field['field_name'], $entity->type);
     if (empty($instance['settings']['course_enrollment_user_field'])) {
       return FALSE;

@@ -128,8 +128,10 @@ abstract class CourseObject extends CourseHandler {
         $course->setActive($this->getId());
         $courseObjects = $course->getObjects();
 
-        // Deny object access to non-enrolled users.
-        if (!course_enrollment_check($this->getCourseNid(), $account->uid)) {
+        // Deny object access to non-enrolled users or users who cannot take
+        // this course.
+        $result = course_access_course('take', $this->getCourse()->getNode(), $account);
+        if (!course_enrollment_check($this->getCourseNid(), $account->uid) || !$result['success']) {
           return FALSE;
         }
         else if ($courseObjects[0]->getId() == $this->getId()) {
