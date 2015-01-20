@@ -426,6 +426,7 @@ function course_outline_list($node) {
   // Iterate over objects.
   $workflow = array();
   $prev_obj = NULL;
+  $img = NULL;
   foreach ($course->getObjects() as $key => $courseObject) {
     $step = array();
     $step['id'] = 'course-object-' . $courseObject->getId();
@@ -488,7 +489,7 @@ function course_outline_list($node) {
     $prev_obj = clone $courseObject;
   }
 
-  if ($prev_obj && $prev_obj->getFulfillment()->isComplete()) {
+  if ($course->getTracker()->getOption('complete')) {
     $workflow[] = array(
       'data' => $img . ' ' . l(t('Complete'), "node/$node->nid/course-complete", array('html' => TRUE)),
       'id' => 'complete',
