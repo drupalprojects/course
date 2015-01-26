@@ -370,9 +370,10 @@ function course_ajaj_fulfullment_check($node, $courseObject, $js = FALSE) {
   module_load_include('inc', 'course', 'includes/course.block');
   // Bust cache.
   course_get_course($node, $courseObject->getCourse()->getUser(), TRUE);
-  $block = _course_block_navigation_view();
+  $block = block_load('course', 'navigation');
+  $block_rend = _block_render_blocks(array($block));
   drupal_json_output(array(
-    'content' => $block['content'],
+    'content' => $block_rend['course_navigation']->content['#markup'],
     'complete' => $courseObject->getFulfillment()->isComplete(),
   ));
 }
