@@ -25,8 +25,12 @@ class CourseObjectWebformTestCase extends CourseTestCase {
 
   function setUp() {
     parent::setUp();
-
-    $this->webform_admin = $this->drupalCreateUser(array('create webform content', 'edit any webform content', 'edit webform components'));
+    $webform_version = drupal_get_installed_schema_version('webform');
+    $perms = array('create webform content', 'edit any webform content');
+    if ($webform_version >= 7420) {
+      $perms[] = 'edit webform components';
+    }
+    $this->webform_admin = $this->drupalCreateUser($perms);
   }
 
   function testWebformCourseObject() {
