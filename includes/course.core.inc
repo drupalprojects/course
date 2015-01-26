@@ -626,7 +626,7 @@ class Course extends CourseHandler {
     foreach ($this->getObjects() as $courseObject) {
       // Remove access.
       $courseObject->revoke();
-      $courseObject->unenroll();
+      $courseObject->unEnroll();
     }
   }
 
