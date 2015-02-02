@@ -237,20 +237,22 @@ function course_signup_course_access($op, $node, $user) {
       $hooks[] = $check;
     }
 
-    if (!empty($node->signup) && empty($node->signup_status)) {
-      module_load_include('inc', 'signup', 'includes/date');
-      $field = signup_date_field($node->type);
-      $items = field_get_items('node', $node, $field['field_name']);
-      if (!empty($items[0]['value'])) {
-        // This node is signup-enabled and closed by date.
-        $date = new DateTime($items[0]['value'], new DateTimeZone('UTC'));
-        $unixtime = $date->getTimestamp();
-        $hooks['course_signup'] = array(
-          'header' => t(''),
-          'success' => FALSE,
-          'message' => t('Enrollments closed on @date.', array('@date' => format_date($unixtime, 'long'))),
-          'weight' => 100,
-        );
+    if (!empty($node->signup)) {
+      if (!empty($node->signup_status)) {
+        module_load_include('inc', 'signup', 'includes/date');
+        $field = signup_date_field($node->type);
+        $items = field_get_items('node', $node, $field['field_name']);
+        if (!empty($items[0]['value'])) {
+          // This node is signup-enabled and closed by date.
+          $date = new DateTime($items[0]['value'], new DateTimeZone('UTC'));
+          $unixtime = $date->getTimestamp();
+          $hooks['course_signup'] = array(
+            'header' => t(''),
+            'success' => FALSE,
+            'message' => t('Enrollments closed on @date.', array('@date' => format_date($unixtime, 'long'))),
+            'weight' => 100,
+          );
+        }
       }
       else {
         // This node is signup-enabled and closed.
@@ -261,8 +263,8 @@ function course_signup_course_access($op, $node, $user) {
           'weight' => 100,
         );
       }
-      return $hooks;
     }
+    return $hooks;
   }
 }
 
