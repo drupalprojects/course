@@ -229,6 +229,7 @@ function course_schema() {
         'type' => 'text',
         'description' => "Extra serialized enrollment data.",
         'size' => 'medium',
+        'merge' => TRUE,
       ),
     ),
     'primary key' => array('eid'),
