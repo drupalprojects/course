@@ -2820,6 +2820,7 @@ function course_entity_info() {
   $entity_info = array(
     'course_enrollment' => array(
       'label' => t('Course enrollment'),
+      'entity class' => 'Entity',
       'controller class' => 'EntityAPIController',
       'base table' => 'course_enrollment',
       'uri callback' => 'course_enrollment_uri',
@@ -2838,6 +2839,7 @@ function course_entity_info() {
     ),
     'course_enrollment_type' => array(
       'label' => t('Enrollment type'),
+      'entity class' => 'Entity',
       'plural label' => t('Enrollment types'),
       'description' => t('Course enrollment types.'),
       'controller class' => 'EntityAPIControllerExportable',
@@ -2861,6 +2863,7 @@ function course_entity_info() {
     ),
     'course_report' => array(
       'label' => t('Course report'),
+      'entity class' => 'Entity',
       'controller class' => 'EntityAPIController',
       'base table' => 'course_report',
       'uri callback' => 'course_report_uri',
@@ -2883,6 +2886,7 @@ function course_entity_info() {
     ),
     'course_object' => array(
       'label' => t('Course object'),
+      'entity class' => 'Entity',
       'controller class' => 'EntityAPIController',
       'base table' => 'course_outline',
       'uri callback' => 'course_object_uri',
@@ -2905,6 +2909,7 @@ function course_entity_info() {
     ),
     'course_object_fulfillment' => array(
       'label' => t('Course object fulfillment'),
+      'entity class' => 'Entity',
       'controller class' => 'EntityAPIController',
       'base table' => 'course_outline_fulfillment',
       'uri callback' => 'course_object_fulfillment_uri',
@@ -2918,6 +2923,7 @@ function course_entity_info() {
     ),
     'course' => array(
       'label' => t('Course'),
+      'entity class' => 'Entity',
       'controller class' => 'EntityAPIController',
       'base table' => 'course_node',
       'uri callback' => 'course_uri',
@@ -2969,6 +2975,7 @@ function course_entity_property_info_alter(&$info) {
   $info['course_enrollment']['properties']['nid']['type'] = 'node';
   $info['course_enrollment']['properties']['timestamp']['type'] = 'date';
   $info['course_enrollment']['properties']['uid']['type'] = 'user';
+  $info['course_enrollment']['properties']['type']['type'] = 'course_enrollment_type';
 
   $info['course_object']['properties']['duration']['type'] = 'duration';
   $info['course_object']['properties']['enabled']['type'] = 'boolean';

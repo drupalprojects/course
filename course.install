@@ -126,7 +126,7 @@ function course_schema() {
       'data' => array(
         'serialize' => TRUE,
         'type' => 'text',
-        'description' => "Serialized snapshot data.",
+        'description' => 'Extra serialized course report data.',
         'size' => 'medium',
       ),
       'coid' => array(
@@ -223,6 +223,12 @@ function course_schema() {
         'length' => 32,
         'not null' => TRUE,
         'default' => '',
+      ),
+      'data' => array(
+        'serialize' => TRUE,
+        'type' => 'text',
+        'description' => "Extra serialized enrollment data.",
+        'size' => 'medium',
       ),
     ),
     'primary key' => array('eid'),
@@ -383,7 +389,7 @@ function course_schema() {
         'description' => 'The Universally Unique Identifier.',
       ),
       'data' => array(
-        'description' => 'Serialized data',
+        'description' => 'Extra serialized course object data.',
         'type' => 'text',
         'serialize' => TRUE,
       ),
@@ -450,7 +456,7 @@ function course_schema() {
       'info' => array(
         'type' => 'text',
         'serialize' => TRUE,
-        'description' => "Description of fulfillment event",
+        'description' => 'Extra serialized course object fulfillment enrollment data.',
       ),
       'uuid' => array(
         'type' => 'varchar',
@@ -1109,4 +1115,17 @@ function course_update_7132() {
     'description' => 'Object grade received.',
   ));
   return t('Fixed grade_result fields.');
+}
+
+/**
+ * Add a serialized data field on enrollments.
+ */
+function course_update_7133() {
+  db_add_field('course_enrollment', 'data', array(
+    'serialize' => TRUE,
+    'type' => 'text',
+    'description' => 'Extra serialized enrollment data.',
+    'size' => 'medium',
+  ));
+  return t('Added data field on enrollments.');
 }
