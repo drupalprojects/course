@@ -2993,6 +2993,7 @@ function course_entity_property_info_alter(&$info) {
   $info['course_report']['properties']['nid']['type'] = 'node';
   $info['course_report']['properties']['uid']['type'] = 'user';
   $info['course_report']['properties']['coid']['type'] = 'course_object';
+  $info['course_report']['properties']['complete']['type'] = 'boolean';
 }
 
 /**
