@@ -407,8 +407,7 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
 
   drupal_set_message('Updated course.');
 
-  // @todo use form #redirect instead of drupal_goto()?
-  drupal_goto("node/$node->nid/course-outline");
+  $form_state['redirect'] = "node/$node->nid/course-outline";
 }
 
 /**
