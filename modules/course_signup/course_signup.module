@@ -246,12 +246,17 @@ function course_signup_course_access($op, $node, $user) {
           // This node is signup-enabled and closed by date.
           $date = new DateTime($items[0]['value'], new DateTimeZone('UTC'));
           $unixtime = $date->getTimestamp();
-          $hooks['course_signup'] = array(
-            'header' => t(''),
-            'success' => FALSE,
-            'message' => t('Enrollments closed on @date.', array('@date' => format_date($unixtime, 'long'))),
-            'weight' => 100,
-          );
+          $signup_close_early = variable_get('signup_close_early', 0);
+          $date->sub(date_interval_create_from_date_string("$signup_close_early hours"));
+          $close_stamp = $date->getTimestamp();
+          if ($unixtime < time() || $unixtime > $close_stamp) {
+            $hooks['course_signup'] = array(
+              'header' => t(''),
+              'success' => FALSE,
+              'message' => t('Enrollments closed on @date.', array('@date' => format_date($close_stamp, 'long'))),
+              'weight' => 100,
+            );
+          }
         }
       }
       else {
