@@ -1999,7 +1999,7 @@ function course_edit_enrollment_action($object, $context) {
   foreach ($course->getObjects() as $key => $courseObject) {
     $coid = $courseObject->getId();
     $fulfillment = $courseObject->getFulfillment();
-    if ($context['course_objects'][$coid] != '') {
+    if ($context['course_objects'][$coid] !== '') {
       // There was a change
 
       if ($context['course_objects'][$coid] == 1) {
