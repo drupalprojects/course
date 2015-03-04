@@ -255,8 +255,8 @@ function _course_outline_object_form($courseObject = NULL) {
   $rform['options']['#markup'] = l($text, $path, $l_options);
 
   $rform['weight'] = array(
-    '#type' => 'weight',
-    '#delta' => 50,
+    '#type' => 'textfield',
+    '#size' => 3,
     '#default_value' => $courseObject->getOption('weight'),
     '#attributes' => array(
       'class' => array('course-object-weight'),
@@ -368,7 +368,7 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   // Sort by weight so we can renumber.
   uasort($objects, '_course_outline_overview_form_cmp_function');
 
-  $i = -50;
+  $i = 0;
   foreach ($objects as $object_key => $object) {
     // Get each course object settings saved form values, which are not on the
     // outline overview form.
