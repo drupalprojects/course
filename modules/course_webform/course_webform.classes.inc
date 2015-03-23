@@ -8,11 +8,7 @@ class CourseObjectWebform extends CourseObjectNode {
   public function create($node = NULL) {
     $webform = new stdClass;
     $webform->type = 'webform';
-    $webform->title = $this->getTitle();
-    $webform->uid = $this->user->uid;
-    node_object_prepare($webform);
-    node_save($webform);
-    $this->setNode($webform);
+    parent::create($webform);
   }
 
   public function getWarnings() {

@@ -26,11 +26,9 @@ class CourseObjectBook extends CourseObjectNode {
   public function create($node = NULL) {
     $node = new stdClass;
     $node->type = $this->getOption('node_type');
-    $node->title = $this->getTitle();
-    $node->uid = $this->user->uid;
     $node->book['bid'] = 'new';
-    node_save($node);
-    $this->setNode($node);
+    $node->book['mlid'] = NULL;
+    parent::create($node);
   }
 
   function optionsDefinition() {

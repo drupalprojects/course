@@ -30,13 +30,9 @@ class CourseObjectPoll extends CourseObjectNode {
       ),
     );
     $poll->type = 'poll';
-    $poll->title = $this->getTitle();
-    $poll->uid = $this->user->uid;
     $poll->active = 1;
     $poll->runtime = 0;
-    node_object_prepare($poll);
-    node_save($poll);
-    $this->setNode($poll);
+    parent::create($poll);
   }
 
   public function getReports() {
