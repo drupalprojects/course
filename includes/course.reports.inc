@@ -18,21 +18,21 @@ function course_object_reports_page($node) {
   $header = '';
   // Report content.
   $content = '';
-
+  // Render Array
+  $render = array();
 
   $course = course_get_course($node);
   foreach ($course->getObjects() as $courseObject) {
-    $lis = array();
+    $items = array();
     if (method_exists($courseObject, 'getReports')) {
       foreach ($courseObject->getReports() as $key => $report) {
-        $report_li = array(
-          'data' => course_object_single_report_link($courseObject, $key, $report),
-        );
-        $lis[] = $report_li;
-      }
-    }
-    if ($lis) {
-      $nav .= theme('item_list', array('items' => $lis, 'title' => $courseObject->getTitle()));
+        $items[$key] = course_object_single_report_link($courseObject, $key, $report);
+      };
+      $nav[$courseObject->getOption('object_type')] = array(
+        '#theme' => 'item_list',
+        '#title' => $courseObject->getTitle(),
+        '#items' => $items,
+      );
     }
   }
 
@@ -53,8 +53,23 @@ function course_object_reports_page($node) {
     }
   }
 
+  $rows['nav'] = array(
+    'data' => $nav,
+    'width' => 200,
+    'id' => 'course-object-reports-nav',
+    'valign' => 'top',
+  );
+  $rows['report'] = array(
+    'data' => $header . $content,
+    'id' => 'course-object-reports-content',
+    'valign' => 'top',
+  );
 
-  return theme('course_report', array('nav' => $nav, 'header' => $header, 'body' => $content));
+  $render['#rows'] = array('data' => $rows);
+  $render['#theme'] = 'table';
+  $render['#attributes'] = array('attributes' => array('id' => 'course-object-reports'));
+
+  return $render;
 }
 
 /**
@@ -62,40 +77,4 @@ function course_object_reports_page($node) {
  */
 function course_object_single_report_link($courseObject, $key, $report) {
   return l($report['title'], "node/{$courseObject->getCourseNid()}/course-reports/objects/{$courseObject->getId()}/$key");
-}
-
-/**
- * Theme the course objects report page.
- */
-function theme_course_report($variables) {
-  $nav = $variables['nav'];
-  $header = $variables['header'];
-  $body = $variables['body'];
-  if (!$nav) {
-    $body = t('None of the objects in your course have reports associated with them.');
-  }
-
-  $body = $header . $body;
-
-  $row = array(
-    array(
-      'data' => $nav,
-      'width' => 200,
-      'id' => 'course-object-reports-nav',
-      'valign' => 'top',
-    ),
-    array(
-      'data' => $body,
-      'id' => 'course-object-reports-content',
-      'valign' => 'top',
-    ),
-  );
-
-  $rows[] = $row;
-
-  $out = theme('table', array('header' => NULL, 'rows' => $rows, 'attributes' => array(
-      'id' => 'course-object-reports',
-  )));
-
-  return $out;
 }
