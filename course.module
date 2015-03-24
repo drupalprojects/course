@@ -1992,9 +1992,6 @@ function course_edit_enrollment_action($object, $context) {
     }
   }
 
-  course_enrollment_save($enrollment);
-  course_report_save($course_report);
-
   $course = course_get_course($node, $account);
   foreach ($course->getObjects() as $key => $courseObject) {
     $coid = $courseObject->getId();
@@ -2023,6 +2020,9 @@ function course_edit_enrollment_action($object, $context) {
       $fulfillment->save();
     }
   }
+
+  course_enrollment_save($enrollment);
+  course_report_save($course_report);
 
   drupal_set_message(t('Updated enrollment for %user', array('%user' => $account->name)));
 }
