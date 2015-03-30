@@ -53,6 +53,29 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
         }
       }
     }
+
+    if (!isset($form['actions']['submit']['#access']) || $form['actions']['submit']['#access']) {
+      $instances = field_info_instances('course_enrollment', $node->course['enrollment_type']);
+      foreach ($instances as $field_name => $instance) {
+        $field = field_info_field($field_name);
+        if ($instance['settings']['course_enrollment_user_field']) {
+          // At least one field must be shown when enrolling. Display the user
+          // enrollment form.
+          $enrollment->nid = $node->nid;
+          $enrollment->uid = $user->uid;
+          $enrollment->type = $node->course['enrollment_type'];
+          $form['course_enrollment'] = array();
+          $form['course_enrollment']['#tree'] = TRUE;
+          $form['course_enrollment']['#parents'] = array('course_enrollment');
+          field_attach_form('course_enrollment', $enrollment, $form['course_enrollment'], $form_state);
+          $form['#submit'] = array(
+            'uc_product_add_to_cart_form_submit',
+            'course_uc_add_to_cart_form_submit',
+          );
+          break;
+        }
+      }
+    }
   }
 
   if ($form_id == 'uc_cart_view_form') {
@@ -65,6 +88,19 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
           }
         }
       }
+    }
+  }
+}
+
+/**
+ * Save the temporary course enrollment entity into the order product.
+ */
+function course_uc_add_to_cart_form_submit($form, $form_state) {
+  $cart = uc_cart_get_contents();
+  foreach ($cart as $cart_item) {
+    if ($cart_item->nid == $form_state['values']['node']->nid) {
+      $cart_item->data['course_enrollment'] = $form_state['values']['course_enrollment'];
+      entity_save('uc_cart_item', $cart_item);
     }
   }
 }
@@ -162,7 +198,9 @@ function course_uc_init() {
  *
  * Satisfy payment requirement when manually enrolled.
  */
-function course_uc_course_enroll($node, $user) {
+function course_uc_course_enrollment_insert($enrollment) {
+  $node = node_load($enrollment->nid);
+  $user = user_load($enrollment->uid);
   $course = course_get_course($node, $user);
   if (course_uc_payment_is_first($course)) {
     foreach ($course->getObjects() as $courseObject) {
@@ -307,7 +345,17 @@ function course_uc_enroll_user_in_ordered_courses($order) {
       // This product is an actual course. They have to be enrolled.
       // This will also satisfy the first payment requirement.
       // @see course_uc_course_enroll()
-      course_enroll($node, $account, 'ubercart');
+      if ($product->data['course_enrollment']) {
+        $course_enrollment = entity_create('course_enrollment', $product->data['course_enrollment']);
+        $course_enrollment->type = $node->course['enrollment_type'];
+        $course_enrollment->nid = $node->nid;
+        $course_enrollment->uid = $account->uid;
+        $course_enrollment->enrollmenttype = 'ubercart';
+        course_enrollment_save($course_enrollment);
+      }
+      else {
+        course_enroll($node, $account, 'ubercart');
+      }
     }
 
     if ($courseNode = course_determine_context('course_uc', 'payment', $node->nid)) {
