@@ -345,9 +345,8 @@ abstract class CourseObject extends CourseHandler {
       );
 
       // Check for multiple instances.
-      $sql = "SELECT count(coid) FROM {course_outline} WHERE module = '%s' AND object_type = '%s' AND instance = '%s'";
       if (db_query("SELECT count(coid) FROM {course_outline} WHERE module = :module AND object_type = :object_type AND instance = :instance", array(':module' => $config['module'], ':object_type' => $config['object_type'], ':instance' => $config['instance']))->fetchField() > 1) {
-        $form['delete_instance']['#description'] = t('<span class="error"><strong>WARNING</strong></span>: multiple course objects link to this instance. Deleting the instance might break the other course objects that use it.');
+        $form['delete']['delete_instance']['#description'] = t('<span class="error"><strong>WARNING</strong></span>: multiple course objects link to this instance. Deleting the instance might break the other course objects that use it.');
       }
     }
 
