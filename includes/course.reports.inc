@@ -28,7 +28,7 @@ function course_object_reports_page($node) {
       foreach ($courseObject->getReports() as $key => $report) {
         $items[$key] = course_object_single_report_link($courseObject, $key, $report);
       };
-      $nav[$courseObject->getOption('object_type')] = array(
+      $nav[$courseObject->getId()] = array(
         '#theme' => 'item_list',
         '#title' => $courseObject->getTitle(),
         '#items' => $items,
