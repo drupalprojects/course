@@ -968,7 +968,7 @@ abstract class CourseObject extends CourseHandler {
    *   if the object can clone but with caveats.
    */
   function getCloneAbility() {
-    return t('The course object %object cannot be cloned. A new instance will be created.', array('%object' => $this->getTitle()));
+    return FALSE;
   }
 
   /**

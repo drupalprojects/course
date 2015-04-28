@@ -21,6 +21,9 @@ function course_clone_warning_messages($course) {
   $messages = array();
   foreach ($course->getObjects() as $courseObject) {
     $warning = $courseObject->getCloneAbility();
+    if ($warning === FALSE) {
+      $messages[] = t('The course object %object cannot be cloned. A new instance will be created.', array('%object' => $courseObject->getTitle()));
+    }
     if (is_string($warning)) {
       $messages[] = $warning;
     }
