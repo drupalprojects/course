@@ -1154,7 +1154,9 @@ abstract class CourseObjectNode extends CourseObject {
   public function __construct($object, $user = NULL, $course = NULL) {
     // Pass configuration to parent.
     parent::__construct($object, $user, $course);
-    $this->node = node_load($this->getInstanceId());
+    if ($this->getInstanceId() && $node = node_load($this->getInstanceId())) {
+      $this->node = clone $node;
+    }
   }
 
   /**
@@ -1257,7 +1259,7 @@ abstract class CourseObjectNode extends CourseObject {
    *   A node or node ID.
    */
   public function setNode($node) {
-    $this->node = $node;
+    $this->node = clone $node;
     $this->setInstanceId($this->node->nid);
   }
 
