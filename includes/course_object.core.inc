@@ -1066,9 +1066,10 @@ class CourseObjectFulfillment extends CourseHandler {
 
     $this->courseObject = $courseObject;
     $sql = "SELECT * FROM {course_outline_fulfillment} WHERE coid = %d AND uid = %d";
-    $fulfillment = db_query("SELECT * FROM {course_outline_fulfillment} WHERE coid = :coid AND uid = :uid", array(':coid' => $this->courseObject->getId(), ':uid' => $user->uid))->fetch(PDO::FETCH_ASSOC);
-
-    $this->setOptions($fulfillment);
+    if (!$courseObject->isTemporary()) {
+      $fulfillment = db_query("SELECT * FROM {course_outline_fulfillment} WHERE coid = :coid AND uid = :uid", array(':coid' => $this->courseObject->getId(), ':uid' => $user->uid))->fetch(PDO::FETCH_ASSOC);
+      $this->setOptions($fulfillment);
+    }
 
     // Set course object ID.
     $this->setOption('coid', $this->courseObject->getId());
