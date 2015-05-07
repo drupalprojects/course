@@ -4,6 +4,8 @@ function resizeFrame(obj) {
   frame.contents().find('body').bind('DOMAttrModified DOMSubtreeModified DOMNodeInserted DOMNodeInsertedIntoDocument', function () {
     frame.height(frame.contents().find("body").height());
   });
-
+  jQuery(obj.contentWindow).resize(function() {
+    frame.height(frame.contents().find("body").height());
+  });
 
 }
