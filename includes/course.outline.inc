@@ -368,7 +368,6 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   // Sort by weight so we can renumber.
   uasort($objects, '_course_outline_overview_form_cmp_function');
 
-  $i = 0;
   foreach ($objects as $object_key => $object) {
     // Get each course object settings saved form values, which are not on the
     // outline overview form.
@@ -380,7 +379,7 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
     $options = $courseObject->getOptions();
 
     // Renumber weights to the way draggable table would do it in case of no JS.
-    $courseObject->setOption('weight', $i++);
+    $courseObject->setOption('weight', $object['weight']);
 
     // We only save overview objects with a selected component, whether loaded
     // from the database or AHAH created.

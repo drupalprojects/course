@@ -540,13 +540,14 @@ abstract class CourseObject extends CourseHandler {
   }
 
   /**
-   * Get options, with session options having precedence.
+   * Get options, with session options, except weight, having precedence.
    */
   public function getOptions() {
     $options = parent::getOptions();
     $sessionDefaults = array();
     if (isset($options['nid']) && isset($options['coid']) && isset($_SESSION['course'][$options['nid']]['editing'][$options['coid']])) {
       $sessionDefaults += array_filter((array) $_SESSION['course'][$options['nid']]['editing'][$options['coid']], array($this, 'optionFilter'));
+      unset($sessionDefaults['weight']);
     }
     return array_merge($options, (array) $sessionDefaults);
   }
