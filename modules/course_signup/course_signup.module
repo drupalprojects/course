@@ -113,6 +113,14 @@ function course_signup_signup_delete($signup) {
  * @see course_signup_signup_update()
  */
 function course_signup_signup_enroll($signup) {
+  if ($enrollment = course_enrollment_load($signup->nid, $signup->uid)) {
+    // Found an enrollment already.
+    if (!$enrollment->status) {
+      // Don't process this enrollment, because it was marked as inactive.
+      return;
+    }
+  }
+
   if ($signup->uid && $signup->nid && $signup->count_towards_limit && empty($signup->anon_mail)) {
     $node = node_load($signup->nid);
     if (course_node_is_course($node)) {
@@ -240,21 +248,22 @@ function course_signup_course_access($op, $node, $user) {
     if (!empty($node->signup)) {
       if (!empty($node->signup_status)) {
         module_load_include('inc', 'signup', 'includes/date');
-        $field = signup_date_field($node->type);
-        $items = field_get_items('node', $node, $field['field_name']);
-        if (!empty($items[0]['value'])) {
-          // This node is signup-enabled and closed by date.
-          $date = new DateTime($items[0]['value'], new DateTimeZone('UTC'));
-          $signup_close_early = variable_get('signup_close_early', 0);
-          $date->sub(date_interval_create_from_date_string("$signup_close_early hours"));
-          $close_stamp = $date->getTimestamp();
-          if (REQUEST_TIME > $close_stamp) {
-            $hooks['course_signup'] = array(
-              'header' => t(''),
-              'success' => FALSE,
-              'message' => t('Enrollments closed on @date.', array('@date' => format_date($close_stamp, 'long'))),
-              'weight' => 100,
-            );
+        if ($field = signup_date_field($node->type)) {
+          $items = field_get_items('node', $node, $field['field_name']);
+          if (!empty($items[0]['value'])) {
+            // This node is signup-enabled and closed by date.
+            $date = new DateTime($items[0]['value'], new DateTimeZone('UTC'));
+            $signup_close_early = variable_get('signup_close_early', 0);
+            $date->sub(date_interval_create_from_date_string("$signup_close_early hours"));
+            $close_stamp = $date->getTimestamp();
+            if (REQUEST_TIME > $close_stamp) {
+              $hooks['course_signup'] = array(
+                'header' => t(''),
+                'success' => FALSE,
+                'message' => t('Enrollments closed on @date.', array('@date' => format_date($close_stamp, 'long'))),
+                'weight' => 100,
+              );
+            }
           }
         }
       }
