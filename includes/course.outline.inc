@@ -94,7 +94,7 @@ function course_outline_overview_form($form, &$form_state) {
   $form['#theme'] = 'course_outline_overview_form';
 
   if (!empty($_SESSION['course'][$node->nid]['editing'])) {
-    drupal_set_message('Changes to this course have not yet been saved.', 'warning');
+    drupal_set_message('Changes to this course have not yet been saved.', 'warning', FALSE);
   }
 
   $handlers = course_get_handlers('object');
