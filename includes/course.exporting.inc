@@ -72,6 +72,9 @@ function course_handle_clone($node) {
       default:
         foreach ($node->course['objects'] as &$object_data) {
           $courseObject = course_get_course_object_by_id($object_data->coid);
+          if ($courseObject->getCloneAbility() === FALSE) {
+            unset($object_data->instance);
+          }
           $object_data->freeze = $courseObject->freeze();
         }
         break;
