@@ -1450,7 +1450,6 @@ function course_course_enrollment_presave($enrollment) {
  */
 function course_enrollment_save($enrollment) {
   if ($enrollment->nid && $enrollment->uid) {
-    drupal_alter('course_enrollment', $enrollment);
     if ($eid = db_query('SELECT eid FROM {course_enrollment} WHERE nid = :nid AND uid = :uid', array(':nid' => $enrollment->nid, ':uid' => $enrollment->uid))->fetchField()) {
       $enrollment->eid = $eid;
     }
