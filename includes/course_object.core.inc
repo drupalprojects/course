@@ -1282,6 +1282,8 @@ abstract class CourseObjectNode extends CourseObject {
 
     $defaults['use_node_title'] = 0;
 
+    $defaults['clone_and_reference'] = 0;
+
     return $defaults;
   }
 
@@ -1337,6 +1339,15 @@ abstract class CourseObjectNode extends CourseObject {
         ),
       ),
     );
+
+    if (module_exists('clone') && !$this->getInstanceId()) {
+      $form['node']['clone_and_reference'] = array(
+        '#title' => t('Clone and reference'),
+        '#type' => 'checkbox',
+        '#description' => t('This will clone the selected content first.'),
+        '#default_value' => $config['clone_and_reference'],
+      );
+    }
 
     $form['node']['use_node_title'] = array(
       '#type' => 'checkbox',
@@ -1432,7 +1443,15 @@ abstract class CourseObjectNode extends CourseObject {
    * On object write, set privacy on this node.
    */
   function save() {
+    if ($this->getOption('clone_and_reference')) {
+      module_load_include('inc', 'clone', 'clone.pages');
+      $new_nid = clone_node_save($this->getOption('instance'));
+      $this->setInstanceId($new_nid);
+      $this->setOption('clone_and_reference', 0);
+    }
+
     parent::save();
+
     if ($this->hasNodePrivacySupport() && $this->getOption('private')) {
       // Ensure that per-node access is enabled.
       $type_settings = content_access_get_settings('all', $this->node->type);
