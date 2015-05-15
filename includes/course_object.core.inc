@@ -265,7 +265,6 @@ abstract class CourseObject extends CourseHandler {
       '#weight' => 0,
     );
 
-
     $form['outline'] = array(
       '#type' => 'fieldset',
       '#title' => t('Settings'),
@@ -1275,7 +1274,7 @@ abstract class CourseObjectNode extends CourseObject {
   public function optionsDefinition() {
     $defaults = parent::optionsDefinition();
 
-    $defaults['private'] = 0;
+    $defaults['private'] = !isset($this->node) && $this->hasNodePrivacySupport();
 
     $options = array_intersect_key(node_type_get_names(), $this->getNodeTypes());
     $defaults['node_type'] = key($options);
@@ -1452,7 +1451,9 @@ abstract class CourseObjectNode extends CourseObject {
 
     parent::save();
 
-    if ($this->hasNodePrivacySupport() && $this->getOption('private')) {
+    $privacy_enabled = $this->hasNodePrivacySupport() && $this->getOption('private');
+    $external_node = $this->getInstanceId() > 0 && $this->getInstanceId() != $this->getCourseNid();
+    if ($privacy_enabled && $external_node) {
       // Ensure that per-node access is enabled.
       $type_settings = content_access_get_settings('all', $this->node->type);
       $type_settings['per_node'] = 1;
