@@ -1,7 +1,7 @@
 <?php
 
 $plugin = array(
-  'title' => t('Condition-based access'),
+  'title' => t('Event'),
   'description' => t('Controls access by conditional dates'),
   'handler' => array(
     'class' => 'CourseObjectAccessConditional',
@@ -77,16 +77,11 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
       '#type' => 'select',
       '#options' => array(
         '',
-        'started' => t('User started course object.'),
-        'completed' => t('User completed course object.'),
+        'started' => t('User started course object'),
+        'completed' => t('User completed course object'),
       ),
       '#description' => t('This sets the conditional behavior.'),
     );
-
-    $options = array('');
-    foreach ($this->getCourseObject()->getCourse()->getObjects() as $courseObject) {
-      $options[$courseObject->getId()] = $courseObject->getTitle();
-    }
 
     if (module_exists('timeperiod')) {
       $form['conditional_time'] = array(
@@ -114,7 +109,7 @@ class CourseObjectAccessConditional extends CourseObjectAccess {
     $form['conditional_object'] = array(
       '#title' => t('Course object'),
       '#type' => 'select',
-      '#options' => $options,
+      '#options' => $this->getObjectOptions(),
       '#description' => t('The course object to check for the type and time of conditional display.'),
     );
 

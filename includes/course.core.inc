@@ -639,6 +639,19 @@ class Course extends CourseHandler {
  */
 abstract class CourseObjectAccess extends CourseHandler {
 
+  /**
+   * Helper method to get possible objects.
+   */
+  public function getObjectOptions() {
+    $options = array('');
+    foreach ($this->getCourseObject()->getCourse()->getObjects() as $courseObject) {
+      if ($courseObject->getId() != $this->getCourseObject()->getId()) {
+        $options[$courseObject->getId()] = $courseObject->getTitle();
+      }
+    }
+    return $options;
+  }
+
   private $courseObject;
 
   function __construct($config = array()) {

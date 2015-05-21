@@ -1,7 +1,7 @@
 <?php
 
 $plugin = array(
-  'title' => t('Date-based access'),
+  'title' => t('Date'),
   'description' => t('Controls access by release and expiration dates'),
   'handler' => array(
     'class' => 'CourseObjectAccessTiming',
@@ -84,32 +84,35 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
       );
     }
 
-    $form['release'] = array(
-      '#title' => t('Release date'),
-      '#description' => t('When this object can be accessed. If this object is required, users will not be able to proceed until after this date.'),
-      '#type' => 'date_popup',
-      '#default_value' => $config['release'],
-    );
+    if (module_exists('date_popup')) {
+      $form['release'] = array(
+        '#title' => t('Release date'),
+        '#description' => t('When this object can be accessed. If this object is required, users will not be able to proceed until after this date.'),
+        '#type' => 'date_popup',
+        '#default_value' => $config['release'],
+      );
 
-    $form['expiration'] = array(
-      '#title' => t('Expiration date'),
-      '#description' => t('When this object will close. If this object is required, users will not be able to proceed to the next activity after this date.'),
-      '#type' => 'date_popup',
-      '#default_value' => $config['expiration'],
-    );
+      $form['expiration'] = array(
+        '#title' => t('Expiration date'),
+        '#description' => t('When this object will close. If this object is required, users will not be able to proceed to the next activity after this date.'),
+        '#type' => 'date_popup',
+        '#default_value' => $config['expiration'],
+      );
 
-    $form['release_hidden'] = array(
-      '#title' => t('Hide until release date'),
-      '#type' => 'checkbox',
-      '#default_value' => $config['release_hidden'],
-    );
+      $form['release_hidden'] = array(
+        '#title' => t('Hide until release date'),
+        '#type' => 'checkbox',
+        '#description' => t('Hide the object until the release date. For example, an evaluation after a live event.'),
+        '#default_value' => $config['release_hidden'],
+      );
 
-    $form['expiration_hidden'] = array(
-      '#title' => t('Hide after expiration date'),
-      '#type' => 'checkbox',
-      '#description' => t('Hide the object after the expiration. For example, an optional pre-test that expires.'),
-      '#default_value' => $config['expiration_hidden'],
-    );
+      $form['expiration_hidden'] = array(
+        '#title' => t('Hide after expiration date'),
+        '#type' => 'checkbox',
+        '#description' => t('Hide the object after the expiration. For example, an optional pre-test that expires.'),
+        '#default_value' => $config['expiration_hidden'],
+      );
+    }
 
     return $form;
   }
