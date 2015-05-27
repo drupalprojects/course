@@ -93,7 +93,7 @@ class CourseObjectAccessTestCase extends CourseTestCase {
     $this->assertTrue($co[1]->access('take', $user), 'User has access to second required object.');
 
     // Complete the only required object.
-    $co[1]->getFulfillment()->setComplete(1);
+    $co[1]->getFulfillment()->setComplete(1)->save();
     $this->assertTrue($co[2]->access('take', $user) && $co[3]->access('take', $user), 'User granted access to remaining optional objects.');
   }
 
@@ -119,7 +119,7 @@ class CourseObjectAccessTestCase extends CourseTestCase {
     // Set all required, but make the second one skippable.
     $co[0]->setOption('required', 1);
     $co[1]->setOption('required', 1);
-    $co[1]->setOption('skippable', 1);
+    $co[1]->setOption('skippable', 1)->save();
     $co[2]->setOption('required', 1);
     $co[3]->setOption('required', 1);
 

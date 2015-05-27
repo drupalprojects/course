@@ -24,8 +24,8 @@ class CourseObjectAccessGrade extends CourseObjectAccess {
 
   function take() {
     $config = $this->getOptions();
-    if ($config['course_grade']) {
-      if ($config['conditional_object']) {
+    if (isset($config['course_grade'])) {
+      if ($this->getOption('conditional_object')) {
         // Check object grade.
         $target = course_object_load($config['conditional_object']);
         if ($config['course_grade'] > $target->getOption('grade_result')) {

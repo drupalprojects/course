@@ -369,6 +369,7 @@ function course_ajaj_fulfullment_check($node, $courseObject, $js = FALSE) {
   }
   module_load_include('inc', 'course', 'includes/course.block');
   // Bust cache.
+  /** @deprecated do not use getUser() */
   course_get_course($node, $courseObject->getCourse()->getUser(), TRUE);
   $block = block_load('course', 'navigation');
   $block_rend = _block_render_blocks(array($block));
@@ -1526,39 +1527,12 @@ function _course_get_course_object_by_uniqid($uniqid, $account = NULL, $course =
  *   A loaded CourseObject or FALSE if no object found.
  */
 function course_get_course_object_by_id($coid, $account = NULL, $course = NULL) {
-  if (!$account) {
-    global $user;
-    $account = $user;
-  }
-
-  $available = course_get_handlers('object');
-
   if (!is_numeric($coid)) {
     return _course_get_course_object_by_uniqid($coid, $account, $course);
   }
-
-
-  if ($row = entity_load_single('course_object', $coid)) {
-    $object_definition = array();
-    if (!empty($available[$row->module][$row->object_type])) {
-      $object_definition = $available[$row->module][$row->object_type];
-    }
-    if (empty($object_definition['class'])) {
-      $object_definition['class'] = 'CourseObjectBroken';
-    }
-    if (!class_exists($object_definition['class'])) {
-      drupal_set_message(t("Could not find class for %m-%c!", array('%m' => $row->module, '%c' => $row->object_type)), 'error');
-      return FALSE;
-    }
-    else {
-      if (!$course) {
-        $course = new Course(node_load($row->nid), $account);
-      }
-      return new $object_definition['class']($row, $account, $course);
-    }
-  }
-  else {
-    return FALSE;
+  if ($courseObject = entity_load_single('course_object', $coid)) {
+    $courseObject->setUser($account);
+    return $courseObject;
   }
 }
 
@@ -1619,7 +1593,7 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
     // Get the course context.
     if (!$course) {
       if ($courseNode = course_determine_context($module, $object_type, $instance, TRUE, FALSE)) {
-        $course = new Course($courseNode, $account);
+        $course = entity_load_single('course', $courseNode->nid);
       }
     }
 
@@ -1665,7 +1639,7 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
     $class = 'CourseObjectBroken';
   }
 
-  $courseObject = new $class($outline_entry, $account, $course);
+  $courseObject = entity_create('course_object', (array) $outline_entry);
   if ($courseObject) {
     return $courseObject;
   }
@@ -1685,23 +1659,18 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
  * @return Course
  */
 function course_get_course($node, $account = NULL, $flush = FALSE) {
-  if (!$node) {
-    return FALSE;
-  }
-
+  /** @deprecated */
   if (!$account) {
     global $user;
     $account = $user;
   }
 
-  $courses = &drupal_static(__FUNCTION__, array());
-
-  if ($flush || !isset($courses[$node->nid]) || !isset($courses[$node->nid][$account->uid])) {
-    $course = new Course($node, $account);
-    $courses[$node->nid][$account->uid] = $course;
+  if ($entities = entity_load('course', array($node->nid), FALSE, $flush)) {
+    $course = $entities[$node->nid];
+    /** @deprecated */
+    $course->setUser($account);
+    return $course;
   }
-
-  return $courses[$node->nid][$account->uid];
 }
 
 /**
@@ -2198,7 +2167,7 @@ function course_init() {
     }
   }
 
-  if (class_exists('Course')) {
+  if (class_exists('Course') && $courseNode) {
     // Check that Course exists for a special use case where Autoload hasn't yet
     // cached the Course class.
 
@@ -2859,7 +2828,7 @@ function course_entity_info() {
     ),
     'course_report' => array(
       'label' => t('Course report'),
-      'entity class' => 'Entity',
+      'entity class' => 'CourseReport',
       'controller class' => 'EntityAPIController',
       'base table' => 'course_report',
       'uri callback' => 'course_report_uri',
@@ -2883,12 +2852,13 @@ function course_entity_info() {
     'course_object' => array(
       'label' => t('Course object'),
       'entity class' => 'Entity',
-      'controller class' => 'EntityAPIController',
+      'controller class' => 'CourseObjectController',
       'base table' => 'course_outline',
       'uri callback' => 'course_object_uri',
       'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'coid',
+        'uuid' => 'uuid',
       ),
       'label callback' => 'course_object_label',
       'views controller class' => 'EntityDefaultViewsController',
@@ -2902,25 +2872,28 @@ function course_entity_info() {
         ),
       ),
       'access callback' => 'course_access',
+      'uuid' => TRUE,
     ),
     'course_object_fulfillment' => array(
       'label' => t('Course object fulfillment'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIController',
+      'entity class' => 'CourseObjectFulfillment',
+      'controller class' => 'CourseObjectFulfillmentController',
       'base table' => 'course_outline_fulfillment',
       'uri callback' => 'course_object_fulfillment_uri',
       'fieldable' => FALSE,
       'entity keys' => array(
         'id' => 'cofid',
+        'uuid' => 'uuid',
       ),
       'label callback' => 'course_object_fulfillment_label',
       'views controller class' => 'EntityDefaultViewsController',
       'access callback' => 'course_access',
+      'uuid' => TRUE,
     ),
     'course' => array(
       'label' => t('Course'),
-      'entity class' => 'Entity',
-      'controller class' => 'EntityAPIController',
+      'entity class' => 'Course',
+      'controller class' => 'CourseController',
       'base table' => 'course_node',
       'uri callback' => 'course_uri',
       'fieldable' => FALSE,

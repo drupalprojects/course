@@ -23,7 +23,7 @@ class CourseObjectContent extends CourseObjectNode {
    */
   function optionsDefinition() {
     $options = parent::optionsDefinition();
-    $options['node_type'] = $this->config['object_type'];
+    $options['node_type'] = $this->object_type;
     return $options;
   }
 }

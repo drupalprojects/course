@@ -9,50 +9,7 @@
  */
 abstract class CourseObject extends CourseHandler {
 
-  // Hold course.
-  private $course = NULL;
-  // Hold course object from database and the fulfillment object.
-  private $courseObjectFulfillment = NULL;
-  // Hold a user.
-  protected $user = NULL;
-
-  /**
-   * Construct a course object from a database record.
-   *
-   * Use course_get_course_object to load an object when parameters are not
-   * already known.
-   *
-   * @param array $config
-   *   An object with object_type, module, and instance
-   * @param object $account
-   *   (optional) A user account object.
-   * @param Course $course
-   *   (optional) An instantiated Course object.
-   */
-  function __construct($config = array(), $account = NULL, Course $course = NULL) {
-    $config = (array) $config;
-
-    $this->serializedField = 'data';
-    $this->entity_type = 'course_object';
-    $this->primaryKey = 'coid';
-    $this->table = 'course_outline';
-
-
-    // Pass configuration to parent.
-    parent::__construct($config);
-
-    if (!$account) {
-      global $user;
-      $account = $user;
-    }
-    $this->user = $account;
-
-    if ($course) {
-      $this->course = $course;
-    }
-
-    $this->courseObjectFulfillment = new CourseObjectFulfillment($this, $account);
-  }
+  protected $accessMessages = array();
 
   /**
    * Override navigation links.
@@ -181,15 +138,9 @@ abstract class CourseObject extends CourseHandler {
 
     foreach (ctools_get_plugins('course', 'course_object_access') as $key => $plugin) {
       $class = ctools_plugin_get_class($plugin, 'handler');
-      $accessPluginDefaults = array();
-      if (isset($this->config['plugins']['access'][$key])) {
-        $accessPluginDefaults = (array) $this->config['plugins']['access'][$key];
-      }
       $accessPlugin = new $class();
-      if ($accessPluginDefaults) {
-        $accessPlugin->setOptions($accessPluginDefaults);
-      }
       $accessPlugin->setCourseObject($this);
+      $accessPlugin->setType($key);
 
       // Run access check.
       $ret = $accessPlugin->$op();
@@ -229,6 +180,7 @@ abstract class CourseObject extends CourseHandler {
       'grade_include' => 0,
       'instance' => NULL,
       'data' => '',
+      'plugins' => array(),
     );
 
     return $defaults;
@@ -383,10 +335,8 @@ abstract class CourseObject extends CourseHandler {
       // Initialize access class.
       $class = ctools_plugin_get_class($plugin, 'handler');
       $courseAccess = new $class();
-      if (!empty($config['plugins']['access'][$key])) {
-        $courseAccess->setOptions($config['plugins']['access'][$key]);
-      }
       $courseAccess->setCourseObject($this);
+      $courseAccess->setType($key);
 
       // Add access plugin form to our form.
       $access_form = $access_form_state = array();
@@ -408,6 +358,8 @@ abstract class CourseObject extends CourseHandler {
       $values = & $form_state['values']['plugins']['access'][$key];
       $class = ctools_plugin_get_class($plugin, 'handler');
       $instance = new $class($values);
+      $instance->setCourseObject($this);
+      $instance->setType($key);
       $instance->optionsValidate($form['plugins']['access'][$key], $form_state['values']['plugins']['access'][$key]);
     }
   }
@@ -603,9 +555,7 @@ abstract class CourseObject extends CourseHandler {
       case 'redirect':
       default:
         // This URL should have already been url()'d (it might be external).
-        session_write_close();
-        header("Location: $url");
-        exit;
+        drupal_goto($url, array('external' => TRUE));
     }
   }
 
@@ -707,12 +657,29 @@ abstract class CourseObject extends CourseHandler {
   }
 
   /**
-   * Get this course object's fulfillment object.
+   * Get the user's fulfillment for this course object.
    *
    * @return CourseObjectFulfillment
    */
-  public function getFulfillment() {
-    return $this->courseObjectFulfillment;
+  public function getFulfillment($account = NULL) {
+    if (!$account) {
+
+      /** @deprecated */
+      if (!empty($this->user)) {
+        $account = $this->user;
+      }
+      else {
+        global $user;
+        $account = $user;
+      }
+    }
+
+    if ($entities = entity_load('course_object_fulfillment', FALSE, array('coid' => $this->identifier(), 'uid' => $account->uid), TRUE)) {
+      return reset($entities);
+    }
+    else {
+      return entity_create('course_object_fulfillment', array('coid' => $this->identifier(), 'uid' => $account->uid));
+    }
   }
 
   /**
@@ -753,14 +720,10 @@ abstract class CourseObject extends CourseHandler {
   public function setCourse($course) {
     if (is_numeric($course)) {
       $this->setOption('nid', $course);
-      $courseNode = node_load($course);
-      $this->course = course_get_course($courseNode);
     }
     else {
-      $this->course = $course;
       $this->setOption('nid', $course->getNode()->nid);
     }
-
     return $this;
   }
 
@@ -770,14 +733,19 @@ abstract class CourseObject extends CourseHandler {
    * @return Course
    */
   function getCourse() {
-    if (!$this->course) {
-      $nid = $this->getCourseNid();
-      if ($nid) {
-        $this->course = new Course(node_load($nid), $this->user);
-      }
-    }
+    $course = entity_load_single('course', $this->nid);
 
-    return $this->course;
+    /** @deprecated */
+    if (!empty($this->user)) {
+      $account = $this->user;
+    }
+    else {
+      global $user;
+      $account = $user;
+    }
+    $course->setUser($account);
+
+    return $course;
   }
 
   /**
@@ -834,13 +802,6 @@ abstract class CourseObject extends CourseHandler {
    */
   function setId($coid) {
     return $this->setOption('coid', $coid);
-  }
-
-  /**
-   * Set the user fulfilling/creating this course object.
-   */
-  function setUser($user) {
-    $this->user = $user;
   }
 
   /**
@@ -1037,514 +998,18 @@ abstract class CourseObject extends CourseHandler {
 
   }
 
-}
-
-/**
- * Parent class for course object fulfillment.
- *
- * Represents the fulfillment record in the database.
- *
- */
-class CourseObjectFulfillment extends CourseHandler {
-
-  private $courseObject;
-
   /**
-   * Construct the fulfillment object.
-   *
-   * A CourseObject and user are required to construct a fulfillment object.
-   *
-   * @param CourseObject $courseObject
-   * @param Object $user
+   * @deprecated
    */
-  function __construct(CourseObject $courseObject, $user) {
-    // Set storage.
-    $this->entity_type = 'course_object_fulfillment';
-    $this->table = 'course_outline_fulfillment';
-    $this->primaryKey = 'cofid';
-    $this->serializedField = 'info';
-
-    $this->courseObject = $courseObject;
-    $sql = "SELECT * FROM {course_outline_fulfillment} WHERE coid = %d AND uid = %d";
-    if (!$courseObject->isTemporary()) {
-      $fulfillment = db_query("SELECT * FROM {course_outline_fulfillment} WHERE coid = :coid AND uid = :uid", array(':coid' => $this->courseObject->getId(), ':uid' => $user->uid))->fetch(PDO::FETCH_ASSOC);
-      $this->setOptions($fulfillment);
-    }
-
-    // Set course object ID.
-    $this->setOption('coid', $this->courseObject->getId());
-    $this->setOption('uid', $user->uid);
+  public function setUser($account) {
+    $this->user = $account;
   }
 
   /**
-   * Is this fulfillment complete?
-   *
-   * @return bool
+   * @deprecated
    */
-  function isComplete() {
-    return (bool) $this->getOption('complete');
-  }
-
-  /**
-   * Set this fulfillment complete.
-   *
-   * @param bool $complete
-   *   Set to 0 to un-complete, 1 or omit to complete.
-   *
-   * @return CourseObjectFulfillment
-   */
-  function setComplete($complete = 1) {
-    if (!$this->getOption('date_completed')) {
-      $this->setOption('date_completed', REQUEST_TIME);
-    }
-
-    return $this->setOption('complete', $complete);
-  }
-
-  /**
-   * Set this fulfillment's grade.
-   *
-   * @param float $grade
-   *
-   * @return CourseObjectFulfillment
-   */
-  function setGrade($grade) {
-    return $this->setOption('grade_result', $grade);
-  }
-
-  /**
-   * Get this fulfillment's grade.
-   *
-   * @return float
-   *   A float value of the user's grade for this fulfillment.
-   */
-  function getGrade() {
-    return $this->getOption('grade_result');
-  }
-
-  /**
-   * Get this fulfillment's course object.
-   */
-  function getCourseObject() {
-    return $this->courseObject;
-  }
-
-  public function delete() {
-    entity_delete('course_object_fulfillment', $this->getId());
-  }
-
-  /**
-   * Track course after saving fulfillment.
-   */
-  public function save() {
-    if (course_enrollment_check($this->getCourseObject()->getCourseNid(), $this->getCourseObject()->getCourse()->getUser()->uid)) {
-      parent::save();
-      $this->getCourseObject()->getCourse()->track();
-    }
-  }
-
-}
-
-/**
- * A course object that uses a node as a base.
- */
-abstract class CourseObjectNode extends CourseObject {
-
-  protected $node;
-
-  public function __construct($object, $user = NULL, $course = NULL) {
-    // Pass configuration to parent.
-    parent::__construct($object, $user, $course);
-    if ($this->getInstanceId() && $node = node_load($this->getInstanceId())) {
-      $this->node = clone $node;
-    }
-  }
-
-  /**
-   * Course context handler callback.
-   */
-  public static function context() {
-    // Get node from URL.
-    if (arg(0) == 'node' && $node = node_load(arg(1))) {
-
-      // This node might not be in a course, so let's check for related nodes.
-      $instances = static::getNodeInstances($node);
-      if (!empty($instances)) {
-        $node = node_load($instances[0]);
-      }
-
-      if (isset($node->nid)) {
-        return array(
-          'object_type' => $node->type,
-          'instance' => $node->nid,
-        );
-      }
-    }
-  }
-
-  /**
-   * When passed a node, this method should return the "parent" nodes that are
-   * contained in a course outline.
-   *
-   * For example, if the passed node was a question in a quiz, all the quiz node
-   * IDs should be returned.
-   */
-  public static function getNodeInstances($node) {
-    return array();
-  }
-
-  public function hasNodePrivacySupport() {
-    return module_exists('content_access') && module_exists('acl');
-  }
-
-  /**
-   * Return a list of valid node types.
-   *
-   * @return array
-   *   An array keyed by machine name of a node type.
-   *   return array(
-   *     'my_event' => t('My event content type'),
-   *   );
-   */
-  public abstract function getNodeTypes();
-
-  /**
-   * Simple node course object behavior is to just redirect to the node.
-   */
-  public function getTakeType() {
-    return 'redirect';
-  }
-
-  public function getTakeUrl() {
-    if ($this->getInstanceId()) {
-      return url("node/{$this->node->nid}");
-    }
-  }
-
-  public function getEditUrl() {
-    if ($this->getInstanceId()) {
-      return url("node/{$this->node->nid}/edit");
-    }
-  }
-
-  public function getViewUrl() {
-    if ($this->getInstanceId()) {
-      return url("node/{$this->node->nid}");
-    }
-  }
-
-  /**
-   * Create a node and set it as this course object's node.
-   *
-   * @param stdClass $node
-   *   A node to be processed for creation, or none to create a generic node. If
-   *   a node is provided, it must have at least a type.
-   */
-  public function create($node = NULL) {
-    if (!$node) {
-      $node = new stdClass;
-      $node->type = $this->getOption('node_type');
-    }
-    $node->title = $this->getTitle();
-    $node->uid = $this->user->uid;
-    $node->language = LANGUAGE_NONE;
-    node_object_prepare($node);
-    node_save($node);
-    $this->setNode($node);
-  }
-
-  /**
-   * Set the node and instance ID (node ID) of this CourseObjectNode.
-   *
-   * @param mixed $node
-   *   A node or node ID.
-   */
-  public function setNode($node) {
-    $this->node = clone $node;
-    $this->setInstanceId($this->node->nid);
-  }
-
-  /**
-   * Destroy the node instance.
-   */
-  public function delete() {
-    node_delete($this->getInstanceId());
-  }
-
-  public function optionsDefinition() {
-    $defaults = parent::optionsDefinition();
-
-    $defaults['private'] = !isset($this->node) && $this->hasNodePrivacySupport();
-
-    $options = array_intersect_key(node_type_get_names(), $this->getNodeTypes());
-    $defaults['node_type'] = key($options);
-
-    $defaults['use_node_title'] = 0;
-
-    $defaults['clone_and_reference'] = 0;
-
-    return $defaults;
-  }
-
-  public function optionsForm(&$form, &$form_state) {
-    parent::optionsForm($form, $form_state);
-
-    $form['node'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Content'),
-      '#description' => ('Settings for course object content.'),
-      '#group' => 'course_tabs',
-      '#weight' => 2,
-    );
-
-    $config = $this->getOptions();
-
-    if (!$this->getInstanceId()) {
-      $types = drupal_map_assoc($this->getNodeTypes());
-      $options = array_intersect_key(node_type_get_names(), $types);
-
-      $form['node']['use_existing_node'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Use existing content'),
-        '#default_value' => 0,
-      );
-
-      $form['node']['node_type'] = array(
-        '#title' => t('Create node'),
-        '#type' => 'select',
-        '#options' => $options,
-        '#description' => t('Selecting a node type will automatically create this node and link it to this course object.'),
-        '#default_value' => $config['node_type'],
-        '#states' => array(
-          'visible' => array(
-            ':input[name="use_existing_node"]' => array('checked' => FALSE),
-          ),
-        ),
-      );
-      if (count($options) > 1) {
-        $form['node']['node_type']['#required'] = TRUE;
-      }
-    }
-
-    $form['node']['instance'] = array(
-      '#title' => t('Existing node'),
-      '#autocomplete_path' => 'course/autocomplete/node/' . implode(',', $this->getNodeTypes()),
-      '#type' => 'textfield',
-      '#description' => t('Use an existing node instead of creating a new one.'),
-      '#default_value' => !empty($this->node->nid) ? check_plain($this->node->title) . " [nid: {$this->node->nid}]" : NULL,
-      '#states' => array(
-        'visible' => array(
-          ':input[name="use_existing_node"]' => array('checked' => TRUE),
-        ),
-      ),
-    );
-
-    if (module_exists('clone') && !$this->getInstanceId()) {
-      $form['node']['clone_and_reference'] = array(
-        '#title' => t('Clone and reference'),
-        '#type' => 'checkbox',
-        '#description' => t('This will clone the selected content first.'),
-        '#default_value' => $config['clone_and_reference'],
-      );
-    }
-
-    $form['node']['use_node_title'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Use existing title'),
-      '#description' => t("Use the referenced content's title as this course object's title."),
-      '#default_value' => $config['use_node_title'],
-    );
-
-    $form['node']['private'] = array(
-      '#title' => t('Private'),
-      '#description' => $this->hasNodePrivacySupport() ? t('This content will not be available to users who are not enrolled in this course.') : t('You must enable content_access and acl in order to restrict course content to users who are enrolled in this course.'),
-      '#type' => 'checkbox',
-      '#default_value' => $config['private'],
-      '#disabled' => !($this->hasNodePrivacySupport()),
-    );
-
-    $nid = $this->getInstanceId();
-    if ($nid) {
-      $node = node_load($nid);
-      $link = l(t("'%title' [node id %nid]", array('%title' => $node->title, '%nid' => $node->nid)), "node/$node->nid", array('attributes' => array('target' => '_blank', 'title' => t('Open in new window')), 'html' => TRUE));
-      $form['node']['instance']['#description'] = t('Currently set to !link', array('!link' => $link));
-    }
-
-    // Block deletion of self-referencing node instances.
-    if (!empty($config['instance']) && ($config['instance'] == $this->getCourseNid())) {
-      $form['delete']['delete_instance']['#disabled'] = TRUE;
-      $form['delete']['delete_instance']['#description'] = t('You cannot delete this instance, as it references this Course.');
-    }
-  }
-
-  /**
-   * Validate the options form. Check the node type.
-   */
-  public function optionsValidate(&$form, &$form_state) {
-    if (isset($form_state['values']['node_type']) && empty($form_state['values']['node_type'])) {
-      form_set_error('node_type', t('Please select a node type.'));
-    }
-  }
-
-  public function optionsSubmit(&$form, &$form_state) {
-    $nid = $form_state['values']['instance'];
-
-    if (!is_numeric($nid)) {
-      if (preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $nid, $matches)) {
-        $nid = $matches[2];
-      }
-    }
-
-    if ($nid) {
-      $form_state['values']['instance'] = $nid;
-    }
-    else {
-      // Unset it, or we'll erase the relationship (since the textfield is
-      // actually blank).
-      unset($form_state['values']['instance']);
-    }
-
-    parent::optionsSubmit($form, $form_state);
-  }
-
-  /**
-   * Grant access to course content before going to it.
-   */
-  function grant() {
-    if ($this->hasNodePrivacySupport()) {
-      if ($this->getOption('private')) {
-        $uid = $this->user->uid;
-        module_load_include('inc', 'content_access', 'content_access.admin');
-        $acl_id = content_access_get_acl_id($this->node, 'view');
-        acl_add_user($acl_id, $uid);
-        acl_node_add_acl($this->node->nid, $acl_id, 1, 0, 0, content_access_get_settings('priority', $this->node->type));
-        node_access_acquire_grants($this->node);
-      }
-    }
-  }
-
-  /**
-   * Duration expired (or something) - CourseObject is telling us so.
-   */
-  function revoke() {
-    if ($this->hasNodePrivacySupport()) {
-      if ($this->getOption('private')) {
-        $uid = $this->user->uid;
-        module_load_include('inc', 'content_access', 'content_access.admin');
-        $acl_id = content_access_get_acl_id($this->node, 'view');
-        acl_remove_user($acl_id, $uid);
-        node_access_acquire_grants($this->node);
-      }
-    }
-  }
-
-  /**
-   * On object write, set privacy on this node.
-   */
-  function save() {
-    if ($this->getOption('clone_and_reference')) {
-      module_load_include('inc', 'clone', 'clone.pages');
-      $new_nid = clone_node_save($this->getOption('instance'));
-      $this->setInstanceId($new_nid);
-      $this->setOption('clone_and_reference', 0);
-    }
-
-    parent::save();
-
-    $privacy_enabled = $this->hasNodePrivacySupport() && $this->getOption('private');
-    $external_node = $this->getInstanceId() > 0 && $this->getInstanceId() != $this->getCourseNid();
-    if ($privacy_enabled && $external_node) {
-      // Ensure that per-node access is enabled.
-      $type_settings = content_access_get_settings('all', $this->node->type);
-      $type_settings['per_node'] = 1;
-      content_access_set_settings($type_settings, $this->node->type);
-
-      // Remove "view" permissions to everyone on this node.
-      $settings = content_access_get_per_node_settings($this->node);
-      $settings['view'] = array();
-      content_access_save_per_node_settings($this->node, $settings);
-
-      // Resave node to update access.
-      node_access_acquire_grants($this->node);
-    }
-  }
-
-  /**
-   * Freeze data to persist over cloning/exporting.
-   * @return array
-   *   An array of data to be frozen.
-   */
-  function freeze() {
-    if ($this->node->nid != $this->getCourse()->getNode()->nid) {
-      // Don't freeze the course, if this course is part of the objects.
-      $ice = new stdClass;
-      $ice->node = $this->node;
-      return $ice;
-    }
-  }
-
-  /**
-   * Thaw data frozen from an earlier export/clone.
-   *
-   * @param array $data
-   *   Unfrozen data.
-   *
-   * @return int
-   *   The new instance ID.
-   */
-  function thaw($ice) {
-    $this->node = $ice->node;
-    unset($this->node->nid);
-    unset($this->node->vid);
-    node_save($this->node);
-    return $this->node->nid;
-  }
-
-  function getCloneAbility() {
-    return t('%object will be cloned as a node. Results may vary.', array('%object' => $this->getTitle()));
-  }
-
-  /**
-   * Get the object title, or return this object's node's title if the option
-   * is set.
-   */
-  function getTitle() {
-    if ($this->getOption('use_node_title') && $this->node) {
-      return $this->node->title;
-    }
-    else {
-      return parent::getTitle();
-    }
-  }
-
-  function getNode() {
-    return $this->node;
-  }
-
-  function getOptionsSummary() {
-    $summary = parent::getOptionsSummary();
-    if ($this->getOption('instance') == $this->getCourseNid()) {
-      // Don't show the edit instance link when the instance is
-      // self-referencing.
-      unset($summary['instance']);
-    }
-    return $summary;
-  }
-
-  /**
-   * When setting our instance ID, also set the node.
-   */
-  function setInstanceId($id) {
-    parent::setInstanceId($id);
-    $this->node = node_load($id);
-  }
-
-}
-
-class CourseObjectBroken extends CourseObject {
-
-  function take() {
-    return t('This course object is misconfigured. Please contact the administrator.');
+  public function getUser() {
+    return $this->user;
   }
 
 }

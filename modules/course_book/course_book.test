@@ -18,28 +18,22 @@ class CourseObjectBookTestCase extends CourseTestCase {
 
   function getModules() {
     $modules = parent::getModules();
-    $modules[] = 'acl';
+    //$modules[] = 'acl';
     $modules[] = 'book';
-    $modules[] = 'content_access';
+    //$modules[] = 'content_access';
     $modules[] = 'course_book';
-    $modules[] = 'node_access_book';
+    //$modules[] = 'node_access_book';
     return $modules;
   }
 
   function testBookCourseObject() {
-    $this->drupalLogin($this->admin_user);
-
     // Create a course with 1 book.
     $courseNode = $this->createCourseNode();
     $co1 = course_get_course_object('course_book', 'book');
     $co1->setOption('book_tracking', 'all');
     $co1->setCourse($courseNode->nid);
-    $co1->setUser($this->admin_user);
     $co1->save();
     $this->assertTrue($co1->getInstanceId() > 0, 'book node created on course object save.');
-
-    // Enroll the user in the course
-    course_enroll($courseNode, $this->admin_user);
 
     // Add some more book pages.
     $bp1 = $this->drupalCreateNode(array(
@@ -56,23 +50,27 @@ class CourseObjectBookTestCase extends CourseTestCase {
       ),
     ));
 
+    // Enroll the user in the course
+    course_enroll($courseNode, $this->student_user);
+
     // Test fulfillment tracking, set to view all pages before complete.
-    $this->assertFalse($co1->getFulfillment()->isComplete(), 'Check that book object is not complete.');
+    $this->assertFalse($co1->getFulfillment($this->student_user)->isComplete(), 'Check that book object is not complete.');
+
+    $this->drupalLogin($this->student_user);
 
     // Visit the book parent
     $this->drupalGet("node/" . $co1->getInstanceId());
+
     // Visit the first book page
     $this->drupalGet("node/{$bp1->nid}");
 
     // Test that course object is not yet complete.
-    $co1 = course_get_course_object_by_id($co1->getId(), $this->admin_user);
-    $this->assertFalse($co1->getFulfillment()->isComplete(), 'Check that book object is not complete after visiting 2/3 pages.');
+    $this->assertFalse($co1->getFulfillment($this->student_user)->isComplete(), 'Check that book object is not complete after visiting 2/3 pages.');
 
 
     $this->drupalGet("node/{$bp2->nid}");
     // Reload course object
-    $co1 = course_get_course_object_by_id($co1->getId(), $this->admin_user);
-    $this->assertTrue($co1->getFulfillment()->isComplete(), 'Check that book object is now complete after visiting 3/3 pages.');
+    $this->assertTrue($co1->getFulfillment($this->student_user)->isComplete(), 'Check that book object is now complete after visiting 3/3 pages.');
   }
 
   /**

@@ -83,6 +83,8 @@ class CourseObjectBook extends CourseObjectNode {
     }
 
     if ($this->getOption('book_tracking') == 'all') {
+      drupal_static_reset();
+      // Possibly a bug here. book_toc doesn't return inaccessible book pages.
       $mlids = array_keys(book_toc($this->node->nid, 99));
       $viewed = array_keys(array_filter($this->getFulfillment()->getOption('book_fulfillment')));
       if (!array_diff($mlids, $viewed)) {

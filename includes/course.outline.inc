@@ -377,6 +377,9 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
       $courseObject = course_get_course_object($object);
     }
     $options = $courseObject->getOptions();
+    foreach ($options as $option => $value) {
+      $courseObject->setOption($option, $value);
+    }
 
     // Renumber weights to the way draggable table would do it in case of no JS.
     $courseObject->setOption('weight', $object['weight']);

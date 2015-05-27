@@ -40,21 +40,21 @@ class CourseObjectAccessConditionalTestCase extends CourseTestCase {
       'conditional_hidden' => 0,
     );
     $hidden['plugins']['access']['conditional']['conditional_hidden'] = 1;
-    $co2->addOptions($set);
+    $co2->addOptions($set)->save();
 
     course_enroll($courseNode, $user);
     $this->assertTrue($co1->access('take'), 'Check that user can access first (depended on) object.');
     // Mark first object as complete.
-    $co1->getFulfillment()->setComplete(1);
+    $co1->getFulfillment()->setComplete(1)->save();
     $this->assertFalse($co2->access('take'), 'Check that user still cannot access second (dependent) object, even though first is complete.');
 
     // Check visibility.
     $this->assertTrue($co2->access('see'), 'Check that user can still see pending course object.');
-    $co2->addOptions($hidden);
+    $co2->addOptions($hidden)->save();
     $this->assertFalse($co2->access('see'), 'Check that user cannot still see pending course object when hidden is checked.');
 
     // Set the completion of this object to more than 5 minutes ago.
-    $co1->getFulfillment()->setOption('date_started', REQUEST_TIME - 301);
+    $co1->getFulfillment()->setOption('date_started', REQUEST_TIME - 301)->save();
     $this->assertTrue($co2->access('take'), 'Check that user can access second course object after time has elapsed.');
   }
 
@@ -82,21 +82,21 @@ class CourseObjectAccessConditionalTestCase extends CourseTestCase {
       'conditional_hidden' => 0,
     );
     $hidden['plugins']['access']['conditional']['conditional_hidden'] = 1;
-    $co2->addOptions($set);
+    $co2->addOptions($set)->save();
 
     course_enroll($courseNode, $user);
     $this->assertTrue($co1->access('take'), 'Check that user can access first (depended on) object.');
     // Mark first object as complete.
-    $co1->getFulfillment()->setComplete(1);
+    $co1->getFulfillment()->setComplete(1)->save();
     $this->assertFalse($co2->access('take'), 'Check that user still cannot access second (dependent) object, even though first is complete.');
 
     // Check visibility.
     $this->assertTrue($co2->access('see'), 'Check that user can still see pending course object.');
-    $co2->addOptions($hidden);
+    $co2->addOptions($hidden)->save();
     $this->assertFalse($co2->access('see'), 'Check that user cannot still see pending course object when hidden is checked.');
 
     // Set the completion of this object to more than 5 minutes ago.
-    $co1->getFulfillment()->setOption('date_completed', REQUEST_TIME - 301);
+    $co1->getFulfillment()->setOption('date_completed', REQUEST_TIME - 301)->save();
     $this->assertTrue($co2->access('take'), 'Check that user can access second course object after time has elapsed.');
   }
 
