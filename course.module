@@ -1960,6 +1960,13 @@ function course_edit_enrollment_action($object, $context) {
     }
   }
 
+  // Update start date
+  if ($context['timestamp']) {
+    if ($unixtime = strtotime($context['timestamp'])) {
+      $enrollment->timestamp = $unixtime;
+    }
+  }
+
   $course = course_get_course($node, $account);
   foreach ($course->getObjects() as $key => $courseObject) {
     $coid = $courseObject->getId();
@@ -2075,6 +2082,14 @@ function course_edit_enrollment_action_form($a1, $context) {
     '#default_value' => !empty($course_report->date_completed) ? format_date($course_report->date_completed, 'custom', 'Y-m-d H:i') : NULL,
   );
 
+  $form['timestamp'] = array(
+    '#title' => t('Set started date to'),
+    '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
+    '#date_format' => 'Y-m-d H:i',
+    '#description' => t('The date the user started the course.'),
+    '#default_value' => !empty($enroll->timestamp) ? format_date($enroll->timestamp, 'custom', 'Y-m-d H:i') : NULL,
+  );
+
   if (isset($node)) {
     // Get course objects, with or without a single user account information.
     $course = course_get_course($node, $account);
@@ -2128,6 +2143,7 @@ function course_edit_enrollment_action_submit($form, $form_state) {
     'complete' => $form_state['values']['complete'],
     'date_completed' => $form_state['values']['date_completed'],
     'course_objects' => $form_state['values']['course_objects'],
+    'timestamp' => $form_state['values']['timestamp'],
   );
 }
 
