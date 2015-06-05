@@ -1129,3 +1129,10 @@ function course_update_7133() {
   ));
   return t('Added data field on enrollments.');
 }
+
+/**
+ * Clear registry.
+ */
+function course_update_7134() {
+  registry_rebuild();
+}
