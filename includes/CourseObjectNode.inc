@@ -237,6 +237,7 @@ abstract class CourseObjectNode extends CourseObject {
    * Validate the options form. Check the node type.
    */
   public function optionsValidate(&$form, &$form_state) {
+    parent::optionsValidate($form, $form_state);
     if (isset($form_state['values']['node_type']) && empty($form_state['values']['node_type'])) {
       form_set_error('node_type', t('Please select a node type.'));
     }

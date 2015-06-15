@@ -61,4 +61,8 @@ abstract class CourseObjectAccess {
     }
   }
 
+  public function optionsValidate(&$form, &$form_state) {
+
+  }
+
 }
