@@ -528,7 +528,7 @@ abstract class CourseObject extends CourseHandler {
 
       // Record start date.
       if (!$this->getFulfillment()->getOption('date_started')) {
-        $this->getFulfillment()->setOption('date_started', REQUEST_TIME);
+        $this->getFulfillment()->setOption('date_started', REQUEST_TIME)->save();
       }
     }
     else {
@@ -536,9 +536,6 @@ abstract class CourseObject extends CourseHandler {
       $this->revoke();
       return FALSE;
     }
-
-    // Save fulfillment record.
-    $this->getFulfillment()->save();
 
     // If we're not displaying any content but we want to fire take() anyway, to
     // let the course object know we sent the user.
