@@ -484,7 +484,7 @@ abstract class CourseObject extends CourseHandler {
     //return theme('course_object_summary');
     $rendered_summary = '';
     if (!empty($summary)) {
-      $rendered_summary = $html = '<div class="description">' . theme('item_list', array('items' => $summary)) . '</div>';
+      $rendered_summary = $html = '<div class="description">' . theme('item_list', array('title' => '', 'items' => $summary)) . '</div>';
     }
 
     return $rendered_summary;

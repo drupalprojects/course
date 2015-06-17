@@ -38,7 +38,7 @@ function _course_block_navigation_view() {
 
     return array(
       'subject' => '',
-      'content' => theme('item_list', array('items' => $items, 'title' => NULL, 'type' => 'ul', 'attributes' => array('id' => 'course-nav'))),
+      'content' => theme('item_list', array('items' => $items, 'title' => '', 'type' => 'ul', 'attributes' => array('id' => 'course-nav'))),
     );
   }
 }

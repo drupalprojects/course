@@ -2141,9 +2141,9 @@ function course_edit_enrollment_action_submit($form, $form_state) {
     'enroll_end' => $form_state['values']['enroll_end'],
     'status' => $form_state['values']['status'],
     'complete' => $form_state['values']['complete'],
+    'timestamp' => $form_state['values']['timestamp'],
     'date_completed' => $form_state['values']['date_completed'],
     'course_objects' => $form_state['values']['course_objects'],
-    'timestamp' => $form_state['values']['timestamp'],
   );
 }
 

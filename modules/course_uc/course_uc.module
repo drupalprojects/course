@@ -414,7 +414,7 @@ function course_uc_tokens($type, $tokens, array $data = array(), array $options 
     }
     if ($show_header) {
       $values['course-products-header'] = t("Here are the courses you have purchased:");
-      $values['course-products'] = theme('item_list', array('items' => $courses));
+      $values['course-products'] = theme('item_list', array('title' => '', 'items' => $courses));
     }
 
     $replacements = array();
