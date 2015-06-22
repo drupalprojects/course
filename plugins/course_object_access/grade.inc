@@ -86,4 +86,17 @@ class CourseObjectAccessGrade extends CourseObjectAccess {
     return $form;
   }
 
+  /**
+   * Helper method to get possible graded objects.
+   */
+  public function getObjectOptions() {
+    $options = array('');
+    foreach ($this->getCourseObject()->getCourse()->getObjects() as $courseObject) {
+      if ($courseObject->getId() != $this->getCourseObject()->getId() && $courseObject->isGraded()) {
+        $options[$courseObject->getId()] = $courseObject->getTitle();
+      }
+    }
+    return $options;
+  }
+
 }
