@@ -56,10 +56,7 @@ abstract class CourseObjectNode extends CourseObject {
    * Return a list of valid node types.
    *
    * @return array
-   *   An array keyed by machine name of a node type.
-   *   return array(
-   *     'my_event' => t('My event content type'),
-   *   );
+   *   An array with node type machine names.
    */
   public abstract function getNodeTypes();
 
@@ -99,6 +96,8 @@ abstract class CourseObjectNode extends CourseObject {
     global $user;
     if (!$node) {
       $node = new stdClass;
+    }
+    if (!isset($node->type)) {
       $node->type = $this->getOption('node_type');
     }
     $node->title = $this->getTitle();
@@ -132,7 +131,7 @@ abstract class CourseObjectNode extends CourseObject {
 
     $defaults['private'] = !isset($this->node) && $this->hasNodePrivacySupport();
 
-    $options = array_intersect_key(node_type_get_names(), $this->getNodeTypes());
+    $options = array_intersect_key(node_type_get_names(), drupal_map_assoc($this->getNodeTypes()));
     $defaults['node_type'] = key($options);
 
     $defaults['use_node_title'] = 0;
@@ -163,6 +162,7 @@ abstract class CourseObjectNode extends CourseObject {
         '#type' => 'checkbox',
         '#title' => t('Use existing content'),
         '#default_value' => 0,
+        '#weight' => 1,
       );
 
       $form['node']['node_type'] = array(
@@ -176,6 +176,7 @@ abstract class CourseObjectNode extends CourseObject {
             ':input[name="use_existing_node"]' => array('checked' => FALSE),
           ),
         ),
+        '#weight' => 2,
       );
       if (count($options) > 1) {
         $form['node']['node_type']['#required'] = TRUE;
@@ -193,6 +194,7 @@ abstract class CourseObjectNode extends CourseObject {
           ':input[name="use_existing_node"]' => array('checked' => TRUE),
         ),
       ),
+        '#weight' => 3,
     );
 
     if (module_exists('clone') && !$this->getInstanceId()) {
@@ -201,6 +203,7 @@ abstract class CourseObjectNode extends CourseObject {
         '#type' => 'checkbox',
         '#description' => t('This will clone the selected content first.'),
         '#default_value' => $config['clone_and_reference'],
+        '#weight' => 4,
       );
     }
 
@@ -209,6 +212,7 @@ abstract class CourseObjectNode extends CourseObject {
       '#title' => t('Use existing title'),
       '#description' => t("Use the referenced content's title as this course object's title."),
       '#default_value' => $config['use_node_title'],
+      '#weight' => 5,
     );
 
     $form['node']['private'] = array(
@@ -217,6 +221,7 @@ abstract class CourseObjectNode extends CourseObject {
       '#type' => 'checkbox',
       '#default_value' => $config['private'],
       '#disabled' => !($this->hasNodePrivacySupport()),
+      '#weight' => 6,
     );
 
     $nid = $this->getInstanceId();

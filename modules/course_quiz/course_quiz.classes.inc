@@ -6,10 +6,11 @@ class CourseObjectQuiz extends CourseObjectNode {
    * Create the quiz node and set it as this object's instance.
    */
   function create($node = NULL) {
-    $quiz = new stdClass;
-    $quiz->auto_created = TRUE;
-    $quiz->type = 'quiz';
-    parent::create($quiz);
+    if (!$node) {
+      $node = new stdClass;
+    }
+    $node->auto_created = TRUE;
+    parent::create($node);
   }
 
   /**
@@ -131,7 +132,7 @@ class CourseObjectQuiz extends CourseObjectNode {
         }
         return array(
           'title' => t('Quiz results'),
-          'content' =>  $out,
+          'content' => $out,
         );
       case 'statistics':
         module_load_include('inc', 'quiz_stats', 'quiz_stats.admin');

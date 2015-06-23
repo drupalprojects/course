@@ -5,12 +5,6 @@
  */
 class CourseObjectWebform extends CourseObjectNode {
 
-  public function create($node = NULL) {
-    $webform = new stdClass;
-    $webform->type = 'webform';
-    parent::create($webform);
-  }
-
   public function getWarnings() {
     $warnings = parent::getWarnings();
 
