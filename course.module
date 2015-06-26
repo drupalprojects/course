@@ -558,17 +558,7 @@ function course_object_options_form_submit(&$form, &$form_state) {
  * Menu loader for course objects, in the context of a course.
  */
 function course_object_load($coid) {
-  global $user;
-  $nid = arg(0) == 'node' && is_numeric(arg(1)) ? arg(1) : 0;
-  // Stored course object.
-  $courseObject = course_get_course_object_by_id($coid, $user);
-
-  if ($courseObject && $nid) {
-    // If we're loading this from a menu loader, set the course.
-    $courseObject->setCourse($nid);
-  }
-
-  return $courseObject;
+  return entity_load_single('course_object', $coid);
 }
 
 /**
