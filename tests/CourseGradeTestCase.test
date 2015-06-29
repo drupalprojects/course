@@ -72,7 +72,10 @@ class CourseGradeTestCase extends CourseTestCase {
       'plugins' => array(
         'access' => array(
           'grade' => array(
-            'course_grade' => 80,
+            'course_grade_range' => array(
+              'low' => 80,
+              'high' => 90
+            )
           ),
         ),
       ),
@@ -81,10 +84,15 @@ class CourseGradeTestCase extends CourseTestCase {
     // Enroll the user.
     course_enroll($courseNode, $this->student_user);
 
-    // Complete but don't hit the grade requirement.
+    // Complete but don't hit the low grade requirement.
     $co1->getFulfillment()->setOption('grade_result', 79)->setComplete(1)->save();
     $course->getTracker()->track();
     $this->assertFalse($co2->access('take', $this->student_user), 'User cannot take course object with lower grade.');
+
+    // Complete but don't hit the high grade requirement.
+    $co1->getFulfillment()->setOption('grade_result', 91)->setComplete(1)->save();
+    $course->getTracker()->track();
+    $this->assertFalse($co2->access('take', $this->student_user), 'User cannot take course object with higher grade.');
 
     // Hit the grade requirement.
     $co1->getFulfillment()->setOption('grade_result', 80)->setComplete(1)->save();
