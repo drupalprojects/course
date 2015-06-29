@@ -16,12 +16,12 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
       if ($node->sell_price > 0 && !course_uc_check_purchased($user->uid, $node->uid) && !course_uc_payment_is_first($course)) {
         // Has a price, not purchased, not the first object.
         if (arg(2) != 'course-object') {
-          $form['actions']['submit']['#access'] = FALSE;
+          $form['#access'] = FALSE;
         }
       }
       else if (course_enrollment_check($node->nid, $user->uid) || (!($node->sell_price > 0) && variable_get('course_access_bypass_checkout', 1))) {
         // User already enrolled, or course is free and bypass is enabled.
-        $form['actions']['submit']['#access'] = FALSE;
+        $form['#access'] = FALSE;
       }
     }
     else {
@@ -34,7 +34,7 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
           if ($courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
             if ($courseObject->getFulfillment()->isComplete()) {
               // User already purchased.
-              $form['actions']['submit']['#access'] = FALSE;
+              $form['#access'] = FALSE;
             }
           }
         }
@@ -49,12 +49,12 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
       $blockers = course_enroll_access($node, $user, FALSE, TRUE);
       foreach ($blockers as $key => $blocker) {
         if (!$blocker['success'] && $key != 'course_must_purchase') {
-          $form['actions']['submit']['#access'] = FALSE;
+          $form['#access'] = FALSE;
         }
       }
     }
 
-    if (!isset($form['actions']['submit']['#access']) || $form['actions']['submit']['#access']) {
+    if (!empty($form['#access'])) {
       $instances = field_info_instances('course_enrollment', $node->course['enrollment_type']);
       foreach ($instances as $field_name => $instance) {
         $field = field_info_field($field_name);
