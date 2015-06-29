@@ -38,6 +38,7 @@ class CourseOutlineUiTestCase extends CourseTestCase {
     $courseNode = $this->createCourseNode();
     $this->drupalGet("node/{$courseNode->nid}/course-outline");
     $this->createCourseObjectUi($courseNode);
+    $this->clickLink('Settings');
   }
 
   /**

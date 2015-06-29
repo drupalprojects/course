@@ -47,7 +47,7 @@ abstract class CourseObjectAccess {
       return $plugins['access'][$this->type];
     }
     else {
-      return array();
+      return $this->optionsDefinition();
     }
   }
 
@@ -63,6 +63,10 @@ abstract class CourseObjectAccess {
 
   public function optionsValidate(&$form, &$form_state) {
 
+  }
+
+  public function optionsDefinition() {
+    return array();
   }
 
 }
