@@ -54,7 +54,7 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
       }
     }
 
-    if (!empty($form['#access'])) {
+    if (!isset($form['#access']) || empty($form['#access'])) {
       $instances = field_info_instances('course_enrollment', $node->course['enrollment_type']);
       foreach ($instances as $field_name => $instance) {
         $field = field_info_field($field_name);
