@@ -35,13 +35,11 @@ class CourseObjectAccessGrade extends CourseObjectAccess {
     if ($this->getOption('conditional_object')) {
       // Check object grade.
       $conditional_object = course_object_load($config['conditional_object']);
-      $grade = $conditional_object->getOption('grade_result');
+      $grade = $conditional_object->getFulfillment()->getOption('grade_result');
     }
     else {
       $grade = $this->getCourseObject()->getCourse()->getTracker()->getOption('grade_result');
     }
-
-
 
     $low_range = $grade >= $config['course_grade_range']['low'];
     $high_range = $grade <= $config['course_grade_range']['high'];
@@ -67,18 +65,7 @@ class CourseObjectAccessGrade extends CourseObjectAccess {
   }
 
   function see() {
-    $grade = NULL;
-
-    if ($this->getOption('conditional_object')) {
-      // Check object grade.
-      $conditional_object = course_object_load($this->getOption('conditional_object'));
-      $grade = $conditional_object->getOption('grade_result');
-    }
-    else {
-      $grade = $this->getCourseObject()->getCourse()->getTracker()->getOption('grade_result');
-    }
-
-    if ((!$this->take() || empty($grade)) && $this->getOption('course_grade_hidden')) {
+    if (!$this->take() && $this->getOption('course_grade_hidden')) {
       return FALSE;
     }
   }
