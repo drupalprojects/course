@@ -2941,6 +2941,11 @@ function course_entity_info() {
  * Define our special schema fields and relationships.
  */
 function course_entity_property_info_alter(&$info) {
+  $info['node']['properties']['course']['label'] = 'Course';
+  $info['node']['properties']['course']['description'] = 'The course associated with this node.';
+  $info['node']['properties']['course']['type'] = 'course';
+  $info['node']['properties']['course']['schema field'] = 'nid';
+
   $info['course']['properties']['close']['type'] = 'date';
   $info['course']['properties']['nid']['type'] = 'node';
   $info['course']['properties']['nid']['required'] = TRUE;
