@@ -22,45 +22,59 @@ class CourseObjectAccessGrade extends CourseObjectAccess {
     return $defaults;
   }
 
+  public function optionsValidate($form, $form_state) {
+    if (!empty($form_state['course_grade_range']['low']) || !empty($form_state['course_grade_range']['high'])) {
+      // If user filled out at least one.
+      if (is_numeric($form_state['course_grade_range']['low']) && is_numeric($form_state['course_grade_range']['high'])) {
+        // User filled out both.
+        if ($form_state['course_grade_range']['low'] > $form_state['course_grade_range']['high']) {
+          form_error($form['course_grade_range'], t('High range cannot be lower than the low range.'));
+        }
+      }
+      else {
+        // User did not fill out both.
+        form_error($form['course_grade_range'], t('You must enter a numeric value for both the low and high grade range.'));
+      }
+    }
+  }
+
   function take() {
     $config = $this->getOptions();
 
-    if (empty($config['course_grade_range']['low']) || empty($config['course_grade_range']['high'])) {
-      return TRUE;
-    }
+    if (is_numeric($config['course_grade_range']['low']) && is_numeric($config['course_grade_range']['high'])) {
+      $grade = NULL;
+      $conditional_object = NULL;
 
-    $grade = NULL;
-    $conditional_object = NULL;
+      if ($this->getOption('conditional_object')) {
+        // Check object grade.
+        $conditional_object = course_object_load($config['conditional_object']);
+        $grade = $conditional_object->getFulfillment()->getOption('grade_result');
+      }
+      else {
+        $grade = $this->getCourseObject()->getCourse()->getTracker()->getOption('grade_result');
+      }
 
-    if ($this->getOption('conditional_object')) {
-      // Check object grade.
-      $conditional_object = course_object_load($config['conditional_object']);
-      $grade = $conditional_object->getFulfillment()->getOption('grade_result');
-    }
-    else {
-      $grade = $this->getCourseObject()->getCourse()->getTracker()->getOption('grade_result');
-    }
+      $low_range = $grade >= $config['course_grade_range']['low'];
+      $high_range = $grade <= $config['course_grade_range']['high'];
 
-    $low_range = $grade >= $config['course_grade_range']['low'];
-    $high_range = $grade <= $config['course_grade_range']['high'];
-
-    if ($low_range && $high_range) {
-      return TRUE;
-    }
-    else if (isset($conditional_object)) {
-      $this->getCourseObject()->setAccessMessage('grade', t('You must have a grade between @grade_low% and @grade_high% in %object to take this activity.', array(
-        '@grade_low' => $config['course_grade_range']['low'],
-        '@grade_high' => $config['course_grade_range']['high'],
-        '%object' => $conditional_object->getTitle(),
-      )));
-      return FALSE;
-    }
-    else {
-      $this->getCourseObject()->setAccessMessage('grade', t('You must have a grade between @grade_low% and @grade_high% to take this activity.', array(
-        '@grade_low' => $config['course_grade_range']['low'],
-        '@grade_high' => $config['course_grade_range']['high']
-      )));
-      return FALSE;
+      if ($low_range && $high_range) {
+        return TRUE;
+      }
+      else if (isset($conditional_object)) {
+        $this->getCourseObject()->setAccessMessage('grade', t('You must have a grade between @grade_low% and @grade_high% in %object to take this activity.', array(
+          '@grade_low' => $config['course_grade_range']['low'],
+          '@grade_high' => $config['course_grade_range']['high'],
+          '%object' => $conditional_object->getTitle(),
+        )));
+        return FALSE;
+      }
+      else {
+        $this->getCourseObject()->setAccessMessage('grade', t('You must have a grade between @grade_low% and @grade_high% to take this activity.', array(
+          '@grade_low' => $config['course_grade_range']['low'],
+          '@grade_high' => $config['course_grade_range']['high']
+        )));
+        return FALSE;
+      }
     }
   }
 
