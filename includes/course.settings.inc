@@ -82,5 +82,14 @@ function course_report_settings_form($form) {
 function course_object_settings_form($form) {
   $form['header']['#markup'] = '<p>' . t('Here, you can manage the settings related to course objects.') . '</p>';
   $form['header']['#markup'] .= '<p>' . t('Fields added to the course object entity are included on the course object editing form, and may be used in course object theme hooks.') . '</p>';
-  return $form;
+
+  $form['course_object_private_roles'] = array(
+    '#title' => 'Default roles allowed access',
+    '#description' => t('By default, when a private course object is created, all view access is revoked. Set roles here that will have access to view private course objects without having access.'),
+    '#type' => 'checkboxes',
+    '#default_value' => variable_get('course_object_private_roles', array()),
+    '#options' => user_roles(),
+  );
+
+  return system_settings_form($form);
 }

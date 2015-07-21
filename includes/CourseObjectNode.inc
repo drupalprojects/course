@@ -323,7 +323,8 @@ abstract class CourseObjectNode extends CourseObject {
 
       // Remove "view" permissions to everyone on this node.
       $settings = content_access_get_per_node_settings($this->node);
-      $settings['view'] = array();
+      $grant_roles = array_filter(variable_get('course_object_private_roles', array()));
+      $settings['view'] = $grant_roles;
       content_access_save_per_node_settings($this->node, $settings);
 
       // Resave node to update access.
