@@ -189,6 +189,7 @@ abstract class CourseObjectNode extends CourseObject {
       '#type' => 'textfield',
       '#description' => t('Use an existing node instead of creating a new one.'),
       '#default_value' => !empty($this->node->nid) ? check_plain($this->node->title) . " [nid: {$this->node->nid}]" : NULL,
+      '#maxlength' => 255,
       '#states' => array(
         'visible' => array(
           ':input[name="use_existing_node"]' => array('checked' => TRUE),
