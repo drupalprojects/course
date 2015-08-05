@@ -161,4 +161,18 @@ class CourseObjectBook extends CourseObjectNode {
     }
   }
 
+  /**
+   * Override of CourseObjectNode::freeze().
+   *
+   * Do not freeze the parent book ID.
+   *
+   * course_book_node_insert() stumbles if this is set and we are cloning a
+   * book.
+   */
+  public function freeze() {
+    $ice = parent::freeze();
+    unset($ice->node->book['bid']);
+    return $ice;
+  }
+
 }
