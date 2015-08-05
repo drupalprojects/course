@@ -22,7 +22,7 @@ class CourseObjectAccessGrade extends CourseObjectAccess {
     return $defaults;
   }
 
-  public function optionsValidate($form, $form_state) {
+  public function optionsValidate($form, &$form_state) {
     if (!empty($form_state['course_grade_range']['low']) || !empty($form_state['course_grade_range']['high'])) {
       // If user filled out at least one.
       if (is_numeric($form_state['course_grade_range']['low']) && is_numeric($form_state['course_grade_range']['high'])) {
