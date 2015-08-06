@@ -56,7 +56,7 @@ class CourseHandler extends Entity {
    *
    * @return mixed
    */
-  public final function getOption($key) {
+  public function getOption($key) {
     $options = $this->getOptions();
     if (isset($options[$key])) {
       return $options[$key];
@@ -76,7 +76,7 @@ class CourseHandler extends Entity {
    *
    * @return CourseHandler
    */
-  public final function setOption($option, $value) {
+  public function setOption($option, $value) {
     if (!preg_match('/\*/', $option) && is_scalar($option)) {
       $this->$option = $value;
     }
@@ -200,7 +200,10 @@ class CourseHandler extends Entity {
     if ($key == NULL) {
       return $this->accessMessages;
     }
-    elseif ($message != NULL) {
+    if (empty($message)) {
+      unset($this->accessMessages[$key]);
+    }
+    else {
       $this->accessMessages[$key] = $message;
     }
   }
