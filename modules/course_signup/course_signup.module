@@ -203,22 +203,21 @@ function course_signup_add_to_cart($nid, $qty, $data) {
  *
  * If a user is enrolled outside of signup, sign them up as well.
  */
-function course_signup_course_enroll($node, $user, $from, $code, $status) {
+function course_signup_course_enrollment_insert($enrollment) {
   // Check if uc_signup is enabled and this enrollment is from ubercart. If it
   // is, we don't want to sign the user up, because uc_signup will convert the
   // temporary signup and create a duplicate.
   $uc_signup = (module_exists('uc_signup') && $from == 'ubercart' && isset($_SESSION['uc_signup']));
   $uc_sid = FALSE;
   if ($uc_signup) {
-    $sql = "SELECT ucsl.sid FROM {uc_signup_log} ucsl
-      LEFT JOIN {signup_log} sl USING (sid)
-      WHERE sl.nid = %d AND sl.uid = %d";
     $uc_sid = db_query("SELECT ucsl.sid FROM {uc_signup_log} ucsl
       LEFT JOIN {signup_log} sl USING (sid)
-      WHERE sl.nid = :sl.nid AND sl.uid = :sl.uid", array(':sl.nid' => $node->nid, ':sl.uid' => $user->uid))->fetchField();
+      WHERE sl.nid = :sl.nid AND sl.uid = :sl.uid", array(':sl.nid' => $enrollment->nid, ':sl.uid' => $enrollment->uid))->fetchField();
   }
-  if ($from != 'course_signup' && !$uc_sid) {
-    course_signup_quick_register($node, $user);
+  if ($enrollment->enrollmenttype != 'course_signup' && !$uc_sid) {
+    $node = node_load($enrollment->nid);
+    $account = user_load($enrollment->uid);
+    course_signup_quick_register($node, $account);
   }
 }
 
@@ -227,8 +226,8 @@ function course_signup_course_enroll($node, $user, $from, $code, $status) {
  *
  * Delete the signup after unenroll.
  */
-function course_signup_course_unenroll($node, $user) {
-  db_query("DELETE FROM {signup_log} WHERE nid = :nid and uid = :uid", array(':nid' => $node->nid, ':uid' => $user->uid));
+function course_signup_course_enrollment_delete($enrollment) {
+  db_query("DELETE FROM {signup_log} WHERE nid = :nid and uid = :uid", array(':nid' => $enrollment->nid, ':uid' => $enrollment->uid));
 }
 
 /**
