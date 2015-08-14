@@ -1203,8 +1203,8 @@ function course_field_attach_form($entity_type, $entity, &$form, &$form_state, $
 
   // After creating a new course, redirect the user to the course outline
   // overview form.
-  if (empty($node->nid)) {
-    $form['buttons']['submit']['#submit'][] = 'course_form_submit';
+  if (empty($entity->nid)) {
+    $form['actions']['submit']['#submit'][] = 'course_form_submit';
   }
 }
 
