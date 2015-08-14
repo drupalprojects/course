@@ -118,8 +118,10 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
   }
 
   function isReleased() {
-    if (REQUEST_TIME <= strtotime($this->getOption('release'))) {
-      $this->getCourseObject()->setAccessMessage('not-open', t('%title will be available on %release.', array('%title' => $this->getCourseObject()->getTitle(), '%release' => $this->getOption('release'))));
+    $release_date = strtotime($this->getOption('release'));
+    if (REQUEST_TIME <= $release_date) {
+      $release_date_formatted = format_date($release_date, 'long');
+      $this->getCourseObject()->setAccessMessage('not-open', t('%title will be available on %release.', array('%title' => $this->getCourseObject()->getTitle(), '%release' => $release_date_formatted)));
       return FALSE;
     }
     else {
@@ -128,8 +130,10 @@ class CourseObjectAccessTiming extends CourseObjectAccess {
   }
 
   function isExpired() {
-    if ($this->getOption('expiration') && REQUEST_TIME > strtotime($this->getOption('expiration'))) {
-      $this->getCourseObject()->setAccessMessage('closed', t('%title closed on %expiration.', array('%title' => $this->getCourseObject()->getTitle(), '%expiration' => $this->getOption('expiration'))));
+    $expiration_date = strtotime($this->getOption('expiration'));
+    if ($this->getOption('expiration') && REQUEST_TIME > $expiration_date) {
+      $expiration_date_formatted = format_date($expiration_date, 'long');
+      $this->getCourseObject()->setAccessMessage('closed', t('%title closed on %expiration.', array('%title' => $this->getCourseObject()->getTitle(), '%expiration' => $expiration_date_formatted)));
       return TRUE;
     }
     else {
