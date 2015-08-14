@@ -247,7 +247,7 @@ function course_signup_course_access($op, $node, $user) {
     if (!empty($node->signup)) {
       if (!empty($node->signup_status)) {
         module_load_include('inc', 'signup', 'includes/date');
-        if ($field = signup_date_field($node->type)) {
+        if ($field = signup_date_field($node->type) && $field != 'none') {
           $items = field_get_items('node', $node, $field['field_name']);
           if (!empty($items[0]['value'])) {
             // This node is signup-enabled and closed by date.
