@@ -801,7 +801,7 @@ function course_node_update($node) {
     }
 
     // 'Credits' is a numeric field so we need to ensure that it is a number.
-    $record['credits'] = isset($records['credits']) ? floatval($record['credits']) : 0;
+    $record['credits'] = isset($record['credits']) ? floatval($record['credits']) : 0;
 
     // Default the enrollment type if necessary.
     if (empty($record['enrollment_type'])) {
