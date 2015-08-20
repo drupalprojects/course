@@ -184,10 +184,10 @@ abstract class CourseObjectNode extends CourseObject {
     }
 
     $form['node']['instance'] = array(
-      '#title' => t('Existing node'),
+      '#title' => t('Existing content'),
       '#autocomplete_path' => 'course/autocomplete/node/' . implode(',', $this->getNodeTypes()),
       '#type' => 'textfield',
-      '#description' => t('Use an existing node instead of creating a new one.'),
+      '#description' => t('Use existing content instead of creating a new one.'),
       '#default_value' => !empty($this->node->nid) ? check_plain($this->node->title) . " [nid: {$this->node->nid}]" : NULL,
       '#maxlength' => 255,
       '#states' => array(
@@ -195,7 +195,7 @@ abstract class CourseObjectNode extends CourseObject {
           ':input[name="use_existing_node"]' => array('checked' => TRUE),
         ),
       ),
-        '#weight' => 3,
+      '#weight' => 3,
     );
 
     if (module_exists('clone') && !$this->getInstanceId()) {
@@ -205,6 +205,11 @@ abstract class CourseObjectNode extends CourseObject {
         '#description' => t('This will clone the selected content first.'),
         '#default_value' => $config['clone_and_reference'],
         '#weight' => 4,
+        '#states' => array(
+          'visible' => array(
+            ':input[name="use_existing_node"]' => array('checked' => TRUE),
+          ),
+        ),
       );
     }
 
