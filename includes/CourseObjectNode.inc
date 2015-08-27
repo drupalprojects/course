@@ -138,6 +138,8 @@ abstract class CourseObjectNode extends CourseObject {
 
     $defaults['clone_and_reference'] = 0;
 
+    $defaults['use_existing_node'] = 0;
+
     return $defaults;
   }
 
@@ -154,33 +156,33 @@ abstract class CourseObjectNode extends CourseObject {
 
     $config = $this->getOptions();
 
-    if (!$this->getInstanceId()) {
-      $types = drupal_map_assoc($this->getNodeTypes());
-      $options = array_intersect_key(node_type_get_names(), $types);
+    $types = drupal_map_assoc($this->getNodeTypes());
+    $options = array_intersect_key(node_type_get_names(), $types);
 
-      $form['node']['use_existing_node'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Use existing content'),
-        '#default_value' => 0,
-        '#weight' => 1,
-      );
+    $form['node']['use_existing_node'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Use existing content'),
+      '#default_value' => $this->getOption('use_existing_node'),
+      '#weight' => 1,
+      '#access' => $this->isTemporary(),
+    );
 
-      $form['node']['node_type'] = array(
-        '#title' => t('Create node'),
-        '#type' => 'select',
-        '#options' => $options,
-        '#description' => t('Selecting a node type will automatically create this node and link it to this course object.'),
-        '#default_value' => $config['node_type'],
-        '#states' => array(
-          'visible' => array(
-            ':input[name="use_existing_node"]' => array('checked' => FALSE),
-          ),
+    $form['node']['node_type'] = array(
+      '#title' => t('Create node'),
+      '#type' => 'select',
+      '#options' => $options,
+      '#description' => t('Selecting a node type will automatically create this node and link it to this course object.'),
+      '#default_value' => $config['node_type'],
+      '#states' => array(
+        'visible' => array(
+          ':input[name="use_existing_node"]' => array('checked' => FALSE),
         ),
-        '#weight' => 2,
-      );
-      if (count($options) > 1) {
-        $form['node']['node_type']['#required'] = TRUE;
-      }
+      ),
+      '#weight' => 2,
+      '#access' => $this->isTemporary(),
+    );
+    if (count($options) > 1) {
+      $form['node']['node_type']['#required'] = TRUE;
     }
 
     $form['node']['instance'] = array(
@@ -251,6 +253,13 @@ abstract class CourseObjectNode extends CourseObject {
     parent::optionsValidate($form, $form_state);
     if (isset($form_state['values']['node_type']) && empty($form_state['values']['node_type'])) {
       form_set_error('node_type', t('Please select a node type.'));
+    }
+
+    $nid = $form_state['values']['instance'];
+    if ($form_state['values']['use_existing_node'] && (empty($form_state['values']['instance']) || !is_numeric($nid))) {
+      if (!preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $nid)) {
+        form_set_error('instance', t('Please select a node.'));
+      }
     }
   }
 
