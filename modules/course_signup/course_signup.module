@@ -63,7 +63,6 @@ function course_signup_quick_register($node, $account, $notify = TRUE) {
       $signup->nid = $node->nid;
       $signup->uid = $account->uid;
       $signup->signup_time = REQUEST_TIME;
-      $signup->attended = 0;
       $signup->form_data = array();
       $signup->count_towards_limit = 1;
       signup_save_signup($signup);
