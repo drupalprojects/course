@@ -66,6 +66,10 @@ function course_signup_quick_register($node, $account, $notify = TRUE) {
       $signup->form_data = array();
       $signup->count_towards_limit = 1;
       signup_save_signup($signup);
+      $signup = signup_load_signup($signup->sid);
+      if ($node->signup_send_confirmation) {
+        signup_send_confirmation_mail($signup, $node);
+      }
     }
   }
   else {
