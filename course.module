@@ -2794,7 +2794,6 @@ function course_entity_info() {
       'entity class' => 'Entity',
       'controller class' => 'EntityAPIController',
       'base table' => 'course_enrollment',
-      'uri callback' => 'course_enrollment_uri',
       'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'eid',
@@ -2837,7 +2836,6 @@ function course_entity_info() {
       'entity class' => 'CourseReport',
       'controller class' => 'EntityAPIController',
       'base table' => 'course_report',
-      'uri callback' => 'course_report_uri',
       'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'crid',
@@ -2860,7 +2858,6 @@ function course_entity_info() {
       'entity class' => 'Entity',
       'controller class' => 'CourseObjectController',
       'base table' => 'course_outline',
-      'uri callback' => 'course_object_uri',
       'fieldable' => TRUE,
       'entity keys' => array(
         'id' => 'coid',
@@ -2885,7 +2882,6 @@ function course_entity_info() {
       'entity class' => 'CourseObjectFulfillment',
       'controller class' => 'CourseObjectFulfillmentController',
       'base table' => 'course_outline_fulfillment',
-      'uri callback' => 'course_object_fulfillment_uri',
       'fieldable' => FALSE,
       'entity keys' => array(
         'id' => 'cofid',
@@ -2901,7 +2897,6 @@ function course_entity_info() {
       'entity class' => 'Course',
       'controller class' => 'CourseController',
       'base table' => 'course_node',
-      'uri callback' => 'course_uri',
       'fieldable' => FALSE,
       'entity keys' => array(
         'id' => 'nid',
@@ -2983,24 +2978,6 @@ function course_entity_property_info_alter(&$info) {
   $info['course_report']['properties']['uid']['required'] = TRUE;
   $info['course_report']['properties']['coid']['type'] = 'course_object';
   $info['course_report']['properties']['complete']['type'] = 'boolean';
-}
-
-/**
- * Generate URI from enrollment entity.
- */
-function course_enrollment_uri($enrollment) {
-  return array(
-    'path' => 'node/' . $enrollment->nid,
-  );
-}
-
-/**
- * Generate URI from course_report entity.
- */
-function course_report_uri($course_report) {
-  return array(
-    'path' => 'node/' . $course_report->nid,
-  );
 }
 
 /**
