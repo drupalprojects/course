@@ -150,7 +150,13 @@ class CourseObjectQuiz extends CourseObjectNode {
   public function unenroll() {
     parent::unenroll();
     $fulfillment = $this->getFulfillment();
-    quiz_delete_results((array) $fulfillment->getOption('quiz_result_ids'));
+    $result_ids = (array) $fulfillment->getOption('quiz_result_ids');
+    if (course_quiz_quiz_version() >= 5) {
+      entity_delete_multiple('quiz_result', $result_ids);
+    }
+    else {
+      quiz_delete_results($result_ids);
+    }
   }
 
   function getNodeTypes() {
