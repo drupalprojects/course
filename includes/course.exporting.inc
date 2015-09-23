@@ -7,8 +7,9 @@
  */
 function course_clone_node_alter(&$node, $context) {
   if ($context['method'] == 'prepopulate') {
-    $course = course_get_course($context['original_node']);
-    course_clone_warning_messages($course);
+    if ($course = course_get_course($context['original_node'])) {
+      course_clone_warning_messages($course);
+    }
   }
 }
 
