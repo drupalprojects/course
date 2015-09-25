@@ -169,6 +169,9 @@ function course_outline_overview_form($form, &$form_state) {
     '#weight' => 20,
   );
 
+  // Sort course object types
+  asort($object_types);
+
   $form['more']['object_type'] = array(
     '#type' => 'select',
     '#options' => $object_types,
