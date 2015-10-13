@@ -61,15 +61,15 @@ class CourseObjectAccessGrade extends CourseObjectAccess {
         return TRUE;
       }
       else if (isset($conditional_object)) {
-        $this->getCourseObject()->setAccessMessage('grade', t('You must have a grade between @grade_low% and @grade_high% in %object to take this activity.', array(
+        $this->getCourseObject()->setAccessMessage('grade', t('%title requires a grade between @grade_low% and @grade_high% to continue.', array(
           '@grade_low' => $config['course_grade_range']['low'],
           '@grade_high' => $config['course_grade_range']['high'],
-          '%object' => $conditional_object->getTitle(),
+          '%title' => $conditional_object->getTitle(),
         )));
         return FALSE;
       }
       else {
-        $this->getCourseObject()->setAccessMessage('grade', t('You must have a grade between @grade_low% and @grade_high% to take this activity.', array(
+        $this->getCourseObject()->setAccessMessage('grade', t('You must have a grade between @grade_low% and @grade_high% to continue.', array(
           '@grade_low' => $config['course_grade_range']['low'],
           '@grade_high' => $config['course_grade_range']['high']
         )));
