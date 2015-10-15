@@ -245,6 +245,7 @@ abstract class CourseObject extends CourseHandler {
       '#size' => 100,
       '#default_value' => check_plain($config['title']),
       '#group' => 'description',
+      '#required' => TRUE,
     );
 
     $form['outline']['enabled'] = array(
