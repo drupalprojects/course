@@ -93,7 +93,7 @@ class CourseObjectQuiz extends CourseObjectNode {
     $warnings = parent::getWarnings();
 
     if ($this->getInstanceId()) {
-      if (!quiz_get_number_of_questions($this->node->vid)) {
+      if (!quiz_get_number_of_questions($this->node->vid, $this->node->nid)) {
         if (course_quiz_quiz_version() >= 5) {
           $link = l('add questions', "node/{$this->getInstanceId()}/quiz/questions");
         }
