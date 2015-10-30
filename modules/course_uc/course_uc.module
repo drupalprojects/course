@@ -345,17 +345,27 @@ function course_uc_enroll_user_in_ordered_courses($order) {
       // This product is an actual course. They have to be enrolled.
       // This will also satisfy the first payment requirement.
       // @see course_uc_course_enroll()
+      if (!$course_enrollment = course_enrollment_load($node->nid, $account->uid)) {
+        // Maybe they were already enrolled.
+        $course_enrollment = entity_create('course_enrollment', array());
+      }
+
       if ($product->data['course_enrollment']) {
-        $course_enrollment = entity_create('course_enrollment', $product->data['course_enrollment']);
-        $course_enrollment->type = $node->course['enrollment_type'];
-        $course_enrollment->nid = $node->nid;
-        $course_enrollment->uid = $account->uid;
-        $course_enrollment->enrollmenttype = 'ubercart';
-        course_enrollment_save($course_enrollment);
+        // Attach enrollment bundle fields.
+        foreach ($product->data['course_enrollment'] as $field => $value) {
+          $course_enrollment->$field = $value;
+        }
       }
-      else {
-        course_enroll($node, $account, 'ubercart');
-      }
+
+      // Set enrollment data.
+      $course_enrollment->type = $node->course['enrollment_type'];
+      $course_enrollment->nid = $node->nid;
+      $course_enrollment->uid = $account->uid;
+      $course_enrollment->enrollmenttype = 'ubercart';
+      // Activate this enrollment.
+      $course_enrollment->status = 1;
+
+      course_enrollment_save($course_enrollment);
     }
 
     if ($courseNode = course_determine_context('course_uc', 'payment', $node->nid)) {
