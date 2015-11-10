@@ -63,7 +63,8 @@ class CourseObjectTestCase extends CourseTestCase {
     $this->createCourseObject($courseNode);
 
     $course = course_get_course($courseNode);
-    $courseObject = reset($course->getObjects());
+    $objects = $course->getObjects();
+    $courseObject = reset($objects);
     $getCourse = $courseObject->getCourse();
 
     $this->assertEqual(spl_object_hash($course), spl_object_hash($getCourse), 'Check that Courses inside of CourseObjects inside of Course are the same.');

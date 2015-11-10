@@ -1353,6 +1353,7 @@ function course_take_course($node) {
         // At least one field must be shown when enrolling. Display the user
         // enrollment form.
         if (empty($enrollment->type)) {
+          $enrollment = new stdClass;
           $enrollment->nid = $node->nid;
           $enrollment->uid = $user->uid;
           $enrollment->type = $node->course['enrollment_type'];
