@@ -142,6 +142,7 @@ function course_schema() {
     'indexes' => array(
       'nid' => array('nid'),
       'uid' => array('uid'),
+      'date_completed' => array('date_completed'),
     ),
   );
 
@@ -473,6 +474,7 @@ function course_schema() {
     ),
     'indexes' => array(
       'coid' => array('coid'),
+      'date_completed' => array('date_completed'),
     ),
   );
 
@@ -1171,4 +1173,17 @@ function course_update_7135() {
     }
   }
   return t('Updated format for grade-based access.');
+}
+
+/**
+ * Add indexes for completion dates.
+ */
+function course_update_7136() {
+  if (!db_index_exists('course_report', 'date_completed')) {
+    db_add_index('course_report', 'date_completed', array('date_completed'));
+  }
+
+  if (!db_index_exists('course_outline_fulfillment', 'date_completed')) {
+    db_add_index('course_outline_fulfillment', 'date_completed', array('date_completed'));
+  }
 }
