@@ -101,14 +101,14 @@ class CourseObjectAccessGrade extends CourseObjectAccess {
       '#title' => t('Percentage low'),
       '#type' => 'textfield',
       '#size' => 4,
-      '#default_value' => $config['course_grade_range']['low'],
+      '#default_value' => isset($config['course_grade_range']['low']) ? $config['course_grade_range']['low'] : '',
     );
 
     $form['course_grade_range']['high'] = array(
       '#title' => t('Percentage high'),
       '#type' => 'textfield',
       '#size' => 4,
-      '#default_value' => $config['course_grade_range']['high'],
+      '#default_value' => isset($config['course_grade_range']['high']) ? $config['course_grade_range']['high'] : '',
     );
 
     $options = $this->getObjectOptions();
