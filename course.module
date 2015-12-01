@@ -3120,9 +3120,11 @@ function course_course_credit_map($node, $account, $mappings) {
     $entity = entity_load_single('course_enrollment', $enrollment->eid);
     if (!empty($mappings['course_enrollment'])) {
       foreach ((array) $mappings['course_enrollment'] as $field => $values) {
-        foreach ($entity->{$field}[LANGUAGE_NONE] as $item) {
-          if (in_array($item['value'], $values)) {
-            return TRUE;
+        if (!empty($entity->{$field})) {
+          foreach ($entity->{$field}[LANGUAGE_NONE] as $item) {
+            if (in_array($item['value'], $values)) {
+              return TRUE;
+            }
           }
         }
       }
