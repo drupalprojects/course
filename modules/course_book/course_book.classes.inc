@@ -85,7 +85,8 @@ class CourseObjectBook extends CourseObjectNode {
     if ($this->getOption('book_tracking') == 'all') {
       // Possibly a bug here. book_toc doesn't return inaccessible book pages.
       $mlids = array_keys(book_toc($this->node->nid, 99));
-      $viewed = array_keys(array_filter($this->getFulfillment()->getOption('book_fulfillment')));
+      $fulfillment = $this->getFulfillment()->getOption('book_fulfillment');
+      $viewed = $fulfillment ? array_keys(array_filter($fulfillment)) : array();
       if (!array_diff($mlids, $viewed)) {
         $this->getFulfillment()->setComplete(1)->save();
       }
