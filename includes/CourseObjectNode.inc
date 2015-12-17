@@ -251,11 +251,12 @@ abstract class CourseObjectNode extends CourseObject {
    */
   public function optionsValidate(&$form, &$form_state) {
     parent::optionsValidate($form, $form_state);
-    if (isset($form_state['values']['node_type']) && empty($form_state['values']['node_type'])) {
+    $nid = $form_state['values']['instance'];
+
+    if (empty($nid) && isset($form_state['values']['node_type']) && empty($form_state['values']['node_type'])) {
       form_set_error('node_type', t('Please select a node type.'));
     }
 
-    $nid = $form_state['values']['instance'];
     if ($form_state['values']['use_existing_node'] && (empty($form_state['values']['instance']) || !is_numeric($nid))) {
       if (!preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $nid)) {
         form_set_error('instance', t('Please select a node.'));
