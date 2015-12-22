@@ -21,10 +21,10 @@ class CourseObjectSignup extends CourseObjectNode {
 
   public function take() {
     if ($this->getFulfillment()->isComplete()) {
-      return "You have been marked attended by an administrator.";
+      return t("You have been marked attended by an administrator.");
     }
     else {
-      return "You must be marked attended by an administrator.";
+      return t("You must be marked attended by an administrator.");
     }
   }
 
