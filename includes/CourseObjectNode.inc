@@ -10,8 +10,9 @@ abstract class CourseObjectNode extends CourseObject {
   public function __construct($values, $entityType) {
     parent::__construct($values, $entityType);
     if ($this->getInstanceId()) {
-      $node = node_load($this->getInstanceId());
-      $this->setNode($node);
+      if ($node = node_load($this->getInstanceId())) {
+        $this->setNode($node);
+      }
     }
   }
 
@@ -68,19 +69,19 @@ abstract class CourseObjectNode extends CourseObject {
   }
 
   public function getTakeUrl() {
-    if ($this->getInstanceId()) {
+    if ($this->getNode()) {
       return url("node/{$this->getNode()->nid}");
     }
   }
 
   public function getEditUrl() {
-    if ($this->getInstanceId()) {
+    if ($this->getNode()) {
       return url("node/{$this->getNode()->nid}/edit");
     }
   }
 
   public function getViewUrl() {
-    if ($this->getInstanceId()) {
+    if ($this->getNode()) {
       return url("node/{$this->getNode()->nid}");
     }
   }
@@ -416,6 +417,27 @@ abstract class CourseObjectNode extends CourseObject {
   function setInstanceId($id) {
     parent::setInstanceId($id);
     $this->node = node_load($id);
+  }
+
+  /**
+   * Show a warning if this object has an instance, but the node does not exist.
+   */
+  function getWarnings() {
+    $warnings = parent::getWarnings();
+    if ($this->getInstanceId() && !$this->getNode()) {
+      $warnings[] = t('The content associated with this object has been deleted.<br/>Saving the course will create new content from the object settings.');
+    }
+    return $warnings;
+  }
+
+  /**
+   * Deny access to objects without content.
+   */
+  function access($op = 'view', $account = NULL) {
+    if ($op == 'take' && !$this->getNode()) {
+      return FALSE;
+    }
+    return parent::access($op, $account);
   }
 
 }
