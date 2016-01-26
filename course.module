@@ -1935,7 +1935,7 @@ function course_edit_enrollment_action($object, $context) {
   if ($context['enroll_end']) {
     // Parse date from popup/plain text.
     if ($unixtime = strtotime($context['enroll_end'])) {
-      $enrollment->enroll_end = $unixtime + 86399;
+      $enrollment->enroll_end = $unixtime;
     }
   }
 
