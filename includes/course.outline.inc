@@ -104,34 +104,35 @@ function course_outline_overview_form($form, &$form_state) {
   $object_counts = array();
   if (count($objects)) {
     foreach (array_keys($objects) as $uniqid) {
-      $courseObject = course_get_course_object_by_id($uniqid);
-      $rform = _course_outline_object_form($courseObject);
+      if ($courseObject = course_get_course_object_by_id($uniqid)) {
+        $rform = _course_outline_object_form($courseObject);
 
-      // Keep track of how many of each course object we have.
-      // @kludge probably some simpler way to do this effectively
-      if (!isset($object_counts[$courseObject->getModule()][$courseObject->getComponent()])) {
-        $object_counts[$courseObject->getModule()][$courseObject->getComponent()] = 1;
-      }
-      else {
-        $object_counts[$courseObject->getModule()][$courseObject->getComponent()] ++;
-      }
+        // Keep track of how many of each course object we have.
+        // @kludge probably some simpler way to do this effectively
+        if (!isset($object_counts[$courseObject->getModule()][$courseObject->getComponent()])) {
+          $object_counts[$courseObject->getModule()][$courseObject->getComponent()] = 1;
+        }
+        else {
+          $object_counts[$courseObject->getModule()][$courseObject->getComponent()] ++;
+        }
 
-      // Don't allow user to change type of object.
-      $rform['object_type'] = array(
-        '#type' => 'hidden',
-        '#value' => $courseObject->getOption('object_type'),
-      );
-      if (empty($handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')])) {
-        $show_object_name = t('Missing CourseObject handler for <br/><i>@m/@t</i>', array('@m' => $courseObject->getOption('module'), '@t' => $courseObject->getOption('object_type')));
+        // Don't allow user to change type of object.
+        $rform['object_type'] = array(
+          '#type' => 'hidden',
+          '#value' => $courseObject->getOption('object_type'),
+        );
+        if (empty($handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')])) {
+          $show_object_name = t('Missing CourseObject handler for <br/><i>@m/@t</i>', array('@m' => $courseObject->getOption('module'), '@t' => $courseObject->getOption('object_type')));
+        }
+        else {
+          $show_object_name = $handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')]['name'] . '<br/><small><i>' . ucwords(str_replace('_', ' ', $courseObject->getOption('module'))) . '</i></small>';
+        }
+        $rform['object_type_show'] = array(
+          '#type' => 'markup',
+          '#markup' => filter_xss_admin($show_object_name),
+        );
+        $cform['objects'][$uniqid] = $rform;
       }
-      else {
-        $show_object_name = $handlers[$courseObject->getOption('module')][$courseObject->getOption('object_type')]['name'] . '<br/><small><i>' . ucwords(str_replace('_', ' ', $courseObject->getOption('module'))) . '</i></small>';
-      }
-      $rform['object_type_show'] = array(
-        '#type' => 'markup',
-        '#markup' => filter_xss_admin($show_object_name),
-      );
-      $cform['objects'][$uniqid] = $rform;
     }
   }
 
