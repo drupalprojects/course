@@ -348,7 +348,7 @@ function course_uc_enroll_user_in_ordered_courses($order) {
         $course_enrollment = entity_create('course_enrollment', array());
       }
 
-      if ($product->data['course_enrollment']) {
+      if (!empty($product->data['course_enrollment'])) {
         // Attach enrollment bundle fields.
         foreach ($product->data['course_enrollment'] as $field => $value) {
           $course_enrollment->$field = $value;
@@ -519,4 +519,21 @@ function course_uc_default_rules_configuration() {
 }';
   $configs['rules_enroll_user_in_ordered_courses_when_complete'] = rules_import($rule);
   return $configs;
+}
+
+/**
+ * Implements hook_course_access_alter().
+ *
+ * If
+ *  - Ubercart is enabled
+ *  - This is a course product
+ *  - Anonymous checkout is enabled
+ *
+ * Then we can unset the requirement that users must be logged in (because we
+ * can assume that the account will be created).
+ */
+function course_uc_course_access_alter(&$hooks, $op, $node, $account) {
+  if ($op == 'enroll' && $node->sell_price > 0 && variable_get('uc_checkout_anonymous', 1)) {
+    unset($hooks['course_noanon']);
+  }
 }
