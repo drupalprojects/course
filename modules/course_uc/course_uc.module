@@ -533,7 +533,7 @@ function course_uc_default_rules_configuration() {
  * can assume that the account will be created).
  */
 function course_uc_course_access_alter(&$hooks, $op, $node, $account) {
-  if ($op == 'enroll' && !empty($node->sell_price) && variable_get('uc_checkout_anonymous', 1)) {
+  if ($op == 'enroll' && !empty($node->sell_price) && $node->sell_price > 0 && variable_get('uc_checkout_anonymous', 1)) {
     unset($hooks['course_noanon']);
   }
 }
