@@ -2490,21 +2490,24 @@ function course_views_bulk_operations_object_info() {
 /**
  * Load a course report entry, by report entry ID or node/user object.
  *
- * @return object
- *   An object representation of a course report.
+ * @return CourseReport
+ *   An entity representation of a course report.
  */
 function course_report_load($mixed, $user = NULL) {
   if (is_object($mixed)) {
-    $result = db_query('SELECT cr.* FROM {course_report} cr WHERE nid = :nid AND uid = :uid', array(':nid' => $mixed->nid, ':uid' => $user->uid));
-    return $result->fetch();
+    $entities = entity_load('course_report', FALSE, array('nid' => $mixed->nid, 'uid' => $user->uid));
+    if ($entities) {
+      return reset($entities);
+    }
   }
   elseif (is_numeric($user)) {
-    $result = db_query('SELECT cr.* FROM {course_report} cr WHERE nid = :nid AND uid = :uid', array(':nid' => $mixed, ':uid' => $user));
-    return $result->fetch();
+    $entities = entity_load('course_report', FALSE, array('nid' => $mixed, 'uid' => $user));
+    if ($entities) {
+      return reset($entities);
+    }
   }
   else {
-    $result = db_query('SELECT cr.* FROM {course_report} cr WHERE crid = :crid', array(':crid' => $mixed));
-    return $result->fetch();
+    return entity_load_single('course_report', $mixed);
   }
 }
 
