@@ -1444,6 +1444,7 @@ function course_enrollment_save($enrollment) {
   if ($enrollment->nid && $enrollment->uid) {
     if ($eid = db_query('SELECT eid FROM {course_enrollment} WHERE nid = :nid AND uid = :uid', array(':nid' => $enrollment->nid, ':uid' => $enrollment->uid))->fetchField()) {
       $enrollment->eid = $eid;
+      unset($enrollment->is_new);
     }
     if (!isset($enrollment->type)) {
       $node = node_load($enrollment->nid);
