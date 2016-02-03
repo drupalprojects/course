@@ -26,9 +26,11 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
     }
     else {
       // Viewing a product that is part of another course.
-      $courseNode = course_get_context('course_uc', 'payment', $node->nid);
-      if (course_node_is_course($courseNode) && $course = course_get_course($courseNode, $user)) {
-        foreach ($course->getObjects() as $idx => $courseObject) {
+      $courseObject = course_get_course_object('course_uc', 'payment', $node->nid);
+      $course = course_get_course($courseObject->getNode(), $user);
+
+      if ($course) {
+        foreach ($course->getObjects() as $courseObject) {
           if ($courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
             if ($courseObject->getFulfillment()->isComplete()) {
               // User already purchased.
