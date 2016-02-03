@@ -1150,7 +1150,7 @@ function course_update_7135() {
   while ($row = $result->fetch()) {
     $data = unserialize($row->data);
 
-    if (isset($data['plugins']['access']['grade']['course_grade']) && (!empty($data['plugins']['access']['grade']['course_grade']) || $data['plugins']['access']['grade']['course_grade'] == 0)) {
+    if (isset($data['plugins']['access']['grade']['course_grade']) && (!empty($data['plugins']['access']['grade']['course_grade']) || $data['plugins']['access']['grade']['course_grade'] == '0')) {
       // Get old value
       $course_grade = $data['plugins']['access']['grade']['course_grade'];
 
