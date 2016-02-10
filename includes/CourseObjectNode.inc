@@ -416,7 +416,7 @@ abstract class CourseObjectNode extends CourseObject {
    */
   function setInstanceId($id) {
     parent::setInstanceId($id);
-    $this->node = node_load($id);
+    $this->node = node_load($id, NULL, TRUE);
   }
 
   /**
