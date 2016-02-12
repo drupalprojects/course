@@ -67,7 +67,7 @@ function course_object_reports_page($node) {
 
   $render['#rows'] = array('data' => $rows);
   $render['#theme'] = 'table';
-  $render['#attributes'] = array('attributes' => array('id' => 'course-object-reports'));
+  $render['#attributes'] = array('id' => 'course-object-reports');
 
   return $render;
 }
