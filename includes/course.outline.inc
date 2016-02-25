@@ -411,6 +411,9 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
   // Clear the editing session.
   unset($_SESSION['course'][$node->nid]['editing']);
 
+  // Save the node to clear any caches.
+  node_save($node);
+
   drupal_set_message('Updated course.');
 
   $form_state['redirect'] = "node/$node->nid/course-outline";
