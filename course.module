@@ -2960,6 +2960,7 @@ function course_entity_property_info_alter(&$info) {
   $info['course']['properties']['nid']['type'] = 'node';
   $info['course']['properties']['nid']['required'] = TRUE;
   $info['course']['properties']['open']['type'] = 'date';
+  $info['course']['properties']['duration']['type'] = 'duration';
 
   $info['course_enrollment']['properties']['created']['type'] = 'date';
   $info['course_enrollment']['properties']['enroll_end']['type'] = 'date';
