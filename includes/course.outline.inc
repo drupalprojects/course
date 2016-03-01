@@ -179,15 +179,17 @@ function course_outline_overview_form($form, &$form_state) {
     '#weight' => 10,
   );
 
+  $form['actions']['#type'] = 'actions';
+
   // Submit and reset buttons.
-  $form['submit'] = array(
+  $form['actions']['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Save outline'),
     '#submit' => array('course_outline_overview_form_submit'),
   );
 
   if (!empty($_SESSION['course'][$node->nid]['editing'])) {
-    $form['reset'] = array(
+    $form['actions']['reset'] = array(
       '#type' => 'submit',
       '#value' => t('Revert'),
       '#submit' => array('course_outline_overview_form_reset'),
