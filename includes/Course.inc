@@ -174,22 +174,25 @@ class Course extends CourseHandler {
    * @return CourseObject[]
    *   An array of course objects.
    */
-  public function getObjects($flush = FALSE) {
+  public function getObjects() {
     $courseObjects = array();
 
-    $sql = 'SELECT coid FROM {course_outline} co
-        WHERE nid = %d
-        ORDER BY weight ASC';
-    $result = db_query('SELECT * FROM {course_outline} co
-        WHERE nid = :nid
-        ORDER BY weight ASC', array(':nid' => $this->getNode()->nid));
+    $efq = new EntityFieldQuery;
+    $result = $efq->entityCondition('entity_type', 'course_object')
+      ->propertyCondition('nid', $this->getNode()->nid)
+      ->propertyOrderBy('weight')
+      ->execute();
 
-    while ($row = $result->fetch()) {
-      if ($courseObject = entity_load_single('course_object', $row->coid)) {
-        /** @deprecated do not use set|getUser() */
-        $courseObject->setUser($this->getUser());
-        $courseObjects[] = $courseObject;
+    if (!empty($result['course_object'])) {
+      if ($courseObjects = entity_load('course_object', array_keys($result['course_object']))) {
+        foreach ($courseObjects as $courseObject) {
+          /** @deprecated do not use set|getUser() */
+          $courseObject->setUser($this->getUser());
+        }
       }
+
+      // Zero index the array.
+      $courseObjects = array_values($courseObjects);
     }
 
     return $courseObjects;
