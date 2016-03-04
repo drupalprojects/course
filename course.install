@@ -851,7 +851,7 @@ function course_update_6133() {
 /**
  * Give course objects and fulfillments UUIDs.
  */
-function course_update_6134() {
+function course_update_uuid() {
   $uuid_field = array(
     'type' => 'varchar',
     'length' => 36,
@@ -868,13 +868,13 @@ function course_update_6134() {
   $sql = "SELECT * FROM {course_outline}";
   $result = db_query($sql);
   while ($row = $result->fetch()) {
-    db_query("update {course_outline} set uuid = :uuid where snid = :snid", array(':uuid' => uuid_generate(), ':snid' => $row->snid));
+    db_query("update {course_outline} set uuid = :uuid where coid = :coid", array(':uuid' => uuid_generate(), ':coid' => $row->coid));
   }
 
   $sql = "SELECT * FROM {course_outline_fulfillment}";
   $result = db_query($sql);
   while ($row = $result->fetch()) {
-    db_query("update {course_outline_fulfillment} set uuid = :uuid where sfid = :sfid", array(':uuid' => uuid_generate(), ':sfid' => $row->sfid));
+    db_query("update {course_outline_fulfillment} set uuid = :uuid where cofid = :cofid", array(':uuid' => uuid_generate(), ':cofid' => $row->cofid));
   }
 
   db_add_unique_key('course_outline', 'uuid', array('uuid'));
@@ -946,6 +946,8 @@ function course_update_6135() {
     'not null' => TRUE,
     'unsigned' => TRUE,
   ));
+
+  course_update_uuid();
 
   return t('Updated schema naming conventions.');
 }
