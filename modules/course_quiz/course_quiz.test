@@ -1,7 +1,5 @@
 <?php
 
-require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
-
 /**
  * Tests for quiz Course objects.
  */
@@ -49,7 +47,7 @@ class CourseObjectQuizTestCase extends CourseTestCase {
     $this->drupalPost(NULL, array(
       'body[und][0][value]' => 'Test question',
       'correct_answer' => 1,
-    ), t('Save'));
+      ), t('Save'));
 
     // Makes tests work against 7.x-4.x and 7.x-5.x. Node ID of the question is 3.
     $answer_element = (course_quiz_quiz_version() >= 5) ? "question[3]" : "tries";
@@ -62,7 +60,7 @@ class CourseObjectQuizTestCase extends CourseTestCase {
     $this->assertFalse($co1->getFulfillment()->isComplete(), 'Check that quiz fulfillment is not complete after fail.');
     $this->drupalPost(NULL, array(
       $answer_element => 0,
-    ), t('Finish'));
+      ), t('Finish'));
 
     // Reload because something happened in the DB.
     $co1 = course_get_course_object_by_id($co1->getId(), $this->quiz_admin);
@@ -72,10 +70,11 @@ class CourseObjectQuizTestCase extends CourseTestCase {
     $this->drupalGet("node/{$quizNode->nid}/take");
     $this->drupalPost(NULL, array(
       $answer_element => 1,
-    ), t('Finish'));
+      ), t('Finish'));
 
     // Reload because something happened in the DB.
     $co1 = course_get_course_object_by_id($co1->getId(), $this->quiz_admin);
     $this->assertTrue($co1->getFulfillment()->isComplete(), 'Check that quiz fulfillment is complete.');
   }
+
 }

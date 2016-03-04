@@ -1,6 +1,5 @@
 <?php
 
-require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
 // Fix for #824232 and testbot.
 module_load_include('inc', 'signup', 'includes/scheduler');
 

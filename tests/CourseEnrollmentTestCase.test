@@ -1,7 +1,5 @@
 <?php
 
-require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
-
 /**
  * Tests for Course enrollment
  */
@@ -36,7 +34,6 @@ class CourseEnrollmentTestCase extends CourseTestCase {
     $this->assertTrue($enroll->eid > 0, 'Enrollment was created.');
     $this->assertTrue($enroll->created > 0, 'Enrollment has a creation timestamp.');
     //$this->assertFalse($enroll->timestamp > 0, 'Check that user has not started course.');
-
     // Take the course
     course_take_course($courseNode);
     $enroll = course_enrollment_load($courseNode, $user);

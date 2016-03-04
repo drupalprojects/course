@@ -1,7 +1,5 @@
 <?php
 
-require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
-
 /**
  * Tests for content Course objects.
  */
@@ -43,4 +41,5 @@ class CourseObjectContentTestCase extends CourseTestCase {
       $this->assertEqual($node->type, $ct1->type, "Node type saved is the same node type specified by the course object.");
     }
   }
+
 }

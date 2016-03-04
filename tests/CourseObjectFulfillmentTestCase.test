@@ -1,7 +1,5 @@
 <?php
 
-require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/tests/CourseTestCase.test';
-
 /**
  * Description of CourseFulfillmentObjectTestCase
  */
