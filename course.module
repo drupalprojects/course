@@ -2284,16 +2284,6 @@ function course_enroll_access($node, $account = NULL, $flush = FALSE, $all = FAL
  * Block enrollments when a course has either not yet started or is expired.
  */
 function course_course_access($op, $node, $user) {
-  if (!user_access('access course')) {
-    return array(
-      'course_noperm' => array(
-        'success' => FALSE,
-        'header' => '',
-        'message' => t('You are not allowed to take courses.'),
-        'weight' => 300,
-    ));
-  }
-
   $enrollment = course_enrollment_load($node->nid, $user->uid);
 
   if ($op == 'enroll') {
@@ -2323,6 +2313,16 @@ function course_course_access($op, $node, $user) {
             '!login' => l(t('login'), 'user/login', $options),
             '!register' => l(t('register'), 'user/register', $options),
           )),
+          'weight' => 300,
+      ));
+    }
+
+    if (!user_access('access course', $user)) {
+      return array(
+        'course_noperm' => array(
+          'success' => FALSE,
+          'header' => '',
+          'message' => t('You are not allowed to take courses.'),
           'weight' => 300,
       ));
     }
