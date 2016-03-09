@@ -179,7 +179,7 @@ function course_outline_overview_form($form, &$form_state) {
     '#weight' => 10,
   );
 
-  $form['actions'] = array('#type' => 'actions');
+  $form['actions']['#type'] = 'actions';
 
   // Submit and reset buttons.
   $form['actions']['submit'] = array(

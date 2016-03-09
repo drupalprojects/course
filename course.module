@@ -2297,6 +2297,14 @@ function course_course_access($op, $node, $user) {
   $enrollment = course_enrollment_load($node->nid, $user->uid);
 
   if ($op == 'enroll') {
+    if (!node_access('view', $node)) {
+      return array('course_denied' => array(
+          'success' => FALSE,
+          'header' => t('Access denied'),
+          'message' => t('You do not have permission to enroll into this course'),
+      ));
+    }
+
     if (!empty($node->course['live_from_date']) && REQUEST_TIME > $node->course['live_from_date']) {
       return array('course_live_started' => array(
           'success' => FALSE,
@@ -2316,14 +2324,6 @@ function course_course_access($op, $node, $user) {
             '!register' => l(t('register'), 'user/register', $options),
           )),
           'weight' => 300,
-      ));
-    }
-
-    if (!node_access('view', $node)) {
-      return array('course_denied' => array(
-          'success' => FALSE,
-          'header' => t('Access denied'),
-          'message' => t('You do not have permission to enroll into this course.'),
       ));
     }
   }
