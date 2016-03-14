@@ -1716,21 +1716,23 @@ function course_views_api() {
 function course_field_extra_fields() {
   $extra = array();
   foreach (entity_get_info() as $entity_type => $entity_info) {
-    foreach (array_keys($entity_info['bundles']) as $bundle) {
-      if (in_array($bundle, course_get_types())) {
-        $extra[$entity_type][$bundle]['form']['course'] = array(
-          'label' => t('Course'),
-          'description' => t('Course form elements.'),
-          'weight' => 0,
-        );
-        $extra[$entity_type][$bundle]['display']['course'] = array(
-          'label' => t('Take course link'),
-          'weight' => 0,
-        );
-        $extra[$entity_type][$bundle]['display']['course_messages'] = array(
-          'label' => t('Course messages'),
-          'weight' => 0,
-        );
+    if ($entity_type == 'node') {
+      foreach (array_keys($entity_info['bundles']) as $bundle) {
+        if (in_array($bundle, course_get_types())) {
+          $extra[$entity_type][$bundle]['form']['course'] = array(
+            'label' => t('Course'),
+            'description' => t('Course form elements.'),
+            'weight' => 0,
+          );
+          $extra[$entity_type][$bundle]['display']['course'] = array(
+            'label' => t('Take course link'),
+            'weight' => 0,
+          );
+          $extra[$entity_type][$bundle]['display']['course_messages'] = array(
+            'label' => t('Course messages'),
+            'weight' => 0,
+          );
+        }
       }
     }
   }
