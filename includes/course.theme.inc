@@ -14,25 +14,6 @@ function theme_course_outline($variables) {
 }
 
 /**
- * Theme a course outline item.
- */
-function theme_course_outline_item($variables) {
-  $output = '';
-  $step = $variables['step'];
-  $img = $variables['img'];
-  $object = $variables['object'];
-
-  if (empty($step['link'])) {
-    $output = $object->getTitle() . '<br/><span class="course-outline-status">' . $step['status'] . '</span>';
-  }
-  else {
-    $output = $img . ' ' . l("{$object->getTitle()}<br/>", $step['link'], array('html' => TRUE)) . '<span class="course-outline-status">' . $step['status'] . '</span>';
-  }
-
-  return $output;
-}
-
-/**
  * Generate a button for taking the course.
  */
 function theme_course_take_course_button($variables) {

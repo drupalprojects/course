@@ -438,55 +438,13 @@ function course_outline_list($node) {
   $prev_obj = NULL;
   $img = NULL;
   foreach ($course->getObjects() as $key => $courseObject) {
-    $step = array();
-    $step['id'] = 'course-object-' . $courseObject->getId();
-    $step['image'] = 'misc/menu-collapsed.png';
-    $step['status'] = '';
-
-    if (!$courseObject->access('see')) {
-      continue;
-    }
-    if ($courseObject->access('take')) {
-      // User can take this course object.
-      $step['link'] = $courseObject->getUrl();
-      $step['class'][] = 'accessible';
-      $step['status'] = t('Not started');
-
-      // Step is complete.
-      if ($courseObject->getFulfillment()->isComplete()) {
-        $step['class'][] = 'completed';
-        $step['status'] = t('Complete');
-        $step['image'] = 'misc/watchdog-ok.png';
-      }
-      elseif ($courseObject->getFulfillment()->getId()) {
-        $step['status'] = t('In progress');
-        $step['class'][] = 'in-progress';
-        $step['image'] = 'misc/menu-collapsed.png';
-      }
-      if ($course->getActive() === $courseObject) {
-        $step['class'][] = 'active';
-      }
-    }
-    else {
-      // User cannot access this step yet.
-      $step['class'] = array('not-accessible');
-      $step['status'] = implode('<br/>', $courseObject->getAccessMessages());
-    }
-
-    if ($courseObject->isRequired()) {
-      $step['class'][] = 'required';
-    }
-
-    $step['class'][] = drupal_html_class($courseObject->getComponent() . '_' . $courseObject->getModule());
-
-    $img = theme('image', array('path' => $step['image']));
-
-    $data = theme('course_outline_item', array('step' => $step, 'img' => $img, 'object' => $courseObject));
+    $entity = entity_load_single('course_object', $courseObject->getId());
+    $view = entity_view('course_object', array($entity));
+    $data = drupal_render($view);
 
     $item = array(
       'data' => $data,
-      'id' => $step['id'],
-      'class' => $step['class'],
+      'id' => $courseObject->getId(),
     );
 
     // Allow other modules to modify this list item.
@@ -500,8 +458,9 @@ function course_outline_list($node) {
   }
 
   if ($course->getTracker()->getOption('complete')) {
+    $img = theme('image', array('path' => 'misc/watchdog-ok.png'));
     $workflow[] = array(
-      'data' => $img . ' ' . l(t('Complete'), "node/$node->nid/course-complete", array('html' => TRUE)),
+      'data' => $img . l(t('Complete'), "node/$node->nid/course-complete", array('html' => TRUE)),
       'id' => 'complete',
     );
   }

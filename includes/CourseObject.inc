@@ -199,13 +199,13 @@ abstract class CourseObject extends CourseHandler {
     $form['header']['#markup'] = t("<h2>Settings for %t</h2>", array('%t' => $this->getTitle()));
 
     $form['uniqid'] = array(
-      '#type' => 'hidden',
-      '#value' => arg(4),
+      '#type' => 'value',
+      '#value' => $this->getId(),
     );
 
     $form['nid'] = array(
-      '#type' => 'hidden',
-      '#value' => arg(1),
+      '#type' => 'value',
+      '#value' => $this->getCourseNid(),
     );
 
     $form['course_tabs']['#type'] = 'vertical_tabs';
