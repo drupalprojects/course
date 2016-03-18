@@ -26,7 +26,7 @@ class CourseGradeTestCase extends CourseTestCase {
     // Reload the course from DB.
     $course = course_get_course($courseNode, $this->student_user);
     $courseObjects = $course->getObjects();
-    $co1 = $courseObjects[0];
+    $co1 = reset($courseObjects);
 
     course_enroll($courseNode, $this->student_user);
 
@@ -58,7 +58,7 @@ class CourseGradeTestCase extends CourseTestCase {
 
     // Reload the course from DB.
     $course = course_get_course($courseNode, $this->student_user, TRUE);
-    $courseObjects = $course->getObjects();
+    $courseObjects = array_values($course->getObjects());
     $co1 = $courseObjects[0];
     $co2 = $courseObjects[1];
 

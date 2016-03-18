@@ -29,7 +29,7 @@ class CourseObjectAccessTestCase extends CourseTestCase {
     $user = $this->student_user;
     $course = course_get_course($courseNode, $user, TRUE);
 
-    $co = $course->getObjects();
+    $co = array_values($course->getObjects());
 
     // Student should not be able to access any objects.
     $this->assertFalse($co[0]->access('take', $user), 'Check that object 1 is not accessible.');
@@ -75,7 +75,7 @@ class CourseObjectAccessTestCase extends CourseTestCase {
     $user = $this->student_user;
     $course = course_get_course($courseNode, $user, TRUE);
 
-    $co = $course->getObjects();
+    $co = array_values($course->getObjects());
 
     course_enroll($courseNode, $user);
 
@@ -110,7 +110,7 @@ class CourseObjectAccessTestCase extends CourseTestCase {
     $user = $this->student_user;
     $course = course_get_course($courseNode, $user, TRUE);
 
-    $co = $course->getObjects();
+    $co = array_values($course->getObjects());
 
     course_enroll($courseNode, $user);
 

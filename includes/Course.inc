@@ -190,9 +190,6 @@ class Course extends CourseHandler {
           $courseObject->setUser($this->getUser());
         }
       }
-
-      // Zero index the array.
-      $courseObjects = array_values($courseObjects);
     }
 
     return $courseObjects;

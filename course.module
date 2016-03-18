@@ -830,14 +830,6 @@ function course_node_load($nodes, $types) {
   $result = db_query('SELECT * FROM {course_node} WHERE nid IN (:nids)', array(':nids' => array_keys($nodes)));
   while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
     $nodes[$row['nid']]->course = $row;
-    $nodes[$row['nid']]->course['objects'] = array();
-  }
-
-  $result = db_query("SELECT * FROM {course_outline}
-    WHERE nid IN (:nids)
-    ORDER BY weight ASC", array(':nids' => array_keys($nodes)));
-  while ($row = $result->fetch()) {
-    $nodes[$row->nid]->course['objects'][$row->coid] = $row;
   }
 }
 
@@ -874,7 +866,7 @@ function course_node_delete($node) {
 /**
  * Saves course objects.
  *
- * @param array $objects
+ * @param CourseObject[] $objects
  *   An array of course object definitions.
  * @param Course $course
  *   (optional) An instantiated Course, from course_get_course().
@@ -887,7 +879,7 @@ function course_save_objects(array $objects, Course $course = NULL) {
       if ($object->nid != $course->getNode()->nid) {
         // We are importing or cloning. Ensure the necessary keys are empty,
         // in order to prepare a new object using this object's definitions.
-        $unset = array('coid', 'nid', 'uuid');
+        $unset = array('coid', 'nid', 'uuid', 'uniqid');
         foreach ($unset as $key) {
           if (isset($object->{$key})) {
             unset($object->{$key});
@@ -897,36 +889,10 @@ function course_save_objects(array $objects, Course $course = NULL) {
         // Replace the nid key, to properly associate the current course node
         // with this course object.
         $object->nid = $course->getNode()->nid;
-
-        // Clean out serialized data field.
-        $unset_data_keys = array('uniqid', 'uuid');
-        if (isset($object->data) && $data = unserialize($object->data)) {
-          foreach ($unset_data_keys as $key) {
-            if (isset($data[$key])) {
-              unset($data[$key]);
-            }
-          }
-          $object->data = serialize($data);
-        }
       }
     }
 
-    // Set options for this object.
-    if ($prepareObject = course_get_course_object($object, NULL, NULL, NULL, $course)) {
-      $available_options = $prepareObject->getOptions();
-      $options = array();
-      foreach ($object as $key => $value) {
-        // Check if this key is a valid option.
-        if (isset($available_options[$key])) {
-          $options[$key] = $value;
-        }
-      }
-      // Set the options.
-      $prepareObject->setOptions($options);
-
-      // Save the object, creating new instances, if applicable.
-      $prepareObject->save();
-    }
+    $object->save();
   }
 }
 

@@ -216,8 +216,10 @@ function course_uc_course_enrollment_insert($enrollment) {
  * @return bool
  */
 function course_uc_payment_is_first($course) {
-  foreach ($course->getObjects() as $idx => $courseObject) {
-    if ($idx == 0 && $courseObject->getComponent() == 'payment') {
+  $courseObjects = $course->getObjects();
+  $first = reset($courseObjects);
+  foreach ($courseObjects as $courseObject) {
+    if (($first->identifier() == $courseObject->identifier()) && $courseObject->getComponent() == 'payment') {
       return TRUE;
     }
   }
@@ -372,8 +374,10 @@ function course_uc_enroll_user_in_ordered_courses($order) {
       // This product is also a course object, other than the first one.
       // Satisfy it!
       $course = course_get_course($courseNode, $account);
-      foreach ($course->getObjects() as $idx => $courseObject) {
-        if ($idx != 0 && $courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
+      $courseObjects = $course->getObjects();
+      $first = reset($courseObjects);
+      foreach ($course->getObjects() as $courseObject) {
+        if (($first->identifier() != $courseObject->identifier()) && $courseObject->getComponent() == 'payment' && $courseObject->getInstanceId() == $node->nid) {
           // Found the course object that matched the instance (product).
           $courseObject->getFulfillment()->setComplete(TRUE)->save();
         }
@@ -476,8 +480,10 @@ function course_uc_course_access($op, $node, $user) {
     // Now we have to check that even if the course has a price, that the
     // payment object is first (to block enrollments). If the course is $0 and
     // there are no payment objects, we assume the enrollment is blocked.
-    foreach ($course->getObjects() as $idx => $courseObject) {
-      $first_object = ($idx == 0);
+    $courseObjects = $course->getObjects();
+    $first = reset($courseObjects);
+    foreach ($courseObjects as $courseObject) {
+      $first_object = ($courseObject->identifier() == $first->identifier());
       $is_payment = ($courseObject->getComponent() == 'payment');
       if ($is_payment && $first_object) {
         $product = node_load($courseObject->getInstanceId());

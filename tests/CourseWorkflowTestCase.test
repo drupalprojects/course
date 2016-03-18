@@ -50,7 +50,7 @@ class CourseWorkflowTestCase extends CourseTestCase {
     // Refresh the course because we made browser calls above.
     $course = course_get_course($courseNode, $this->learner, TRUE);
 
-    $objects = $course->getObjects();
+    $objects = array_values($course->getObjects());
     // Set the first object complete.
     $objects[0]->getFulfillment()->setComplete(1)->save();
     $this->drupalGet("node/$courseNode->nid/takecourse");
@@ -70,7 +70,7 @@ class CourseWorkflowTestCase extends CourseTestCase {
     // @kludge: the below two lines shouldn't be necessary, but something is
     // happening with object sharing
     $course = course_get_course($courseNode, $this->learner, TRUE);
-    $objects = $course->getObjects();
+    $objects = array_values($course->getObjects());
 
     $objects[1]->getFulfillment()->setComplete(1)->save();
     $this->drupalGet("node/$courseNode->nid/takecourse");

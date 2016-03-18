@@ -91,7 +91,7 @@ abstract class CourseObject extends CourseHandler {
         if (!course_enrollment_check($this->getCourseNid(), $account->uid) || !$result['success']) {
           return FALSE;
         }
-        else if ($courseObjects[0]->getId() == $this->getId()) {
+        else if (reset($courseObjects)->getId() == $this->getId()) {
           // User is enrolled. Grant access if first object.
           $access = TRUE;
         }

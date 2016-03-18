@@ -79,8 +79,8 @@ function course_outline_overview_form($form, &$form_state) {
   if (!empty($_SESSION['course'][$node->nid]['editing'])) {
     $objects = $_SESSION['course'][$node->nid]['editing'];
   }
-  else if (!empty($node->course['objects'])) {
-    $objects = $node->course['objects'];
+  else if ($objects = $course->getObjects()) {
+    // Great.
   }
   else {
     $objects = array();

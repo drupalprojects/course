@@ -68,6 +68,7 @@ class CourseObjectController extends EntityAPIController {
             $courseObject->setOption($field, $value);
           }
         }
+        unset($courseObject->$serialized_field);
       }
     }
     return $entities;
