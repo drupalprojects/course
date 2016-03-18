@@ -489,84 +489,93 @@ function course_completion_page($course_node) {
   // Render array.
   $page = array();
 
-  if ($report->complete) {
-    $page['course_completion_header'] = array(
-      '#prefix' => '<p>',
-      '#suffix' => '</p>',
-      '#markup' => t('Thank you for participating in this course.'),
-    );
+  // Links.
+  $links = array();
 
-    $links = array(
-      'course' => array(
-        t('Return to course'),
-        "node/$course_node->nid",
-        t('Return to the course to view course details and material.'),
-      ),
-    );
+  $links['course'] = array(
+    t('Return to course'),
+    "node/$course_node->nid/takecourse",
+    t('Return to the course to view course details and material.'),
+  );
+
+  if ($report->getOption('complete')) {
     // Allow modules to add links to the course completion landing page, such as
     // post-course actions.
     drupal_alter('course_outline_completion_links', $links, $course_node, $account);
   }
   else {
-    drupal_set_title(t('Remaining requirements'));
-
-    $page['course_completion_header'] = array(
-      '#prefix' => '<p>',
-      '#suffix' => '</p>',
-      '#markup' => t('You must complete the remaining requirements to complete this course.'),
-    );
-
-    $course = course_get_course($course_node, $account);
-    $objects = $course->getObjects();
-    $requirements_outstanding = array();
-    foreach ($objects as $courseObject) {
-      // Find required course objects the user has not yet completed.
-      if ($courseObject->getOption('required') && !$courseObject->getOption('complete')) {
-        $requirements_outstanding[$courseObject->getId()] = $courseObject->getFulfillment();
-      }
-    }
-
-    $items = array();
-    foreach ($requirements_outstanding as $req) {
-      $status_css = $req->isComplete() ? 'complete' : 'incomplete';
-      $status_img = $req->isComplete() ? 'ok' : ($req->getCourseObject()->isRequired() ? 'error' : 'warning');
-      $status_optional = ($status_img == 'warning') ? ' (optional)' : '';
-      $items[] = array(
-        array(
-          'data' => theme('image', array('path' => "misc/watchdog-{$status_img}.png", 'width' => '', 'height' => '', 'alt' => $status_css)),
-          'width' => 20,
-        ),
-        $req->getCourseObject()->getTitle() . $status_optional . '<br/>' . $req->getCourseObject()->getStatus(),
-      );
-    }
-
-    $page['course_completion_requirements'] = array(
-      '#theme' => 'table',
-      '#header' => NULL,
-      '#rows' => $items,
-    );
-
-    $links = array(
-      'course' => array(t('Return to course'),
-        "node/$course_node->nid/takecourse",
-        t('Return to the course to view course details and material.'),
-      ),
-    );
-
-    // Allow modules to alter remaining requirement links on the course
-    // completion landing page.
     drupal_alter('course_outline_incomplete_links', $links, $course_node, $account);
   }
+
+
+  drupal_set_title($report->getOption('complete') ? t('Course complete') : t('Remaining requirements'));
+
+  $course = course_get_course($course_node, $account);
+  $objects = $course->getObjects();
+  $items = array();
+  foreach ($objects as $courseObject) {
+    if ($courseObject->access('see')) {
+      // Find required course objects the user has not yet completed.
+      $req = $courseObject->getFulfillment();
+      $status_css = $req->isComplete() ? 'complete' : 'incomplete';
+      $status_img = $req->isComplete() ? 'ok' : ($req->getCourseObject()->isRequired() ? 'error' : 'warning');
+      $status_class = 'course-complete-item-' . $status_img;
+      $status_optional = ($status_img == 'warning') ? ' (optional)' : ' (required)';
+      if ($courseObject->access('take')) {
+        $link = l($req->getCourseObject()->getTitle(), $courseObject->getUrl());
+      }
+      else {
+        $link = $req->getCourseObject()->getTitle();
+      }
+      $items[] = array(
+        'data' => array(
+          array(
+            'data' => theme('image', array('path' => "misc/watchdog-{$status_img}.png", 'width' => '', 'height' => '', 'alt' => $status_css)),
+            'width' => 20,
+            'class' => array('course-complete-item-status'),
+          ),
+          array(
+            'data' => $link . $status_optional . '<br/>' . $req->getCourseObject()->getStatus(),
+            'class' => array('course-complete-item-title'),
+          ),
+        ),
+        'class' => array($status_class),
+      );
+    }
+  }
+
+  if ($report->getOption('complete')) {
+    $message = t('You have completed the course. Use the links below to review the course content.');
+  }
+  else {
+    $message = t('This course is not complete. Use the links below to access the remaining course content.');
+  }
+
+  $page['course_header'] = array(
+    '#type' => 'item',
+    '#title' => t('Thank you for participating in this course.'),
+    '#description' => $message,
+    '#weight' => 1,
+  );
+
+  $page['course_completion_requirements'] = array(
+    '#theme' => 'table',
+    '#header' => NULL,
+    '#rows' => $items,
+    '#weight' => 3,
+    '#attributes' => array('class' => array('course-complete-items')),
+  );
 
   foreach ($links as $key => $link) {
     $element = array(
       '#title' => l($link[0], $link[1], array('html' => TRUE)),
       '#description' => $link[2],
-      '#children' => '',
-      '#theme' => 'form_element',
+      '#type' => 'item',
     );
     $page['course_links'][$key] = $element;
   }
+
+  $page['course_links']['#weight'] = 2;
 
   return $page;
 }

@@ -148,7 +148,6 @@ function course_menu() {
     'access callback' => TRUE,
     'page arguments' => array(1),
     'page callback' => 'course_completion_page',
-    'type' => MENU_CALLBACK,
     'file' => 'includes/course.outline.inc',
   );
 
