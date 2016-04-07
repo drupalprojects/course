@@ -1010,4 +1010,69 @@ abstract class CourseObject extends CourseHandler {
     return $this->user;
   }
 
+  function buildContent($view_mode = 'full', $langcode = NULL) {
+    $content = parent::buildContent($view_mode, $langcode);
+
+    $step = array();
+    $step['id'] = 'course-object-' . $this->getId();
+    $step['image'] = 'misc/menu-collapsed.png';
+    $step['status'] = '';
+
+    if ($this->access('see')) {
+      if ($this->access('take')) {
+        // User can take this course object.
+        $step['link'] = $this->getUrl();
+        $step['class'][] = 'accessible';
+        $step['status'] = t('Not started');
+
+        // Step is complete.
+        if ($this->getFulfillment()->isComplete()) {
+          $step['class'][] = 'completed';
+          $step['status'] = t('Complete');
+          $step['image'] = 'misc/watchdog-ok.png';
+        }
+        elseif ($this->getFulfillment()->getId()) {
+          $step['status'] = t('In progress');
+          $step['class'][] = 'in-progress';
+          $step['image'] = 'misc/menu-collapsed.png';
+        }
+        if ($this->getCourse()->getActive() === $this) {
+          $step['class'][] = 'active';
+        }
+      }
+      else {
+        // User cannot access this step yet.
+        $step['class'] = array('not-accessible');
+        $step['status'] = implode('<br/>', $this->getAccessMessages());
+      }
+
+      if ($this->isRequired()) {
+        $step['class'][] = 'required';
+      }
+
+      $step['class'][] = drupal_html_class($this->getComponent() . '_' . $this->getModule());
+
+      $img = theme('image', array('path' => $step['image']));
+
+
+      $fields = field_extra_fields_get_display('course_object', 'course_object', $view_mode);
+      $content['course_outline_image'] = array(
+        '#markup' => $img,
+        '#weight' => $fields['course_outline_image']['weight'],
+      );
+      $content['course_outline_link'] = array(
+        '#markup' => $this->access('take') ? l($this->getTitle(), $this->getUrl()) : $this->getTitle(),
+        '#weight' => $fields['course_outline_link']['weight'],
+      );
+      $content['course_outline_status'] = array(
+        '#markup' => $step['status'],
+        '#weight' => $fields['course_outline_status']['weight'],
+        '#prefix' => '<div>',
+        '#suffix' => '</div>',
+      );
+    }
+
+    return $content;
+  }
+
 }
