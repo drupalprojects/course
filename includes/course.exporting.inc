@@ -29,6 +29,9 @@ function course_clone_warning_messages($course) {
       $messages[] = $warning;
     }
   }
+
+  $messages[] = t('Cloned course objects that reference an existing course object in this course will need to be updated to reference the newly cloned course object.');
+
   if ($messages) {
     drupal_set_message(filter_xss_admin(theme('item_list', array('items' => $messages, 'title' => t('Cloning issues')))), 'warning');
   }
