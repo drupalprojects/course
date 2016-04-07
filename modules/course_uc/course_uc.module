@@ -60,9 +60,11 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
           if ($instance['settings']['course_enrollment_user_field']) {
             // At least one field must be shown when enrolling. Display the user
             // enrollment form.
-            $enrollment->nid = $node->nid;
-            $enrollment->uid = $user->uid;
-            $enrollment->type = $node->course['enrollment_type'];
+            $enrollment = entity_create('course_enrollment', array(
+              'nid' => $node->nid,
+              'uid' => $user->uid,
+              'type' => $node->course['enrollment_type'],
+            ));
             $form['course_enrollment'] = array();
             $form['course_enrollment']['#tree'] = TRUE;
             $form['course_enrollment']['#parents'] = array('course_enrollment');
