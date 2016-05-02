@@ -1832,7 +1832,9 @@ function course_tokens($type, $tokens, array $data = array(), array $options = a
           $replacements[$tokens[$name]] = format_date($report->$name_parsed[0], $name_parsed[1], $name_parsed[1] == 'custom' && count($name_parsed) == 3 ? $name_parsed[2] : '');
         }
         else {
-          $replacements[$tokens[$name]] = $report->$name;
+          if(isset($report->$name)) {
+            $replacements[$tokens[$name]] = $report->$name;
+          }
         }
       }
     }
