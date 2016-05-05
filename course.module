@@ -1013,7 +1013,6 @@ function course_unenroll($node, $user) {
  *   TRUE if the user is enrolled, FALSE otherwise.
  */
 function course_enrollment_check($nid, $uid) {
-  $sql_check = "SELECT 1 FROM {course_enrollment} WHERE nid = %d AND uid = %d AND status = %d";
   $query = db_query("SELECT 1 FROM {course_enrollment} WHERE nid = :nid AND uid = :uid AND status = :status", array(':nid' => $nid, ':uid' => $uid, ':status' => 1));
   return $query->fetchField() > 0;
 }
@@ -2403,7 +2402,6 @@ function course_report_save($entry) {
   // Load user so we can serialize it.
   $account = user_load($entry->uid);
 
-  $sql = "SELECT * FROM {course_report} WHERE nid = %d AND uid = %d";
   $result = db_query("SELECT * FROM {course_report} WHERE nid = :nid AND uid = :uid", array(':nid' => $entry->nid, ':uid' => $entry->uid));
   $old = $result->fetch();
 
@@ -2555,7 +2553,6 @@ function course_outline_delete_object($mixed) {
   entity_delete('course_object', $mixed['coid']);
 
   // Delete the object's fulfillments.
-  $sql = "DELETE FROM {course_outline_fulfillment} WHERE coid = %d";
   db_delete('course_outline_fulfillment')
     ->condition('coid', $mixed['coid'])
     ->execute();
