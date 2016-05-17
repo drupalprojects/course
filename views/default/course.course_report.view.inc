@@ -121,6 +121,8 @@ $handler->display->display_options['arguments']['nid']['default_argument_type'] 
 $handler->display->display_options['arguments']['nid']['summary']['format'] = 'default_summary';
 $handler->display->display_options['arguments']['nid']['specify_validation'] = TRUE;
 $handler->display->display_options['arguments']['nid']['validate']['type'] = 'course';
+$handler->display->display_options['arguments']['nid']['validate_options']['access'] = TRUE;
+$handler->display->display_options['arguments']['nid']['validate_options']['access_op'] = 'update';
 $handler->display->display_options['arguments']['nid']['break_phrase'] = TRUE;
 /* Filter criterion: Course report: Course date completed */
 $handler->display->display_options['filters']['date_completed']['id'] = 'date_completed';
@@ -142,6 +144,8 @@ $handler->display->display_options['filters']['course']['value'] = '1';
 /* Display: Course report */
 $handler = $view->new_display('page', 'Course report', 'page_1');
 $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
+$handler->display->display_options['defaults']['access'] = FALSE;
+$handler->display->display_options['access']['type'] = 'none';
 $handler->display->display_options['defaults']['arguments'] = FALSE;
 /* Contextual filter: Content: Nid */
 $handler->display->display_options['arguments']['nid']['id'] = 'nid';
@@ -155,6 +159,8 @@ $handler->display->display_options['arguments']['nid']['default_argument_type'] 
 $handler->display->display_options['arguments']['nid']['summary']['format'] = 'default_summary';
 $handler->display->display_options['arguments']['nid']['specify_validation'] = TRUE;
 $handler->display->display_options['arguments']['nid']['validate']['type'] = 'course';
+$handler->display->display_options['arguments']['nid']['validate_options']['access'] = TRUE;
+$handler->display->display_options['arguments']['nid']['validate_options']['access_op'] = 'update';
 $handler->display->display_options['path'] = 'node/%/course-reports/overview';
 $handler->display->display_options['menu']['type'] = 'default tab';
 $handler->display->display_options['menu']['title'] = 'Overview';
@@ -203,6 +209,8 @@ $handler->display->display_options['sitename_title'] = 0;
 /* Display: Export */
 $handler = $view->new_display('views_data_export', 'Export', 'views_data_export_2');
 $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
+$handler->display->display_options['defaults']['access'] = FALSE;
+$handler->display->display_options['access']['type'] = 'none';
 $handler->display->display_options['pager']['type'] = 'none';
 $handler->display->display_options['style_plugin'] = 'views_data_export_csv';
 $handler->display->display_options['style_options']['provide_file'] = 1;
