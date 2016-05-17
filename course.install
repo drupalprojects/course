@@ -400,6 +400,7 @@ function course_schema() {
     'primary key' => array('coid'),
     'indexes' => array(
       'nid' => array('nid'),
+      'instance' => array('instance'),
     ),
     'unique keys' => array(
       'uuid' => array('uuid'),
@@ -1200,4 +1201,14 @@ function course_update_7136() {
 function course_update_7137() {
   drupal_set_message('The "access course" permission has been added to the authenticated user role because it was not checked in previous releases of Course.', 'warning');
   user_role_grant_permissions(DRUPAL_AUTHENTICATED_RID, array('access course'));
+}
+
+/**
+ * Add an index on "instance".
+ */
+function course_update_7138() {
+  if (!db_index_exists('course_outline', 'instance')) {
+    db_add_index('course_outline', 'instance', array('instance'));
+  }
+  return t('Added index on "instance" column.');
 }
