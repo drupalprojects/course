@@ -43,6 +43,7 @@ files[] = tests/CourseOutlineUiTestCase.test
 files[] = tests/CourseTestCase.test
 files[] = tests/CourseWorkflowTestCase.test
 files[] = views/handlers/course_views_handler_relationship_ce_cr.inc
+files[] = views/handlers/course_views_handler_relationship_cr_ce.inc
 files[] = views/handlers/views_handler_filter_course.inc
 files[] = views/handlers/views_join_course.inc
 files[] = views/plugins/views_plugin_argument_validate_course.inc
