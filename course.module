@@ -2454,28 +2454,6 @@ function course_user_delete($account) {
 }
 
 /**
- * Implements hook_views_bulk_operations_object_info().
- *
- * Expose information about the course report and enrollment objects to VBO.
- */
-function course_views_bulk_operations_object_info() {
-  return array(
-    'course_report' => array(
-      'type' => 'course_report',
-      'base_table' => 'course_report',
-      'load' => 'course_report_load',
-      'title' => 'name',
-    ),
-    'course_enrollment' => array(
-      'type' => 'course_enrollment',
-      'base_table' => 'course_enrollment',
-      'load' => 'course_enrollment_load',
-      'title' => 'eid',
-    ),
-  );
-}
-
-/**
  * Load a course report entry, by report entry ID or node/user object.
  *
  * @return CourseReport
