@@ -1319,10 +1319,11 @@ function course_take_course($node) {
         // At least one field must be shown when enrolling. Display the user
         // enrollment form.
         if (empty($enrollment->type)) {
-          $enrollment = new stdClass;
-          $enrollment->nid = $node->nid;
-          $enrollment->uid = $user->uid;
-          $enrollment->type = $node->course['enrollment_type'];
+          $enrollment = entity_create('course_enrollment', array(
+            'nid' => $node->nid,
+            'uid' => $user->uid,
+            'type' => $node->course['enrollment_type'],
+          ));
         }
         $form = entity_ui_get_form('course_enrollment', $enrollment, 'edit');
         return $form;
