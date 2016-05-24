@@ -3156,12 +3156,3 @@ function course_enrollment_type_access($op, $entity = NULL, $account = NULL, $en
 function course_admin_access() {
   return user_access('administer course') || user_access('access course administration area');
 }
-
-/**
- * Generate URI from course object.
- */
-function course_object_uri($entity) {
-  return array(
-    'path' => 'node/' . $entity->nid . '/course-object/' . $entity->coid,
-  );
-}

@@ -1075,4 +1075,13 @@ abstract class CourseObject extends CourseHandler {
     return $content;
   }
 
+  /**
+   * Generate URI from course object.
+   */
+  public function uri() {
+    return array(
+      'path' => 'node/' . $this->nid . '/course-object/' . $this->identifier(),
+    );
+  }
+
 }
