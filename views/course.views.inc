@@ -11,7 +11,7 @@ function course_views_data_alter(&$data) {
     $data['course_enrollment']['course_report'] = array(
     'title' => 'Course report',
     'relationship' => array(
-      'base' => 'course_enrollment',
+      'base' => 'course_report',
       'handler' => 'course_views_handler_relationship_ce_cr',
       'label' => t('Course report'),
       'help' => t('Create a relationship from the course enrollment to the course report.'),
