@@ -846,6 +846,9 @@ function course_node_delete($node) {
     db_delete('course_enrollment')
       ->condition('nid', $node->nid)
       ->execute();
+    db_delete('course_report')
+      ->condition('nid', $node->nid)
+      ->execute();
     $query = db_select('course_outline', 'co');
     $query->join('course_outline_fulfillment', 'cof', 'co.coid = cof.coid');
     $result = $query
@@ -1831,7 +1834,7 @@ function course_tokens($type, $tokens, array $data = array(), array $options = a
           $replacements[$tokens[$name]] = format_date($report->$name_parsed[0], $name_parsed[1], $name_parsed[1] == 'custom' && count($name_parsed) == 3 ? $name_parsed[2] : '');
         }
         else {
-          if(isset($report->$name)) {
+          if (isset($report->$name)) {
             $replacements[$tokens[$name]] = $report->$name;
           }
         }
@@ -2435,6 +2438,11 @@ function course_report_save($entry) {
 function course_user_delete($account) {
   // Delete any fulfillments.
   db_delete('course_outline_fulfillment')
+    ->condition('uid', $account->uid)
+    ->execute();
+
+  // Delete any course report records.
+  db_delete('course_report')
     ->condition('uid', $account->uid)
     ->execute();
 
