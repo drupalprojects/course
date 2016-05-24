@@ -16,6 +16,7 @@ php = 5
 package = Course
 configure = admin/course
 files[] = includes/CourseController.inc
+files[] = includes/CourseEnrollment.inc
 files[] = includes/CourseHandler.inc
 files[] = includes/Course.inc
 files[] = includes/CourseObjectAccess.inc

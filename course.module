@@ -2718,7 +2718,7 @@ function course_entity_info() {
   $entity_info = array(
     'course_enrollment' => array(
       'label' => t('Course enrollment'),
-      'entity class' => 'Entity',
+      'entity class' => 'CourseEnrollment',
       'controller class' => 'EntityAPIController',
       'base table' => 'course_enrollment',
       'fieldable' => TRUE,
@@ -2726,7 +2726,7 @@ function course_entity_info() {
         'id' => 'eid',
         'bundle' => 'type',
       ),
-      'label callback' => 'course_enrollment_label',
+      'label callback' => 'entity_class_label',
       'views controller class' => 'EntityDefaultViewsController',
       'bundles' => array(),
       'bundle keys' => array(
@@ -2767,7 +2767,7 @@ function course_entity_info() {
       'entity keys' => array(
         'id' => 'crid',
       ),
-      'label callback' => 'course_report_label',
+      'label callback' => 'entity_class_label',
       'views controller class' => 'EntityDefaultViewsController',
       'bundles' => array(
         'course_report' => array(
@@ -2925,29 +2925,6 @@ function course_course_enroll($node, $user, $from) {
     );
     course_report_save($entry);
   }
-}
-
-/**
- * Enrollment entity label callback.
- */
-function course_enrollment_label($enrollment, $entity_type) {
-  if ($enrollment) {
-    $node = node_load($enrollment->nid);
-    $account = user_load($enrollment->uid);
-    return t("@username's enrollment in @title", array('@username' => format_username($account), '@title' => $node->title));
-  }
-  else {
-    return t('Enrollment');
-  }
-}
-
-/**
- * Course report entity label callback.
- */
-function course_report_label($enrollment) {
-  $node = node_load($enrollment->nid);
-  $account = user_load($enrollment->uid);
-  return t("@username's course report for @title", array('@username' => $account->name, '@title' => $node->title));
 }
 
 /**
