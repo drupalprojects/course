@@ -2783,7 +2783,7 @@ function course_entity_info() {
     ),
     'course_object' => array(
       'label' => t('Course object'),
-      'entity class' => 'Entity',
+      'entity class' => 'CourseObject',
       'controller class' => 'CourseObjectController',
       'base table' => 'course_outline',
       'fieldable' => TRUE,
