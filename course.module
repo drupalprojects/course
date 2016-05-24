@@ -5,11 +5,11 @@
  * Core functionality for Courses.
  */
 // Course outline functions
-require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/includes/course.outline.inc';
+require_once 'includes/course.outline.inc';
 // Course exporting functions
-require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/includes/course.exporting.inc';
+require_once 'includes/course.exporting.inc';
 // Rules support
-require_once DRUPAL_ROOT . '/' . drupal_get_path('module', 'course') . '/includes/course.rules.inc';
+require_once 'includes/course.rules.inc';
 
 /**
  * Implements hook_menu().
