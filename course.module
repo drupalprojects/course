@@ -2654,59 +2654,6 @@ function course_determine_context($module = NULL, $object_type = NULL, $instance
 }
 
 /**
- * Implements hook_date_api_fields().
- *
- * Expose the course date columns to date API.
- */
-function course_date_api_fields($field) {
-  $values = array(
-    'sql_type' => DATE_UNIX,
-    'granularity' => array('year', 'month', 'day'),
-  );
-
-  switch ($field) {
-    case 'course_report.date_completed':
-    case 'course_report.updated':
-    case 'course_enrollment.timestamp':
-    case 'course_enrollment.enroll_end':
-    case 'course_node.open':
-    case 'course_node.close':
-      return $values;
-  }
-}
-
-/**
- * Implements hook_date_api_tables().
- */
-function course_date_api_tables() {
-  return array('course_report', 'course_enrollment', 'course_node');
-}
-
-/**
- * Get all the options for a user type selection.
- */
-function course_user_type_get_options() {
-  $field_name = variable_get('course_user_types_field', '');
-  $options = array();
-
-  if (!empty($field_name)) {
-    $field = field_read_field($field_name);
-    $options = $field['settings']['allowed_values'];
-  }
-
-  $lines = explode("\n", variable_get('course_user_types', ''));
-  $additional = array();
-  foreach ($lines as $line) {
-    $line = explode('|', $line);
-    if ($line[0]) {
-      $additional[$line[0]] = $line[1];
-    }
-  }
-
-  return array_merge($options, $additional);
-}
-
-/**
  * Helper function for autocompletion of node titles.
  */
 function course_object_autocomplete_node($types, $string) {
