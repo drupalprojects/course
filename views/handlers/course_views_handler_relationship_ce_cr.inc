@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Create a relationship from the course report to course enrollment.
+ * Create a relationship from the course enrollment to course report.
  */
 class course_views_handler_relationship_ce_cr extends views_handler_relationship {
 
@@ -12,9 +12,9 @@ class course_views_handler_relationship_ce_cr extends views_handler_relationship
     // Figure out what base table this relationship brings to the party.
     $join = new views_join_course();
     $join->definition = array(
-      'table' => 'course_enrollment',
+      'table' => 'course_report',
       'field' => 'uid',
-      'left_table' => !empty($this->relationship) ? $this->relationship : 'course_report',
+      'left_table' => !empty($this->relationship) ? $this->relationship : 'course_enrollment',
       'left_field' => 'uid',
       'extra' => array(
         array(

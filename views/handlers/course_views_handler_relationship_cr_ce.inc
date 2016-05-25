@@ -12,9 +12,9 @@ class course_views_handler_relationship_cr_ce extends views_handler_relationship
     // Figure out what base table this relationship brings to the party.
     $join = new views_join_course();
     $join->definition = array(
-      'table' => 'course_report',
+      'table' => 'course_enrollment',
       'field' => 'uid',
-      'left_table' => !empty($this->relationship) ? $this->relationship : 'course_enrollment',
+      'left_table' => !empty($this->relationship) ? $this->relationship : 'course_report',
       'left_field' => 'uid',
       'extra' => array(
         array(
