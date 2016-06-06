@@ -435,26 +435,26 @@ function course_outline_list($node) {
 
   // Iterate over objects.
   $workflow = array();
-  $prev_obj = NULL;
   $img = NULL;
   foreach ($course->getObjects() as $key => $courseObject) {
-    $entity = entity_load_single('course_object', $courseObject->getId());
-    $view = entity_view('course_object', array($entity));
-    $data = drupal_render($view);
+    if ($courseObject->access('see')) {
+      // The item will be in the list only if the user can see it. If they can
+      // take it, entity_view() will output a link instead of text.
+      $entity = entity_load_single('course_object', $courseObject->getId());
+      $view = entity_view('course_object', array($entity));
+      $data = drupal_render($view);
 
-    $item = array(
-      'data' => $data,
-      'id' => $courseObject->getId(),
-    );
+      $item = array(
+        'data' => $data,
+        'id' => $courseObject->getId(),
+      );
 
-    // Allow other modules to modify this list item.
-    $courseObject->overrideOutlineListItem($item);
+      // Allow other modules to modify this list item.
+      $courseObject->overrideOutlineListItem($item);
 
-    // Add this item to the list.
-    $workflow[] = $item;
-
-    // We have to clone it, otherwise $courseObject becomes the next object.
-    $prev_obj = clone $courseObject;
+      // Add this item to the list.
+      $workflow[] = $item;
+    }
   }
 
   if ($course->getTracker()->getOption('complete')) {

@@ -69,16 +69,24 @@ abstract class CourseObject extends CourseHandler {
       $account = $user;
     }
 
-    // Stock access: check for completion of previous object.
+    if (!$this->getOption('enabled') || $this->getOption('hidden')) {
+      // Object is disabled or hidden so it should never be visible.
+      return FALSE;
+    }
+
     switch ($op) {
       case 'see':
-        $access = !$this->getOption('hidden') && $this->getOption('enabled');
+        // User can see this object in the outline.
+        $access = TRUE;
         break;
       case 'take':
+      case 'view':
         if (!$account->uid) {
+          // Not logged in. Should never be accessible.
           return FALSE;
         }
-      case 'view':
+
+        // Stock access: check for completion of previous object.
         // Get a copy of the course, so we can run setActive() without changing
         // the global course.
         $course = clone $this->getCourse();
@@ -104,6 +112,13 @@ abstract class CourseObject extends CourseHandler {
           $objects = array_reverse($course->getObjects());
           $check = FALSE;
           foreach ($objects as $object) {
+            if (!$object->getOption('enabled')) {
+              // Do not check this object.
+              // Note that hidden objects are still counted when doing
+              // fulfillment checks.
+              continue;
+            }
+
             if ($check) {
               if ($object->isRequired() && !$object->isSkippable()) {
                 // Object is required.
@@ -135,7 +150,6 @@ abstract class CourseObject extends CourseHandler {
     }
 
     // Plugin access.
-
     foreach (ctools_get_plugins('course', 'course_object_access') as $key => $plugin) {
       $class = ctools_plugin_get_class($plugin, 'handler');
       $accessPlugin = new $class();
@@ -1015,7 +1029,7 @@ abstract class CourseObject extends CourseHandler {
 
     $step = array();
     $step['id'] = 'course-object-' . $this->getId();
-    $step['image'] = 'misc/menu-collapsed.png';
+    $step['image'] = '';
     $step['status'] = '';
 
     if ($this->access('see')) {
@@ -1034,7 +1048,7 @@ abstract class CourseObject extends CourseHandler {
         elseif ($this->getFulfillment()->getId()) {
           $step['status'] = t('In progress');
           $step['class'][] = 'in-progress';
-          $step['image'] = 'misc/menu-collapsed.png';
+          $step['image'] = '';
         }
         if ($this->getCourse()->getActive() === $this) {
           $step['class'][] = 'active';

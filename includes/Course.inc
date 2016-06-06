@@ -69,6 +69,11 @@ class Course extends CourseHandler {
     $old = NULL;
     $storeNext = FALSE;
     foreach ($this->getObjects() as $courseObject) {
+      if (!$courseObject->getOption('enabled')) {
+        // Skip disabled objects.
+        continue;
+      }
+
       if ($id == $courseObject->getId()) {
         // Active - save old, store next.
         if ($old) {
@@ -138,7 +143,7 @@ class Course extends CourseHandler {
 
     $links = array();
 
-    if ($prev) {
+    if ($prev && $prev->access('take')) {
       $links['prev'] = l(t('Previous'), $prev->getUrl(), array('html' => TRUE));
     }
 

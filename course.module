@@ -561,7 +561,7 @@ function course_object_load($coid) {
 }
 
 /**
- * Take the course object.
+ * Page handler for a course object.
  *
  * @return string
  *   Themed output.
@@ -574,7 +574,12 @@ function course_object_take($courseObject) {
   $item = menu_get_item($course->getUrl());
   menu_set_item(NULL, $item);
 
-  return $courseObject->takeCourseObject();
+  if ($out = $courseObject->takeCourseObject()) {
+    return $out;
+  }
+  else {
+    drupal_access_denied();
+  }
 }
 
 /**

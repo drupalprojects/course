@@ -148,7 +148,8 @@ class CourseObjectAccessTestCase extends CourseTestCase {
   }
 
   /**
-   * Test hidden course objects do not show up in the course outline.
+   * Test hidden course objects do not show up in the course outline but block
+   * completion.
    */
   function testHiddenCourseObjects() {
     // Create a course.
@@ -156,23 +157,39 @@ class CourseObjectAccessTestCase extends CourseTestCase {
 
     // Use the student user.
     $user = $this->student_user;
+    $this->drupalLogin($user);
+
+    // Create an optional object so we can test the "Next" button.
+    $o_optional = $this->createCourseObject($courseNode);
+    $o_optional->setOption('required', FALSE)->save();
 
     $o1 = $this->createCourseObject($courseNode);
+    $o1->setOption('required', TRUE)->save();
 
-    // By default, should be visible.
+    // By default, should be visible in the outline.
     $this->assertTrue($o1->access('see', $user));
 
     // Make object hidden.
     $o1->setOption('hidden', 1)->save();
     $this->assertFalse($o1->access('see', $user));
+    $this->assertFalse($o1->access('take', $user));
+    $this->assertFalse($o1->access('view', $user));
 
-    // Make object not hidden.
-    $o1->setOption('hidden', 0)->save();
-    $this->assertTrue($o1->access('see', $user));
+    $this->drupalGet("node/$courseNode->nid/takecourse");
+    $this->drupalGet("node/$courseNode->nid/course-object/{$o_optional->coid}");
+    $this->assertNoLink(t('Next'));
+
+    $this->drupalGet("node/$courseNode->nid/course-object/{$o1->coid}");
+    $this->assertResponse(403, t('Hidden object is not accessible.'));
+
+    // Check that the course is not complete without completing the hidden object.
+    $report = course_report_load($courseNode, $user);
+    $this->assertFalse($report->complete);
   }
 
   /**
-   * Test disabled course objects.
+   * Test disabled course objects do not show up in the course outline and do
+   * not block completion.
    */
   function testDisabledCourseObjects() {
     // Create a course.
@@ -180,19 +197,36 @@ class CourseObjectAccessTestCase extends CourseTestCase {
 
     // Use the student user.
     $user = $this->student_user;
+    $this->drupalLogin($user);
+
+    // Create an optional object so we can test the "Next" button.
+    $o_optional = $this->createCourseObject($courseNode);
+    $o_optional->setOption('required', FALSE)->save();
 
     $o1 = $this->createCourseObject($courseNode);
+    $o1->setOption('required', TRUE)->save();
 
     // By default, should be visible.
-    $this->assertTrue($o1->access('see', $user));
-
-    // Make object enabled.
-    $o1->setOption('enabled', 1)->save();
     $this->assertTrue($o1->access('see', $user));
 
     // Make object disabled.
     $o1->setOption('enabled', 0)->save();
     $this->assertFalse($o1->access('see', $user));
+    $this->assertFalse($o1->access('view', $user));
+    $this->assertFalse($o1->access('take', $user));
+    $this->drupalGet("node/$courseNode->nid/takecourse");
+
+    // Completion link.
+    $this->clickLink(t('Next'));
+    $this->assertNoResponse(403, t('Did not get access denied.'));
+
+    $this->drupalGet("node/$courseNode->nid/course-object/{$o1->coid}");
+    $this->assertResponse(403, t('Disabled object is not accessible.'));
+
+    // Check that the course is complete even without completing the disabled
+    // object.
+    $report = course_report_load($courseNode, $user);
+    $this->assertTrue($report->complete);
   }
 
 }
