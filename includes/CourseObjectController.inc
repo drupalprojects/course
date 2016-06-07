@@ -74,4 +74,10 @@ class CourseObjectController extends EntityAPIController {
     return $entities;
   }
 
+  function buildContent($entity, $view_mode = 'full', $langcode = NULL, $content = array()) {
+    $build = parent::buildContent($entity, $view_mode, $langcode, $content);
+    $build['#theme'] = 'course_object';
+    return $build;
+  }
+
 }

@@ -2513,13 +2513,8 @@ function course_theme() {
         'items' => NULL,
       ),
     ),
-    'course_outline_item' => array(
-      'file' => 'includes/course.theme.inc',
-      'variables' => array(
-        'step' => NULL,
-        'img' => NULL,
-        'object' => NULL,
-      ),
+    'course_object' => array(
+      'render element' => 'elements',
     ),
     'course_take_course_button' => array(
       'file' => 'includes/course.theme.inc',
