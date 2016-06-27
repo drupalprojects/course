@@ -449,6 +449,22 @@ function course_outline_list($node) {
         'id' => $courseObject->getId(),
       );
 
+      if ($courseObject->access('take')) {
+        // User can take this course object.
+        $item['class'][] = 'accessible';
+
+        // Step is complete.
+        if ($courseObject->getFulfillment()->isComplete()) {
+          $item['class'][] = 'completed';
+        }
+        elseif ($courseObject->getFulfillment()->getId()) {
+          $item['class'][] = 'in-progress';
+        }
+        if ($course->getActive() === $courseObject) {
+          $item['class'][] = 'active';
+        }
+      }
+
       // Allow other modules to modify this list item.
       $courseObject->overrideOutlineListItem($item);
 
