@@ -29,9 +29,10 @@ function course_poll_fulfill(&$form, &$form_state) {
   global $user;
 
   $nid = $form['#node']->nid;
+  $chid = $form_state['values']['choice'];
 
   // Find the course object associated with this poll.
   if ($courseObject = course_get_course_object('course_poll', 'poll', $nid, $user)) {
-    $courseObject->getFulfillment()->setComplete()->save();
+    $courseObject->getFulfillment($user)->setOption('chid', $chid)->setComplete()->save();
   }
 }

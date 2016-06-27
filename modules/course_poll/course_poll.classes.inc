@@ -70,14 +70,15 @@ class CourseObjectPoll extends CourseObjectNode {
    * Remove poll votes for this user.
    */
   function unEnroll() {
+    $account = $this->getCourse()->getUser();
+
     db_delete('poll_vote')
-      ->condition('nid', $this->node->nid)
-      ->condition('uid', $this->getCourse()->getUser()->uid)
+      ->condition('nid', $this->getNode()->nid)
+      ->condition('uid', $account->uid)
       ->execute();
     db_update('poll_choice')
       ->expression('chvotes', 'chvotes - 1')
-      ->condition('nid', $this->node->nid)
-      ->condition('weight', $this->node->vote)
+      ->condition('chid', $this->getFulfillment($account)->getOption('chid'))
       ->execute();
   }
 
