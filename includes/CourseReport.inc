@@ -22,6 +22,7 @@ class CourseReport extends CourseHandler {
     $required = 0;
     $required_complete = 0;
     $prev = NULL;
+    $account = user_load($this->uid);
     foreach ($this->getCourse()->getObjects() as $courseObject) {
       if (!$courseObject->getOption('enabled')) {
         continue;
@@ -36,14 +37,14 @@ class CourseReport extends CourseHandler {
       $required += $courseObject->getOption('required');
 
       // Count completed required objects.
-      $required_complete += ($courseObject->getOption('required') && $courseObject->getFulfillment()->isComplete());
+      $required_complete += ($courseObject->getOption('required') && $courseObject->getFulfillment($account)->isComplete());
 
       // Log last grade.
       if ($courseObject->isGraded() && $courseObject->getOption('grade_include')) {
-        $this->setOption('grade_result', $courseObject->getFulfillment()->getOption('grade_result'));
+        $this->setOption('grade_result', $courseObject->getFulfillment($account)->getOption('grade_result'));
       }
 
-      if (!$courseObject->getFulfillment()->isComplete() && $prev && $prev->getFulfillment()->isComplete()) {
+      if (!$courseObject->getFulfillment($account)->isComplete() && $prev && $prev->getFulfillment($account)->isComplete()) {
         $this->setOption('section_name', $courseObject->getTitle());
         $this->setOption('coid', $courseObject->getId());
       }
