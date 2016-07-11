@@ -1832,7 +1832,7 @@ function course_tokens($type, $tokens, array $data = array(), array $options = a
   if ($type == 'course-report' && !empty($data['node']) && course_node_is_course($data['node']) && !empty($data['user'])) {
     // Node and user context, we can lookup the user's records.
     if ($report = course_report_load($data['node'], $data['user'])) {
-      $report->data = unserialize($report->data);
+      $report->data = empty($report->data) ? NULL : unserialize($report->data);
       foreach ($tokens as $name => $original) {
         // Handle date formats
         if ((strpos($name, 'date_completed') === 0 || strpos($name, 'updated') === 0) && strpos($name, ':') !== FALSE) {
