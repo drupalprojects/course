@@ -690,14 +690,14 @@ abstract class CourseObject extends CourseHandler {
       return reset($entities);
     }
     else {
-      return entity_create('course_object_fulfillment', array('coid' => $this->identifier(), 'uid' => $account->uid));
+      return entity_create('course_object_fulfillment', array('coid' => $this->identifier(), 'uid' => $account->uid, 'module' => $this->module, 'object_type' => $this->object_type));
     }
   }
 
   /**
    * Get the instance ID. This could be the external component ID, a Node ID...
    *
-   * @return int
+   * @return string
    */
   function getInstanceId() {
     return $this->getOption('instance');

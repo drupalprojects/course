@@ -89,3 +89,17 @@ class CourseObjectWebform extends CourseObjectNode {
   }
 
 }
+
+/**
+ * Course fulfillment class for webforms.
+ */
+class CourseObjectWebformFulfillment extends CourseObjectFulfillment {
+
+  /**
+   * Define storage for submission IDs.
+   */
+  function optionsDefinition() {
+    return array('sids' => array());
+  }
+
+}
