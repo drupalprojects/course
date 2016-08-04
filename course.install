@@ -814,6 +814,7 @@ function course_update_6132() {
     'type' => 'varchar',
     'length' => 255,
     'not null' => TRUE,
+    'default' => '',
   ));
 
   // hook_update_N() no longer returns a $ret array. Instead, return
