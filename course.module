@@ -2435,16 +2435,6 @@ function course_report_save($entry) {
  * Clean up course reports and fulfillments for a deleted user.
  */
 function course_user_delete($account) {
-  // Delete any fulfillments.
-  db_delete('course_outline_fulfillment')
-    ->condition('uid', $account->uid)
-    ->execute();
-
-  // Delete any course report records.
-  db_delete('course_report')
-    ->condition('uid', $account->uid)
-    ->execute();
-
   $result = db_query("SELECT * FROM {course_enrollment} WHERE uid = :uid", array(':uid' => $account->uid));
   while ($enrollment = $result->fetch()) {
     $node = node_load($enrollment->nid);
