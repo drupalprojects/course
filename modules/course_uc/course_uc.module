@@ -414,6 +414,7 @@ function course_uc_tokens($type, $tokens, array $data = array(), array $options 
 
   if ($type == 'uc_order') {
     $object = $data['uc_order'];
+    $show_header = FALSE;
 
     foreach ($object->products as $product) {
       $node = node_load($product->nid);
@@ -424,7 +425,7 @@ function course_uc_tokens($type, $tokens, array $data = array(), array $options 
           $line .= ' or ' . l('Take course now', "node/{$node->nid}/takecourse");
         }
         $courses[] = $line;
-        $show_header = 1;
+        $show_header = TRUE;
       }
       $items[] = l($node->title, "node/{$node->nid}");
     }
