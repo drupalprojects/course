@@ -1066,7 +1066,7 @@ abstract class CourseObject extends CourseHandler {
 
       $step['class'][] = drupal_html_class($this->getComponent() . '_' . $this->getModule());
 
-      $img = theme('image', array('path' => $step['image']));
+      $img = !empty($step['image']) ? theme('image', array('path' => $step['image'])) : '';
 
 
       $fields = field_extra_fields_get_display('course_object', 'course_object', $view_mode);
