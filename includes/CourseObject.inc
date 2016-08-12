@@ -1069,18 +1069,14 @@ abstract class CourseObject extends CourseHandler {
       $img = !empty($step['image']) ? theme('image', array('path' => $step['image'])) : '';
 
 
-      $fields = field_extra_fields_get_display('course_object', 'course_object', $view_mode);
       $content['course_outline_image'] = array(
         '#markup' => $img,
-        '#weight' => $fields['course_outline_image']['weight'],
       );
       $content['course_outline_link'] = array(
         '#markup' => $this->access('take') ? l($this->getTitle(), $this->getUrl()) : $this->getTitle(),
-        '#weight' => $fields['course_outline_link']['weight'],
       );
       $content['course_outline_status'] = array(
         '#markup' => $step['status'],
-        '#weight' => $fields['course_outline_status']['weight'],
         '#prefix' => '<div>',
         '#suffix' => '</div>',
       );
