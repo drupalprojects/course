@@ -683,6 +683,10 @@ function course_permission() {
       'title' => t('Administer course enrollment types'),
       'description' => t('Manage course enrollment types, fields, and display settings.'),
     ),
+    'administer course enrollments' => array(
+      'title' => t('Administer course enrollments'),
+      'description' => t('Allows editing or deleting all course enrollments.'),
+    ),
   );
 }
 
@@ -2716,7 +2720,7 @@ function course_entity_info() {
       'bundle keys' => array(
         'bundle' => 'type',
       ),
-      'access callback' => 'course_access',
+      'access callback' => 'course_enrollment_access',
     ),
     'course_enrollment_type' => array(
       'label' => t('Enrollment type'),
@@ -3116,4 +3120,11 @@ function course_enrollment_type_access($op, $entity = NULL, $account = NULL, $en
  */
 function course_admin_access() {
   return user_access('administer course') || user_access('access course administration area');
+}
+
+/**
+ * Access callback for the entity API.
+ */
+function course_enrollment_access($op, $entity, $account = NULL, $entity_type) {
+  return user_access('administer course') || user_access('administer course enrollments');
 }
