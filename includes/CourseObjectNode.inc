@@ -266,21 +266,23 @@ abstract class CourseObjectNode extends CourseObject {
   }
 
   public function optionsSubmit(&$form, &$form_state) {
-    $nid = $form_state['values']['instance'];
+    if (isset($form_state['values']['instance'])) {
+      $nid = $form_state['values']['instance'];
 
-    if (!is_numeric($nid)) {
-      if (preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $nid, $matches)) {
-        $nid = $matches[2];
+      if (!is_numeric($nid)) {
+        if (preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $nid, $matches)) {
+          $nid = $matches[2];
+        }
       }
-    }
 
-    if ($nid) {
-      $form_state['values']['instance'] = $nid;
-    }
-    else {
-      // Unset it, or we'll erase the relationship (since the textfield is
-      // actually blank).
-      unset($form_state['values']['instance']);
+      if ($nid) {
+        $form_state['values']['instance'] = $nid;
+      }
+      else {
+        // Unset it, or we'll erase the relationship (since the textfield is
+        // actually blank).
+        unset($form_state['values']['instance']);
+      }
     }
 
     parent::optionsSubmit($form, $form_state);

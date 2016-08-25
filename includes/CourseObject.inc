@@ -204,7 +204,6 @@ abstract class CourseObject extends CourseHandler {
    * Default options form for all course objects.
    */
   public function optionsForm(&$form, &$form_state) {
-    ctools_include('dependent');
     ctools_include('plugins');
     parent::optionsForm($form, $form_state);
 
@@ -288,16 +287,20 @@ abstract class CourseObject extends CourseHandler {
       '#title' => t('Skippable'),
       '#type' => 'checkbox',
       '#default_value' => $config['skippable'],
-      '#dependency' => array('edit-required' => array(1)),
+      '#states' => array('visible' => array('#edit-required' => array('checked' => TRUE))),
       '#description' => t('Users can proceed past this object but it will still be required for course completion.'),
     );
 
+    // Delete object
     $form['delete']['delete'] = array(
-      '#title' => t('Delete'),
-      '#type' => 'checkbox',
-      '#description' => t('Deleting course content is irreversible.'),
-      '#default_value' => $config['delete'],
-      '#group' => 'delete',
+      '#value' => t('Delete'),
+      '#weight' => 999,
+      '#type' => 'submit',
+      '#submit' => array(
+        array($this, 'setDelete'),
+        array($this, 'optionsSubmit'),
+      ),
+      '#limit_validation_errors' => array(),
     );
 
     // Only allow deletion of existing instances.
@@ -306,7 +309,7 @@ abstract class CourseObject extends CourseHandler {
         '#title' => t('Also delete the referenced content.'),
         '#type' => 'checkbox',
         '#default_value' => $config['delete_instance'],
-        '#dependency' => array('edit-delete--2' => array(1)),
+        '#stats' => array('visible' => array('#edit-delete' => array('checked' => TRUE))),
         '#group' => 'delete',
       );
 
@@ -359,11 +362,24 @@ abstract class CourseObject extends CourseHandler {
     }
 
     // Update settings
-    $form['update'] = array(
+    $form['actions']['update'] = array(
       '#value' => t('Update'),
       '#weight' => 999,
       '#type' => 'submit',
+      '#validate' => array(
+        array($this, 'optionsValidate'),
+      ),
+      '#submit' => array(
+        array($this, 'optionsSubmit'),
+      ),
     );
+  }
+
+  /**
+   * Mark this object for deletion.
+   */
+  public function setDelete(&$form, &$form_state) {
+    $form_state['values']['delete'] = 1;
   }
 
   public function optionsValidate(&$form, &$form_state) {
@@ -388,8 +404,13 @@ abstract class CourseObject extends CourseHandler {
     $uniqid = $this->getId();
     $nid = $this->getCourseNid();
 
+    // Start editing session.
+    course_editing_start($this->getCourse());
+
     // Flip 'visible' so it behaves like 'hidden'.
-    $form_state['values']['hidden'] = ($form_state['values']['hidden'] != 1);
+    if (isset($form_state['values']['hidden'])) {
+      $form_state['values']['hidden'] = ($form_state['values']['hidden'] != 1);
+    }
 
     // Object-specific settings
     foreach (array_keys($this->getOptions()) as $key) {
@@ -399,8 +420,10 @@ abstract class CourseObject extends CourseHandler {
     }
 
     // Save plugin info.
-    foreach (ctools_get_plugins('course', 'course_object_access') as $key => $plugin) {
-      $_SESSION['course'][$nid]['editing'][$uniqid]['plugins']['access'][$key] = $form_state['values']['plugins']['access'][$key];
+    if (isset($form_state['values']['plugins'])) {
+      foreach (ctools_get_plugins('course', 'course_object_access') as $key => $plugin) {
+        $_SESSION['course'][$nid]['editing'][$uniqid]['plugins']['access'][$key] = $form_state['values']['plugins']['access'][$key];
+      }
     }
 
     // Update the options.
@@ -469,7 +492,7 @@ abstract class CourseObject extends CourseHandler {
 
     // Required.
     if (!empty($options['delete'])) {
-      $dest = "node/{$options['nid']}/course-object/nojs/{$uniqid}/restore";
+      $dest = "node/{$options['nid']}/course-object/nojs/{$this->getId()}/restore";
       $text = t('Object will be removed from outline');
       $restore_text = t('Restore this object to the course outline.');
       if ($options['delete_instance']) {

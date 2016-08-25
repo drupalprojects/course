@@ -523,37 +523,6 @@ function course_object_options_form_after_build($form, &$form_state) {
 }
 
 /**
- * Form validation handler for course_object_options_form().
- *
- * @see course_object_options_form_submit()
- */
-function course_object_options_form_validate(&$form, &$form_state) {
-  if ($form_state['values']['uniqid']) {
-    // Get course object from session/database.
-    $courseObject = course_object_load($form_state['values']['uniqid']);
-    $courseObject->setId($form_state['values']['uniqid']);
-    $courseObject->optionsValidate($form, $form_state);
-  }
-}
-
-/**
- * Form submission handler for course_object_options_form().
- *
- * @see course_object_options_form_validate()
- */
-function course_object_options_form_submit(&$form, &$form_state) {
-  if ($form_state['values']['uniqid']) {
-    // Get course object from session/database.
-    $courseObject = course_object_load($form_state['values']['uniqid']);
-    $course = $courseObject->getCourse();
-    // Start editing session.
-    course_editing_start($course);
-    $courseObject->setId($form_state['values']['uniqid']);
-    $courseObject->optionsSubmit($form, $form_state);
-  }
-}
-
-/**
  * Menu loader for course objects, in the context of a course.
  */
 function course_object_load($coid) {
