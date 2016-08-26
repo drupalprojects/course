@@ -292,7 +292,7 @@ abstract class CourseObject extends CourseHandler {
     );
 
     // Delete object
-    $form['delete']['delete'] = array(
+    $form['delete']['delete_button'] = array(
       '#value' => t('Delete'),
       '#weight' => 999,
       '#type' => 'submit',
