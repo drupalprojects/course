@@ -2544,48 +2544,43 @@ function course_set_context($node = NULL, $clear = FALSE) {
  * @return mixed
  *   A course node or NULL if course context not found.
  */
-function course_determine_context($module = NULL, $object_type = NULL, $instance = NULL, $no_set = FALSE, $flush = FALSE) {
-  $cache = &drupal_static(__FUNCTION__);
+function course_determine_context($module = NULL, $object_type = NULL, $instance = NULL, $no_set = FALSE) {
   $context = NULL;
 
-  if (!$context || $flush || $no_set) {
-    // Determine the course node based on passed query parameters.
-    $result = db_query("SELECT nid FROM {course_outline} WHERE instance = :instance AND module = :module AND object_type = :object_type", array(':instance' => $instance, ':module' => $module, ':object_type' => $object_type));
-    $nids = array();
-    while ($course_outline = $result->fetch()) {
-      $nids[] = $course_outline->nid;
-    }
-
-    if (count($nids) > 1) {
-      if (!empty($_SESSION['course']['active']) && in_array($_SESSION['course']['active'], $nids)) {
-        // The active course in the session is one of the courses this object
-        // belongs to.
-        $context = node_load($_SESSION['course']['active']);
-      }
-      else {
-        // No active course, or no match. We have to guess since we're accessing
-        // this course material outside of the course.
-        $context = node_load($nids[0]);
-      }
-    }
-    elseif ($nids) {
-      // We don't have an active session (or, the course in the active session
-      // didn't contain this course object). So we just guess the first one.
-      $context = node_load($nids[0]);
-    }
-
-    if ($no_set) {
-      // Callee just wants context.
-      return $context;
-    }
-    elseif ($context) {
-      // Set the active course and static cache it.
-      $_SESSION['course']['active'] = $context->nid;
-      $cache = $context;
-    }
+  // Determine the course node based on passed query parameters.
+  $result = db_query("SELECT nid FROM {course_outline} WHERE instance = :instance AND module = :module AND object_type = :object_type", array(':instance' => $instance, ':module' => $module, ':object_type' => $object_type));
+  $nids = array();
+  while ($course_outline = $result->fetch()) {
+    $nids[] = $course_outline->nid;
   }
 
-  return $cache;
+  if (count($nids) > 1) {
+    if (!empty($_SESSION['course']['active']) && in_array($_SESSION['course']['active'], $nids)) {
+      // The active course in the session is one of the courses this object
+      // belongs to.
+      $context = node_load($_SESSION['course']['active']);
+    }
+    else {
+      // No active course, or no match. We have to guess since we're accessing
+      // this course material outside of the course.
+      $context = node_load($nids[0]);
+    }
+  }
+  elseif ($nids) {
+    // We don't have an active session (or, the course in the active session
+    // didn't contain this course object). So we just guess the first one.
+    $context = node_load($nids[0]);
+  }
+
+  if ($no_set) {
+    // Callee just wants context.
+    return $context;
+  }
+  elseif ($context) {
+    // Set the active course and static cache it.
+    $_SESSION['course']['active'] = $context->nid;
+    return $context;
+  }
 }
 
 /**
