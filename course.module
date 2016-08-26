@@ -2557,7 +2557,7 @@ function course_determine_context($module = NULL, $object_type = NULL, $instance
     }
 
     if (count($nids) > 1) {
-      if (in_array($_SESSION['course']['active'], $nids)) {
+      if (!empty($_SESSION['course']['active']) && in_array($_SESSION['course']['active'], $nids)) {
         // The active course in the session is one of the courses this object
         // belongs to.
         $context = node_load($_SESSION['course']['active']);
