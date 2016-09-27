@@ -258,10 +258,9 @@ abstract class CourseObjectNode extends CourseObject {
       form_set_error('node_type', t('Please select a node type.'));
     }
 
-    if ($form_state['values']['use_existing_node'] && (empty($form_state['values']['instance']) || !is_numeric($nid))) {
-      if (!preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $nid)) {
-        form_set_error('instance', t('Please select a node.'));
-      }
+    $missing_node = !preg_match('/^(?:\s*|(.*) )?\[\s*nid\s*:\s*(\d+)\s*\]$/', $nid);
+    if (($form_state['values']['use_existing_node'] || !$this->isTemporary()) && $missing_node) {
+      form_set_error('instance', t('Please select a node.'));
     }
   }
 
