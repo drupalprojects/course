@@ -530,7 +530,7 @@ function course_completion_page($course_node) {
       $status_css = $req->isComplete() ? 'complete' : 'incomplete';
       $status_img = $req->isComplete() ? 'ok' : ($req->getCourseObject()->isRequired() ? 'error' : 'warning');
       $status_class = 'course-complete-item-' . $status_img;
-      $status_optional = ($status_img == 'warning') ? ' (optional)' : ' (required)';
+      $status_optional = ' ' . (!$req->getCourseObject()->isRequired() ? '(optional)' : '(required)');
       if ($courseObject->access('take')) {
         $link = l($req->getCourseObject()->getTitle(), $courseObject->getUrl());
       }
