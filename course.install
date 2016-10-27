@@ -483,6 +483,7 @@ function course_schema() {
     'indexes' => array(
       'coid' => array('coid'),
       'date_completed' => array('date_completed'),
+      'instance' => array('instance'),
     ),
   );
 
