@@ -104,8 +104,12 @@ abstract class CourseObject extends CourseHandler {
           $access = TRUE;
         }
 
-        if ($course->getPrev() && (!$course->getPrev()->isRequired() || ($course->getPrev()->isRequired() && $course->getPrev()->isSkippable()))) {
-          // Previous step was not required.
+        if (!$course->getPrev()) {
+          // There wasn't a previous object.
+          $access = TRUE;
+        }
+        elseif (!$course->getPrev()->isRequired() || $course->getPrev()->isSkippable()) {
+          // Previous step was not required, or was skippable.
           $access = TRUE;
 
           // But we need to see if at least one required step was completed (or the start of the course).
@@ -141,8 +145,7 @@ abstract class CourseObject extends CourseHandler {
             }
           }
         }
-
-        if ($course->getPrev() && $course->getPrev()->getFulfillment()->isComplete()) {
+        elseif ($course->getPrev()->getFulfillment()->isComplete()) {
           // If last object was complete, and we are on the current object,
           // grant access.
           $access = TRUE;
