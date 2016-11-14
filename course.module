@@ -2591,7 +2591,11 @@ function course_object_autocomplete_node($types, $string) {
   $values = explode(',', $types);
   $query = db_select('node', 'n');
   $query->condition('n.type', $values, 'in')
-    ->condition('n.title', "%$string%", 'like')
+    ->condition(
+     db_or()
+      ->condition('n.title', "%$string%", 'like')
+      ->condition('n.nid', $string)
+    )
     ->fields('n', array('nid', 'title'))
     ->range(0, 10);
   $result = $query->execute();
