@@ -468,7 +468,7 @@ function course_outline_list($node) {
   }
 
   if ($course->getTracker()->getOption('complete')) {
-    $img = theme('image', array('path' => 'misc/watchdog-ok.png'));
+    $img = theme('image', array('path' => 'misc/watchdog-ok.png', 'alt' => t('Complete')));
     $workflow[] = array(
       'data' => $img . l(t('Complete'), "node/$node->nid/course-complete", array('html' => TRUE)),
       'id' => 'complete',

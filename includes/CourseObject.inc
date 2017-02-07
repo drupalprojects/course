@@ -1092,7 +1092,7 @@ abstract class CourseObject extends CourseHandler {
 
       $step['class'][] = drupal_html_class($this->getComponent() . '_' . $this->getModule());
 
-      $img = !empty($step['image']) ? theme('image', array('path' => $step['image'])) : '';
+      $img = !empty($step['image']) ? theme('image', array('path' => $step['image'], 'alt' => strip_tags($step['status']))) : '';
 
 
       $content['course_outline_image'] = array(
