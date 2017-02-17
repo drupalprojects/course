@@ -1301,7 +1301,15 @@ function course_take_course($node) {
       }
     }
 
-    $enrollment = course_enroll($node, $user);
+    // No fields to show. Check for enrollment. If it does not exist, create it.
+    if (empty($enrollment)) {
+      $enrollment = entity_create('course_enrollment', array(
+        'nid' => $node->nid,
+        'uid' => $user->uid,
+        'type' => $node->course['enrollment_type'],
+      ));
+      $enrollment->save();
+    }
   }
 
   $take_access = course_take_course_access($node);
