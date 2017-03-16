@@ -1811,7 +1811,7 @@ function course_tokens($type, $tokens, array $data = array(), array $options = a
         // Handle date formats
         if ((strpos($name, 'date_completed') === 0 || strpos($name, 'updated') === 0) && strpos($name, ':') !== FALSE) {
           $name_parsed = explode(':', $name, 3);
-          $replacements[$tokens[$name]] = format_date($report->$name_parsed[0], $name_parsed[1], $name_parsed[1] == 'custom' && count($name_parsed) == 3 ? $name_parsed[2] : '');
+          $replacements[$tokens[$name]] = format_date($report->{$name_parsed[0]}, $name_parsed[1], $name_parsed[1] == 'custom' && count($name_parsed) == 3 ? $name_parsed[2] : '');
         }
         else {
           if (isset($report->$name)) {
