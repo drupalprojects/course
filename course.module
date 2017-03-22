@@ -902,16 +902,14 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
   }
 
   if (course_node_is_course($node)) {
-    $enrollment = array(
+    $enrollment = entity_create('course_enrollment', array(
       'nid' => $node->nid,
       'uid' => $account->uid,
       'enrollmenttype' => $from,
       'status' => $status,
       'code' => $code,
       'type' => $node->course['enrollment_type'],
-    );
-
-    $enrollment = (object) $enrollment;
+    ));
 
     $watchdog_variables = array(
       '!uid' => $account->uid,
@@ -920,7 +918,7 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
     if (!course_enrollment_check($node->nid, $account->uid)) {
       // User is not enrolled yet.
       watchdog('course_enroll', 'Enrolling user !uid into !nid.', $watchdog_variables);
-      course_enrollment_save($enrollment);
+      $enrollment->save();
       module_invoke_all('course_enroll', $node, $account, $from, $code, $status);
     }
 
