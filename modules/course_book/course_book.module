@@ -139,7 +139,7 @@ function course_book_override_outline_list_item(&$item, CourseObject $courseObje
             // Replace only the first instance of the title (in case the same
             // string also exists elsewhere in the data output.
             //$replaced = str_replace($pattern, $replacement, $subject);
-            $replaced = preg_replace('/' . $pattern . '/', $replacement, $subject, 1);
+            $replaced = preg_replace('/' . preg_quote($pattern, '/') . '/', $replacement, $subject, 1);
             $item['data'] = $replaced;
           }
           break;
