@@ -213,24 +213,6 @@ function hook_course_access($op, $node, $user) {
 }
 
 /**
- * Allow modules to be notified about a new course enrollment.
- *
- * @deprecated - use hook_course_enrollment_[insert|update]($enrollment)
- */
-function hook_course_enroll($node, $user) {
-  drupal_set_message("User enrolled into course.");
-}
-
-/**
- * Allow modules to be notified about an unenrollment.
- *
- * @deprecated - use hook_course_enrollment_delete($enrollment)
- */
-function hook_course_unenroll($node, $user) {
-  drupal_set_message("User unenrolled from course.");
-}
-
-/**
  * Implements hook_course_access_alter().
  */
 function hook_course_access_alter(&$hooks, $op, $node, $account) {

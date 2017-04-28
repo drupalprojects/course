@@ -919,7 +919,6 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
       // User is not enrolled yet.
       watchdog('course_enroll', 'Enrolling user !uid into !nid.', $watchdog_variables);
       $enrollment->save();
-      module_invoke_all('course_enroll', $node, $account, $from, $code, $status);
     }
 
     // Flush caches.
@@ -946,41 +945,8 @@ function course_enroll($node, $account, $from = NULL, $code = NULL, $status = 1)
  *   TRUE if user is un-enrolled, FALSE if node is not a course.
  */
 function course_unenroll($node, $user) {
-  if (course_node_is_course($node)) {
-    $enrollment = course_enrollment_load($node->nid, $user->uid);
-    $report = course_report_load($node->nid, $user->uid);
-
-    $course = course_get_course($node, $user);
-    $course->unenroll();
-
-    entity_delete('course_enrollment', $enrollment->eid);
-    entity_delete('course_report', $report->crid);
-
-    // Find all course objects in this course and delete the fulfillment.
-    $coids = array();
-    $result = db_query("SELECT coid FROM {course_outline} WHERE nid = :nid", array(':nid' => $node->nid));
-    while ($row = $result->fetch()) {
-      $coids[] = $row->coid;
-    }
-
-    if (count($coids)) {
-      $sql = "SELECT cofid FROM {course_outline_fulfillment} WHERE coid IN (:coids) AND uid = :uid";
-      $cofid = db_query($sql, array(':coids' => $coids, ':uid' => $user->uid))->fetchAllKeyed(0, 0);
-      entity_delete_multiple('course_object_fulfillment', $cofid);
-    }
-
-    // Notify other modules after course unenrollment.
-    // @todo is this deprecated by hook_course_enrollment_delete()?
-    module_invoke_all('course_unenroll', $node, $user);
-    $watchdog_variables = array(
-      '!uid' => $user->uid,
-      '!nid' => $node->nid,
-    );
-    watchdog('course_enroll', 'Removed user !uid from !nid', $watchdog_variables);
-    return TRUE;
-  }
-  else {
-    return FALSE;
+  if ($enrollment = course_enrollment_load($node->nid, $user->uid)) {
+    return $enrollment->delete();
   }
 }
 
@@ -1008,7 +974,7 @@ function course_enrollment_check($nid, $uid) {
  * @param int $uid
  *   User ID.
  *
- * @return mixed
+ * @return CourseEnrollment
  *   Enrollment object or FALSE
  */
 function course_enrollment_load($nid, $uid = NULL) {
@@ -1426,6 +1392,34 @@ function course_course_enrollment_update($enrollment) {
   $node = node_load($enrollment->nid);
   $account = user_load($enrollment->uid);
   course_get_course($node, $account)->getTracker()->track();
+}
+
+/**
+ * Implements hook_course_enrollment_delete().
+ */
+function course_course_enrollment_delete($enrollment) {
+  $report = course_report_load($enrollment->nid, $enrollment->uid);
+
+  /** @var $course Course */
+  $course = entity_load_single('course', $enrollment->nid);
+  $course->setUser($enrollment->uid);
+  $course->unenroll();
+
+  // Also delete the course report.
+  $report->delete();
+
+  // Find all course objects in this course and delete the fulfillment.
+  $coids = array();
+  $result = db_query("SELECT coid FROM {course_outline} WHERE nid = :nid", array(':nid' => $enrollment->nid));
+  while ($row = $result->fetch()) {
+    $coids[] = $row->coid;
+  }
+
+  if (count($coids)) {
+    $sql = "SELECT cofid FROM {course_outline_fulfillment} WHERE coid IN (:coids) AND uid = :uid";
+    $cofid = db_query($sql, array(':coids' => $coids, ':uid' => $enrollment->uid))->fetchAllKeyed(0, 0);
+    entity_delete_multiple('course_object_fulfillment', $cofid);
+  }
 }
 
 /**
