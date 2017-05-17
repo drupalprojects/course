@@ -328,6 +328,7 @@ abstract class CourseObject extends CourseHandler {
         '#type' => 'fieldset',
         '#description' => t('Settings for graded objects.'),
         '#group' => 'course_tabs',
+        '#weight' => 2,
       );
 
       $form['grading']['grade_include'] = array(
