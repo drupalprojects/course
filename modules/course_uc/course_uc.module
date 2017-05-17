@@ -472,6 +472,17 @@ function course_uc_course_access($op, $node, $user) {
   if ($op == 'enroll') {
     $course = course_get_course($node, $user);
 
+    // Block enrollment if course is free and bypass checkout is not enabled.
+    if (!($node->sell_price > 0) && !variable_get('course_access_bypass_checkout', 1) && !course_uc_check_purchased($user->uid, $node->nid)) {
+      return array('course_must_purchase' => array(
+          'success' => FALSE,
+          'header' => t('Checkout required'),
+          'message' => t('You must checkout to enroll in this course.'),
+          'weight' => 1000,
+        ),
+      );
+    }
+
     // Now we have to check that even if the course has a price, that the
     // payment object is first (to block enrollments). If the course is $0 and
     // there are no payment objects, we assume the enrollment is blocked.
