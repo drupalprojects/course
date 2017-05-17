@@ -103,6 +103,7 @@ function course_generate($course_type, $course_object_types, $course_object_limi
   // Populate all core fields on behalf of field.module
   module_load_include('inc', 'devel_generate', 'devel_generate.fields');
   devel_generate_fields($node, 'node', $node->type);
+  unset($node->og_group_ref);
   node_save($node);
 
   for ($i = 1; $i <= $course_object_limit; $i++) {
@@ -110,12 +111,18 @@ function course_generate($course_type, $course_object_types, $course_object_limi
   }
 
   for ($i = 1; $i <= $course_enrollments; $i++) {
-    $course_enrollment = entity_create('course_enrollment', array(
-      'type' => 'course_enrollment',
-      'nid' => $node->nid,
-      'uid' => array_pop($users),
-    ));
-    $course_enrollment->save();
+    if ($uid = array_pop($users)) {
+      $course_enrollment = entity_create('course_enrollment', array(
+        'type' => 'course_enrollment',
+        'nid' => $node->nid,
+        'uid' => $uid,
+      ));
+      $course_enrollment->save();
+    }
+    else {
+      drupal_set_message("Did not have enough users. Could only create $i enrollments.");
+      break;
+    }
   }
 
   drupal_set_message('Generated course: ' . l($node->title, 'node/' . $node->nid));
