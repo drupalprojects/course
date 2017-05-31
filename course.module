@@ -1415,7 +1415,8 @@ function course_course_enrollment_delete($enrollment) {
 
   /** @var $course Course */
   $course = entity_load_single('course', $enrollment->nid);
-  $course->setUser($enrollment->uid);
+  // @todo deprecated call
+  $course->setUser(user_load($enrollment->uid));
   $course->unenroll();
 
   // Also delete the course report.

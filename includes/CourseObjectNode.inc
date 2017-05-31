@@ -305,6 +305,9 @@ abstract class CourseObjectNode extends CourseObject {
 
   /**
    * Duration expired (or something) - CourseObject is telling us so.
+   *
+   * @todo this needs to move to a fulfillment class because getUser() in this
+   * context is deprecated
    */
   function revoke() {
     if ($this->hasNodePrivacySupport()) {
