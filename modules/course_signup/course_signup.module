@@ -256,7 +256,7 @@ function course_signup_course_access($op, $node, $user) {
             // This node is signup-enabled and closed by date.
             $close_stamp = strtotime($items[0]['value'] . ' UTC');
             $signup_close_early = variable_get('signup_close_early', 0);
-            $close_stamp -= ($signup_close_early * 60);
+            $close_stamp -= ($signup_close_early * 3600);
             if (REQUEST_TIME > $close_stamp) {
               $hooks['course_signup'] = array(
                 'header' => t(''),
