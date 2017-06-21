@@ -26,6 +26,11 @@ class course_views_handler_relationship_ce_cr extends views_handler_relationship
     );
 
     $join->construct();
+
+    if ($this->options['required']) {
+      $join->type = 'INNER';
+    }
+
     $this->ensure_my_table();
 
     $alias = $join->definition['table'] . '_' . $join->definition['left_table'];

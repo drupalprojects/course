@@ -142,8 +142,6 @@ function course_schema() {
     'primary key' => array('crid'),
     'unique keys' => array('uk' => array('nid', 'uid')),
     'indexes' => array(
-      'nid' => array('nid'),
-      'uid' => array('uid'),
       'date_completed' => array('date_completed'),
     ),
   );
@@ -236,10 +234,6 @@ function course_schema() {
     ),
     'primary key' => array('eid'),
     'unique keys' => array('nid_uid' => array('nid', 'uid')),
-    'indexes' => array(
-      'nid' => array('nid'),
-      'uid' => array('uid'),
-    ),
   );
 
   $schema['course_node'] = array(
@@ -1249,4 +1243,14 @@ function course_update_7140() {
     db_add_index('course_outline_fulfillment', 'instance', array('instance'));
   }
   return t('Added index on fulfillment "instance" column.');
+}
+
+/**
+ * Remove duplicate indexes.
+ */
+function course_update_7141() {
+  db_drop_index('course_report', 'nid');
+  db_drop_index('course_report', 'uid');
+  db_drop_index('course_enrollment', 'nid');
+  db_drop_index('course_enrollment', 'uid');
 }
