@@ -145,7 +145,8 @@ function course_menu() {
   // Landing page for course completion.
   $items['node/%course/course-complete'] = array(
     'title' => 'Course complete',
-    'access callback' => TRUE,
+    'access arguments' => array(1),
+    'access callback' => 'course_completion_page_access',
     'page arguments' => array(1),
     'page callback' => 'course_completion_page',
     'file' => 'includes/course.outline.inc',
@@ -3095,4 +3096,12 @@ function course_admin_access() {
  */
 function course_enrollment_access($op, $entity, $account = NULL, $entity_type) {
   return user_access('administer course') || user_access('administer course enrollments');
+}
+
+/**
+ * Access callback for completion page.
+ */
+function course_completion_page_access($node) {
+  global $user;
+  return course_enrollment_check($node->nid, $user->uid);
 }

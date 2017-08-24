@@ -18,7 +18,7 @@ class CourseWorkflowTestCase extends CourseTestCase {
    * Ensure the next object is properly linked.
    */
   function testObjectAdvancement() {
-    $this->learner = $this->drupalCreateUser();
+    $this->student_user = $this->drupalCreateUser();
 
     // Add two course objects to a course.
     $courseNode = $this->createCourseNode();
@@ -35,11 +35,19 @@ class CourseWorkflowTestCase extends CourseTestCase {
     $co2->save();
 
     // Get the course, now loaded as the user.
-    $course = course_get_course($courseNode, $this->learner, TRUE);
+    $course = course_get_course($courseNode, $this->student_user, TRUE);
+
+    $this->drupalGet("node/{$courseNode->nid}/course-complete");
+    $this->assertResponse(403, 'Cannot see completion page');
 
     // Login, enroll, and try to access the objects via links.
-    $this->drupalLogin($this->learner);
-    course_enroll($courseNode, $this->learner);
+    $this->drupalLogin($this->student_user);
+    course_enroll($courseNode, $this->student_user);
+
+    $this->drupalGet("node/{$courseNode->nid}/course-complete");
+    $this->assertResponse(200, 'Can see completion page');
+    $this->assertText('This course is not complete.');
+
     $this->drupalGet("node/$courseNode->nid/takecourse");
     $this->assertLink('Course object 1');
     $this->assertNoLink('Course object 2');
@@ -48,7 +56,7 @@ class CourseWorkflowTestCase extends CourseTestCase {
     $this->assertText(t('I am a test course object with the title !title', array('!title' => $co1->getOption('title'))));
 
     // Refresh the course because we made browser calls above.
-    $course = course_get_course($courseNode, $this->learner, TRUE);
+    $course = course_get_course($courseNode, $this->student_user, TRUE);
 
     $objects = array_values($course->getObjects());
     // Set the first object complete.
@@ -69,14 +77,14 @@ class CourseWorkflowTestCase extends CourseTestCase {
     // Set the second object complete.
     // @kludge: the below two lines shouldn't be necessary, but something is
     // happening with object sharing
-    $course = course_get_course($courseNode, $this->learner, TRUE);
+    $course = course_get_course($courseNode, $this->student_user, TRUE);
     $objects = array_values($course->getObjects());
 
     $objects[1]->getFulfillment()->setComplete(1)->save();
     $this->drupalGet("node/$courseNode->nid/takecourse");
     $this->assertLink('Complete');
     $this->clickLink('Complete');
-    $this->assertText('Thank you for participating in this course.');
+    $this->assertText('You have completed the course.');
   }
 
 }
