@@ -106,10 +106,10 @@ class CourseObjectBook extends CourseObjectNode {
     if (isset($node->book)) {
       $book_link = $node->book;
       if ($prev = book_prev($book_link)) {
-        $links['prev'] = l('Previous', $prev['href']);
+        $links['prev'] = l(t('Previous'), $prev['href']);
       }
       if ($next = book_next($book_link)) {
-        $links['next'] = l('Next', $next['href']);
+        $links['next'] = l(t('Next'), $next['href']);
       }
     }
 
