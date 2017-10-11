@@ -56,6 +56,8 @@ class CourseObjectFulfillment extends CourseHandler {
 
   /**
    * Get this fulfillment's course object.
+   *
+   * @return CourseObject
    */
   function getCourseObject() {
     return entity_load_single('course_object', $this->coid);
