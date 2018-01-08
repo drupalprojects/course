@@ -82,8 +82,9 @@ class CourseObjectWebform extends CourseObjectNode {
     if ($sids = $fulfillment->getOption('sids')) {
       module_load_include('inc', 'webform', 'includes/webform.submissions');
       foreach ($sids as $sid) {
-        $submission = webform_get_submission($node->nid, $sid);
-        webform_submission_delete($node, $submission);
+        if ($submission = webform_get_submission($node->nid, $sid)) {
+          webform_submission_delete($node, $submission);
+        }
       }
     }
   }
