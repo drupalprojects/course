@@ -41,7 +41,7 @@ class CourseObjectAccessGrade extends CourseObjectAccess {
   function take() {
     $config = $this->getOptions();
 
-    if (is_numeric($config['course_grade_range']['low']) && is_numeric($config['course_grade_range']['high'])) {
+    if (!empty($config['course_grade_range']) && is_numeric($config['course_grade_range']['low']) && is_numeric($config['course_grade_range']['high'])) {
       $grade = NULL;
       $conditional_object = NULL;
 
