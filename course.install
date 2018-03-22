@@ -120,6 +120,7 @@ function course_schema() {
       ),
       'complete' => array(
         'type' => 'int',
+        'size' => 'tiny',
         'not null' => TRUE,
         'unsigned' => TRUE,
         'default' => 0,
@@ -331,6 +332,7 @@ function course_schema() {
       ),
       'enabled' => array(
         'type' => 'int',
+        'size' => 'tiny',
         'not null' => TRUE,
         'unsigned' => TRUE,
         'default' => 0,
@@ -643,26 +645,9 @@ function course_update_6125() {
 function course_update_6126() {
   $ret = array();
 
-  $sql = "SELECT * FROM {course_outline_fulfillment} order by sfid asc";
-  $result = db_query($sql);
-  $sfids = array();
-  $delete = array();
-
-  while ($row = $result->fetch()) {
-    if (!empty($sfids[$row->snid][$row->uid])) {
-      $delete[] = $sfids[$row->snid][$row->uid];
-    }
-    $sfids[$row->snid][$row->uid] = $row->sfid;
-  }
-
-  if ($delete) {
-    $sql = "DELETE FROM {course_outline_fulfillment} WHERE sfid in (:sfids)";
-    db_query($sql, array(':sfids' => $delete));
-  }
-
-  db_add_unique_key('course_outline_fulfillment', 'snid_uid', array('snid', 'uid'));
-  //db_add_index('course_outline_fulfillment', 'snid', array('snid'));
-  //db_add_index('course_outline', 'nid', array('nid'));
+  // This does the same thing as the code it replaced except won't run out of
+  // memory. @kludge Does not work with MySQL 5.7+.
+  db_query('alter ignore table {course_outline_fulfillment} add unique snid_uid (snid,uid)');
 
   db_change_field('course_outline_fulfillment', 'grade_result', 'grade_result', array(
     'type' => 'int',
@@ -1253,4 +1238,27 @@ function course_update_7141() {
   db_drop_index('course_report', 'uid');
   db_drop_index('course_enrollment', 'nid');
   db_drop_index('course_enrollment', 'uid');
+}
+
+/**
+ * Update some fields to boolean.
+ */
+function course_update_7142() {
+  db_change_field('course_report', 'complete', 'complete', array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'not null' => TRUE,
+    'unsigned' => TRUE,
+    'default' => 0,
+    'description' => 'Flag to mark this course as complete.',
+  ));
+
+  db_change_field('course_outline', 'required', 'required', array(
+    'type' => 'int',
+    'size' => 'tiny',
+    'not null' => TRUE,
+    'unsigned' => TRUE,
+    'default' => 0,
+    'description' => 'is this item required?',
+  ));
 }
