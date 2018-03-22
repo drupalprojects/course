@@ -2882,6 +2882,7 @@ function course_entity_property_info_alter(&$info) {
   $info['course_object_fulfillment']['properties']['uid']['required'] = TRUE;
 
   $info['course_report']['properties']['date_completed']['type'] = 'date';
+  $info['course_report']['properties']['updated']['type'] = 'date';
   $info['course_report']['properties']['nid']['type'] = 'node';
   $info['course_report']['properties']['uid']['type'] = 'user';
   $info['course_report']['properties']['nid']['required'] = TRUE;
