@@ -1909,13 +1909,12 @@ function course_remove_enrollment_action(&$enrollment, $context) {
 /**
  * Edit enrollment action
  *
- * @param object $object
+ * @param object $enrollment
  *   An object containing nid and uid properties.
  * @param array $context
  *   Values from user input.
  */
-function course_edit_enrollment_action($object, $context) {
-  $enrollment = course_enrollment_load($object->nid, $object->uid);
+function course_edit_enrollment_action($enrollment, $context) {
   $node = node_load($enrollment->nid);
   $account = user_load($enrollment->uid);
   if (!$course_report = course_report_load($node, $account)) {
@@ -1958,7 +1957,7 @@ function course_edit_enrollment_action($object, $context) {
   $course = course_get_course($node, $account);
   foreach ($course->getObjects() as $key => $courseObject) {
     $coid = $courseObject->getId();
-    $fulfillment = $courseObject->getFulfillment();
+    $fulfillment = $courseObject->getFulfillment($account);
     if ($context['course_objects'][$coid] !== '') {
       // There was a change
 
@@ -1996,38 +1995,37 @@ function course_edit_enrollment_action($object, $context) {
 function course_edit_enrollment_action_form($a1, $context) {
   $form = array();
 
-  $nids = array();
-  $enrollments = entity_load('course_enrollment', $context['selection']);
-  foreach ($enrollments as $enrollment) {
-    $nids[] = $enrollment->nid;
-    $uids[] = $enrollment->uid;
-  }
-
-  if (count(array_unique($nids)) == 1) {
-    $node = node_load(reset($nids));
-  }
-
-  if (count(array_unique($nids)) == 1) {
-    $user = user_load(reset($uids));
-  }
-
-  $form['header'] = array(
-    '#value' => format_plural(count(array_unique($nids)), 'Use this form to edit course enrollment and completion data for 1 user', 'Use this form to edit course enrollment and completion data for @count users'),
-  );
+  // Load the first enrollment.
+  $selection = reset($context['selection']);
+  $check_enrollment = course_enrollment_load($selection);
+  $node = node_load($check_enrollment->nid);
 
   // Check if this action is being performed on a single user, and set the
   // account accordingly.
   $account = NULL;
-  $enroll = NULL;
   $course_report = NULL;
-  if (count(array_unique($nids)) == 1) {
-    // Only one user, so let's prefill values.
-    $selection = reset($context['selection']);
-
-    $enroll = course_enrollment_load($selection);
-    $account = user_load($enroll->uid);
+  if (count($context['selection']) === 1) {
+    // Only one user and course, so let's prefill values.
+    $enrollment = $check_enrollment;
+    $account = user_load($enrollment->uid);
     $course_report = course_report_load($node, $account);
   }
+
+  $form['timestamp'] = array(
+    '#title' => t('Set started date to'),
+    '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
+    '#date_format' => 'Y-m-d H:i',
+    '#description' => t('The date the user started the course.'),
+    '#default_value' => !empty($enrollment->timestamp) ? format_date($enrollment->timestamp, 'custom', 'Y-m-d H:i') : NULL,
+  );
+
+   $form['enroll_end'] = array(
+    '#title' => t('Extend course enrollment until'),
+    '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
+    '#date_format' => 'Y-m-d H:i',
+    '#description' => t('The date when the user will not be able to access the course.'),
+    '#default_value' => !empty($enrollment->enroll_end) ? format_date($enrollment->enroll_end, 'custom', 'Y-m-d H:i') : NULL,
+  );
 
   $form['status'] = array(
     '#title' => t('Set enrollment status to'),
@@ -2037,18 +2035,9 @@ function course_edit_enrollment_action_form($a1, $context) {
       1 => 'Active',
       0 => 'Inactive',
     ),
-    '#default_value' => !empty($enroll->status) ? $enroll->status : NULL,
+    '#default_value' => !empty($enrollment->status) ? $enrollment->status : NULL,
     '#description' => t('Setting an enrollment to "inactive" will prevent a user from accessing the course.'),
   );
-
-  $form['enroll_end'] = array(
-    '#title' => t('Extend course enrollment until'),
-    '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
-    '#date_format' => 'Y-m-d H:i',
-    '#description' => t('The date when the user will not be able to access the course.'),
-    '#default_value' => !empty($enroll->enroll_end) ? format_date($enroll->enroll_end, 'custom', 'Y-m-d H:i') : NULL,
-  );
-
 
   $form['complete'] = array(
     '#title' => t('Set completion status to'),
@@ -2068,14 +2057,6 @@ function course_edit_enrollment_action_form($a1, $context) {
     '#date_format' => 'Y-m-d H:i',
     '#description' => t('The date of completion.'),
     '#default_value' => !empty($course_report->date_completed) ? format_date($course_report->date_completed, 'custom', 'Y-m-d H:i') : NULL,
-  );
-
-  $form['timestamp'] = array(
-    '#title' => t('Set started date to'),
-    '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
-    '#date_format' => 'Y-m-d H:i',
-    '#description' => t('The date the user started the course.'),
-    '#default_value' => !empty($enroll->timestamp) ? format_date($enroll->timestamp, 'custom', 'Y-m-d H:i') : NULL,
   );
 
   if (isset($node)) {
