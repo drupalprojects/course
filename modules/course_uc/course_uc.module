@@ -56,7 +56,7 @@ function course_uc_form_alter(&$form, &$form_state, $form_id) {
         $instances = field_info_instances('course_enrollment', $node->course['enrollment_type']);
         foreach ($instances as $field_name => $instance) {
           $field = field_info_field($field_name);
-          if ($instance['settings']['course_enrollment_user_field']) {
+          if (!empty($instance['settings']['course_enrollment_user_field'])) {
             // At least one field must be shown when enrolling. Display the user
             // enrollment form.
             $enrollment = entity_create('course_enrollment', array(

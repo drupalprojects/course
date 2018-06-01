@@ -1393,10 +1393,10 @@ function course_course_enrollment_insert($enrollment) {
   if (!course_report_load($enrollment->nid, $enrollment->uid)) {
     // If we don't have a course report record already, save a new one.
     $course_report = entity_create('course_report', array(
-        'nid' => $enrollment->nid,
-        'uid' => $enrollment->uid,
-        'section_name' => 'Enrolled',
-        'complete' => 0,
+      'nid' => $enrollment->nid,
+      'uid' => $enrollment->uid,
+      'section_name' => 'Enrolled',
+      'complete' => 0,
     ));
     $course_report->save();
   }
@@ -1406,6 +1406,8 @@ function course_course_enrollment_insert($enrollment) {
 
 /**
  * Implements hook_course_enrollment_update().
+ *
+ * When an enrollment is updated, re-evaluate requirements.
  */
 function course_course_enrollment_update($enrollment) {
   $node = node_load($enrollment->nid);
@@ -1415,6 +1417,8 @@ function course_course_enrollment_update($enrollment) {
 
 /**
  * Implements hook_course_enrollment_delete().
+ *
+ * Clean up after an enrollment deletion.
  */
 function course_course_enrollment_delete($enrollment) {
   $report = course_report_load($enrollment->nid, $enrollment->uid);
