@@ -513,13 +513,8 @@ function course_object_options_form($form, &$form_state, $courseObject) {
     }
   }
 
-  $form['#after_build'][] = 'course_object_options_form_after_build';
-  return $form;
-}
-
-function course_object_options_form_after_build($form, &$form_state) {
-  $courseObject = $form_state['build_info']['args'][0];
   $fieldset_key = $courseObject->getComponent();
+
 
   foreach (element_children($form) as $key) {
     $element = $form[$key];
@@ -528,7 +523,7 @@ function course_object_options_form_after_build($form, &$form_state) {
     // know where the fields are coming from. Consider adding a
     // CourseObject::objectOptionsForm which will separate object-specific
     // behavior from Course-specific behavior.
-    if (!empty($element['#type']) && !in_array($element['#type'], array('', 'hidden', 'submit', 'button')) && !empty($element['#input'])) {
+    if (!empty($element['#type']) && !in_array($element['#type'], array('', 'hidden', 'submit', 'button', 'fieldset', 'vertical_tabs', 'value'))) {
       $form[$fieldset_key][$key] = $element;
       unset($form[$key]);
     }
