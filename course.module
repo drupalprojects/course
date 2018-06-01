@@ -381,7 +381,7 @@ function course_ajaj_fulfullment_check($node, $courseObject, $js = FALSE) {
   module_load_include('inc', 'course', 'includes/course.block');
   // Bust cache.
   /** @deprecated do not use getUser() */
-  course_get_course($node, $courseObject->getCourse()->getUser(), TRUE);
+  course_get_course($node, $courseObject->getCourse()->getUser());
   $block = block_load('course', 'navigation');
   $block_rend = _block_render_blocks(array($block));
   drupal_json_output(array(
@@ -965,8 +965,15 @@ function course_unenroll($node, $user) {
  *   TRUE if the user is enrolled, FALSE otherwise.
  */
 function course_enrollment_check($nid, $uid) {
-  $query = db_query("SELECT 1 FROM {course_enrollment} WHERE nid = :nid AND uid = :uid AND status = :status", array(':nid' => $nid, ':uid' => $uid, ':status' => 1));
-  return $query->fetchField() > 0;
+  $checked = &drupal_static(__FUNCTION__, array());
+
+  if (!isset($checked[$nid][$uid])) {
+    $query = db_query("SELECT 1 FROM {course_enrollment} WHERE nid = :nid AND uid = :uid AND status = :status", array(':nid' => $nid, ':uid' => $uid, ':status' => 1));
+    $status = ($query->fetchField() > 0);
+    $checked[$nid][$uid] = $status;
+  }
+
+  return $checked[$nid][$uid];
 }
 
 /**
@@ -1359,6 +1366,9 @@ function course_course_enrollment_presave($enrollment) {
   if (empty($enrollment->type)) {
     $enrollment->type = $node->course['enrollment_type'];
   }
+
+  // Clear the enrollment check cache.
+  drupal_static_reset('course_enrollment_check');
 }
 
 /**
@@ -1612,20 +1622,29 @@ function course_get_course_object($module, $object_type = NULL, $instance = NULL
  * @param stdClass $account
  *   The user with which to instantiate course objects and fulfillment.
  *
- * @return Course
+ * @return Course|boolean
+ *   The Course entity, or FALSE if provided node was not a Course.
  */
-function course_get_course($node, $account = NULL, $flush = FALSE) {
-  /** @deprecated */
-  if (!$account) {
-    global $user;
-    $account = $user;
-  }
+function course_get_course($node, $account = NULL) {
+  if (course_node_is_course($node)) {
+    $static = &drupal_static(__FUNCTION__, array());
 
-  if ($entities = entity_load('course', array($node->nid), FALSE, $flush)) {
-    $course = $entities[$node->nid];
     /** @deprecated */
-    $course->setUser($account);
-    return $course;
+    if (!$account) {
+      global $user;
+      $account = $user;
+    }
+
+    if (!isset($static[$node->nid][$account->uid])) {
+      $course = entity_load_single('course', $node->nid);
+      $course->setUser($account);
+      $static[$node->nid][$account->uid] = $course;
+    }
+
+    return $static[$node->nid][$account->uid];
+  }
+  else {
+    return FALSE;
   }
 }
 
@@ -1743,7 +1762,7 @@ function course_preprocess_page(&$variables) {
  * @return array
  */
 function course_get_types() {
-  $types = & drupal_static(__FUNCTION__, array());
+  $types = &drupal_static(__FUNCTION__, array());
 
   if (!$types) {
     foreach (node_type_get_types() as $type => $info) {

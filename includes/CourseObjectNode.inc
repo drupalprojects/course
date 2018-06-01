@@ -420,6 +420,7 @@ abstract class CourseObjectNode extends CourseObject {
    */
   function setInstanceId($id) {
     parent::setInstanceId($id);
+    // Cloning breaks without a reset.
     $this->node = node_load($id, NULL, TRUE);
   }
 

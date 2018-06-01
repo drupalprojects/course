@@ -58,11 +58,11 @@ class CourseObjectController extends EntityAPIController {
     }
 
     foreach ($entities as $courseObject) {
-      $reflect = new ReflectionClass($courseObject);
-      foreach ($reflect->getProperties(ReflectionProperty::IS_PRIVATE | ReflectionProperty::IS_PROTECTED) as $prop) {
-        $props[$prop->getName()] = $prop->getName();
-      }
       if (isset($courseObject->$serialized_field) && is_array($courseObject->$serialized_field)) {
+        $reflect = new ReflectionClass($courseObject);
+        foreach ($reflect->getProperties(ReflectionProperty::IS_PRIVATE | ReflectionProperty::IS_PROTECTED) as $prop) {
+          $props[$prop->getName()] = $prop->getName();
+        }
         foreach ($courseObject->$serialized_field as $field => $value) {
           if (!isset($props[$field])) {
             $courseObject->setOption($field, $value);

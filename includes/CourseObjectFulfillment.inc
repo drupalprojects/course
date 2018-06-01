@@ -70,7 +70,12 @@ class CourseObjectFulfillment extends CourseHandler {
     // Make sure the user is enrolled first.
     if (course_enrollment_check($this->getCourseObject()->getCourseNid(), $this->uid)) {
       parent::save();
+      // Re-evaluate requirements.
       $this->getCourseObject()->getCourse()->track();
+      return $this;
+    }
+    else {
+      return FALSE;
     }
   }
 

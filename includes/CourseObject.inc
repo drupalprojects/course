@@ -995,6 +995,8 @@ abstract class CourseObject extends CourseHandler {
       $this->setId(NULL);
     }
 
+    $this->getCourse()->resetCache();
+
     return parent::save();
   }
 

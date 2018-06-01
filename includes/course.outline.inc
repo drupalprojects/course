@@ -425,7 +425,7 @@ function course_outline_overview_form_submit(&$form, &$form_state) {
 function course_outline_list($node) {
   global $user;
 
-  $course = course_get_course($node, $user, TRUE);
+  $course = course_get_course($node, $user);
 
   // Iterate over objects.
   $workflow = array();

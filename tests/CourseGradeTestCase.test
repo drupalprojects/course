@@ -83,17 +83,17 @@ class CourseGradeTestCase extends CourseTestCase {
     course_enroll($courseNode, $this->student_user);
 
     // Complete but don't hit the low grade requirement.
-    $co1->getFulfillment()->setOption('grade_result', 79)->setComplete(1)->save();
+    $course->getObjects()[1]->getFulfillment()->setOption('grade_result', 79)->setComplete(1)->save();
     $course->getTracker()->track();
     $this->assertFalse($co2->access('take', $this->student_user), 'User cannot take course object with lower grade.');
 
     // Complete but don't hit the high grade requirement.
-    $co1->getFulfillment()->setOption('grade_result', 91)->setComplete(1)->save();
+    $course->getObjects()[1]->getFulfillment()->setOption('grade_result', 91)->setComplete(1)->save();
     $course->getTracker()->track();
     $this->assertFalse($co2->access('take', $this->student_user), 'User cannot take course object with higher grade.');
 
     // Hit the grade requirement.
-    $co1->getFulfillment()->setOption('grade_result', 80)->setComplete(1)->save();
+    $course->getObjects()[1]->getFulfillment()->setOption('grade_result', 80)->setComplete(1)->save();
     $course->getTracker()->track();
     $this->assertTrue($co2->access('take', $this->student_user), 'User can take course object with required grade.');
   }

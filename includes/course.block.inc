@@ -22,7 +22,7 @@ function _course_block_navigation_view() {
   global $user;
   $node = course_get_context();
   if ($node) {
-    $course = course_get_course($node, $user, TRUE);
+    $course = course_get_course($node, $user);
     $links = $course->getNavigation();
 
     $items = array();

@@ -11,7 +11,7 @@ class Course extends CourseHandler {
   /** @deprecated */
   private $user;
   // Ordered list of course objects.
-  private $courseObjects;
+  private $courseObjects = array();
   // Course report tracker
   private $tracker;
   // The active course object.
@@ -38,7 +38,7 @@ class Course extends CourseHandler {
       }
     }
 
-    if ($entities = entity_load('course_report', FALSE, array('nid' => $this->getNode()->nid, 'uid' => $account->uid))) {
+    if ($entities = entity_load('course_report', FALSE, array('nid' => $this->getNode()->nid, 'uid' => $account->uid), TRUE)) {
       return reset($entities);
     }
     else {
@@ -170,6 +170,7 @@ class Course extends CourseHandler {
    * Track the course (scan required objects, update progress, completion, etc).
    */
   public function track($account = NULL) {
+    $this->resetCache();
     $this->getTracker($account)->track();
   }
 
@@ -180,24 +181,30 @@ class Course extends CourseHandler {
    *   An array of course objects.
    */
   public function getObjects() {
-    $courseObjects = array();
+    if (empty($this->courseObjects)) {
+      $efq = new EntityFieldQuery;
+      $result = $efq->entityCondition('entity_type', 'course_object')
+        ->propertyCondition('nid', $this->getNode()->nid)
+        ->propertyOrderBy('weight')
+        ->execute();
 
-    $efq = new EntityFieldQuery;
-    $result = $efq->entityCondition('entity_type', 'course_object')
-      ->propertyCondition('nid', $this->getNode()->nid)
-      ->propertyOrderBy('weight')
-      ->execute();
-
-    if (!empty($result['course_object'])) {
-      if ($courseObjects = entity_load('course_object', array_keys($result['course_object']))) {
-        foreach ($courseObjects as $courseObject) {
-          /** @deprecated do not use set|getUser() */
-          $courseObject->setUser($this->getUser());
+      if (!empty($result['course_object'])) {
+        if ($this->courseObjects = entity_load('course_object', array_keys($result['course_object']))) {
+          foreach ($this->courseObjects as $courseObject) {
+            /** @deprecated do not use set|getUser() */
+            $courseObject->setUser($this->getUser());
+          }
         }
       }
     }
 
-    return $courseObjects;
+    return $this->courseObjects;
+  }
+
+  function resetCache() {
+    // Reset this course's cache.
+    $this->courseObjects = array();
+    return $this;
   }
 
   public function getNode() {
