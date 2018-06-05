@@ -259,7 +259,7 @@ abstract class CourseObject extends CourseHandler {
       '#type' => 'textfield',
       '#description' => t('The title of this course object as it will appear to users in the course outline.'),
       '#size' => 100,
-      '#default_value' => check_plain($config['title']),
+      '#default_value' => $config['title'],
       '#group' => 'description',
       '#required' => TRUE,
     );
