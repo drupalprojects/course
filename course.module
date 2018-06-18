@@ -768,7 +768,7 @@ function course_node_update($node) {
       $field_exists = isset($settings['field']);
       if ($field_exists) {
         $items = field_get_items('node', $node, $settings['field'], $node->language);
-        if (count($items)) {
+        if ($items && count($items)) {
           $value = $items[0][$settings['value']];
           if (!empty($value)) {
             $date = new DateTime("$value UTC");
