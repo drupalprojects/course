@@ -103,7 +103,8 @@ abstract class CourseObjectNode extends CourseObject {
     }
     $node->title = $this->getTitle();
     $node->uid = $user->uid;
-    $node->language = LANGUAGE_NONE;
+    $language = language_default();
+    $node->language = $language->language;
     node_object_prepare($node);
     node_save($node);
     $this->setNode($node);
