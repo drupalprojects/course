@@ -13,7 +13,7 @@ function course_object_reports_page($node) {
   $report_key = arg(5);
   $report_subkey = arg(6);
   // Report navigation.
-  $nav = '';
+  $nav = array();
   // Report header.
   $header = '';
   // Report content.
