@@ -1894,11 +1894,10 @@ function course_action_info() {
 /**
  * Action to enroll a user in current course.
  */
-function course_add_enrollment_action($user, $context) {
-  if ($node = node_load($_SESSION['vbo_course'])) {
-    course_enroll($node, $user, 'course_add_enrollment_action');
-    drupal_set_message(t("Enrolled %name in %title.", array('%name' => $user->name, '%title' => $node->title)));
-  }
+function course_add_enrollment_action($user, $context, $x) {
+  $node = node_load($context['view_info']['arguments'][0]);
+  course_enroll($node, $user, 'course_add_enrollment_action');
+  drupal_set_message(t("Enrolled %name in %title.", array('%name' => $user->name, '%title' => $node->title)));
 }
 
 /**
@@ -2023,7 +2022,7 @@ function course_edit_enrollment_action_form($a1, $context) {
     '#default_value' => !empty($enrollment->timestamp) ? format_date($enrollment->timestamp, 'custom', 'Y-m-d H:i') : NULL,
   );
 
-   $form['enroll_end'] = array(
+  $form['enroll_end'] = array(
     '#title' => t('Extend course enrollment until'),
     '#type' => module_exists('date_popup') ? 'date_popup' : 'date_text',
     '#date_format' => 'Y-m-d H:i',
@@ -2170,11 +2169,6 @@ function course_init() {
           , 'scope' => JS_DEFAULT));
       }
     }
-  }
-
-  if (arg(0) == 'node' && arg(2) == 'course-enrollments') {
-    // Hack until #1902104 is fixed.
-    $_SESSION['vbo_course'] = arg(1);
   }
 }
 
